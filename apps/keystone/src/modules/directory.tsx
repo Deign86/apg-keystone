@@ -60,19 +60,19 @@ function Directory() {
   const sourceName = (id: string) => connections.get(id)?.name ?? id;
 
   const columns: Column<DirectoryRecord>[] = [
-    { key: 'code', header: 'Code', width: 76, cell: (d) => <span className="font-semibold text-gold-bright tabular-nums">{d.code}</span> },
-    { key: 'type', header: 'Type', width: 92, cell: (d) => <span className="text-ink-2">{d.type}</span> },
-    { key: 'name', header: 'Name', cell: (d) => d.name },
-    { key: 'tin', header: 'TIN', width: 140, cell: (d) => <span className="text-ink-2 tabular-nums">{d.tin || '—'}</span> },
+    { key: 'code', header: 'Code', width: 68, cell: (d) => <span className="font-semibold text-gold-bright tabular-nums">{d.code}</span> },
+    { key: 'type', header: 'Type', width: 88, cell: (d) => <span className="text-ink-2">{d.type}</span> },
+    { key: 'name', header: 'Name', cell: (d) => <span title={d.name}>{d.name}</span> },
+    { key: 'tin', header: 'TIN', width: 138, cell: (d) => <span className="text-ink-2 tabular-nums">{d.tin || '—'}</span> },
     {
-      key: 'detail', header: 'Details', width: 280, cell: (d) => (
+      key: 'detail', header: 'Details', cell: (d) => (
         <span className="text-ink-2">
           {[d.detail, d.dept, d.type === 'Client' ? `${d.vat ? 'VAT' : 'non-VAT'}${d.ewt ? ', EWT' : ''}` : null].filter(Boolean).join(' · ') || '—'}
         </span>
       ),
     },
     {
-      key: 'used', header: 'Used by', width: 140, cell: (d) => {
+      key: 'used', header: 'Used by', width: 100, cell: (d) => {
         const used = usedBy(state, d.code);
         const linked = Object.keys(d.links ?? {});
         return used.length || linked.length ? (
