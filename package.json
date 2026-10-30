@@ -1,0 +1,23 @@
+{
+  "name": "keystone",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/core",
+    "packages/ui",
+    "apps/keystone"
+  ],
+  "scripts": {
+    "sync": "node scripts/sync-shared.mjs",
+    "dev": "npm run sync && npm run dev -w apps/keystone",
+    "desktop": "npm run sync && cd apps/keystone && tauri dev",
+    "build": "npm run sync -- --check && cd apps/keystone && tauri build",
+    "typecheck": "npm run typecheck -w packages/core && npm run typecheck -w packages/ui && npm run typecheck -w apps/keystone",
+    "test": "npm test -w packages/core && npm test -w apps/keystone",
+    "lint:taste": "node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  }
+}

@@ -1,7 +1,6 @@
 .DS_Store
 node_modules/
-.build/
-apple/build/
-.swiftpm/
-*.xcodeproj/xcuserdata/
 .taste-skill/
+apps/keystone/dist/
+apps/keystone/src-tauri/target/
+apps/keystone/src-tauri/gen/

@@ -1,51 +1,64 @@
 # Keystone design
 
-Keystone is an APG admin tool, so it wears the house style the other APG systems already share. Read this before
-changing how any screen looks on either platform. The values live in `shared/design/tokens.json`.
+Keystone is an APG admin tool, so it uses the house style the other APG systems already share. Read this before
+changing how any screen looks. The values live in `shared/design/tokens.json`. `npm run sync` turns them into the
+Tailwind theme (`packages/ui/src/theme.css`), and CI fails if the two drift apart.
 
 ## Where the look comes from
 
 | Source | What Keystone takes from it |
 |---|---|
-| **Attendance tracker** (`alpha-premier-attendance`, `client/src/styles.css`) | The palette, exactly: ground `#0b0a08`, surface `#151613`, raised `#1d1c17`, input `#0f100e`, ink `#f6f2e9`, line `#3a3426`, gold `#c6a254` / `#e1c477` / `#8d753e`, good `#98d2a8`, bad `#efaa92`. Orbitron for the greeting and the clock, Poppins for the rest. The **numbered key badges** (filled gold when active). Outlined status capsules in Orbitron capitals. Count chips for filters. The kiosk home: status capsule and clock on top, the Orbitron greeting in the middle. |
-| **Website admin portal** (`apg-website`, `src/routes/admin`) | The 236pt labelled sidebar. The page header: small gold capitals over a big bold title. Gold capitals for table headers. |
-| **Alpha Branding Studio** (`Alpha_Branding`, `macos/`) | The two-platform pattern: a native SwiftUI Mac app and a XAML Windows app sharing one palette. The `build.sh` packaging approach and the bundle ID family (`com.alphapremier.*`). |
-| **Taste Skill** (`.claude/skills/taste-skill`, app-screen rules, style `data-terminal` dealt with `--keep palette,type`) | What the brand does not decide: flat surfaces with no shadows or gradients, colour only on data and the one primary action, one 1px gold line to mark the selected rail item, KPIs as type in one strip split by lines (no icon tiles), right-aligned tabular figures, a grey dash for a missing value, and one finding sentence under every title. |
+| **Attendance tracker** (`alpha-premier-attendance`, `client/src/styles.css`) | **The palette, exactly:** ground `#0b0a08`, surface `#151613`, raised `#1d1c17`, input `#0f100e`, ink `#f6f2e9`, line `#3a3426`, gold `#c6a254` / `#e1c477` / `#8d753e`, good `#98d2a8`, bad `#efaa92`.<br>**Fonts:** Orbitron for the greeting, the clock and figures; Poppins for everything else.<br>**Components:** the numbered key badges (filled gold when active), the outlined status capsules in Orbitron capitals, the count chips used as filters.<br>**Home screen:** the kiosk layout, with a status capsule and clock on top and the Orbitron greeting in the middle. |
+| **Website admin** (`apg-website`, `src/routes/admin`) | The 236px labelled sidebar, the page header (small gold capitals over a big bold title), and the gold capitals over table columns. |
+| **Alpha Branding Studio** (`Alpha_Branding`) | The `com.alphapremier.*` identifier family and dark-only windows. |
+| **Taste Skill** (`.claude/skills/taste-skill`, app-screen rules; style `data-terminal` dealt with `--keep palette,type`) | The rules the brand doesn't settle:<br>• Surfaces are flat, with no shadows or gradients at rest.<br>• Colour goes only on data and the one primary action.<br>• The selected rail item is marked by a single 1px gold line on the rail's edge.<br>• KPIs are type in one strip split by lines, with no icon tiles.<br>• Figures are right-aligned with tabular digits; a missing value is a grey dash.<br>• Every title has one finding sentence under it, saying what needs attention, computed by `@keystone/core`. |
+| **ui-skills** (`baseline-ui`, `fixing-accessibility`, `fixing-motion-performance`) | **Primitives:** Base UI for everything with keyboard or focus behaviour (selects, menus, dialogs, checkboxes, toasts), plus Tailwind with `cn()`.<br>**Interaction:** an alert dialog before anything destructive; errors shown next to the action that failed.<br>**Text:** `text-balance` on headings, `text-pretty` on paragraphs, tabular figures for data, nothing under 11px.<br>**Motion:** transform and opacity only, at most 200ms, and none under Reduce Motion.<br>**Layering and states:** a fixed z-index scale; every empty state offers one next action. |
 
-Where the brand and the skill disagree, the brand wins. Keystone keeps the eyebrow labels and the uppercase gold table
-headers because every APG admin screen has them. The skill's rules apply everywhere else.
+## Brand exceptions, on purpose
+
+These go against a skill rule because every APG system does them. Each one is marked in the code with
+`taste-skill-ignore` and allowed by name in the inspector:
+
+- **Gold tracked capitals:** screen eyebrows, table headers, status capsules. The inspector runs with
+  `--allow micro-label`.
+- **The cream ink `#f6f2e9`:** the attendance tracker's text colour. The inspector warns about it; it stays.
+- **The 58px Orbitron greeting on Home:** the kiosk's own front door. Every other screen title is 34px.
+- **Small type on the ID card:** the card is drawn at true CR80 size (54mm wide), so its 8px text is about 2mm, normal
+  for a printed card. The ID Maker screen is inspected with `--allow tiny-text`; every other screen has nothing under
+  11px.
+
+The ID card's foil stripe is flat gold. There are no gradients anywhere.
 
 ## Rules
 
-- **Colour.** Gold is used on the one primary button of a screen, on document numbers, on the selected rail item and in
-  status. Everything else is ink, grey or line. No gradients. The one exception is the printed ID card's foil stripe,
-  which is part of the card design.
-- **Surfaces.** Ground, then a card one tone up with a 1px `line` border, radius 8. Nothing at rest has a shadow. Only
-  the toast, which floats, has one.
-- **Type.** Poppins at 34 bold for titles, 14 for body text, 12–12.5 for captions. Orbitron for the greeting (56), the
-  clock (20), headline figures (24), tile and card titles (14–15), and status capsules (9.5, capitals).
-- **Every screen header** has three parts. The eyebrow is the section name in gold capitals. The title is a noun. The
-  line under it is the finding: the one fact on that screen that most needs attention, computed by `KeystoneCore`
-  (for example "₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026."). It never describes
-  the interface.
-- **Registers.** Rows are 45pt with 1px lines and no zebra stripes. The identity column gets the spare width.
-  Numbers are right-aligned with tabular figures. Each row has one status capsule and one `⋯` menu at the far right.
-  Clicking a row loads the record into the form.
-- **Buttons.** Primary is a flat gold fill with dark ink. Secondary is an outline in `lineBright` with gold text.
-  Quiet has no chrome. Height is 34 (28 for small) and radius 6. On press the button scales to 0.97. On hover it
-  brightens.
-- **Motion.** Kept short (0.12–0.22 s) and turned off under Reduce Motion: screens fade in, tiles lift 2pt on
-  hover, the toast slides up.
-- **Documents** (voucher, statement, ID card) are drawn on white paper tokens. The same view is used for the
-  preview and for the PDF.
+- **Colour:** gold goes on the one primary button of a screen, on document numbers, on the selected rail item and
+  in status. Everything else is ink, grey or line.
+- **Surfaces:** the ground, then a card one tone up with a 1px `line` border and radius 8. Only real overlays (menus,
+  dialogs, toasts) have a shadow.
+- **Type:** titles are Poppins 34 bold, body text 14, captions 12–12.5. Orbitron is used for the greeting, the clock,
+  headline figures (24, with the lead at 30), and card titles (14–15).
+- **Screen header:** the eyebrow (the section), then the title (a noun), then the finding (the one fact that matters
+  on that screen). The finding never describes the interface.
+- **Registers:**
+  - Real `<table>` elements, with 45px rows and 1px lines.
+  - The identity column takes the spare width, and figures are right-aligned.
+  - One status capsule per row and one `⋯` menu at the far right.
+  - Click a row, or press Enter on it, to load the record into the form.
+- **Buttons:** primary is flat gold with dark ink; secondary is outlined; quiet has no outline. They are 36px tall (28px
+  small) with radius 6, and scale to 0.97 when pressed.
+- **Documents** (the voucher, the statement, the ID card) are drawn once. The same element is the live preview, the
+  print and the PDF.
 
-## Shared across platforms
+## Checks, and their latest results
 
-| Thing | Source of truth | Mac | Windows |
-|---|---|---|---|
-| Colours, sizes, radii | `shared/design/tokens.json` | `Theme/Tokens.swift` (generated) | `Theme/Tokens.xaml` (generated) |
-| Fonts, logo | `shared/fonts`, `shared/logo.png` | `Resources/` (copied) | `Assets/` (copied) |
-| Sample data | `shared/data/seed.json` | `Generated/SeedData.swift` | `Assets/seed.json` |
-| Wording of findings, toasts and log lines | `KeystoneCore` | as is | ported 1:1 |
+```bash
+npm run lint:taste
+CHROME_PATH=<chromium> node .claude/skills/taste-skill/scripts/inspect.mjs "http://127.0.0.1:5174/#vouchers" --app --widths 1440,1100 --allow micro-label
+```
 
-Run `node scripts/sync-shared.mjs` after editing anything in `shared/`. CI fails if a generated file is stale.
+On 2026-10-30:
+- **Lint (app mode):** 0 fails.
+- **Inspector:** 0 fails on all nine screens at 1440 and 1100px. That is the app's minimum window width, so a phone
+  width isn't inspected.
+- **Accessibility:** every control has a name, form errors are tied to their fields, dialogs trap focus, and toasts
+  are announced. Registers can be used from the keyboard.

@@ -1,57 +1,74 @@
 # Keystone
 
-The all-in-one admin app for Alpha Premier Group: Check Vouchers, Billing Statements and the ID Maker built around one
-shared Directory, with an Activity Log. It also opens the other APG apps (the attendance tracker and Alpha Branding
-Studio).
+Alpha Premier Group's admin app. It covers Check Vouchers, Billing Statements, the ID Maker, a shared Directory and
+an Activity Log, and it connects to the other APG systems:
 
-Keystone runs as a native app: SwiftUI on the Mac first, then WinUI 3 on Windows. Both apps are built from the
-same core rules, design tokens and sample data.
+- **The attendance tracker:** live attendance from the front-desk kiosk, plus its employees and photos.
+- **Alpha Branding Studio:** hands it listing photos, checks its version.
+- **The website:** new hires, payments reported online, inquiries.
+
+It is one Tauri 2 + React + TypeScript codebase for macOS and Windows: the same stack as the attendance tracker.
 
 ```
-apple/        Mac app: KeystoneCore (rules, tested) + KeystoneApp (SwiftUI)
-windows/      Windows app (WinUI 3) — generated theme and assets only, port not started
-shared/       design tokens, fonts, logo, sample data — the single source for both apps
-scripts/      sync-shared.mjs regenerates platform files from shared/
-prototype/    the original single-page web prototype (2026-10-27), kept for reference
-docs/         DESIGN.md (the look and where it comes from), PORTING.md (Swift → C# map)
+apps/keystone/   the app: screens (src/modules), connected systems (src/connectors), native side (src-tauri)
+packages/core/   every rule, tested: numbering, VAT/EWT, amount in words, saving, imports
+packages/ui/     the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
+shared/          tokens, fonts, logo, sample data
+prototype/       the original single-page web prototype (2026-10-27), kept for reference
+docs/            ARCHITECTURE.md (how to add a screen or a system), DESIGN.md (the look),
+                 ATTENDANCE-INTEGRATION.md (one open decision)
 ```
 
-## Run the Mac app
+## Get the app
 
-On macOS 14 or later with Xcode 15.3+:
+Every push builds installers on GitHub Actions: open the workflow **Keystone**, pick the latest run, and download
+from **Artifacts**.
+
+- **macOS** (`Keystone-macOS`): open the `.dmg` and drag Keystone to Applications. It is ad-hoc signed, so on first
+  launch use right-click › Open, or *System Settings › Privacy & Security › Open Anyway*.
+- **Windows** (`Keystone-Windows`): run the setup `.exe`. It installs for the current user. SmartScreen may ask once;
+  choose *More info › Run anyway*.
+
+## Develop
+
+Needs Node 22 and Rust (stable). On Linux it also needs the WebKitGTK libraries listed in the workflow.
 
 ```bash
-cd apple
-open Package.swift        # Xcode: pick the "Keystone" scheme, then Run
-# or
-swift run Keystone
+npm install
+npm run desktop     # the desktop app, with hot reload
+npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (connectors that need the desktop say so)
+npm test            # core rules + connectors and modularity
+npm run typecheck
+npm run lint:taste  # Taste Skill app-screen lint
+npm run build       # installers for this OS into apps/keystone/src-tauri/target/release/bundle
 ```
 
-To make a double-clickable `Keystone.app` and a zip: `./apple/build.sh`. Every push also builds one on GitHub
-Actions (workflow **Mac app** → artifact **Keystone-macos**). It is ad-hoc signed, so the first launch needs a
-right-click › Open.
+Adding a screen or a connected system is one file plus one line; see `docs/ARCHITECTURE.md`.
 
-Data is saved to `~/Library/Application Support/Keystone/state.json`, with card photos in `photos/` beside it.
-**Activity Log › Reset sample data** starts over.
+## Setting up the connections
 
-## Tests
+In Keystone, open **Connections** (⌘8 / Ctrl+8):
 
-```bash
-cd apple && swift test
-```
+- **Attendance tracker:**
+  - **Kiosk address:** enter the address the attendance app shows under Live attendance › Share on the LAN.
+  - **Viewer token:** only needed if the kiosk asks for one.
+  - **Employees and photos:** these come from the attendance app's backups. On the kiosk PC that needs nothing. On
+    another PC, set **Backup folder** to where the backups are shared.
+- **Alpha Branding Studio:** nothing to set; Keystone finds it if it's installed.
+- **Website:** a website admin account (ideally a dedicated one for Keystone). The password is kept in the computer's
+  keychain.
 
-The core tests check amounts in words, tax totals, numbering and the ID verification pattern against values taken
-from the web prototype's own code.
+## Data
 
-## Status
-
-- Sample data only. Records are made up; company details are APG's real ones.
-- New compared with the prototype: real PDF export, status changes from each register's `⋯` menu, ID photos kept on
-  disk, a directory filter, and launching Alpha Branding Studio and the attendance dashboard.
-- Not yet: user accounts, a shared office database, printing straight to the ID card printer.
+- Saved on each computer:
+  - macOS: `~/Library/Application Support/com.alphapremier.keystone/`
+  - Windows: `%APPDATA%\com.alphapremier.keystone\`
+- **Connections › Data** has back up, restore and reset to the sample set. A backup is one JSON file in the
+  prototype's own format.
+- Sample records are made up; company details are APG's real ones.
 
 ## Agent skills
 
 `.claude/skills` vendors [ui-skills](https://github.com/ibelick/ui-skills) and
-[Taste Skill](https://github.com/Leonxlnx/taste-skill). `.mcp.json` connects the ui-skills registry MCP. See
-`.claude/skills/SOURCES.md`.
+[Taste Skill](https://github.com/Leonxlnx/taste-skill). `.mcp.json` connects the ui-skills registry MCP. Keystone's
+screens are checked with both (see `docs/DESIGN.md`).
