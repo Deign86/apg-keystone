@@ -1,0 +1,35 @@
+name: Mac app
+
+on:
+  push:
+    paths: ["apple/**", "shared/**", "scripts/**", ".github/workflows/apple.yml"]
+  pull_request:
+    paths: ["apple/**", "shared/**", "scripts/**", ".github/workflows/apple.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generated files match /shared
+        run: node scripts/sync-shared.mjs --check
+
+      - name: Core tests
+        working-directory: apple
+        run: swift test
+
+      - name: Build Keystone.app
+        working-directory: apple
+        run: ./build.sh 0.1.0-${GITHUB_SHA::7}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Keystone-macos
+          path: apple/build/*.zip
+          if-no-files-found: error
