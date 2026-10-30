@@ -188,10 +188,10 @@ struct KeystoneButtonStyle: ButtonStyle {
     var small = false
 
     func makeBody(configuration: Configuration) -> some View {
-        Body(configuration: configuration, kind: kind, small: small)
+        StyledButton(configuration: configuration, kind: kind, small: small)
     }
 
-    private struct Body: View {
+    private struct StyledButton: View {
         let configuration: Configuration
         let kind: Kind
         let small: Bool

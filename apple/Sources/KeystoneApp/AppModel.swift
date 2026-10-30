@@ -2,6 +2,7 @@ import AppKit
 import KeystoneCore
 import Observation
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The app's one view model. It owns the `Terminal` (all the rules) and the forms'
 /// drafts, saves after every change, and does the Mac-only work: files, PDFs, launching

@@ -23,7 +23,7 @@ struct Register<Item: Identifiable, Row: View, Actions: View>: View {
     let columns: [Column]
     let items: [Item]
     var empty = "Nothing here yet."
-    var open: (Item) -> Void
+    var open: @MainActor (Item) -> Void
     @ViewBuilder var row: (Item) -> Row
     @ViewBuilder var actions: (Item) -> Actions
 
@@ -220,8 +220,8 @@ struct FormCard<Content: View>: View {
     let eyebrow: String
     let title: String
     let save: String
-    let onSave: () -> Void
-    let onExport: () -> Void
+    let onSave: @MainActor () -> Void
+    let onExport: @MainActor () -> Void
     var exportTitle = "Export PDF"
     @ViewBuilder var content: Content
 

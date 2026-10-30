@@ -1,6 +1,7 @@
 import AppKit
 import KeystoneCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 // The printed documents. They draw on white "paper" tokens with the same layout as the
 // prototype's print preview, and the same views are rendered to PDF by PDFExport, so
