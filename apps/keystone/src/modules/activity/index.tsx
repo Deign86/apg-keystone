@@ -1,41 +1,21 @@
-import { Button, EmptyState, Field, Panel, ScreenHeader, Tag, TextInput, cn } from '@keystone/ui';
+import { Button, EmptyState, Field, Panel, ScreenHeader, TextInput, cn } from '@keystone/ui';
 import { useState } from 'react';
-import { count, lastEntryDate, shortDate, type LogEntry } from '@keystone/core';
-import { useKeystone } from '../app/context';
-import type { ModuleDef } from '../app/registry';
-
-const FILTERS = [
-  { id: 'all', label: 'All' },
-  { id: 'CV', label: 'Vouchers' },
-  { id: 'BS', label: 'Billing' },
-  { id: 'ID', label: 'IDs' },
-  { id: 'DIR', label: 'Directory' },
-] as const;
-
-export function Feed({ entries, compact = false }: { entries: LogEntry[]; compact?: boolean }) {
-  if (!entries.length) return <EmptyState text="No activity yet." />;
-  return (
-    <ol className="m-0 list-none p-0">
-      {entries.map((e, i) => (
-        <li key={`${e.when}-${i}`} className={cn('grid items-baseline gap-x-3 border-t border-line py-2.5 text-[13px]', compact ? 'grid-cols-[46px_1fr]' : 'grid-cols-[140px_46px_1fr]', i === 0 && !compact && 'border-t-0')}>
-          {!compact && <time className="text-xs text-ink-3 tabular-nums">{e.when}</time>}
-          <Tag>{e.mod}</Tag>
-          <span className="text-pretty">
-            {e.text}
-            {compact && <time className="ml-2 text-xs text-ink-3 tabular-nums">{shortDate(e.when.slice(0, 10))}</time>}
-          </span>
-        </li>
-      ))}
-    </ol>
-  );
-}
+import { count, lastEntryDate } from '@keystone/core';
+import { useKeystone } from '../../app/context';
+import { Feed } from '../../app/kit';
+import type { ModuleDef } from '../../app/registry';
 
 function Activity() {
-  const { state } = useKeystone();
+  const { state, registry } = useKeystone();
+  // Filters come from the installed modules' log tags, plus "Other" for entries written
+  // by modules this build does not have.
+  const known = Object.assign({}, ...registry.modules.map((m) => m.logTags ?? {})) as Record<string, string>;
+  const hasOther = state.log.some((e) => !(e.mod in known));
+  const filters = [{ id: 'all', label: 'All' }, ...Object.entries(known).map(([id, label]) => ({ id, label })), ...(hasOther ? [{ id: 'other', label: 'Other' }] : [])];
   const [mod, setMod] = useState<string>('all');
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
-  const shown = state.log.filter((e) => (mod === 'all' || e.mod === mod) && (!q || e.text.toLowerCase().includes(q)));
+  const shown = state.log.filter((e) => (mod === 'all' || e.mod === mod || (mod === 'other' && !(e.mod in known))) && (!q || e.text.toLowerCase().includes(q)));
   return (
     <>
       <ScreenHeader
@@ -45,7 +25,7 @@ function Activity() {
       />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div role="group" aria-label="Module" className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.id}
               type="button"

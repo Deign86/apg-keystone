@@ -5,7 +5,7 @@ import {
 import { importEmployees, type Change, type Connector, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from '../platform';
 import type { Connections } from './connections';
-import type { Registry } from './registry';
+import type { ModuleApp, Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
 
 interface KeystoneContextValue {
@@ -22,9 +22,10 @@ const KeystoneContext = createContext<KeystoneContextValue | null>(null);
 export function KeystoneProvider({ store, registry, connections, children }: { store: KeystoneStore; registry: Registry; connections: Connections; children: ReactNode }) {
   // The route lives in the address (#vouchers), so screens can be linked to and reloads keep their place.
   const known = useCallback((id: string) => registry.modules.some((m) => m.id === id), [registry]);
+  const start = registry.modules.some((m) => m.id === 'home') ? 'home' : registry.modules[0]?.id ?? '';
   const [route, setRoute] = useState(() => {
     const fromHash = location.hash.slice(1);
-    return known(fromHash) ? fromHash : 'home';
+    return known(fromHash) ? fromHash : start;
   });
   const go = useCallback((id: string) => {
     if (!known(id)) return;
@@ -58,6 +59,19 @@ export function useKeystone() {
     return r;
   }, [store, notify]);
   return { state, ctx: store.ctx, run, store, registry, connections, platform, route, go, notify };
+}
+
+/** The app as a module sees it: navigation, drafts, and whether another module is installed. */
+export function useModuleApp(): ModuleApp {
+  const { store, registry, go } = useCtx();
+  const state = useSyncExternalStore(store.subscribe, store.getState);
+  return useMemo(() => ({
+    go,
+    has: (id: string) => registry.modules.some((m) => m.id === id),
+    setDraft: <T,>(key: string, draft: T) => store.setDraft(key, draft),
+    state,
+    ctx: store.ctx,
+  }), [go, registry, store, state]);
 }
 
 /** A form draft that survives switching screens. */

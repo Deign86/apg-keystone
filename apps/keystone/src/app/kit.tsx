@@ -1,8 +1,11 @@
-import { Button, CellInput, FigureStrip, Panel, SectionLabel, SelectInput, StatusPill, cn } from '@keystone/ui';
+import { Button, CellInput, EmptyState, FigureStrip, Panel, SectionLabel, SelectInput, StatusPill, Tag, cn } from '@keystone/ui';
 import { X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { lineDraft, type Connector, type HealthState, type LineDraft } from '@keystone/core';
-import { useConnectorStatus, useImportPeople, useKeystone } from '../app/context';
+import { lineDraft, shortDate, type Connector, type HealthState, type LineDraft, type LogEntry } from '@keystone/core';
+import { useConnectorStatus, useImportPeople, useKeystone, useModuleApp } from './context';
+
+// The module kit: building blocks any module may use. Everything here belongs to the
+// kernel, so a module that uses it can be removed without touching another module.
 
 /** Description · account or reference · amount · remove. */
 export function LineEditor({ title, lines, onChange, accounts }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; accounts?: string[] }) {
@@ -92,7 +95,8 @@ const HEALTH: Record<HealthState, { label: string; tone: 'good' | 'warn' | 'bad'
 
 /** A connected system's card: health, live figures, and its actions. Works for any connector. */
 export function ConnectorCard({ connector, compact = false }: { connector: Connector; compact?: boolean }) {
-  const { connections, notify, go } = useKeystone();
+  const { connections, notify } = useKeystone();
+  const app = useModuleApp();
   const status = useConnectorStatus(connector.id);
   const importPeople = useImportPeople();
   const [busy, setBusy] = useState<string | null>(null);
@@ -146,12 +150,31 @@ export function ConnectorCard({ connector, compact = false }: { connector: Conne
             {busy === 'people' ? 'Importing…' : connector.people.label}
           </Button>
         )}
-        {(h?.state === 'setup' || h?.state === 'error' || connector.settings.length > 0) && (
-          <Button size="sm" kind="quiet" className={cn('ml-auto')} onClick={() => go('connections')}>
+        {app.has('connections') && (h?.state === 'setup' || h?.state === 'error' || connector.settings.length > 0) && (
+          <Button size="sm" kind="quiet" className={cn('ml-auto')} onClick={() => app.go('connections')}>
             Settings
           </Button>
         )}
       </div>
     </Panel>
+  );
+}
+
+/** Time, tag and what happened, one entry per line. */
+export function Feed({ entries, compact = false }: { entries: LogEntry[]; compact?: boolean }) {
+  if (!entries.length) return <EmptyState text="No activity yet." />;
+  return (
+    <ol className="m-0 list-none p-0">
+      {entries.map((e, i) => (
+        <li key={`${e.when}-${i}`} className={cn('grid items-baseline gap-x-3 border-t border-line py-2.5 text-[13px]', compact ? 'grid-cols-[46px_1fr]' : 'grid-cols-[140px_46px_1fr]', i === 0 && !compact && 'border-t-0')}>
+          {!compact && <time className="text-xs text-ink-3 tabular-nums">{e.when}</time>}
+          <Tag>{e.mod}</Tag>
+          <span className="text-pretty">
+            {e.text}
+            {compact && <time className="ml-2 text-xs text-ink-3 tabular-nums">{shortDate(e.when.slice(0, 10))}</time>}
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }

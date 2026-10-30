@@ -1,14 +1,14 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import {
-  count, ID_STATUSES, idDraftOf, idOf, idsNewestFirst, issueID, newID, queuedForPrinting, recordsOf, setIDStatus, shortDate, toneOf,
-  withEmployee, type IDRecord,
+  count, ID_STATUSES, idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting,
+  recordsOf, setIDStatus, shortDate, toneOf, withEmployee, type IDRecord,
 } from '@keystone/core';
-import { useDraft, useKeystone, usePhoto } from '../app/context';
-import type { ModuleDef } from '../app/registry';
-import { IDCardSheet } from '../documents/Paper';
-import { printElement, savePdf } from '../documents/output';
-import { FormCard, Workspace } from './shared';
+import { useDraft, useKeystone, useModuleApp, usePhoto } from '../../app/context';
+import type { ModuleDef } from '../../app/registry';
+import { IDCardSheet } from './IDCard';
+import { printElement, savePdf } from '../../app/output';
+import { FormCard, Workspace } from '../../app/kit';
 
 /** The select's value for "no directory record"; Base UI treats an empty value as unselected. */
 const MANUAL = 'manual';
@@ -24,9 +24,13 @@ async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
+const DRAFT = 'id-maker.draft';
+
 function IDMaker() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
-  const [draft, setDraft] = useDraft('id', () => newID(state, ctx));
+  const { state, ctx, run, platform, notify, store, registry } = useKeystone();
+  const app = useModuleApp();
+  const peopleSource = registry.connectors.find((c) => c.people);
+  const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const photo = usePhoto(draft.photo);
@@ -108,7 +112,7 @@ function IDMaker() {
           >
             <FieldRow>
               <Field label="ID No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
-              <Field label="Employee" hint={employees.some((e) => e.links) ? undefined : 'Import people from the attendance tracker in Connections.'}>
+              <Field label="Employee" hint={!employees.some((e) => e.links) && peopleSource && (app.has('home') || app.has('connections')) ? `Bring people in from ${peopleSource.name} on ${app.has('home') ? 'Home' : 'Connections'}.` : undefined}>
                 <SelectInput value={draft.emp || MANUAL} onChange={(emp) => setDraft(withEmployee(state, draft, emp === MANUAL ? '' : emp))} options={[{ value: MANUAL, label: 'Type details by hand' }, ...employees.map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))]} />
               </Field>
             </FieldRow>
@@ -127,7 +131,7 @@ function IDMaker() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <Button size="sm" onClick={choosePhoto}>{draft.photo ? 'Replace photo…' : 'Choose photo…'}</Button>
                 {draft.photo && <Button size="sm" kind="quiet" onClick={() => setDraft({ ...draft, photo: undefined })}>Remove</Button>}
-                <span className="text-xs text-ink-2">Cropped square from the centre. People imported from the attendance tracker bring their photo.</span>
+                <span className="text-xs text-ink-2">Cropped square from the centre.{peopleSource ? ` People imported from ${peopleSource.name} bring their photo.` : ''}</span>
               </div>
             </div>
             <FieldRow>
@@ -151,5 +155,16 @@ export const idMakerModule: ModuleDef = {
   order: 4,
   onHome: true,
   stat: (s) => ['Queued for printing', String(queuedForPrinting(s).length)],
+  figure: idFigure,
+  finding: idFinding,
+  waiting: idWaiting,
+  openWaiting: (no, app) => {
+    const i = app.state.ids.find((x) => x.no === no);
+    if (i) app.setDraft(DRAFT, idDraftOf(i));
+    app.go('id-maker');
+  },
+  create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go('id-maker'); } },
+  logTags: { ID: 'IDs' },
+  onOpen: markExpired,
   Screen: IDMaker,
 };

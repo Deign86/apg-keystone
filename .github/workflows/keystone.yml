@@ -22,8 +22,11 @@ jobs:
       - run: npm ci
       - name: Generated theme matches shared/design/tokens.json
         run: npm run sync -- --check
+      - name: Parts stay independent (no module, connector or domain imports another)
+        run: npm run check:boundaries
       - run: npm run typecheck
-      - run: npm test
+      - name: Tests, including removing each module and connector in turn
+        run: npm test
       - name: Taste Skill lint (app rules)
         run: node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src
       - name: Linux libraries for the Tauri shell

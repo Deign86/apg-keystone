@@ -1,19 +1,22 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import {
-  count, newStatement, outstanding, outstandingTotal, overdue, peso, recordOf, recordsOf, saveStatement, setStatementStatus,
-  shortDate, STATEMENT_STATUSES, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, toneOf, withClient, type Statement,
+  billingFigure, billingFinding, billingWaiting, count, markOverdue, newStatement, outstanding, outstandingTotal, overdue, peso,
+  recordOf, recordsOf, saveStatement, setStatementStatus, shortDate, STATEMENT_STATUSES, statementDraftOf, statementOf,
+  statementsNewestFirst, statementTotals, toneOf, withClient, type Statement,
 } from '@keystone/core';
-import { useDraft, useKeystone } from '../app/context';
-import type { ModuleDef } from '../app/registry';
-import { StatementPaper } from '../documents/Paper';
-import { printElement, savePdf } from '../documents/output';
-import { FormCard, LineEditor, Workspace } from './shared';
+import { useDraft, useKeystone } from '../../app/context';
+import type { ModuleDef } from '../../app/registry';
+import { StatementPaper } from './StatementPaper';
+import { printElement, savePdf } from '../../app/output';
+import { FormCard, LineEditor, Workspace } from '../../app/kit';
+
+const DRAFT = 'billing.draft';
 
 function Billing() {
   const { state, ctx, run, platform, notify, store } = useKeystone();
   const confirm = useConfirm();
-  const [draft, setDraft] = useDraft('bs', () => newStatement(state, ctx));
+  const [draft, setDraft] = useDraft(DRAFT, () => newStatement(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.bs.find((b) => b.no === draft.editing) : undefined;
@@ -121,5 +124,16 @@ export const billingModule: ModuleDef = {
   order: 3,
   onHome: true,
   stat: (s) => ['Outstanding', peso(outstandingTotal(s))],
+  figure: billingFigure,
+  finding: billingFinding,
+  waiting: billingWaiting,
+  openWaiting: (no, app) => {
+    const b = app.state.bs.find((x) => x.no === no);
+    if (b) app.setDraft(DRAFT, statementDraftOf(b, app.ctx));
+    app.go('billing');
+  },
+  create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go('billing'); } },
+  logTags: { BS: 'Billing' },
+  onOpen: markOverdue,
   Screen: Billing,
 };

@@ -1,10 +1,10 @@
 import { KeyBadge, SectionLabel } from '@keystone/ui';
 import logo from '@keystone/ui/logo.png';
 import { useEffect, useState } from 'react';
-import { clockTime, finding, greeting, weekdayLong } from '@keystone/core';
-import { useAllConnectorStatuses, useKeystone } from '../app/context';
-import type { ModuleDef } from '../app/registry';
-import { ConnectorCard } from './shared';
+import { clockTime, greeting, topFinding, weekdayLong } from '@keystone/core';
+import { useAllConnectorStatuses, useKeystone } from '../../app/context';
+import { ConnectorCard } from '../../app/kit';
+import type { ModuleDef } from '../../app/registry';
 
 function useNow() {
   const [now, setNow] = useState(() => new Date());
@@ -50,7 +50,7 @@ function Home() {
           <img src={logo} alt="Alpha Premier phoenix" className="size-16 object-contain" />
         </div>
         <h1 className="m-0 font-display text-[clamp(34px,5vw,58px)] leading-tight font-semibold">{greeting(now)}</h1>
-        <p className="mx-auto mt-3 mb-0 max-w-[60ch] font-semibold text-gold">{finding(state)}</p>
+        <p className="mx-auto mt-3 mb-0 max-w-[60ch] font-semibold text-gold">{topFinding(registry.modules.map((m) => m.finding?.(state, ctx)))}</p>
       </div>
 
       <h2 className="sr-only">Systems</h2>
@@ -81,6 +81,7 @@ function Home() {
         })}
       </ul>
 
+      {registry.connectors.length > 0 && <>
       <div className="mt-8 mb-3 flex flex-wrap items-baseline justify-between gap-3 border-t border-line pt-5">
         <SectionLabel>Connected systems</SectionLabel>
         <p className="m-0 text-[12.5px] text-ink-2">The other APG apps, live. Each keeps running on its own.</p>
@@ -88,6 +89,7 @@ function Home() {
       <div className="grid items-start gap-4 min-[900px]:grid-cols-2">
         {registry.connectors.map((c) => <ConnectorCard key={c.id} connector={c} />)}
       </div>
+      </>}
     </div>
   );
 }

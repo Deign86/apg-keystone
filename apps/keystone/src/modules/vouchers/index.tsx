@@ -2,18 +2,22 @@ import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sec
 import { useCallback, useRef, useState } from 'react';
 import {
   amountInWords, awaitingApproval, count, newVoucher, payees, peso, recordOf, saveVoucher, setVoucherStatus, shortDate,
-  sumCentavos, toneOf, VOUCHER_STATUSES, voucherDraftOf, voucherOf, vouchersNewestFirst, voucherTotal, type Voucher,
+  sumCentavos, toneOf, VOUCHER_STATUSES, voucherDraftOf, voucherFigure, voucherFinding, voucherOf, vouchersNewestFirst,
+  voucherTotal, voucherWaiting, type Voucher,
 } from '@keystone/core';
-import { useDraft, useKeystone } from '../app/context';
-import type { ModuleDef } from '../app/registry';
-import { VoucherPaper } from '../documents/Paper';
-import { printElement, savePdf } from '../documents/output';
-import { FormCard, LineEditor, Workspace } from './shared';
+import { useDraft, useKeystone } from '../../app/context';
+import type { ModuleDef } from '../../app/registry';
+import { VoucherPaper } from './VoucherPaper';
+import { printElement, savePdf } from '../../app/output';
+import { FormCard, LineEditor, Workspace } from '../../app/kit';
+
+/** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
+const DRAFT = 'vouchers.draft';
 
 function Vouchers() {
   const { state, ctx, run, platform, notify, store } = useKeystone();
   const confirm = useConfirm();
-  const [draft, setDraft] = useDraft('cv', () => newVoucher(state, ctx));
+  const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const ref = ctx.seed.reference;
@@ -120,5 +124,15 @@ export const vouchersModule: ModuleDef = {
   order: 2,
   onHome: true,
   stat: (s) => ['Awaiting approval', String(awaitingApproval(s).length)],
+  figure: voucherFigure,
+  finding: voucherFinding,
+  waiting: voucherWaiting,
+  openWaiting: (no, app) => {
+    const v = app.state.cv.find((x) => x.no === no);
+    if (v) app.setDraft(DRAFT, voucherDraftOf(v));
+    app.go('vouchers');
+  },
+  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx)); app.go('vouchers'); } },
+  logTags: { CV: 'Vouchers' },
   Screen: Vouchers,
 };

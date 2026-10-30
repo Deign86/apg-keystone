@@ -1,5 +1,4 @@
-import type { Figure } from './overview';
-import type { ExternalPerson } from './terminal';
+import type { Figure } from './insight';
 
 // The contract every connected system implements. A connector is a plain object that
 // declares what it can do; Keystone discovers its abilities from the fields present and
@@ -105,6 +104,18 @@ export interface ConnectorAction {
   run(env: ConnectorEnv): Promise<string>;
 }
 
+/** A person as another system knows them. */
+export interface ExternalPerson {
+  externalId: string;
+  name: string;
+  position?: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  /** A photo already saved in the app's photo folder. */
+  photo?: string;
+}
+
 /** A photo handed back by a connector, keyed by the person's id in that system. */
 export interface ExternalPhoto {
   externalId: string;
@@ -123,6 +134,8 @@ export interface Connector {
   name: string;
   /** One line on what the system is. */
   about: string;
+  /** Up to four capitals marking records linked to this system ("RFID"). */
+  tag?: string;
   platforms: PlatformName[];
   settings: SettingField[];
   /** Is it there and usable right now? Called on open and every minute. */

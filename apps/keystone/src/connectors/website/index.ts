@@ -10,6 +10,7 @@ import { WebsiteInbox } from './WebsiteInbox';
 export const websiteConnector: Connector = {
   id: 'website',
   name: 'APG Website',
+  tag: 'WEB',
   about: 'alphapremiergroup.com and its admin portal: inquiries, payments reported online, job applicants.',
   platforms: ['macos', 'windows', 'linux'],
   refreshSeconds: 300,
@@ -85,6 +86,8 @@ export const websitePlugin: ConnectorPlugin = {
       section: 'Connected · alphapremiergroup.com',
       blurb: 'Payments clients report online, matched to statements, and the latest inquiries.',
       order: 7,
+      // Matching payments needs statements; without the billing module this screen is left out.
+      requires: ['billing'],
       Screen: WebsiteInbox,
     },
   ],

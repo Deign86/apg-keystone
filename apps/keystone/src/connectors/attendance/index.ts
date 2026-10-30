@@ -1,6 +1,6 @@
 import { count, type Connector, type ConnectorEnv, type Figure } from '@keystone/core';
 import type { ConnectorPlugin } from '../../app/registry';
-import { loadSql } from '../../lib/sql';
+import { loadSql } from './sql';
 import { readAttendanceBackup } from './backup';
 
 // Alpha Premier Attendance (alpha-premier-attendance): the RFID kiosk at the front desk.
@@ -83,6 +83,7 @@ async function newestBackup(env: ConnectorEnv): Promise<string | null> {
 export const attendanceConnector: Connector = {
   id: 'attendance',
   name: 'Attendance Tracker',
+  tag: 'RFID',
   about: 'The RFID time-in kiosk at the front desk, with payroll PDFs and the bathroom key log.',
   platforms: ['windows', 'macos', 'linux', 'web'],
   refreshSeconds: 30,

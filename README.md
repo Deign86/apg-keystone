@@ -8,6 +8,8 @@ an Activity Log, and it connects to the other APG systems:
 - **The website:** new hires, payments reported online, inquiries.
 
 It is one Tauri 2 + React + TypeScript codebase for macOS and Windows: the same stack as the attendance tracker.
+It is **modular-first**: every screen and every connected system can be taken out without breaking the rest, and CI
+proves it on every push. Agents and co-developers start with [`AGENTS.md`](AGENTS.md).
 
 ```
 apps/keystone/   the app: screens (src/modules), connected systems (src/connectors), native side (src-tauri)
@@ -15,8 +17,9 @@ packages/core/   every rule, tested: numbering, VAT/EWT, amount in words, saving
 packages/ui/     the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
 shared/          tokens, fonts, logo, sample data
 prototype/       the original single-page web prototype (2026-10-27), kept for reference
-docs/            ARCHITECTURE.md (how to add a screen or a system), DESIGN.md (the look),
+docs/            MODULARITY.md (the contracts), ARCHITECTURE.md (how it fits), DESIGN.md (the look),
                  ATTENDANCE-INTEGRATION.md (one open decision)
+AGENTS.md        the rules for anyone changing Keystone (CLAUDE.md points here)
 ```
 
 ## Get the app
@@ -37,13 +40,13 @@ Needs Node 22 and Rust (stable). On Linux it also needs the WebKitGTK libraries 
 npm install
 npm run desktop     # the desktop app, with hot reload
 npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (connectors that need the desktop say so)
-npm test            # core rules + connectors and modularity
-npm run typecheck
-npm run lint:taste  # Taste Skill app-screen lint
+npm run check       # everything CI checks: theme in sync, boundaries, typecheck, tests, Taste Skill lint
+npm test            # core rules, connectors, and the removal test (each part taken out in turn)
 npm run build       # installers for this OS into apps/keystone/src-tauri/target/release/bundle
 ```
 
-Adding a screen or a connected system is one file plus one line; see `docs/ARCHITECTURE.md`.
+Adding or removing a screen or a connected system is one folder plus one line; see `AGENTS.md` and the README in
+`apps/keystone/src/modules/` or `apps/keystone/src/connectors/`.
 
 ## Setting up the connections
 

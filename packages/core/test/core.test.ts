@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, applyDueDates, bundledSeed, editText, finding, importEmployees, issueID, lineDraft,
-  longDate, newDirectoryDraft, newID, newStatement, newVoucher, nextCode, nextIDNo, nextNumber, nextStatementNo,
-  nextVoucherNo, overviewFigures, parseAmount, parseState, payees, peso, percent, recordPayment, removeDirectoryRecord,
+  addDays, addYears, amountInWords, billingFigure, billingFinding, billingWaiting, bundledSeed, directoryFigure, editText,
+  idFigure, idFinding, importEmployees, issueID, lineDraft, longDate, markExpired, markOverdue, newDirectoryDraft, newID,
+  newStatement, newVoucher, nextCode, nextIDNo, nextNumber, nextStatementNo, nextVoucherNo, parseAmount, parseState, payees,
+  peso, percent, recordPayment, removeDirectoryRecord, topFinding, voucherFigure, voucherFinding, voucherWaiting,
   saveDirectoryRecord, saveStatement, saveVoucher, setVoucherStatus, shortDate, statementTotals, toCentavos, usedBy,
   validateConnector, verificationCells, voucherDraftOf, withClient, withDeadline, withEmployee, type Ctx,
 } from '../src';
@@ -180,19 +181,32 @@ describe('terminal', () => {
     expect(() => recordPayment(r.state, 'BS-2026-0087', p, ctx)).toThrow(/already paid/);
   });
 
-  it('marks overdue statements on open', () => {
-    const s = applyDueDates(state(), ctx);
+  it('marks overdue statements and expired cards on open', () => {
+    const s = markOverdue(state(), ctx);
     expect(s.bs.find((b) => b.no === 'BS-2026-0088')?.status).toBe('Sent'); // due Nov 5
-    const late = applyDueDates(state(), { ...ctx, now: () => new Date(2026, 10, 10) });
+    const late = markOverdue(state(), { ...ctx, now: () => new Date(2026, 10, 10) });
     expect(late.bs.find((b) => b.no === 'BS-2026-0088')?.status).toBe('Overdue');
+    expect(late.log[0].text).toBe('BS-2026-0088 marked overdue.');
+    const expired = markExpired(state(), { ...ctx, now: () => new Date(2027, 8, 5) });
+    expect(expired.ids.filter((i) => i.status === 'Expired').map((i) => i.no)).toEqual(['APG-2026-0028']);
   });
 
-  it('summarises the books', () => {
-    const f = overviewFigures(state(), ctx);
-    expect(f[0]).toMatchObject({ value: '1', caption: '₱35,000.00 pending signature' });
-    expect(f[1]).toMatchObject({ value: '₱677,627.50', caption: '2 statements open · 1 overdue' });
-    expect(f[2].value).toBe('1');
-    expect(finding(state())).toBe('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026.');
+  it('each domain reports its own figure, finding and waiting items', () => {
+    const s = state();
+    expect(voucherFigure(s)).toMatchObject({ value: '1', caption: '₱35,000.00 pending signature' });
+    expect(billingFigure(s)).toMatchObject({ value: '₱677,627.50', caption: '2 statements open · 1 overdue', lead: true });
+    expect(idFigure(s, ctx).value).toBe('1');
+    expect(directoryFigure(s).caption).toBe('4 vendors · 3 clients · 4 employees');
+    expect(voucherWaiting(s).map((w) => w.no)).toEqual(['CV-2026-0141']);
+    expect(billingWaiting(s).map((w) => w.no)).toEqual(['BS-2026-0087', 'BS-2026-0088']);
+  });
+
+  it('the finding is the most urgent thing any installed domain reports', () => {
+    const s = state();
+    expect(topFinding([voucherFinding(s), billingFinding(s), idFinding(s)])).toBe('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026.');
+    // Without billing installed, the vouchers finding leads.
+    expect(topFinding([voucherFinding(s), idFinding(s)])).toBe('1 voucher worth ₱35,000.00 waits for approval.');
+    expect(topFinding([])).toBe('Nothing is waiting on you.');
   });
 
   it('reads backups and refuses other files', () => {

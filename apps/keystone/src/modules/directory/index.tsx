@@ -1,11 +1,11 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column } from '@keystone/ui';
 import { useState } from 'react';
 import {
-  count, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
+  count, directoryDraftOf, directoryFigure, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
   type DirectoryDraft, type DirectoryRecord, type RecordType,
 } from '@keystone/core';
-import { useKeystone } from '../app/context';
-import type { ModuleDef } from '../app/registry';
+import { useKeystone } from '../../app/context';
+import type { ModuleDef } from '../../app/registry';
 
 function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => void }) {
   const { state, run } = useKeystone();
@@ -78,7 +78,7 @@ function Directory() {
         return used.length || linked.length ? (
           <span className="flex flex-wrap gap-1" title={linked.length ? `Linked to ${linked.map(sourceName).join(', ')}` : undefined}>
             {used.map((u) => <Tag key={u}>{u}</Tag>)}
-            {linked.map((l) => <Tag key={l}>{l === 'attendance' ? 'RFID' : l === 'website' ? 'WEB' : l.slice(0, 3).toUpperCase()}</Tag>)}
+            {linked.map((l) => <Tag key={l}>{connections.get(l)?.tag ?? l.slice(0, 3).toUpperCase()}</Tag>)}
           </span>
         ) : <span className="text-ink-3">—</span>;
       },
@@ -151,5 +151,7 @@ export const directoryModule: ModuleDef = {
   order: 5,
   onHome: true,
   stat: (s) => ['Records', String(s.dir.length)],
+  figure: directoryFigure,
+  logTags: { DIR: 'Directory' },
   Screen: Directory,
 };

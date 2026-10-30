@@ -15,7 +15,9 @@
     "build": "npm run sync -- --check && cd apps/keystone && tauri build",
     "typecheck": "npm run typecheck -w packages/core && npm run typecheck -w packages/ui && npm run typecheck -w apps/keystone",
     "test": "npm test -w packages/core && npm test -w apps/keystone",
-    "lint:taste": "node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src"
+    "lint:taste": "node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check": "npm run sync -- --check && npm run check:boundaries && npm run typecheck && npm test && npm run lint:taste"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.12.4"

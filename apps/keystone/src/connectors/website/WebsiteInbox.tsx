@@ -4,7 +4,7 @@ import {
   count, newDirectoryDraft, outstanding, peso, recordOf, recordPayment, saveDirectoryRecord, shortDate, statementTotals, toCentavos,
   type Statement,
 } from '@keystone/core';
-import { useConnectorStatus, useKeystone } from '../../app/context';
+import { useConnectorStatus, useKeystone, useModuleApp } from '../../app/context';
 import { paymentAmount, websiteApi, type Inquiry } from './api';
 
 type Load = { state: 'loading' } | { state: 'ready'; payments: Inquiry[]; inquiries: Inquiry[] } | { state: 'failed'; reason: string };
@@ -21,7 +21,8 @@ function candidates(open: Statement[], p: Inquiry, name: (code: string) => strin
 }
 
 export function WebsiteInbox() {
-  const { state, connections, run, go } = useKeystone();
+  const { state, connections, run } = useKeystone();
+  const app = useModuleApp();
   const connector = connections.get('website')!;
   const health = useConnectorStatus('website').health;
   const [load, setLoad] = useState<Load>({ state: 'loading' });
@@ -98,7 +99,7 @@ export function WebsiteInbox() {
     return (
       <>
         {header}
-        <Panel><EmptyState text={health?.detail ?? 'Connecting to the website…'} action={<Button size="sm" kind="primary" onClick={() => go('connections')}>Set up the website</Button>} /></Panel>
+        <Panel><EmptyState text={health?.detail ?? 'Connecting to the website…'} action={app.has('connections') ? <Button size="sm" kind="primary" onClick={() => app.go('connections')}>Set up the website</Button> : undefined} /></Panel>
       </>
     );
   }

@@ -36,7 +36,7 @@ function Rail() {
   const mod = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+';
   return (
     <nav aria-label="Keystone" className="flex h-dvh w-[var(--size-rail)] shrink-0 flex-col gap-6 border-r border-line bg-bg py-5 pr-3.5 pl-4">
-      <button type="button" onClick={() => go('home')} className="flex items-center gap-2.5 rounded-control text-left">
+      <button type="button" onClick={() => registry.modules[0] && go(registry.modules[0].id)} className="flex items-center gap-2.5 rounded-control text-left">
         <img src={logo} alt="" className="size-[38px] shrink-0 object-contain" />
         <span className="min-w-0">
           <span className="block font-display text-[11px] leading-tight font-bold text-ink">
@@ -108,11 +108,15 @@ export function Shell() {
     <div className="flex h-dvh overflow-hidden">
       <Rail />
       <main id="main" className="min-w-0 flex-1 overflow-y-auto">
-        <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-8 pt-7 pb-14 motion-safe:animate-[fade-in_180ms_ease-out]">
-          <ModuleBoundary module={active}>
-            <active.Screen />
-          </ModuleBoundary>
-        </div>
+        {active ? (
+          <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-8 pt-7 pb-14 motion-safe:animate-[fade-in_180ms_ease-out]">
+            <ModuleBoundary module={active}>
+              <active.Screen />
+            </ModuleBoundary>
+          </div>
+        ) : (
+          <p className="m-8 text-ink-2">No screens are installed. Add a module to apps/keystone/src/modules/index.ts.</p>
+        )}
       </main>
     </div>
   );

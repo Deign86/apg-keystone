@@ -1,8 +1,8 @@
 import { Button, Checkbox, Field, Panel, ScreenHeader, SectionLabel, StatusPill, TextInput, useConfirm } from '@keystone/ui';
 import { useState } from 'react';
 import { bundledSeed, count, localDate, parseState, type Connector } from '@keystone/core';
-import { useConnectorStatus, useKeystone } from '../app/context';
-import type { ModuleDef } from '../app/registry';
+import { useConnectorStatus, useImportPeople, useKeystone } from '../../app/context';
+import type { ModuleDef } from '../../app/registry';
 
 /** A connector's settings form, drawn from the fields it declares. */
 function ConnectorSettings({ connector }: { connector: Connector }) {
@@ -11,6 +11,7 @@ function ConnectorSettings({ connector }: { connector: Connector }) {
   const [values, setValues] = useState(() => connections.settingsOf(connector));
   const [secrets, setSecrets] = useState<Record<string, string | null>>({});
   const [busy, setBusy] = useState(false);
+  const importPeople = useImportPeople();
   const h = status.health;
 
   const save = async () => {
@@ -59,6 +60,7 @@ function ConnectorSettings({ connector }: { connector: Connector }) {
             ),
           )}
           <div className="flex justify-end gap-2 border-t border-line pt-3">
+            {connector.people && <Button className="mr-auto" disabled={busy || h?.state === 'unsupported'} onClick={() => { setBusy(true); void importPeople(connector).finally(() => setBusy(false)); }}>{connector.people.label}</Button>}
             <Button disabled={busy} onClick={() => void connections.refresh(connector)}>Test again</Button>
             <Button kind="primary" type="submit" disabled={busy}>{busy ? 'Checking…' : 'Save and connect'}</Button>
           </div>
@@ -143,7 +145,7 @@ export const connectionsModule: ModuleDef = {
   id: 'connections',
   title: 'Connections',
   section: 'Settings',
-  blurb: '',
+  blurb: 'Settings for each connected system, and backing up your data.',
   order: 90,
   Screen: Connections,
 };

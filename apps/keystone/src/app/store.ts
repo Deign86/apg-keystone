@@ -1,6 +1,4 @@
-import {
-  applyDueDates, bundledSeed, KeystoneError, parseState, type Change, type Ctx, type TerminalState,
-} from '@keystone/core';
+import { bundledSeed, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from '../platform';
 
 export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false; error: string };
@@ -22,7 +20,8 @@ export class KeystoneStore {
     this.state = initial;
   }
 
-  static async open(platform: Platform): Promise<KeystoneStore> {
+  /** Loads the saved state, then runs each installed module's housekeeping (overdue, expired). */
+  static async open(platform: Platform, housekeeping: ((s: TerminalState, ctx: Ctx) => TerminalState)[] = []): Promise<KeystoneStore> {
     let state = structuredClone(bundledSeed.state);
     const saved = await platform.loadState().catch(() => null);
     if (saved) {
@@ -34,8 +33,15 @@ export class KeystoneStore {
       }
     }
     const store = new KeystoneStore(platform, state);
-    const dated = applyDueDates(state, store.ctx);
-    if (dated !== state) store.commit(dated);
+    let tidied = state;
+    for (const step of housekeeping) {
+      try {
+        tidied = step(tidied, store.ctx);
+      } catch (e) {
+        console.error('Housekeeping step failed; skipped.', e);
+      }
+    }
+    if (tidied !== state) store.commit(tidied);
     return store;
   }
 
