@@ -31,10 +31,16 @@ export const idDraftOf = (i: IDRecord): IDDraft => ({
   blood: i.blood, iceName: i.iceName, iceNo: i.iceNo, signatory: i.signatory, photo: i.photo,
 });
 
-export const idOf = (d: IDDraft, status: IDStatus = 'For printing'): IDRecord => ({
-  no: d.no, emp: d.emp, name: d.name.trim(), pos: d.pos, dept: d.dept, issued: d.issued, valid: d.valid, blood: d.blood,
-  iceName: d.iceName, iceNo: d.iceNo, signatory: d.signatory, status, ...(d.photo ? { photo: d.photo } : {}),
-});
+export function idOf(d: IDDraft, status: IDStatus = 'For printing'): IDRecord {
+  const id: IDRecord = {
+    no: d.no, emp: d.emp, name: d.name.trim(), pos: d.pos, dept: d.dept, issued: d.issued, valid: d.valid, blood: d.blood,
+    iceName: d.iceName, iceNo: d.iceNo, signatory: d.signatory, status,
+  };
+
+  if (d.photo) id.photo = d.photo;
+
+  return id;
+}
 
 /** Picking an employee fills the card from the directory, photo included. */
 export function withEmployee(s: TerminalState, d: IDDraft, emp: string): IDDraft {
@@ -42,7 +48,11 @@ export function withEmployee(s: TerminalState, d: IDDraft, emp: string): IDDraft
 
   if (!e) return { ...d, emp };
 
-  return { ...d, emp, name: e.name, pos: e.detail, dept: e.dept ?? '', ...(e.photo ? { photo: e.photo } : {}) };
+  const next: IDDraft = { ...d, emp, name: e.name, pos: e.detail, dept: e.dept ?? '' };
+
+  if (e.photo) next.photo = e.photo;
+
+  return next;
 }
 
 export function issueID(s: TerminalState, d: IDDraft, ctx: Ctx, asNew = false): Change<IDRecord> {

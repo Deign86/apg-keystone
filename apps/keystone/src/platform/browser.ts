@@ -20,6 +20,8 @@ function response(r: Response): HttpResponse {
   return {
     status: r.status, ok: r.ok,
     text: () => r.text(),
+    // SAFETY: not checked here. json<T>() is the HTTP layer's contract, as untyped as fetch's
+    // Response.json(): each connector names T for the endpoint it calls.
     json: <T,>() => r.json() as Promise<T>,
     bytes: async () => new Uint8Array(await r.arrayBuffer()),
   };
@@ -84,14 +86,14 @@ export const browserPlatform: Platform = {
     if (value === null) sessionStorage.removeItem(`keystone-secret:${key}`);
     else sessionStorage.setItem(`keystone-secret:${key}`, value);
   },
-  putPhoto: async (name, bytes) => { await photoOp('readwrite', (s) => s.put(new Blob([bytes as BlobPart]), name)); },
+  putPhoto: async (name, bytes) => { await photoOp('readwrite', (s) => s.put(new Blob([bytes.slice()]), name)); },
   photoUrl: async (name) => {
     const blob = await photoOp<Blob | undefined>('readonly', (s) => s.get(name)).catch(() => undefined);
 
     return blob ? URL.createObjectURL(blob) : null;
   },
   saveFile: async (name, bytes) => {
-    const url = URL.createObjectURL(new Blob([bytes as BlobPart]));
+    const url = URL.createObjectURL(new Blob([bytes.slice()]));
     const a = Object.assign(document.createElement('a'), { href: url, download: name });
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);

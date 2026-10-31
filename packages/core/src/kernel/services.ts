@@ -14,6 +14,19 @@ export const SERVICES = {
   statementPayments: 'billing.statement-payments',
 } as const;
 
+/**
+ * Each published name with its contract, so a provider is checked against the contract and
+ * a lookup returns it typed. A new service adds its name to SERVICES and a line here.
+ */
+export interface ServiceContracts {
+  [SERVICES.statementPayments]: StatementPayments;
+}
+
+export type ServiceName = keyof ServiceContracts;
+
+/** What a module offers: some of the published services, each implementing its contract. */
+export type ServiceProviders = { [N in ServiceName]?: ServiceContracts[N] };
+
 export interface Payment {
   /** Pesos received. */
   amount: number;

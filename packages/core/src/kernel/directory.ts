@@ -65,13 +65,26 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
 
   const base: DirectoryRecord = {
     code: original?.code ?? nextCode(s, d.type), type: d.type, name, tin: clean(d.tin), detail: clean(d.detail),
-    ...(d.type === 'Employee' && clean(d.dept) ? { dept: clean(d.dept) } : {}),
-    ...(d.type === 'Client' ? { vat: d.vat, ewt: d.ewt } : {}),
-    ...(clean(d.email) ? { email: clean(d.email) } : {}),
-    ...(clean(d.phone) ? { phone: clean(d.phone) } : {}),
-    ...(original?.links ? { links: original.links } : {}),
-    ...(original?.photo ? { photo: original.photo } : {}),
   };
+
+  const dept = clean(d.dept);
+  const email = clean(d.email);
+  const phone = clean(d.phone);
+
+  if (d.type === 'Employee' && dept) base.dept = dept;
+
+  if (d.type === 'Client') {
+    base.vat = d.vat;
+    base.ewt = d.ewt;
+  }
+
+  if (email) base.email = email;
+
+  if (phone) base.phone = phone;
+
+  if (original?.links) base.links = original.links;
+
+  if (original?.photo) base.photo = original.photo;
 
   if (original) {
     return {
@@ -108,7 +121,7 @@ export interface ImportResult { added: DirectoryRecord[]; updated: DirectoryReco
  * linked (or with the same name) is updated, never duplicated, and keeps their code.
  */
 export function importEmployees(s: TerminalState, source: { id: string; name: string }, people: ExternalPerson[], ctx: Ctx): Change<ImportResult> {
-  let dir = [...s.dir];
+  const dir = [...s.dir];
   const result: ImportResult = { added: [], updated: [], unchanged: 0 };
 
   for (const p of people) {
@@ -117,12 +130,19 @@ export function importEmployees(s: TerminalState, source: { id: string; name: st
     if (!name) continue;
     const i = dir.findIndex((d) => d.type === 'Employee' && (d.links?.[source.id] === p.externalId || d.name.toLowerCase() === name.toLowerCase()));
 
-    const fields = {
+    const fields: Pick<DirectoryRecord, 'name' | 'detail' | 'dept' | 'email' | 'phone' | 'photo'> = {
       name, detail: clean(p.position ?? '') || (i >= 0 ? dir[i].detail : ''),
-      ...(clean(p.department ?? '') ? { dept: clean(p.department ?? '') } : {}),
-      ...(p.email ? { email: p.email } : {}), ...(p.phone ? { phone: p.phone } : {}),
-      ...(p.photo ? { photo: p.photo } : {}),
     };
+
+    const dept = clean(p.department ?? '');
+
+    if (dept) fields.dept = dept;
+
+    if (p.email) fields.email = p.email;
+
+    if (p.phone) fields.phone = p.phone;
+
+    if (p.photo) fields.photo = p.photo;
 
     if (i >= 0) {
       const merged: DirectoryRecord = { ...dir[i], ...fields, links: { ...dir[i].links, [source.id]: p.externalId } };
@@ -133,7 +153,7 @@ export function importEmployees(s: TerminalState, source: { id: string; name: st
       result.updated.push(merged);
     } else {
       const rec: DirectoryRecord = { code: nextCode({ ...s, dir }, 'Employee'), type: 'Employee', tin: '', ...fields, links: { [source.id]: p.externalId } };
-      dir = [...dir, rec];
+      dir.push(rec);
       result.added.push(rec);
     }
   }

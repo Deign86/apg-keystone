@@ -86,7 +86,7 @@ function DataPanel() {
     if (!file) return;
 
     try {
-      const next = parseState(JSON.parse(new TextDecoder().decode(file.bytes)));
+      const next = parseState(new TextDecoder().decode(file.bytes));
       confirm({
         title: `Restore ${file.name}?`,
         body: `It holds ${count(next.cv.length, 'voucher')}, ${count(next.bs.length, 'statement')}, ${count(next.ids.length, 'ID')} and ${count(next.dir.length, 'directory record')}. Everything Keystone holds now is replaced.`,

@@ -107,13 +107,13 @@ export function ConnectorCard({ connector, compact = false }: { connector: Conne
   const h = status.health;
   const tone = h ? HEALTH[h.state] : { label: 'Checking', tone: 'neutral' as const };
 
-  const act = async (id: string, work: () => Promise<string | boolean | void>) => {
+  const act = async (id: string, work: () => Promise<string | void>) => {
     setBusy(id);
 
     try {
       const r = await work();
 
-      if (typeof r === 'string') notify(r);
+      if (r) notify(r);
     } catch (e) {
       notify(e instanceof Error ? e.message : String(e), 'error');
     } finally {
@@ -156,7 +156,7 @@ export function ConnectorCard({ connector, compact = false }: { connector: Conne
           </Button>
         ))}
         {connector.people && (
-          <Button size="sm" disabled={busy !== null || h?.state === 'unsupported'} onClick={() => act('people', () => importPeople(connector))}>
+          <Button size="sm" disabled={busy !== null || h?.state === 'unsupported'} onClick={() => act('people', async () => { await importPeople(connector); })}>
             {busy === 'people' ? 'Importing…' : connector.people.label}
           </Button>
         )}

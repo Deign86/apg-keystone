@@ -63,11 +63,12 @@ COMPOSITION (the only place that knows the full list)
    - A screen that collects these (Overview, Home, Activity) reads them from the registry. It never names another
      module.
 4. **When a part needs another part's behaviour, it asks for a service.**
-   - The contract (types and the published name) lives in `packages/core/src/kernel/services.ts` under `SERVICES`.
+   - The contract (types and the published name) lives in `packages/core/src/kernel/services.ts`: the name under
+     `SERVICES`, and the name → contract pair in `ServiceContracts`.
    - The provider offers it on its `ModuleDef`: `provides: { [SERVICES.statementPayments]: statementPayments }`.
-   - The consumer asks by name: `const desk = useModuleApp().service<StatementPayments>(SERVICES.statementPayments)`
-     and **works without it** (`desk` is `undefined` when the provider is not installed). One provider per service;
-     the registry refuses a second.
+   - The consumer asks by name: `const desk = useModuleApp().service(SERVICES.statementPayments)`, typed from
+     `ServiceContracts`, and **works without it** (`desk` is `undefined` when the provider is not installed). One
+     provider per service; the registry refuses a second.
 5. **Jumping to another screen is always guarded.** Use `useModuleApp()`: `app.has('connections') && app.go('connections')`.
    Never assume a module is installed.
 6. **A hard dependency is declared, not assumed.** Prefer a service and degrade. If a module truly cannot work without
@@ -106,8 +107,9 @@ automatically.**
   `npm install`.
 - **A connected system:** the same with `packages/connectors/README.md` › Template, `apps/keystone/src/connectors.ts`
   and `@keystone/connector-<id>`.
-- **Something another part needs from yours:** publish a service. Add its name to `SERVICES` and its types to
-  `packages/core/src/kernel/services.ts`, provide it from your `ModuleDef`, and test both sides.
+- **Something another part needs from yours:** publish a service. Add its name to `SERVICES`, its types and its
+  `ServiceContracts` line to `packages/core/src/kernel/services.ts`, provide it from your `ModuleDef`, and test both
+  sides.
 - Write the package's `README.md` with the same headings as the existing ones: Owns, Contributes, Needs,
   Removing it.
 - For a significant change, add an Architecture Decision Record in `docs/adr/`. That means a change to the kernel, a

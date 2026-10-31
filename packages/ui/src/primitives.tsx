@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
@@ -72,7 +72,7 @@ export function ScreenHeader({ eyebrow, title, line, actions }: { eyebrow: strin
 }
 
 /** A card: one tone up from the ground with a 1px line. No shadow. */
-export function Panel({ children, className, as: As = 'section', ...rest }: { children: ReactNode; className?: string; as?: 'section' | 'div' | 'form'; [k: string]: unknown }) {
+export function Panel({ children, className, as: As = 'section', ...rest }: { children: ReactNode; className?: string; as?: 'section' | 'div' | 'form' } & Omit<HTMLAttributes<HTMLElement>, 'children' | 'className'>) {
   return (
     <As className={cn('rounded-card border border-line bg-surface p-[18px]', className)} {...rest}>
       {children}

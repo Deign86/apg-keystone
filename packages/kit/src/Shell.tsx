@@ -5,8 +5,10 @@ import { useKeystone } from './context';
 import type { ModuleDef } from './registry';
 
 /** One module failing to render shows its own error; the rail and every other module keep working. */
-class ModuleBoundary extends Component<{ module: ModuleDef; children: ReactNode }, { error: Error | null }> {
-  state = { error: null as Error | null };
+interface BoundaryState { error: Error | null }
+
+class ModuleBoundary extends Component<{ module: ModuleDef; children: ReactNode }, BoundaryState> {
+  state: BoundaryState = { error: null };
   static getDerivedStateFromError(error: Error) {
     return { error };
   }

@@ -21,7 +21,15 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
     <form className="flex flex-col gap-3.5" onSubmit={(e) => { e.preventDefault(); save(); }}>
       <FieldRow>
         <Field label="Type">
-          <SelectInput value={d.type} onChange={(t) => setD({ ...d, type: t as RecordType, vat: t === 'Client' })} options={RECORD_TYPES.map((t) => ({ value: t, label: t }))} />
+          <SelectInput
+            value={d.type}
+            onChange={(t) => {
+              const type = RECORD_TYPES.find((r) => r === t);
+
+              if (type) setD({ ...d, type, vat: type === 'Client' });
+            }}
+            options={RECORD_TYPES.map((t) => ({ value: t, label: t }))}
+          />
         </Field>
         <Field label="TIN"><TextInput figures placeholder="000-000-000-000" value={d.tin} onChange={(tin) => setD({ ...d, tin })} /></Field>
       </FieldRow>

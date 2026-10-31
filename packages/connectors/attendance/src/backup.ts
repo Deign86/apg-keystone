@@ -61,12 +61,12 @@ export async function readAttendanceBackup(zip: Uint8Array, loadSql: () => Promi
     for (const [userId, fullName, department, status, cardType, designation] of rows) {
       if ((status && status !== 'ACTIVE') || (cardType && cardType !== 'EMPLOYEE')) { skipped++; continue; }
 
-      people.push({
-        externalId: String(userId),
-        name: String(fullName ?? '').trim(),
-        ...(designation ? { position: String(designation) } : {}),
-        ...(department ? { department: String(department) } : {}),
-      });
+      const person: ExternalPerson = { externalId: String(userId), name: String(fullName ?? '').trim() };
+
+      if (designation) person.position = String(designation);
+
+      if (department) person.department = String(department);
+      people.push(person);
     }
 
     const wanted = new Set(people.map((p) => p.externalId.toUpperCase()));
@@ -79,6 +79,7 @@ export async function readAttendanceBackup(zip: Uint8Array, loadSql: () => Promi
       const id = people.find((p) => p.externalId.toUpperCase() === m[1].toUpperCase())?.externalId;
 
       if (!id || !wanted.has(id.toUpperCase())) continue;
+      // SAFETY: PHOTO only matches webp, jpg, jpeg and png (any case), the keys of TYPES once lowercased.
       photos.push({ externalId: id, bytes, type: TYPES[m[2].toLowerCase() as keyof typeof TYPES] });
     }
 

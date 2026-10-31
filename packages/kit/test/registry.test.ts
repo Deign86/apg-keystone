@@ -2,6 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { buildRegistry, findService, type ModuleDef } from '../src/registry';
 import { okConnector } from './fakes';
 
+// Made-up services for these tests, published the way a real one is.
+declare module '@keystone/core' {
+  interface ServiceContracts {
+    'ledger.totals': { total(): number };
+    'bank.balance': { balance(): number };
+    'payroll.runs': { runs(): number };
+  }
+}
+
 const Screen = () => null;
 const mod = (id: string, extra: Partial<ModuleDef> = {}): ModuleDef => ({ id, title: id[0].toUpperCase() + id.slice(1), section: '', blurb: '', order: 0, Screen, ...extra });
 
@@ -30,6 +39,7 @@ describe('registry', () => {
   });
 
   it('a refused connector takes its screens with it', () => {
+    // SAFETY: a deliberately broken connector with no health check; the registry must refuse it.
     const r = buildRegistry([], [{ connector: { ...okConnector('lease'), health: undefined as never }, modules: [mod('lease')] }]);
     expect(r.modules).toEqual([]);
     expect(r.refused.map((x) => x.id)).toEqual(['lease']);
@@ -56,7 +66,7 @@ describe('services', () => {
 
   it('finds the installed provider of a service by name', () => {
     const r = buildRegistry([mod('ledger', { provides: { 'ledger.totals': ledger } }), mod('reports')], []);
-    expect(findService<typeof ledger>(r.modules, 'ledger.totals')?.total()).toBe(42);
+    expect(findService(r.modules, 'ledger.totals')?.total()).toBe(42);
   });
 
   it('tells services apart by name when several are installed', () => {
@@ -85,6 +95,6 @@ describe('services', () => {
 
     expect(r.modules.map((m) => m.id)).toEqual(['ledger']);
     expect(r.refused).toEqual([{ id: 'shadow', reason: 'Shadow offers ledger.totals, which Ledger already provides.' }]);
-    expect(findService<typeof ledger>(r.modules, 'ledger.totals')?.total()).toBe(42);
+    expect(findService(r.modules, 'ledger.totals')?.total()).toBe(42);
   });
 });

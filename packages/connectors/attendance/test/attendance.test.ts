@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { zipSync } from 'fflate';
 import initSqlJs from 'sql.js';
 import { describe, expect, it } from 'vitest';
-import type { ConnectorEnv, HttpResponse, SystemBridge } from '@keystone/core';
+import type { ConnectorEnv, HttpResponse, JsonValue, SystemBridge } from '@keystone/core';
 import { attendanceConnector, attendanceFigures, isLate, kioskBase } from '../src';
 import { readAttendanceBackup } from '../src/backup';
 
@@ -111,6 +111,7 @@ describe('attendance connector', () => {
   });
 });
 
-function response(status: number, body: unknown): HttpResponse {
+function response(status: number, body: JsonValue): HttpResponse {
+  // SAFETY: a fake server. Each test hands it the body the code under test expects as T.
   return { status, ok: status >= 200 && status < 300, text: async () => JSON.stringify(body), json: async <T,>() => body as T, bytes: async () => new Uint8Array() };
 }

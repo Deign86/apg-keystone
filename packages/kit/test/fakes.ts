@@ -1,11 +1,13 @@
-import type { Connector, HttpResponse } from '@keystone/core';
+import type { Connector, HttpResponse, JsonValue } from '@keystone/core';
 import type { Platform } from '../src/platform';
 
 /** A platform held in memory, so the kit's tests need no browser storage and no desktop. */
 export function memoryPlatform(saved: string | null = null) {
+  const settings: Record<string, Record<string, string>> = {};
+
   const files = {
     state: saved,
-    settings: {} as Record<string, Record<string, string>>,
+    settings,
     secrets: new Map<string, string>(),
     writes: 0,
   };
@@ -43,6 +45,7 @@ export const okConnector = (id: string, extra: Partial<Connector> = {}): Connect
   id, name: id, about: '', platforms: ['web'], settings: [], health: async () => ({ state: 'ready', detail: 'fine' }), ...extra,
 });
 
-export function response(status: number, body: unknown): HttpResponse {
+export function response(status: number, body: JsonValue): HttpResponse {
+  // SAFETY: a fake server. Each test hands it the body the code under test expects as T.
   return { status, ok: status >= 200 && status < 300, text: async () => JSON.stringify(body), json: async <T,>() => body as T, bytes: async () => new Uint8Array() };
 }

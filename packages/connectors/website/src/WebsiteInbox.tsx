@@ -1,7 +1,7 @@
 import { Button, EmptyState, Panel, Register, ScreenHeader, SectionLabel, Sheet, StatusPill, type Column } from '@keystone/ui';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  count, newDirectoryDraft, peso, saveDirectoryRecord, SERVICES, shortDate, toCentavos, type OpenStatement, type StatementPayments,
+  count, newDirectoryDraft, peso, saveDirectoryRecord, SERVICES, shortDate, toCentavos, type OpenStatement,
 } from '@keystone/core';
 import { useConnectorStatus, useKeystone, useModuleApp } from '@keystone/kit';
 import { paymentAmount, websiteApi, type Inquiry } from './api';
@@ -25,7 +25,7 @@ export function WebsiteInbox() {
   const { state, connections, run } = useKeystone();
   const app = useModuleApp();
   // Statements belong to the billing module; this screen only reaches them through its service.
-  const desk = app.service<StatementPayments>(SERVICES.statementPayments);
+  const desk = app.service(SERVICES.statementPayments);
   const connector = connections.get('website')!;
   const health = useConnectorStatus('website').health;
   const [load, setLoad] = useState<Load>({ state: 'loading' });

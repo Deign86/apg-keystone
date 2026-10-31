@@ -136,7 +136,7 @@ points to stays protected from deletion even in a build without the vouchers scr
 every version. The rules for it:
 
 - **Additions:** fields added later are optional.
-- **New modules:** a new module stores its data under `state.ext[<module id>]`. `parseState` keeps any `ext` keys a build
+- **New modules:** a new module stores its data (any JSON value) under `state.ext[<module id>]`. `parseState` keeps any `ext` keys a build
   doesn't recognise, so removing a module never deletes its data. Putting the module back finds the data where it was.
 - **Log entries:** an entry written by a module this build doesn't have is still shown, under "Other".
 

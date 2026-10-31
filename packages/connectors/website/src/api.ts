@@ -60,10 +60,9 @@ export class WebsiteApi {
 
     return this.env.http.request(`${this.base}${path}`, {
       method,
-      headers: {
-        Accept: 'application/json',
-        ...(method !== 'GET' ? { Origin: this.base, 'Content-Type': 'application/json' } : {}),
-      },
+      headers: method === 'GET'
+        ? { Accept: 'application/json' }
+        : { Accept: 'application/json', Origin: this.base, 'Content-Type': 'application/json' },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
       timeoutMs: 12000,
     });

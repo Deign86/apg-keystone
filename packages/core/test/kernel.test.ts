@@ -88,8 +88,9 @@ describe('state and numbering', () => {
 
   it('reads backups, keeps unknown module data, refuses other files', () => {
     const withExt = { ...state(), ext: { payroll: { cutoffs: 2 } } };
-    expect(parseState(withExt).ext).toEqual({ payroll: { cutoffs: 2 } });
-    expect(() => parseState({ hello: 1 })).toThrow('That file is not a Keystone backup.');
+    expect(parseState(JSON.stringify(withExt)).ext).toEqual({ payroll: { cutoffs: 2 } });
+    expect(() => parseState('{"hello":1}')).toThrow('That file is not a Keystone backup.');
+    expect(() => parseState('null')).toThrow('That file is not a Keystone backup.');
   });
 
   it('the finding is the highest priority any installed module reports', () => {

@@ -1,6 +1,6 @@
 import { localDate, type ISODate } from './dates';
 import { shortDate, stamp } from './format';
-import type { ModuleTag, Seed, TerminalState } from './schema';
+import type { JsonValue, ModuleTag, Seed, TerminalState } from './schema';
 
 // What every domain builds on: the refusal type, the context a rule runs in, the shape
 // of a change, the activity log, numbering, and loading a saved state. Nothing here
@@ -52,18 +52,32 @@ export interface Editing {
   editing?: string;
 }
 
+/** What a backup must hold to load: the four record lists. The log and module data may be missing. */
+type Backup = Pick<TerminalState, 'dir' | 'cv' | 'bs' | 'ids'> & { log?: TerminalState['log']; ext?: Record<string, JsonValue> };
+
+function isBackup(json: unknown): json is Backup {
+  if (json === null || json === undefined) return false;
+
+  // SAFETY: only reads the four lists, and each one is checked with Array.isArray before
+  // the value is trusted. null and undefined, the only values that cannot be read, are refused above.
+  const x = json as Partial<Backup>;
+
+  return Array.isArray(x.dir) && Array.isArray(x.cv) && Array.isArray(x.bs) && Array.isArray(x.ids);
+}
+
 /**
- * A state from a backup file or an older version, checked enough to load safely.
- * Unknown keys under `ext` (data kept by modules this build does not have) are kept.
+ * A state from a backup file or an older version (the file's text), checked enough to load
+ * safely. Unknown keys under `ext` (data kept by modules this build does not have) are kept.
  */
-export function parseState(json: unknown): TerminalState {
-  const x = json as Partial<TerminalState> | null;
+export function parseState(text: string): TerminalState {
+  const json: unknown = JSON.parse(text);
 
-  if (!x || typeof x !== 'object' || !Array.isArray(x.dir) || !Array.isArray(x.cv) || !Array.isArray(x.bs) || !Array.isArray(x.ids)) {
-    throw new KeystoneError('That file is not a Keystone backup.');
-  }
+  if (!isBackup(json)) throw new KeystoneError('That file is not a Keystone backup.');
+  const state: TerminalState = { dir: json.dir, cv: json.cv, bs: json.bs, ids: json.ids, log: Array.isArray(json.log) ? json.log : [] };
 
-  return { dir: x.dir, cv: x.cv, bs: x.bs, ids: x.ids, log: Array.isArray(x.log) ? x.log : [], ...(x.ext ? { ext: x.ext } : {}) };
+  if (json.ext) state.ext = json.ext;
+
+  return state;
 }
 
 /** The date of the newest log entry, or a dash. */

@@ -26,8 +26,11 @@ export const lineDraftOf = (l: LineItem) => lineDraft({
 
 /** Lines with no description and no amount are dropped, as in the prototype. */
 export function lineItemsOf(drafts: LineDraft[], kind: 'acct' | 'ref'): LineItem[] {
-  return drafts
-    .map((d) => ({ d, c: parseAmount(d.amount) ?? 0 }))
-    .filter(({ d, c }) => d.desc.trim() !== '' || c !== 0)
-    .map(({ d, c }) => (kind === 'acct' ? { desc: d.desc, acct: d.acct, amt: toPesos(c) } : { desc: d.desc, ref: d.ref, amt: toPesos(c) }));
+  return drafts.flatMap((d) => {
+    const c = parseAmount(d.amount) ?? 0;
+
+    if (d.desc.trim() === '' && c === 0) return [];
+
+    return [kind === 'acct' ? { desc: d.desc, acct: d.acct, amt: toPesos(c) } : { desc: d.desc, ref: d.ref, amt: toPesos(c) }];
+  });
 }

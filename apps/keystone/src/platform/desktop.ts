@@ -25,6 +25,8 @@ const http: HttpClient = {
     return {
       status: r.status, ok: r.ok,
       text: () => r.text(),
+      // SAFETY: not checked here. json<T>() is the HTTP layer's contract, as untyped as fetch's
+      // Response.json(): each connector names T for the endpoint it calls.
       json: <T,>() => r.json() as Promise<T>,
       bytes: async () => new Uint8Array(await r.arrayBuffer()),
     };
@@ -58,7 +60,7 @@ export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => 
     try {
       const bytes = await readBytes(await dataPath('photos', name));
 
-      return URL.createObjectURL(new Blob([bytes as BlobPart]));
+      return URL.createObjectURL(new Blob([bytes.slice()]));
     } catch {
       return null;
     }

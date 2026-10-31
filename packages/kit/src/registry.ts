@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import {
-  validateConnector, type Connector, type Ctx, type Figure, type Finding, type TerminalState, type WaitingItem,
+  validateConnector, type Connector, type Ctx, type Figure, type Finding, type ServiceContracts, type ServiceName,
+  type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
 /**
@@ -14,7 +15,7 @@ export interface ModuleApp {
   /** Puts a draft where a module's form will pick it up next time it opens. */
   setDraft<T>(key: string, draft: T): void;
   /** A service another module provides (see SERVICES in @keystone/core), or undefined if none is installed. */
-  service<T>(name: string): T | undefined;
+  service<N extends ServiceName>(name: N): ServiceContracts[N] | undefined;
   state: TerminalState;
   ctx: Ctx;
 }
@@ -57,7 +58,7 @@ export interface ModuleDef {
   /** Housekeeping when Keystone opens (statements past due become Overdue). */
   onOpen?: (state: TerminalState, ctx: Ctx) => TerminalState;
   /** Services this module offers other parts, by published name: { [SERVICES.statementPayments]: impl }. */
-  provides?: Record<string, unknown>;
+  provides?: ServiceProviders;
 }
 
 /** A connected system plus any screens it brings with it. */
@@ -154,9 +155,11 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
 }
 
 /** The provider of a named service among the installed modules, if any. */
-export function findService<T>(modules: ModuleDef[], name: string): T | undefined {
+export function findService<N extends ServiceName>(modules: ModuleDef[], name: N): ServiceContracts[N] | undefined {
   for (const m of modules) {
-    if (m.provides && name in m.provides) return m.provides[name] as T;
+    const provided = m.provides?.[name];
+
+    if (provided) return provided;
   }
 
   return undefined;

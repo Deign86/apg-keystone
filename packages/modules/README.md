@@ -23,8 +23,9 @@ and keeps working, without matching, when billing is not installed.
   third-party library it declares itself. Never on another module or a connector. `npm run check:boundaries` fails
   otherwise.
 - **To show up elsewhere, contribute:** use the fields on `ModuleDef`. Don't edit Overview or Home.
-- **To use another module's behaviour, ask for its service:** `useModuleApp().service<T>(SERVICES.x)`, and handle
-  `undefined`. To offer one, add it to `SERVICES` in core and to your `ModuleDef.provides`.
+- **To use another module's behaviour, ask for its service:** `useModuleApp().service(SERVICES.x)` (typed from
+  `ServiceContracts`), and handle `undefined`. To offer one, add it to `SERVICES` and `ServiceContracts` in core and to
+  your `ModuleDef.provides`.
 - **To reach another screen:** `const app = useModuleApp(); app.has('x') && app.go('x')`.
 - **Rules go in `src/rules.ts`,** as pure functions tested in `test/`. The screen only calls `run(...)`.
 - **Forms:** keep the draft with `useDraft('<id>.draft', …)`, so another screen can prefill it through

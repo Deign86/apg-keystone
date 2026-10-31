@@ -8,7 +8,7 @@ function Pattern({ text }: { text: string }) {
   const n = VERIFICATION_SIZE;
 
   return (
-    <svg viewBox={`0 0 ${n} ${n}`} className="block size-16 rounded-[3px] border-[3px] border-white bg-white" role="img" aria-label="Verification pattern" shapeRendering="crispEdges">
+    <svg viewBox={`0 0 ${n} ${n}`} className="block size-16 rounded-[3px] border-[3px] border-white bg-white [shape-rendering:crispEdges]" role="img" aria-label="Verification pattern">
       {cells.flatMap((row, y) => row.map((dark, x) => (dark ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#111" /> : null)))}
     </svg>
   );

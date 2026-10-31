@@ -1,4 +1,4 @@
-import type { AppLocator, Connector, ConnectorEnv, PlatformName } from '@keystone/core';
+import type { AppLocator, Connector, ConnectorEnv, Health, PlatformName } from '@keystone/core';
 import type { ConnectorPlugin } from '@keystone/kit';
 
 // Alpha Branding Studio (Alpha_Branding): frames listing photos in the official gold
@@ -94,22 +94,26 @@ export const brandingStudioConnector: Connector = {
     const latest = release?.tag_name.replace(/^v/i, '');
 
     if (!app) {
-      return {
-        state: 'setup',
-        detail: `Not installed on this computer${latest ? `; version ${latest} is available` : ''}.`,
-        ...(release ? { update: { version: latest!, url: installerFor(release, env.system.platform) } } : {}),
-      };
+      const missing: Health = { state: 'setup', detail: `Not installed on this computer${latest ? `; version ${latest} is available` : ''}.` };
+
+      if (release) missing.update = { version: latest!, url: installerFor(release, env.system.platform) };
+
+      return missing;
     }
 
     const version = app.version?.replace(/\.0$/, '');
     const behind = release && version && isNewer(release.tag_name, version);
 
-    return {
+    const installed: Health = {
       state: 'ready',
       detail: version ? `Version ${version} installed${behind ? `; ${latest} is out` : ', up to date'}.` : 'Installed.',
-      ...(version ? { version } : {}),
-      ...(behind ? { update: { version: latest!, url: installerFor(release!, env.system.platform) } } : {}),
     };
+
+    if (version) installed.version = version;
+
+    if (behind) installed.update = { version: latest!, url: installerFor(release!, env.system.platform) };
+
+    return installed;
   },
 
   actions: [

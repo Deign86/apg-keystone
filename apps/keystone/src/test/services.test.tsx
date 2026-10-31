@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SERVICES, type HttpResponse, type StatementPayments } from '@keystone/core';
+import { SERVICES, type HttpResponse, type JsonValue } from '@keystone/core';
 import { App, buildRegistry, Connections, findService, KeystoneStore, type Platform } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
@@ -10,7 +10,8 @@ import { browserPlatform } from '../platform/browser';
 // statements that belong to the billing module (module package) through the
 // statement-payments service. Tested end to end, with and without billing installed.
 
-function response(status: number, body: unknown): HttpResponse {
+function response(status: number, body: JsonValue): HttpResponse {
+  // SAFETY: a fake server. Each test hands it the body the code under test expects as T.
   return { status, ok: status >= 200 && status < 300, text: async () => JSON.stringify(body), json: async <T,>() => body as T, bytes: async () => new Uint8Array() };
 }
 
@@ -78,13 +79,13 @@ afterEach(() => {
 describe('website and billing, through the statement-payments service', () => {
   it('billing provides the service the website asks for', () => {
     const r = buildRegistry(builtInModules, plugins);
-    const desk = findService<StatementPayments>(r.modules, SERVICES.statementPayments);
+    const desk = findService(r.modules, SERVICES.statementPayments);
     expect(desk).toBeDefined();
-    expect(typeof desk!.open).toBe('function');
+    expect(desk!.open).toBeTypeOf('function');
   });
 
   it('matches a payment reported online to its statement and marks it paid', async () => {
-    const desk = findService<StatementPayments>(buildRegistry(builtInModules, plugins).modules, SERVICES.statementPayments)!;
+    const desk = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.statementPayments)!;
     const store0 = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null });
     const target = desk.open(store0.state)[0];
     const { platform, archived } = withWebsite(target.amount / 100);

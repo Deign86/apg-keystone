@@ -172,7 +172,7 @@ export function validateConnector(c: Connector, existing: string[]): string | nu
 
   if (!c.name.trim()) return `Connector "${c.id}" has no name.`;
 
-  if (typeof c.health !== 'function') return `Connector "${c.id}" has no health check.`;
+  if (!c.health) return `Connector "${c.id}" has no health check.`;
   const keys = c.settings.map((s) => s.key);
 
   if (new Set(keys).size !== keys.length) return `Connector "${c.id}" repeats a setting key.`;

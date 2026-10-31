@@ -27,5 +27,6 @@ screen.
   show.')`. Never mutate the state you were given.
 - **Time:** comes from `ctx.now()`, never `new Date()`, so tests can pin it (they use 30 Oct 2026, 09:05, Manila).
 - **What belongs here:** only what two or more parts need. Something one module needs belongs in that module.
-- **A new service:** add its name to `SERVICES` and its types to `services.ts`. The provider and the consumer both
+- **A new service:** add its name to `SERVICES`, its types to `services.ts` and a line to `ServiceContracts` (name →
+  contract), so the provider is checked against the contract. The provider and the consumer both
   import only these, never each other.

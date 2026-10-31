@@ -26,4 +26,7 @@ export * from './kernel/directory';
 // Rules for each area live in that area's module package (packages/modules/*), not here.
 
 /** The sample data (generated from shared/data/seed.json by `npm run sync`): company details, reference lists and the sample records. */
-export const bundledSeed = seedJson as unknown as Seed;
+// SAFETY: seed.json is generated from shared/data/seed.json by `npm run sync`, and CI fails
+// when it is stale. A JSON import widens literals such as 'Vendor' to string, so TypeScript
+// needs this one-step assertion; it still rejects the import if the shapes stop overlapping.
+export const bundledSeed = seedJson as Seed;

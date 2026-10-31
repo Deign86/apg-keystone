@@ -6,6 +6,9 @@ import type { ISODate } from './dates';
 
 export type RecordType = 'Vendor' | 'Client' | 'Employee';
 
+/** A value that survives a JSON round trip: what the saved state can hold. */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 export const RECORD_TYPES: RecordType[] = ['Vendor', 'Client', 'Employee'];
 export const CODE_PREFIX: Record<RecordType, string> = { Vendor: 'V-', Client: 'C-', Employee: 'E-' };
 export const USED_IN: Record<RecordType, string> = { Vendor: 'Check Vouchers', Client: 'Billing Statements', Employee: 'the ID Maker' };
@@ -126,7 +129,7 @@ export interface TerminalState {
   ids: IDRecord[];
   log: LogEntry[];
   /** Data that added modules keep, under their module id. Unknown keys are kept untouched. */
-  ext?: Record<string, unknown>;
+  ext?: Record<string, JsonValue>;
 }
 
 export interface Company {

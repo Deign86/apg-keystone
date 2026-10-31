@@ -27,7 +27,7 @@ export class KeystoneStore {
 
     if (saved) {
       try {
-        state = parseState(JSON.parse(saved));
+        state = parseState(saved);
       } catch {
         // A damaged file: start from the sample data but never overwrite the old file
         // until the person changes something.
@@ -89,6 +89,8 @@ export class KeystoneStore {
   draft<T>(key: string, make: () => T): T {
     if (!this.drafts.has(key)) this.drafts.set(key, make());
 
+    // SAFETY: each draft key belongs to one form, and that form's useDraft reads and writes it
+    // with the same T. The entry was set from make() above if it was missing.
     return this.drafts.get(key) as T;
   }
 

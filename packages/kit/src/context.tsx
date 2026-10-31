@@ -2,7 +2,7 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { importEmployees, type Change, type Connector, type Ctx, type TerminalState } from '@keystone/core';
+import { importEmployees, type Change, type Connector, type Ctx, type ServiceName, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import type { Connections } from './connections';
 import { findService, type ModuleApp, type Registry } from './registry';
@@ -88,24 +88,20 @@ export function useModuleApp(): ModuleApp {
     go,
     has: (id: string) => registry.modules.some((m) => m.id === id),
     setDraft: <T,>(key: string, draft: T) => store.setDraft(key, draft),
-    service: <T,>(name: string) => findService<T>(registry.modules, name),
+    service: <N extends ServiceName>(name: N) => findService(registry.modules, name),
     state,
     ctx: store.ctx,
   }), [go, registry, store, state]);
 }
 
 /** A form draft that survives switching screens. */
-export function useDraft<T>(key: string, make: () => T): [T, (next: T | ((prev: T) => T)) => void] {
+export function useDraft<T>(key: string, make: () => T): [T, (next: T) => void] {
   const { store } = useCtx();
   const [value, setValue] = useState<T>(() => store.draft(key, make));
 
-  const set = useCallback((next: T | ((prev: T) => T)) => {
-    setValue((prev) => {
-      const v = typeof next === 'function' ? (next as (p: T) => T)(prev) : next;
-      store.setDraft(key, v);
-
-      return v;
-    });
+  const set = useCallback((next: T) => {
+    store.setDraft(key, next);
+    setValue(next);
   }, [store, key]);
 
   return [value, set];

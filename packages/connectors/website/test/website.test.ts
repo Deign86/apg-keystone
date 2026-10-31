@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { ConnectorEnv, HttpClient, HttpResponse, OpenStatement, SystemBridge } from '@keystone/core';
+import type { ConnectorEnv, HttpClient, HttpResponse, JsonValue, OpenStatement, SystemBridge } from '@keystone/core';
 import { websiteConnector } from '../src';
 import { imageType, paymentAmount, resetWebsiteSession, siteBase, websiteApi, type Inquiry } from '../src/api';
 import { candidates } from '../src/WebsiteInbox';
@@ -9,10 +9,12 @@ const system: SystemBridge = {
   pickFiles: async () => [], readFile: async () => new Uint8Array(), listFiles: async () => [], appDataFolder: async () => null,
 };
 
-function response(status: number, body: unknown): HttpResponse {
+function response(status: number, body: JsonValue | Uint8Array): HttpResponse {
   return {
     status, ok: status >= 200 && status < 300,
-    text: async () => JSON.stringify(body), json: async <T,>() => body as T,
+    text: async () => JSON.stringify(body),
+    // SAFETY: a fake server. Each test hands it the body the code under test expects as T.
+    json: async <T,>() => body as T,
     bytes: async () => (body instanceof Uint8Array ? body : new Uint8Array()),
   };
 }
@@ -77,11 +79,15 @@ function fakeSite(opts: { password?: string; expireAfter?: number } = {}) {
 beforeEach(() => resetWebsiteSession());
 
 describe('reading what the website sends', () => {
+  const blank: Inquiry = {
+    id: 1, kind: 'payment', enterprise_slug: '', name: '', email: '', phone: '', subject: '', excerpt: '', meta: null,
+    status: 'new', created_at: '2026-10-30 09:00:00',
+  };
+
   it('reads what the Pay page sends', () => {
-    const p = { meta: { amount: '₱4,999.00' } } as Inquiry;
-    expect(paymentAmount(p)).toBe(4999);
-    expect(paymentAmount({ meta: { amount: '0' } } as Inquiry)).toBeNull();
-    expect(paymentAmount({ meta: null } as Inquiry)).toBeNull();
+    expect(paymentAmount({ ...blank, meta: { amount: '₱4,999.00' } })).toBe(4999);
+    expect(paymentAmount({ ...blank, meta: { amount: '0' } })).toBeNull();
+    expect(paymentAmount(blank)).toBeNull();
     expect(siteBase('alphapremiergroup.com/')).toBe('https://alphapremiergroup.com');
     expect(siteBase('https://alphapremiergroup.com/admin')).toBe('https://alphapremiergroup.com');
     expect(imageType(new Uint8Array([0xff, 0xd8, 0xff]))).toBe('image/jpeg');
@@ -96,7 +102,7 @@ describe('reading what the website sends', () => {
       { no: 'BS-2026-003', client: 'Harbor View Inc.', due: '2026-11-09', amount: 499900 },
     ];
 
-    const paid = { name: 'Ana Lopez', meta: { amount: '4,999.00', company: '' } } as Inquiry;
+    const paid: Inquiry = { ...blank, name: 'Ana Lopez', meta: { amount: '4,999.00', company: '' } };
     expect(candidates(open, paid).map((b) => b.no)).toEqual(['BS-2026-003', 'BS-2026-002', 'BS-2026-001']);
     expect(open[0].no).toBe('BS-2026-001'); // the input is left in order
   });

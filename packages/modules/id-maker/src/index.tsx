@@ -10,7 +10,7 @@ const MANUAL = 'manual';
 
 /** Crops the centre square at 640px and returns JPEG bytes. */
 async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
-  const bitmap = await createImageBitmap(new Blob([bytes as BlobPart]));
+  const bitmap = await createImageBitmap(new Blob([bytes.slice()]));
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 640;

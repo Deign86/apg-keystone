@@ -7,7 +7,7 @@ function Activity() {
   const { state, registry } = useKeystone();
   // Filters come from the installed modules' log tags, plus "Other" for entries written
   // by modules this build does not have.
-  const known = Object.assign({}, ...registry.modules.map((m) => m.logTags ?? {})) as Record<string, string>;
+  const known = Object.fromEntries(registry.modules.flatMap((m) => Object.entries(m.logTags ?? {})));
   const hasOther = state.log.some((e) => !(e.mod in known));
   const filters = [{ id: 'all', label: 'All' }, ...Object.entries(known).map(([id, label]) => ({ id, label })), ...(hasOther ? [{ id: 'other', label: 'Other' }] : [])];
   const [mod, setMod] = useState<string>('all');

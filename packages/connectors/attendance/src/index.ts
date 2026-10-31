@@ -76,7 +76,8 @@ async function kiosk(env: ConnectorEnv) {
 }
 
 async function newestBackup(env: ConnectorEnv): Promise<string | null> {
-  const folders = [env.settings.backupFolder?.trim()].filter(Boolean) as string[];
+  const chosen = env.settings.backupFolder?.trim();
+  const folders = chosen ? [chosen] : [];
   const local = await env.system.appDataFolder(IDENTIFIER);
 
   if (local) folders.push(`${local}${local.includes('\\') ? '\\' : '/'}backups`);
