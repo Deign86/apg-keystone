@@ -4,17 +4,17 @@ For AI coding agents and human co-developers. Read this first, then the README.m
 change. Keystone is **modular-first**: every screen and every connected system is a part you can delete without
 breaking anything else. Keep it that way. The rules below are enforced by CI.
 
-**What we are building toward.** Our reference is Param Rengaiah's *On Modular Architectures*, summarised and mapped to
-Keystone in `docs/references/on-modular-architectures.md`. It defines a module (after Kirk Knoernschild) as a
-*"deployable, manageable, natively reusable, composable, stateless unit of software that provides a concise interface
-to consumers."* Before you add or change a part, ask:
+**What we are building toward.** Read `docs/references/on-modular-architectures.md`. It starts from Param Rengaiah's
+*On Modular Architectures* and updates it with current practice (modular monoliths, fitness functions, contribution
+points, deep modules, team cognitive load). It ends in ten principles. A Keystone part:
+- **Owns one business function or one external system.** Decompose by what changes together (Parnas).
+- **Is removable and testable alone, and known only by what it declares.** Its contract is `ModuleDef` or `Connector`.
+- **Uses only the context it is given** (`ModuleApp` or `ConnectorEnv`), and contains its own failures.
+- **Is deep:** a small interface hiding a decision likely to change. The same decision spread across several parts is
+  *information leakage*. Fix it.
+- **Says what it is in its own README.**
 
-- Does it have one clear business purpose?
-- Does it only use the context it is given?
-- Does it expose only its `ModuleDef` or `Connector`?
-- Can it be removed alone?
-
-Modularity comes from design, not from tools, so don't expect a framework to fix a dependency you have tangled.
+Modularity comes from design, not from tools. The checks only stop it from slipping.
 
 ## What Keystone is
 
@@ -94,6 +94,8 @@ every screen that is left. **When you add a module or a connector, it joins that
   from `packages/core/src/index.ts`.
 - Write a `README.md` in the new folder using the same headings as the existing ones: Owns, Contributes, Needs,
   Removing it.
+- For a significant change, add an Architecture Decision Record in `docs/adr/`. That means a change to the kernel, a
+  new or removed part, a new saved-state format, or a new way of talking to another system.
 
 ## Before you commit
 
@@ -124,8 +126,9 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
 
 ## Further reading
 
-- `docs/references/on-modular-architectures.md`: the reference article, how Keystone applies each idea, where it falls
-  short, and what "going all the way" would mean.
+- `docs/references/on-modular-architectures.md`: the reference (Rengaiah 2014, updated with what came after), the ten
+  principles, the trade-offs, and the sources.
+- `docs/adr/`: why things are the way they are, one decision per file.
 - `docs/MODULARITY.md`: the contracts in full, and why the kernel and parts are split this way.
 - `docs/ARCHITECTURE.md`: how a change flows, where data lives, the three connectors.
 - `docs/DESIGN.md`: the look and where it comes from.

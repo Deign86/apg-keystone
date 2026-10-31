@@ -4,20 +4,16 @@
 everything else keeps working. This document explains the design that makes that true and the contracts a new part
 has to follow. `AGENTS.md` has the short rules; this is the reasoning behind them.
 
-**The reference this is measured against:** Param Rengaiah, *On Modular Architectures* (2014). It is summarised, with
-each principle mapped to Keystone and the honest gaps, in
-[`docs/references/on-modular-architectures.md`](references/on-modular-architectures.md). Its core ideas, as Keystone
-uses them:
+**The reference this is measured against:** `docs/references/on-modular-architectures.md`. It starts from Param
+Rengaiah's *On Modular Architectures* (2014) and updates it with what the field has learned since:
+- the modular monolith (Fowler, Grzybek, Shopify's Packwerk, Spring Modulith);
+- architecture checked by tests (*Building Evolutionary Architectures*);
+- plugin platforms that compose parts by what they declare (VS Code);
+- the theory underneath (Parnas's information hiding, Ousterhout's deep modules, Martin's component principles);
+- people (Team Topologies, Conway's law), and documentation for agents (`AGENTS.md`, ADRs).
 
-- **Modules are physical units.** Each has a clear business context, works within the context it is given, and has a
-  concise public interface. In Keystone that interface is `ModuleDef` or `Connector`, and the context is `ModuleApp` or
-  `ConnectorEnv`.
-- **Modularity has to hold at design time and at run time.** At design time, the boundary check and folder layout
-  enforce it. At run time, the registry, per-screen error boundaries, isolated connector calls and the removal test do.
-- **Design creates modularity; tools don't.** The stack was chosen for one codebase. What keeps Keystone modular is
-  this design and the checks that hold it.
-- **A modularity release comes before the next big exercise.** Keystone shipped this restructure before adding more
-  features.
+It distils ten principles (P1–P10), a module definition for 2026, and Keystone's deliberate trade-offs (T1–T3).
+Significant decisions are recorded in `docs/adr/`.
 
 ## Kernel and parts
 
