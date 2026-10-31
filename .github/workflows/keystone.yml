@@ -20,12 +20,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Generated theme matches shared/design/tokens.json
+      - name: Generated files (theme, assets, seed) match shared/
         run: npm run sync -- --check
-      - name: Parts stay independent (no module, connector or domain imports another)
+      - name: Package boundaries (parts depend only on core, ui and kit; every import declared)
         run: npm run check:boundaries
       - run: npm run typecheck
-      - name: Tests, including removing each module and connector in turn
+      - name: Every package's tests, plus the removal, contract and service suites
         run: npm test
       - name: Taste Skill lint (app rules)
         run: npm run lint:taste
