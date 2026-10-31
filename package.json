@@ -18,7 +18,7 @@
     "build": "npm run sync -- --check && cd apps/keystone && tauri build",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
-    "lint:taste": "node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src packages/kit/src packages/modules packages/connectors",
+    "lint:taste": "node .agents/skills/design-taste-frontend/scripts/lint.mjs --app apps/keystone/src packages/ui/src packages/kit/src packages/modules packages/connectors",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check": "npm run sync -- --check && npm run check:boundaries && npm run typecheck && npm test && npm run lint:taste"
   },

@@ -78,6 +78,7 @@ In Keystone, open **Connections** (⌘8 / Ctrl+8):
 
 ## Agent skills
 
-`.claude/skills` vendors [ui-skills](https://github.com/ibelick/ui-skills) and
-[Taste Skill](https://github.com/Leonxlnx/taste-skill). `.mcp.json` connects the ui-skills registry MCP. Keystone's
-screens are checked with both (see `docs/DESIGN.md`).
+`.claude/skills` vendors [ui-skills](https://github.com/ibelick/ui-skills). `.agents/skills` holds
+[Taste Skill](https://github.com/Leonxlnx/taste-skill) (`design-taste-frontend`) and the other installed skills
+(ponytail, unlazy, anti-slop, e2e, grill-me), each linked from `.claude/skills`. `.mcp.json` connects the ui-skills
+registry MCP. Keystone's screens are checked with ui-skills and Taste Skill (see `docs/DESIGN.md`).

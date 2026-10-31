@@ -11,7 +11,7 @@ Tailwind theme (`packages/ui/src/theme.css`), and CI fails if the two drift apar
 | **Attendance tracker** (`alpha-premier-attendance`, `client/src/styles.css`) | **The palette, exactly:** ground `#0b0a08`, surface `#151613`, raised `#1d1c17`, input `#0f100e`, ink `#f6f2e9`, line `#3a3426`, gold `#c6a254` / `#e1c477` / `#8d753e`, good `#98d2a8`, bad `#efaa92`.<br>**Fonts:** Orbitron for the greeting, the clock and figures; Poppins for everything else.<br>**Components:** the numbered key badges (filled gold when active), the outlined status capsules in Orbitron capitals, the count chips used as filters.<br>**Home screen:** the kiosk layout, with a status capsule and clock on top and the Orbitron greeting in the middle. |
 | **Website admin** (`apg-website`, `src/routes/admin`) | The 236px labelled sidebar, the page header (small gold capitals over a big bold title), and the gold capitals over table columns. |
 | **Alpha Branding Studio** (`Alpha_Branding`) | The `com.alphapremier.*` identifier family and dark-only windows. |
-| **Taste Skill** (`.claude/skills/taste-skill`, app-screen rules; style `data-terminal` dealt with `--keep palette,type`) | The rules the brand doesn't settle:<br>• Surfaces are flat, with no shadows or gradients at rest.<br>• Colour goes only on data and the one primary action.<br>• The selected rail item is marked by a single 1px gold line on the rail's edge.<br>• KPIs are type in one strip split by lines, with no icon tiles.<br>• Figures are right-aligned with tabular digits; a missing value is a grey dash.<br>• Every title has one finding sentence under it, saying what needs attention, computed by `@keystone/core`. |
+| **Taste Skill** (`.agents/skills/design-taste-frontend`, app-screen rules; style `data-terminal` dealt with `--keep palette,type`) | The rules the brand doesn't settle:<br>• Surfaces are flat, with no shadows or gradients at rest.<br>• Colour goes only on data and the one primary action.<br>• The selected rail item is marked by a single 1px gold line on the rail's edge.<br>• KPIs are type in one strip split by lines, with no icon tiles.<br>• Figures are right-aligned with tabular digits; a missing value is a grey dash.<br>• Every title has one finding sentence under it, saying what needs attention, computed by `@keystone/core`. |
 | **ui-skills** (`baseline-ui`, `fixing-accessibility`, `fixing-motion-performance`) | **Primitives:** Base UI for everything with keyboard or focus behaviour (selects, menus, dialogs, checkboxes, toasts), plus Tailwind with `cn()`.<br>**Interaction:** an alert dialog before anything destructive; errors shown next to the action that failed.<br>**Text:** `text-balance` on headings, `text-pretty` on paragraphs, tabular figures for data, nothing under 11px.<br>**Motion:** transform and opacity only, at most 200ms, and none under Reduce Motion.<br>**Layering and states:** a fixed z-index scale; every empty state offers one next action. |
 
 ## Brand exceptions, on purpose
@@ -53,7 +53,7 @@ The ID card's foil stripe is flat gold. There are no gradients anywhere.
 
 ```bash
 npm run lint:taste
-CHROME_PATH=<chromium> node .claude/skills/taste-skill/scripts/inspect.mjs "http://127.0.0.1:5174/#vouchers" --app --widths 1440,1100 --allow micro-label
+CHROME_PATH=<chromium> node .agents/skills/design-taste-frontend/scripts/inspect.mjs "http://127.0.0.1:5174/#vouchers" --app --widths 1440,1100 --allow micro-label
 ```
 
 On 2026-10-30:

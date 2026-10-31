@@ -138,7 +138,7 @@ cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml   # when you touch
 
 UI changes also go through the design checks in `docs/DESIGN.md`:
 - **Skills to load:** the vendored `ui-skills` (`baseline-ui`, `fixing-accessibility`, `fixing-motion-performance`)
-  and `taste-skill`, all in `.claude/skills/`.
+  in `.claude/skills/`, and the Taste Skill (`design-taste-frontend`) in `.agents/skills/`.
 - **Inspector:** run `inspect.mjs --app` on the screens you changed and look at the screenshots.
 - **Look:** follow the APG house style; it lives in `shared/design/tokens.json`.
 
