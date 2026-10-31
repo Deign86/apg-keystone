@@ -1,30 +1,14 @@
 {
   "$comment": "Sample data for every Keystone build. Records are made up; company details are APG’s real ones. The state block uses the same JSON schema the apps persist (and the web prototype kept in localStorage), so this file is also a valid saved state.",
   "company": {
-    "name": "ALPHA PREMIER GROUP",
-    "address": "Unit 3104, PSE Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City",
-    "contact": "(02) 8 650 2540 · 0915 888 9482 · alphapremiergroup.com",
+    "name": "ALPHA PREMIER GROUP OF COMPANIES OPC",
+    "address": "Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605",
+    "contact": "0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com",
     "shortAddress": "Tektite East Tower, Ortigas Center, Pasig",
-    "phone": "(02) 8 650 2540",
+    "phone": "02 8650 2540",
     "billingEmail": "billing@alphapremiergroup.com"
   },
   "reference": {
-    "accounts": [
-      "5210 Utilities",
-      "5220 Rent Expense",
-      "5320 Office Supplies",
-      "5330 Freight",
-      "5410 Professional Fees",
-      "5510 Repairs & Maintenance",
-      "5610 Commissions Payable",
-      "5710 Taxes & Licenses",
-      "2110 Accounts Payable"
-    ],
-    "banks": [
-      "BDO – Current 0012-3456-78",
-      "BPI – Current 9876-5432-10",
-      "Metrobank – Current 123-4-56789"
-    ],
     "bloodTypes": [
       "O+",
       "O−",
@@ -39,10 +23,10 @@
       "preparedBy": "D. Lazaro",
       "checkedBy": "Accounting",
       "approvedBy": "CEO",
-      "billingPeriod": "November 1–30, 2026",
-      "paymentInstructions": "Please make checks payable to Alpha Premier Group. Deposit slips may be sent to billing@alphapremiergroup.com.",
+      "paymentInstructions": "Please make payment to:\nBank: BPI\nAccount Name: Alpha Premier Group of Companies OPC\nAccount Number: 4011 0258 68\n\nKindly send proof of payment to accounting@alphapremiergroup.com",
+      "billingNote": "Thank you for choosing Alpha Premier Group of Companies as your virtual office provider. Should you have any questions regarding this billing, please contact us at billing@alphapremiergroup.com / 02 8650 2540.",
       "signatory": "Chief Executive Officer",
-      "billingTerms": "Due upon receipt; 2% monthly on late balances",
+      "billingTerms": "5% penalty charge will be applied to delayed monthly payments.",
       "dueInDays": 15,
       "idValidYears": 1
     }
@@ -84,7 +68,8 @@
         "tin": "008-771-402-000",
         "detail": "18/F One Corporate Centre, Ortigas",
         "vat": true,
-        "ewt": true
+        "ewt": true,
+        "attention": "Carlo Mendiola"
       },
       {
         "code": "C-002",
@@ -102,7 +87,8 @@
         "tin": "006-332-918-000",
         "detail": "Warehouse 4, Cavite Export Zone",
         "vat": true,
-        "ewt": true
+        "ewt": true,
+        "attention": "Liza Tan"
       },
       {
         "code": "E-001",
@@ -142,12 +128,11 @@
         "no": "CV-2026-0139",
         "date": "2026-10-20",
         "payee": "V-001",
-        "bank": "BDO – Current 0012-3456-78",
         "check": "0004509",
+        "checkDate": "2026-10-20",
         "lines": [
           {
             "desc": "Electricity – Head Office, Sept 2026",
-            "acct": "5210 Utilities",
             "amt": 48230.55
           }
         ],
@@ -160,17 +145,15 @@
         "no": "CV-2026-0140",
         "date": "2026-10-22",
         "payee": "V-003",
-        "bank": "BDO – Current 0012-3456-78",
         "check": "0004510",
+        "checkDate": "2026-10-22",
         "lines": [
           {
             "desc": "Printing of lease folders (500 pcs)",
-            "acct": "5320 Office Supplies",
             "amt": 12500
           },
           {
             "desc": "Delivery",
-            "acct": "5330 Freight",
             "amt": 650
           }
         ],
@@ -183,12 +166,11 @@
         "no": "CV-2026-0141",
         "date": "2026-10-26",
         "payee": "V-004",
-        "bank": "BPI – Current 9876-5432-10",
         "check": "0001188",
+        "checkDate": "2026-10-26",
         "lines": [
           {
             "desc": "Retainer – October 2026",
-            "acct": "5410 Professional Fees",
             "amt": 35000
           }
         ],
@@ -200,19 +182,23 @@
     ],
     "bs": [
       {
-        "no": "BS-2026-0086",
+        "no": "010097-2026",
         "date": "2026-10-01",
+        "invoiceDate": "2026-10-01",
         "due": "2026-10-15",
         "client": "C-001",
-        "period": "October 1–31, 2026",
-        "ref": "Lease No. L-2025-014",
+        "attention": "Carlo Mendiola",
         "lines": [
           {
-            "desc": "Monthly rent – 18/F, 420 sqm",
+            "desc": "Monthly rent – 18/F, 420 sqm (October 2026)",
+            "qty": 1,
+            "price": 357000,
             "amt": 357000
           },
           {
-            "desc": "Association dues",
+            "desc": "Association dues (October 2026)",
+            "qty": 1,
+            "price": 42000,
             "amt": 42000
           }
         ],
@@ -221,19 +207,22 @@
         "status": "Paid"
       },
       {
-        "no": "BS-2026-0087",
+        "no": "010098-2026",
         "date": "2026-10-01",
+        "invoiceDate": "2026-10-01",
         "due": "2026-10-10",
         "client": "C-002",
-        "period": "October 2026",
-        "ref": "Lease No. L-2026-003",
         "lines": [
           {
-            "desc": "Monthly rent – Unit 12B",
+            "desc": "Monthly rent – Unit 12B (October 2026)",
+            "qty": 1,
+            "price": 85000,
             "amt": 85000
           },
           {
-            "desc": "Parking slot P-214",
+            "desc": "Parking slot P-214 (October 2026)",
+            "qty": 1,
+            "price": 6000,
             "amt": 6000
           }
         ],
@@ -242,19 +231,23 @@
         "status": "Overdue"
       },
       {
-        "no": "BS-2026-0088",
+        "no": "010099-2026",
         "date": "2026-10-25",
+        "invoiceDate": "2026-10-25",
         "due": "2026-11-05",
         "client": "C-003",
-        "period": "November 1–30, 2026",
-        "ref": "Lease No. L-2024-021",
+        "attention": "Liza Tan",
         "lines": [
           {
-            "desc": "Warehouse lease – Bldg 4",
+            "desc": "Warehouse lease – Bldg 4 (November 2026)",
+            "qty": 1,
+            "price": 510000,
             "amt": 510000
           },
           {
-            "desc": "CUSA charges",
+            "desc": "CUSA charges (November 2026)",
+            "qty": 1,
+            "price": 38250,
             "amt": 38250
           }
         ],
@@ -316,7 +309,7 @@
       {
         "when": "2026-10-25 10:15",
         "mod": "BS",
-        "text": "BS-2026-0088 sent to Harbor Point Logistics Corp. (₱586,627.50 due Nov 5, 2026)."
+        "text": "010099-2026 sent to Harbor Point Logistics Corp. (₱586,627.50 due Nov 5, 2026)."
       },
       {
         "when": "2026-10-22 14:03",
@@ -331,7 +324,7 @@
       {
         "when": "2026-10-16 11:20",
         "mod": "BS",
-        "text": "BS-2026-0086 marked paid; BDO deposit ref 7731925."
+        "text": "010097-2026 marked paid; BDO deposit ref 7731925."
       },
       {
         "when": "2026-10-06 15:48",

@@ -1,31 +1,28 @@
-import { Button, CellInput, EmptyState, FigureStrip, Panel, SectionLabel, SelectInput, StatusPill, Tag, cn } from '@keystone/ui';
+import { Button, CellInput, EmptyState, FigureStrip, Panel, SectionLabel, StatusPill, Tag, cn } from '@keystone/ui';
 import { X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { lineDraft, shortDate, type Connector, type HealthState, type LineDraft, type LogEntry } from '@keystone/core';
+import { lineDraft, shortDate, type Connector, type HealthState, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
 import { useConnectorStatus, useImportPeople, useKeystone, useModuleApp } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
 
-/** Description · account or reference · amount · remove. */
-export function LineEditor({ title, lines, onChange, accounts }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; accounts?: string[] }) {
+/** Description · amount · remove; or, priced by unit, description · quantity · unit price · remove. */
+export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; pricing?: LinePricing }) {
   const set = (id: string, patch: Partial<LineDraft>) => onChange(lines.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  const unit = pricing === 'unit';
 
   return (
     <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
       <div className="flex items-center justify-between">
         <legend className="text-[12.5px] font-medium">{title}</legend>
-        <Button size="sm" onClick={() => onChange([...lines, lineDraft({ acct: accounts?.[0] ?? '' })])}>Add line</Button>
+        <Button size="sm" onClick={() => onChange([...lines, lineDraft()])}>Add line</Button>
       </div>
       {lines.map((l, i) => (
-        <div key={l.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_112px_32px] items-center gap-1.5">
+        <div key={l.id} className={cn('grid items-center gap-1.5', unit ? 'grid-cols-[minmax(0,1fr)_64px_112px_32px]' : 'grid-cols-[minmax(0,1fr)_112px_32px]')}>
           <CellInput label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} onChange={(v) => set(l.id, { desc: v })} />
-          {accounts ? (
-            <SelectInput label={`Line ${i + 1} account`} value={l.acct} onChange={(v) => set(l.id, { acct: v })} options={accounts.map((a) => ({ value: a, label: a }))} />
-          ) : (
-            <CellInput label={`Line ${i + 1} reference`} placeholder="Reference" value={l.ref} onChange={(v) => set(l.id, { ref: v })} />
-          )}
-          <CellInput label={`Line ${i + 1} amount`} placeholder="0.00" align="right" value={l.amount} onChange={(v) => set(l.id, { amount: v })} />
+          {unit && <CellInput label={`Line ${i + 1} quantity`} placeholder="Qty" align="right" value={l.qty} onChange={(v) => set(l.id, { qty: v })} />}
+          <CellInput label={unit ? `Line ${i + 1} unit price` : `Line ${i + 1} amount`} placeholder={unit ? 'Unit price' : '0.00'} align="right" value={l.amount} onChange={(v) => set(l.id, { amount: v })} />
           <button
             type="button"
             aria-label={`Remove line ${i + 1}`}

@@ -18,6 +18,10 @@ Keep the document as it is, so a prototype backup opens in any Keystone and the 
 ## Consequences
 
 - **Good:** backups are compatible across versions, and the format stays simple.
+- **Since the company's forms (2026-10-31):** vouchers no longer save `bank` or line accounts, statements no longer
+  save `period` or `ref`, and invoice numbers read `010100-2026`. Those keys became optional, so every older file
+  still loads in Keystone. The web prototype no longer reads newer files reliably: its voucher register breaks on a
+  voucher without a bank, and it would number its next statement from the year. It is kept only for reference.
 - **Cost:** the four older areas share one document. A domain can read data owned by another. The boundary check
   stops code from depending on another domain, but not data from being read.
 - **What would change this:** a format version bump that moves the older areas under `ext`, each behind its own

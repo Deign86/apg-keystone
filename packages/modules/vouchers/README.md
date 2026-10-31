@@ -3,9 +3,13 @@
 ## Owns
 - `src/index.tsx`: the register (status changes from the row menu; void asks first), the form, editing in place while a
   voucher is For Approval, Save as new, Print, and Export PDF.
-- `src/VoucherPaper.tsx`: the printed voucher.
+- `src/VoucherPaper.tsx`: the printed voucher, laid out as the company's Disbursement Voucher: payee and address,
+  check no. and date of check, particulars and amount, then Prepared, Audited, Approved and Received by. Three copies
+  to a sheet, cut apart after printing; Print scales the sheet to one A4 page.
 - `src/rules.ts`: its rules (numbering, saving, status changes, the release check number) and what it
   contributes. Tested in `test/rules.test.ts`.
+
+Older vouchers keep the bank and account code they were saved with; neither is entered or printed any more.
 
 ## Contributes
 - **Overview:** the "Vouchers awaiting approval" figure, each voucher awaiting approval in the waiting list, and the

@@ -11,7 +11,7 @@ numbering, blank lines dropped).
 | `src/kernel/schema.ts` | The saved-state shape (`dir`, `cv`, `bs`, `ids`, `log`, `ext`), kept compatible with the prototype |
 | `src/kernel/money.ts`, `dates.ts`, `format.ts` | Centavos, Manila dates, peso and date formats, amount in words |
 | `src/kernel/state.ts` | `KeystoneError`, `Ctx`, `Change`, `logged`, `nextNumber`, `parseState` |
-| `src/kernel/lines.ts` | Line-item drafts for documents |
+| `src/kernel/lines.ts` | Line-item drafts for documents: an amount per line (vouchers), or a quantity at a unit price (statements) |
 | `src/kernel/insight.ts` | `Figure`, `Finding`, `WaitingItem`, `topFinding` |
 | `src/kernel/directory.ts` | The shared directory: records, payees, codes, saving and removing, importing people from a connected system |
 | `src/kernel/connectors.ts` | The connector contract and `withDeadline` |
