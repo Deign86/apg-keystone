@@ -149,6 +149,18 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
 - **Inspector:** run `inspect.mjs --app` on the screens you changed and look at the screenshots.
 - **Look:** follow the APG house style; it lives in `shared/design/tokens.json`.
 
+## Pull requests
+
+Every change reaches `main` through a pull request, and every pull request merges itself once CI is green.
+- **When you open one,** turn on auto-merge with a merge commit, so it merges as soon as the Keystone workflow
+  passes: checks, end-to-end tests, and both installer builds.
+- **Agents watch the pull request until it merges:** they fix CI failures, merge conflicts and review comments on
+  it, and never skip or weaken a check to get green.
+- **After the merge** the branch is deleted (the repository deletes merged branches).
+
+This relies on two repository settings, **Allow auto-merge** and **Automatically delete head branches**
+(Settings › General › Pull Requests), and on `main` requiring the three Keystone checks to pass.
+
 ## Conventions
 
 - **Names:**
