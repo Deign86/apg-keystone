@@ -1,0 +1,17 @@
+{
+  "name": "@keystone/connector-branding-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Connector for Alpha Branding Studio: finds, updates and hands photos to the installed studio.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*"
+  }
+}

@@ -1,0 +1,138 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+/* Scan this package's components for classes, wherever the app lives. */
+@source "./";
+
+/*
+  APG house style: gold on near-black, Orbitron for display figures, Poppins for the
+  rest. Colour sits on data and the one primary action; surfaces are flat and separated
+  by a 1px line. Only real overlays (menus, dialogs, toasts) float. taste-skill-ignore
+  The tracked gold capitals (eyebrows, table headers, status capsules) are the one deliberate exception to the baseline type rules,
+  because every APG admin system uses them (docs/DESIGN.md).
+
+  z-index scale, fixed: 10 sticky · 30 popovers and menus · 40 dialogs · 50 toasts.
+*/
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-gold-soft);
+    color: var(--color-ink);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 10px; border: 2px solid var(--color-bg); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-gold-soft); }
+}
+
+@layer components {
+  /* The gold capitals over a title: "ADMINISTRATOR ACCESS". Kept on purpose: every APG admin
+     system (attendance tracker, website admin) heads its screens this way. taste-skill-ignore */
+  .eyebrow { /* taste-skill-ignore: APG brand eyebrow */
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+  /* Inputs share one chrome: dark well, 1px line, gold when focused. */
+  .input-chrome {
+    width: 100%;
+    min-width: 0;
+    min-height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-input);
+    background: var(--color-input);
+    color: var(--color-ink);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 120ms ease-out;
+  }
+  .input-chrome:hover {
+    border-color: var(--color-line-bright);
+  }
+  .input-chrome:focus,
+  .input-chrome:focus-visible,
+  .input-chrome[data-popup-open] {
+    outline: none;
+    border-color: var(--color-gold);
+  }
+  .input-chrome[aria-invalid="true"],
+  .input-chrome[data-invalid] {
+    border-color: var(--color-bad);
+  }
+  .input-chrome::placeholder {
+    color: var(--color-ink-3);
+  }
+  .input-chrome::-webkit-calendar-picker-indicator {
+    filter: invert(0.75) sepia(0.4) saturate(2) hue-rotate(5deg);
+    cursor: pointer;
+  }
+}
+
+/* A field whose label is read by screen readers but not shown (search boxes). */
+.sr-only-label > label:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}
+
+/* Printing a document prints the paper only. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
+  }
+  [data-print-root] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

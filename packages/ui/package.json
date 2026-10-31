@@ -1,0 +1,24 @@
+{
+  "name": "@keystone/ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The APG design system for Keystone: Tailwind theme generated from shared/design/tokens.json, Orbitron and Poppins, and the shared controls built on Base UI primitives.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./logo.png": "./src/assets/logo.png"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@base-ui/react": "^1.9.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.65.0",
+    "react": "^18.3.1",
+    "tailwind-merge": "^3.7.0"
+  }
+}

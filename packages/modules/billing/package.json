@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/module-billing",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Billing Statements: receivables with VAT and EWT, the statement document, their rules, and the statement-payments service.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

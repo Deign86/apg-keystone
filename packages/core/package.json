@@ -1,0 +1,13 @@
+{
+  "name": "@keystone/core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The kernel every part shares: money and dates, the saved state, the directory, the connector contract and the published service contracts. No UI and no platform code.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@keystone/module-overview",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Overview: the CEO summary, built from every installed module\u2019s figures, findings and waiting items.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}
