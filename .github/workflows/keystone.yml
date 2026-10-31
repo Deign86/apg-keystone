@@ -24,6 +24,8 @@ jobs:
         run: npm run sync -- --check
       - name: Package boundaries (parts depend only on core, ui and kit; every import declared)
         run: npm run check:boundaries
+      - name: Oxlint with the anti-slop rules
+        run: npm run lint
       - run: npm run typecheck
       - name: Every package's tests, plus the removal, contract and service suites
         run: npm test
