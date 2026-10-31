@@ -16,6 +16,7 @@ async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
   canvas.width = canvas.height = 640;
   canvas.getContext('2d')!.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 640, 640);
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not encode the photo.'))), 'image/jpeg', 0.88));
+
   return new Uint8Array(await blob.arrayBuffer());
 }
 
@@ -36,12 +37,14 @@ function IDMaker() {
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => issueID(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
+
     if (r.ok) setDraft(newID(store.getState(), ctx));
   }, [run, draft, ctx, setDraft, store]);
 
   const choosePhoto = async () => {
     try {
       const file = await platform.openFile([{ name: 'Photo', extensions: ['jpg', 'jpeg', 'png', 'webp', 'heic'] }]);
+
       if (!file) return;
       const name = `card-${Date.now()}.jpg`;
       await platform.putPhoto(name, await squareJpeg(file.bytes));
@@ -155,6 +158,7 @@ export const idMakerModule: ModuleDef = {
   waiting: idWaiting,
   openWaiting: (no, app) => {
     const i = app.state.ids.find((x) => x.no === no);
+
     if (i) app.setDraft(DRAFT, idDraftOf(i));
     app.go('id-maker');
   },

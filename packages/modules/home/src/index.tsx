@@ -8,17 +8,22 @@ function useNow() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
+
     return () => clearInterval(t);
   }, []);
+
   return now;
 }
 
 function SystemsReady() {
   const { registry } = useKeystone();
+
   const problems = useAllConnectorStatuses()
     .filter(({ status }) => status.health && (status.health.state === 'offline' || status.health.state === 'error'))
     .map(({ id }) => ({ c: registry.connectors.find((x) => x.id === id)! }));
+
   const ok = problems.length === 0;
+
   return (
     <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${ok ? 'border-good/40 text-good' : 'border-bad/40 text-bad'}`}>
       <span aria-hidden="true" className={`size-[7px] rounded-full ${ok ? 'bg-good' : 'bg-bad'}`} />
@@ -33,6 +38,7 @@ function Home() {
   const now = useNow();
   const tiles = registry.modules.filter((m) => m.onHome);
   const index = (id: string) => registry.modules.findIndex((m) => m.id === id);
+
   return (
     <div className="mx-auto max-w-[1120px]">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
@@ -55,6 +61,7 @@ function Home() {
       <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 min-[700px]:grid-cols-2 min-[1000px]:grid-cols-3">
         {tiles.map((m) => {
           const [label, value] = m.stat?.(state, ctx) ?? ['', ''];
+
           return (
             <li key={m.id}>
               <button

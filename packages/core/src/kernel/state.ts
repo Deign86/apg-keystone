@@ -38,8 +38,10 @@ export function logged(s: TerminalState, mod: ModuleTag, text: string, ctx: Ctx)
 export function nextNumber(existing: string[], prefix: string, width = 4): string {
   const highest = existing.reduce((max, no) => {
     const m = /(\d+)$/.exec(no);
+
     return m ? Math.max(max, parseInt(m[1], 10)) : max;
   }, 0);
+
   return prefix + String(highest + 1).padStart(width, '0');
 }
 
@@ -56,9 +58,11 @@ export interface Editing {
  */
 export function parseState(json: unknown): TerminalState {
   const x = json as Partial<TerminalState> | null;
+
   if (!x || typeof x !== 'object' || !Array.isArray(x.dir) || !Array.isArray(x.cv) || !Array.isArray(x.bs) || !Array.isArray(x.ids)) {
     throw new KeystoneError('That file is not a Keystone backup.');
   }
+
   return { dir: x.dir, cv: x.cv, bs: x.bs, ids: x.ids, log: Array.isArray(x.log) ? x.log : [], ...(x.ext ? { ext: x.ext } : {}) };
 }
 

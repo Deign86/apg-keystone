@@ -10,6 +10,7 @@ import { useConnectorStatus, useImportPeople, useKeystone, useModuleApp } from '
 /** Description · account or reference · amount · remove. */
 export function LineEditor({ title, lines, onChange, accounts }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; accounts?: string[] }) {
   const set = (id: string, patch: Partial<LineDraft>) => onChange(lines.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+
   return (
     <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
       <div className="flex items-center justify-between">
@@ -67,9 +68,12 @@ export function FormCard({
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); onSubmit(); }
     };
+
     window.addEventListener('keydown', onKey);
+
     return () => window.removeEventListener('keydown', onKey);
   }, [onSubmit]);
+
   return (
     <Panel as="form" id={id} aria-label={title} className="flex flex-col gap-3.5" onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(); }}>
       <div>
@@ -105,8 +109,10 @@ export function ConnectorCard({ connector, compact = false }: { connector: Conne
 
   const act = async (id: string, work: () => Promise<string | boolean | void>) => {
     setBusy(id);
+
     try {
       const r = await work();
+
       if (typeof r === 'string') notify(r);
     } catch (e) {
       notify(e instanceof Error ? e.message : String(e), 'error');
@@ -130,7 +136,11 @@ export function ConnectorCard({ connector, compact = false }: { connector: Conne
       {status.figures && status.figures.length > 0 && <FigureStrip figures={status.figures} />}
       <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
         {h?.update && (
-          <Button size="sm" kind="secondary" onClick={() => act('update', async () => { await connections.env(connector).system.openUrl(h.update!.url); return `Downloading ${connector.name} ${h.update!.version}.`; })}>
+          <Button size="sm" kind="secondary" onClick={() => act('update', async () => {
+            await connections.env(connector).system.openUrl(h.update!.url);
+
+            return `Downloading ${connector.name} ${h.update!.version}.`;
+          })}>
             Get {h.update.version}
           </Button>
         )}
@@ -163,6 +173,7 @@ export function ConnectorCard({ connector, compact = false }: { connector: Conne
 /** Time, tag and what happened, one entry per line. */
 export function Feed({ entries, compact = false }: { entries: LogEntry[]; compact?: boolean }) {
   if (!entries.length) return <EmptyState text="No activity yet." />;
+
   return (
     <ol className="m-0 list-none p-0">
       {entries.map((e, i) => (

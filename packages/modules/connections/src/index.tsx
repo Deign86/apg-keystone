@@ -15,6 +15,7 @@ function ConnectorSettings({ connector }: { connector: Connector }) {
 
   const save = async () => {
     setBusy(true);
+
     try {
       const changed = Object.fromEntries(Object.entries(secrets).filter(([, v]) => v !== ''));
       await connections.configure(connector, values, changed);
@@ -72,13 +73,18 @@ function ConnectorSettings({ connector }: { connector: Connector }) {
 function DataPanel() {
   const { state, store, platform, notify } = useKeystone();
   const confirm = useConfirm();
+
   const backup = async () => {
     const name = await platform.saveFile(`keystone-backup-${localDate(new Date())}.json`, new TextEncoder().encode(JSON.stringify(state, null, 2)), [{ name: 'Keystone backup', extensions: ['json'] }]);
+
     if (name) notify(`Saved ${name}.`);
   };
+
   const restore = async () => {
     const file = await platform.openFile([{ name: 'Keystone backup', extensions: ['json'] }]);
+
     if (!file) return;
+
     try {
       const next = parseState(JSON.parse(new TextDecoder().decode(file.bytes)));
       confirm({
@@ -92,6 +98,7 @@ function DataPanel() {
       notify(e instanceof Error ? e.message : 'That file is not a Keystone backup.', 'error');
     }
   };
+
   const reset = () => confirm({
     title: 'Reset to the sample data?',
     body: 'Every voucher, statement, ID and directory record is replaced with the sample set. Back up first if you may need them.',
@@ -99,6 +106,7 @@ function DataPanel() {
     danger: true,
     onConfirm: () => { store.replaceAll(structuredClone(bundledSeed.state)); notify('Data reset to the sample set.'); },
   });
+
   return (
     <Panel aria-labelledby="data" className="flex flex-col gap-3">
       <SectionLabel id="data">Data</SectionLabel>
@@ -117,6 +125,7 @@ function DataPanel() {
 
 function Connections() {
   const { registry } = useKeystone();
+
   return (
     <>
       <ScreenHeader

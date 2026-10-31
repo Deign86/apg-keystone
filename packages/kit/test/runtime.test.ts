@@ -41,6 +41,7 @@ describe('store', () => {
     vi.useFakeTimers();
     const { platform, files } = memoryPlatform();
     const store = await KeystoneStore.open(platform);
+
     for (let i = 0; i < 5; i++) store.commit({ ...store.state, log: [...store.state.log] });
     await vi.advanceTimersByTimeAsync(300);
     expect(files.writes).toBe(1);
@@ -108,6 +109,7 @@ describe('connected systems', () => {
 
   it('keeps secrets in the keychain, never in the settings file', async () => {
     const { platform, files } = memoryPlatform();
+
     const site: Connector = okConnector('website', {
       settings: [
         { key: 'email', label: 'Email', kind: 'text' },
@@ -115,6 +117,7 @@ describe('connected systems', () => {
         { key: 'baseUrl', label: 'Website', kind: 'url', default: 'https://alphapremiergroup.com' },
       ],
     });
+
     const c = new Connections(platform, [site]);
     await c.configure(site, { email: 'keystone@alphapremiergroup.com' }, { password: 'hunter2' });
     expect(JSON.stringify(files.settings)).not.toContain('hunter2');

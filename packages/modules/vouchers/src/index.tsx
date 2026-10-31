@@ -23,6 +23,7 @@ function Vouchers() {
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveVoucher(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
+
     // Number the next blank voucher from the state after the save.
     if (r.ok) setDraft(newVoucher(store.getState(), ctx));
   }, [run, draft, ctx, setDraft, store]);
@@ -123,6 +124,7 @@ export const vouchersModule: ModuleDef = {
   waiting: voucherWaiting,
   openWaiting: (no, app) => {
     const v = app.state.cv.find((x) => x.no === no);
+
     if (v) app.setDraft(DRAFT, voucherDraftOf(v));
     app.go('vouchers');
   },

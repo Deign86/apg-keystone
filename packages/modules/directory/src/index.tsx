@@ -10,10 +10,13 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
   const { state, run } = useKeystone();
   const [d, setD] = useState(draft);
   const [error, setError] = useState<string | null>(null);
+
   const save = () => {
     const r = run((s, c) => saveDirectoryRecord(s, d, c));
+
     if (r.ok) onDone(); else setError(r.error);
   };
+
   return (
     <form className="flex flex-col gap-3.5" onSubmit={(e) => { e.preventDefault(); save(); }}>
       <FieldRow>
@@ -54,8 +57,10 @@ function Directory() {
   const [editing, setEditing] = useState<DirectoryDraft | null>(null);
 
   const q = query.trim().toLowerCase();
+
   const rows = state.dir.filter((d) => (filter === 'All' || d.type === filter)
     && (!q || [d.code, d.name, d.tin, d.detail, d.dept, d.email].some((x) => x?.toLowerCase().includes(q))));
+
   const sourceName = (id: string) => connections.get(id)?.name ?? id;
 
   const columns: Column<DirectoryRecord>[] = [
@@ -74,6 +79,7 @@ function Directory() {
       key: 'used', header: 'Used by', width: 100, cell: (d) => {
         const used = usedBy(state, d.code);
         const linked = Object.keys(d.links ?? {});
+
         return used.length || linked.length ? (
           <span className="flex flex-wrap gap-1" title={linked.length ? `Linked to ${linked.map(sourceName).join(', ')}` : undefined}>
             {used.map((u) => <Tag key={u}>{u}</Tag>)}
@@ -97,6 +103,7 @@ function Directory() {
           {(['All', ...RECORD_TYPES] as const).map((t) => {
             const n = t === 'All' ? state.dir.length : recordsOf(state, t).length;
             const on = filter === t;
+
             return (
               <button
                 key={t}

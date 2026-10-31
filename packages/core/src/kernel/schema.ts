@@ -5,6 +5,7 @@ import type { ISODate } from './dates';
 // are all optional.
 
 export type RecordType = 'Vendor' | 'Client' | 'Employee';
+
 export const RECORD_TYPES: RecordType[] = ['Vendor', 'Client', 'Employee'];
 export const CODE_PREFIX: Record<RecordType, string> = { Vendor: 'V-', Client: 'C-', Employee: 'E-' };
 export const USED_IN: Record<RecordType, string> = { Vendor: 'Check Vouchers', Client: 'Billing Statements', Employee: 'the ID Maker' };
@@ -39,11 +40,17 @@ export interface LineItem {
 export type Tone = 'good' | 'warn' | 'bad' | 'neutral';
 
 export const VOUCHER_STATUSES = ['For Approval', 'Approved', 'Released', 'Void'] as const;
+
 export type VoucherStatus = (typeof VOUCHER_STATUSES)[number];
+
 export const STATEMENT_STATUSES = ['Sent', 'Paid', 'Overdue', 'Void'] as const;
+
 export type StatementStatus = (typeof STATEMENT_STATUSES)[number];
+
 export const ID_STATUSES = ['For printing', 'Active', 'Expired', 'Revoked'] as const;
+
 export type IDStatus = (typeof ID_STATUSES)[number];
+
 export type Status = VoucherStatus | StatementStatus | IDStatus;
 
 const TONES: Record<Status, Tone> = {
@@ -51,6 +58,7 @@ const TONES: Record<Status, Tone> = {
   Sent: 'neutral', Paid: 'good', Overdue: 'bad',
   'For printing': 'warn', Active: 'good', Expired: 'bad', Revoked: 'bad',
 };
+
 export const toneOf = (s: Status): Tone => TONES[s] ?? 'neutral';
 
 export interface Voucher {

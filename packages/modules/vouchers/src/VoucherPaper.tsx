@@ -5,6 +5,7 @@ import { Letterhead, Lines, Meta, orDash, Signatures, Sheet } from '@keystone/ki
 
 export const VoucherPaper = forwardRef<HTMLDivElement, { voucher: Voucher; payee?: DirectoryRecord; company: Company }>(function VoucherPaper({ voucher: v, payee, company }, ref) {
   const total = voucherTotal(v);
+
   return (
     <Sheet ref={ref} label={`Check voucher ${v.no}`}>
       <Letterhead company={company} title="Check Voucher" no={v.no} />

@@ -38,5 +38,6 @@ export const IDLE_FINDING = 'Nothing is waiting on you.';
 /** The highest-priority finding, or the idle sentence. */
 export function topFinding(findings: (Finding | null | undefined)[]): string {
   const best = findings.filter((f): f is Finding => !!f).sort((a, b) => b.priority - a.priority)[0];
+
   return best?.text ?? IDLE_FINDING;
 }

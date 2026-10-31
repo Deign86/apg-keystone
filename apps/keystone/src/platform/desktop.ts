@@ -21,6 +21,7 @@ const http: HttpClient = {
       body: init.body,
       connectTimeout: init.timeoutMs ?? 10000,
     });
+
     return {
       status: r.status, ok: r.ok,
       text: () => r.text(),
@@ -56,6 +57,7 @@ export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => 
   photoUrl: async (name) => {
     try {
       const bytes = await readBytes(await dataPath('photos', name));
+
       return URL.createObjectURL(new Blob([bytes as BlobPart]));
     } catch {
       return null;
@@ -63,13 +65,17 @@ export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => 
   },
   saveFile: async (suggestedName, bytes, filters) => {
     const path = await save({ defaultPath: suggestedName, filters });
+
     if (!path) return null;
     await writeBytes(path, bytes);
+
     return path.split(/[\\/]/).pop() ?? path;
   },
   openFile: async (filters) => {
     const path = await open({ multiple: false, directory: false, filters });
+
     if (!path || Array.isArray(path)) return null;
+
     return { name: path.split(/[\\/]/).pop() ?? path, bytes: await readBytes(path) };
   },
   locateApp: (locator) => invoke<InstalledApp | null>('locate_app', { locator }),
@@ -77,6 +83,7 @@ export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => 
   openUrl: (url) => openUrl(url),
   pickFiles: async (title, filters, multiple) => {
     const picked = await open({ title, multiple, directory: false, filters });
+
     return picked === null ? [] : Array.isArray(picked) ? picked : [picked];
   },
   readFile: readBytes,

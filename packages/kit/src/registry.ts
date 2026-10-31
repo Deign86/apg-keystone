@@ -87,19 +87,33 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
 
   for (const p of plugins) {
     const problem = validateConnector(p.connector, connectors.map((c) => c.id));
+
     if (problem) {
       refused.push({ id: p.connector.id, reason: problem });
       continue;
     }
+
     connectors.push(p.connector);
     contributed.push(...(p.modules ?? []));
   }
 
   const seen = new Set<string>();
+
   let modules = [...builtIn, ...contributed].sort((a, b) => a.order - b.order).filter((m) => {
-    if (!ID.test(m.id)) { refused.push({ id: m.id, reason: `Module id "${m.id}" must be lowercase letters, digits and dashes.` }); return false; }
-    if (seen.has(m.id)) { refused.push({ id: m.id, reason: `Two modules use the id "${m.id}".` }); return false; }
+    if (!ID.test(m.id)) {
+      refused.push({ id: m.id, reason: `Module id "${m.id}" must be lowercase letters, digits and dashes.` });
+
+      return false;
+    }
+
+    if (seen.has(m.id)) {
+      refused.push({ id: m.id, reason: `Two modules use the id "${m.id}".` });
+
+      return false;
+    }
+
     seen.add(m.id);
+
     return true;
   });
 
@@ -110,9 +124,11 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
     const present = new Set(modules.map((m) => m.id));
     modules = modules.filter((m) => {
       const missing = (m.requires ?? []).filter((r) => !present.has(r));
+
       if (!missing.length) return true;
       refused.push({ id: m.id, reason: `${m.title} needs ${missing.join(', ')}, which ${missing.length === 1 ? 'is' : 'are'} not installed.` });
       changed = true;
+
       return false;
     });
   }
@@ -122,13 +138,18 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
   const offered = new Map<string, string>();
   modules = modules.filter((m) => {
     const taken = Object.keys(m.provides ?? {}).filter((s) => offered.has(s));
+
     if (taken.length) {
       refused.push({ id: m.id, reason: `${m.title} offers ${taken.join(', ')}, which ${offered.get(taken[0])} already provides.` });
+
       return false;
     }
+
     for (const s of Object.keys(m.provides ?? {})) offered.set(s, m.title);
+
     return true;
   });
+
   return { modules, connectors, refused };
 }
 
@@ -137,5 +158,6 @@ export function findService<T>(modules: ModuleDef[], name: string): T | undefine
   for (const m of modules) {
     if (m.provides && name in m.provides) return m.provides[name] as T;
   }
+
   return undefined;
 }

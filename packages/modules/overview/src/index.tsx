@@ -12,10 +12,13 @@ function Overview() {
   const mods = registry.modules;
   const figures = mods.flatMap((m) => (m.figure ? [m.figure(state, ctx)] : []));
   const lead = figures.findIndex((f) => f.lead);
+
   const waiting = mods
     .flatMap((m) => (m.waiting ? m.waiting(state, ctx).map((w) => ({ ...w, owner: m })) : []))
     .sort((a, b) => a.rank - b.rank);
+
   const creators = mods.filter((m) => m.create);
+
   return (
     <>
       <ScreenHeader

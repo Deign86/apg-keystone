@@ -14,6 +14,7 @@ function Activity() {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const shown = state.log.filter((e) => (mod === 'all' || e.mod === mod || (mod === 'other' && !(e.mod in known))) && (!q || e.text.toLowerCase().includes(q)));
+
   return (
     <>
       <ScreenHeader

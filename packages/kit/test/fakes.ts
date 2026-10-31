@@ -9,7 +9,9 @@ export function memoryPlatform(saved: string | null = null) {
     secrets: new Map<string, string>(),
     writes: 0,
   };
+
   const needsDesktop = async (): Promise<never> => { throw new Error('Not in tests.'); };
+
   const platform: Platform = {
     kind: 'browser',
     platform: 'web',
@@ -32,6 +34,7 @@ export function memoryPlatform(saved: string | null = null) {
     listFiles: async () => [],
     appDataFolder: async () => null,
   };
+
   return { platform, files };
 }
 

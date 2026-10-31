@@ -16,6 +16,7 @@ describe('branding studio connector', () => {
         { name: 'Alpha.Branding-v2.5.0-macos.pkg', browser_download_url: 'https://x/mac.pkg' },
       ],
     };
+
     expect(installerFor(release, 'windows')).toBe('https://x/setup.exe');
     expect(installerFor(release, 'macos')).toBe('https://x/mac.pkg');
     expect(installerFor(release, 'linux')).toBe(release.html_url);

@@ -11,6 +11,7 @@ const POPUP = cn(
   'shadow-[0_16px_48px_rgb(0_0_0/0.55)] outline-none transition-[opacity,transform] duration-150 ease-out',
   'data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
 );
+
 const BACKDROP = 'fixed inset-0 z-40 bg-black/60 transition-opacity duration-150 ease-out data-[ending-style]:opacity-0 data-[starting-style]:opacity-0';
 
 // ---------- confirmation for destructive or irreversible actions ----------
@@ -32,6 +33,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
   const [open, setOpen] = useState(false);
   const ask = useCallback((r: ConfirmRequest) => { setRequest(r); setOpen(true); }, []);
+
   return (
     <ConfirmContext.Provider value={ask}>
       {children}
@@ -83,6 +85,7 @@ export function Sheet({ open, onOpenChange, title, description, children }: { op
 /** `notify("CV-2026-0142 saved.")`, or `notify(text, "error")` for a refusal. */
 export function useNotify() {
   const manager = Toast.useToastManager();
+
   return useCallback(
     (text: string, type: 'success' | 'error' = 'success') => manager.add({ title: text, type, timeout: type === 'error' ? 6000 : 3200 }),
     [manager],
@@ -91,6 +94,7 @@ export function useNotify() {
 
 function Toasts() {
   const { toasts } = Toast.useToastManager();
+
   return (
     <Toast.Portal>
       <Toast.Viewport className="fixed right-0 bottom-[max(20px,env(safe-area-inset-bottom))] left-[var(--size-rail)] z-50 mx-auto flex w-[min(520px,calc(100vw-var(--size-rail)-32px))] flex-col items-center gap-2 outline-none">

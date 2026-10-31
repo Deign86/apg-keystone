@@ -20,9 +20,13 @@ export const payees = (s: TerminalState) => [...recordsOf(s, 'Vendor'), ...recor
  */
 export function usedBy(s: TerminalState, code: string): ModuleTag[] {
   const used: ModuleTag[] = [];
+
   if (s.cv.some((v) => v.payee === code)) used.push('CV');
+
   if (s.bs.some((b) => b.client === code)) used.push('BS');
+
   if (s.ids.some((i) => i.emp === code)) used.push('ID');
+
   return used;
 }
 
@@ -47,14 +51,18 @@ const clean = (x: string) => x.trim();
 
 export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ctx): Change<DirectoryRecord> {
   const name = clean(d.name);
+
   if (!name) throw new KeystoneError('Enter a name for the record.');
   const clash = s.dir.find((x) => x.type === d.type && x.code !== d.editing && x.name.toLowerCase() === name.toLowerCase());
+
   if (clash) throw new KeystoneError(`${clash.code} already has that name.`);
 
   const original = d.editing ? recordOf(s, d.editing) : undefined;
+
   if (original && original.type !== d.type) {
     throw new KeystoneError(`${original.code} is a ${original.type.toLowerCase()}; add a new record to change its type.`);
   }
+
   const base: DirectoryRecord = {
     code: original?.code ?? nextCode(s, d.type), type: d.type, name, tin: clean(d.tin), detail: clean(d.detail),
     ...(d.type === 'Employee' && clean(d.dept) ? { dept: clean(d.dept) } : {}),
@@ -64,12 +72,14 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
     ...(original?.links ? { links: original.links } : {}),
     ...(original?.photo ? { photo: original.photo } : {}),
   };
+
   if (original) {
     return {
       state: logged({ ...s, dir: s.dir.map((x) => (x.code === original.code ? base : x)) }, 'DIR', `${base.code} ${base.name} updated.`, ctx),
       record: base, message: `${base.code} updated.`,
     };
   }
+
   return {
     state: logged({ ...s, dir: [...s.dir, base] }, 'DIR', `${base.code} ${base.name} added to the directory as ${d.type.toLowerCase()}.`, ctx),
     record: base, message: `${base.code} added. It is now selectable in ${USED_IN[d.type]}.`,
@@ -79,9 +89,12 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
 /** Removes a record no document refers to. */
 export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx): Change<DirectoryRecord> {
   const d = recordOf(s, code);
+
   if (!d) throw new KeystoneError(`${code} is not in the directory.`);
   const used = usedBy(s, code);
+
   if (used.length) throw new KeystoneError(`${code} is used by ${used.join(', ')} records and cannot be removed.`);
+
   return {
     state: logged({ ...s, dir: s.dir.filter((x) => x.code !== code) }, 'DIR', `${code} ${d.name} removed from the directory.`, ctx),
     record: d, message: `${code} removed.`,
@@ -97,19 +110,25 @@ export interface ImportResult { added: DirectoryRecord[]; updated: DirectoryReco
 export function importEmployees(s: TerminalState, source: { id: string; name: string }, people: ExternalPerson[], ctx: Ctx): Change<ImportResult> {
   let dir = [...s.dir];
   const result: ImportResult = { added: [], updated: [], unchanged: 0 };
+
   for (const p of people) {
     const name = clean(p.name);
+
     if (!name) continue;
     const i = dir.findIndex((d) => d.type === 'Employee' && (d.links?.[source.id] === p.externalId || d.name.toLowerCase() === name.toLowerCase()));
+
     const fields = {
       name, detail: clean(p.position ?? '') || (i >= 0 ? dir[i].detail : ''),
       ...(clean(p.department ?? '') ? { dept: clean(p.department ?? '') } : {}),
       ...(p.email ? { email: p.email } : {}), ...(p.phone ? { phone: p.phone } : {}),
       ...(p.photo ? { photo: p.photo } : {}),
     };
+
     if (i >= 0) {
       const merged: DirectoryRecord = { ...dir[i], ...fields, links: { ...dir[i].links, [source.id]: p.externalId } };
+
       if (JSON.stringify(merged) === JSON.stringify(dir[i])) { result.unchanged++; continue; }
+
       dir[i] = merged;
       result.updated.push(merged);
     } else {
@@ -118,9 +137,12 @@ export function importEmployees(s: TerminalState, source: { id: string; name: st
       result.added.push(rec);
     }
   }
+
   const changed = result.added.length + result.updated.length;
+
   const summary = changed
     ? `${count(result.added.length, 'employee')} added and ${count(result.updated.length, 'employee')} updated from ${source.name}.`
     : `Employees already match ${source.name}.`;
+
   return { state: changed ? logged({ ...s, dir }, 'DIR', summary, ctx) : s, record: result, message: summary };
 }

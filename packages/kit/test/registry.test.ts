@@ -10,6 +10,7 @@ describe('registry', () => {
     const r = buildRegistry([mod('home', { order: 0 }), mod('billing', { order: 3 })], [
       { connector: okConnector('payroll'), modules: [mod('payroll', { order: 1 })] },
     ]);
+
     expect(r.modules.map((m) => m.id)).toEqual(['home', 'payroll', 'billing']);
     expect(r.connectors.map((c) => c.id)).toEqual(['payroll']);
     expect(r.refused).toEqual([]);
@@ -22,6 +23,7 @@ describe('registry', () => {
       { connector: okConnector('Bad Id') },
       { connector: okConnector('lease'), modules: [mod('home', { title: 'Duplicate', order: 9 })] },
     ]);
+
     expect(r.connectors.map((c) => c.id)).toEqual(['payroll', 'lease']);
     expect(r.modules.map((m) => m.id)).toEqual(['home', 'payroll']);
     expect(r.refused.map((x) => x.id)).toEqual(['payroll', 'Bad Id', 'home']);
@@ -80,6 +82,7 @@ describe('services', () => {
       mod('ledger', { order: 1, provides: { 'ledger.totals': ledger } }),
       mod('shadow', { order: 2, provides: { 'ledger.totals': { total: () => 0 } } }),
     ], []);
+
     expect(r.modules.map((m) => m.id)).toEqual(['ledger']);
     expect(r.refused).toEqual([{ id: 'shadow', reason: 'Shadow offers ledger.totals, which Ledger already provides.' }]);
     expect(findService<typeof ledger>(r.modules, 'ledger.totals')?.total()).toBe(42);

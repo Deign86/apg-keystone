@@ -6,9 +6,12 @@ import { Letterhead, Lines, Meta, orDash, Signatures, Sheet } from '@keystone/ki
 export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement; client?: DirectoryRecord; company: Company; terms: string }>(function StatementPaper({ statement: b, client, company, terms }, ref) {
   const t = statementTotals(b);
   const footer: [string, string, boolean?][] = [['Subtotal', peso(t.subtotal)]];
+
   if (b.vat) footer.push(['Add: 12% VAT', peso(t.vat)]);
+
   if (b.ewt) footer.push(['Less: 5% expanded withholding tax (BIR Form 2307 to follow)', `(${peso(t.ewt)})`]);
   footer.push(['Total amount due', peso(t.due), true]);
+
   return (
     <Sheet ref={ref} label={`Billing statement ${b.no}`}>
       <Letterhead company={company} title="Billing Statement" no={b.no} />

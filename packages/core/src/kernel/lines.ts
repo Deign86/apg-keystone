@@ -14,6 +14,7 @@ export interface LineDraft {
 }
 
 let seq = 0;
+
 export const lineDraft = (init: Partial<Omit<LineDraft, 'id'>> = {}): LineDraft => ({
   id: `line-${++seq}`, desc: '', acct: '', ref: '', amount: '', ...init,
 });

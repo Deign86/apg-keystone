@@ -38,6 +38,7 @@ function workspaces() {
   return rootManifest.workspaces.flatMap((w) => {
     if (!w.endsWith('/*')) return [join(root, w)];
     const base = join(root, w.slice(0, -2));
+
     return readdirSync(base).map((n) => join(base, n)).filter((d) => existsSync(join(d, 'package.json')));
   });
 }
@@ -45,12 +46,19 @@ function workspaces() {
 /** What a package is, from where it sits. */
 function layerOf(dir) {
   const r = rel(dir);
+
   if (r === 'packages/ui') return 'ui';
+
   if (r === 'packages/core') return 'core';
+
   if (r === 'packages/kit') return 'kit';
+
   if (r.startsWith('packages/modules/')) return 'module';
+
   if (r.startsWith('packages/connectors/')) return 'connector';
+
   if (r === 'apps/keystone') return 'app';
+
   return 'unknown';
 }
 
@@ -74,9 +82,12 @@ const WHY = {
 
 function files(dir) {
   if (!existsSync(dir)) return [];
+
   return readdirSync(dir).flatMap((name) => {
     const p = join(dir, name);
+
     if (statSync(p).isDirectory()) return name === 'node_modules' || name === 'dist' ? [] : files(p);
+
     return /\.(tsx?|mjs)$/.test(name) && !name.endsWith('.d.ts') ? [p] : [];
   });
 }
@@ -90,6 +101,7 @@ function splitSpec(spec) {
   const parts = clean.split('/');
   const n = clean.startsWith('@') ? 2 : 1;
   const sub = parts.slice(n).join('/');
+
   return [parts.slice(0, n).join('/'), sub ? `./${sub}` : '.'];
 }
 
@@ -106,43 +118,60 @@ const byName = new Map(packages.map((p) => [p.manifest.name, p]));
 for (const { dir, manifest, layer } of packages) {
   const name = manifest.name;
   const where = rel(join(dir, 'package.json'));
+
   if (layer === 'unknown') flag(where, 'a workspace outside packages/{core,ui,kit,modules,connectors} or apps/keystone; give it a layer in scripts/check-boundaries.mjs');
+
   if (layer === 'module' && name !== `@keystone/module-${dir.split(sep).pop()}`) flag(where, `must be named @keystone/module-${dir.split(sep).pop()}`);
+
   if (layer === 'connector' && name !== `@keystone/connector-${dir.split(sep).pop()}`) flag(where, `must be named @keystone/connector-${dir.split(sep).pop()}`);
 
   // The manifest itself: a dependency that is declared is a dependency, used or not.
   const allowed = ALLOWED[layer] ?? (() => false);
+
   for (const dep of [...declared(manifest), ...Object.keys(manifest.devDependencies ?? {})]) {
     if (!dep.startsWith('@keystone/')) continue;
+
     if (!byName.has(dep)) flag(where, `depends on "${dep}", which is not a package in this workspace`);
     else if (!allowed(dep)) flag(where, `depends on "${dep}" — ${WHY[layer]}`);
   }
 
   const deps = declared(manifest);
+
   for (const file of files(dir)) {
     if (file.endsWith('.config.ts')) continue; // build and test configs read root files on purpose
     const isTest = /[\\/]test[\\/]/.test(file);
+
     for (const spec of importsOf(file)) {
       if (spec.startsWith('.')) {
         const target = resolve(dirname(file), spec);
+
         if (relative(dir, target).startsWith('..')) flag(rel(file), `imports "${spec}", which leaves ${name}; depend on the package that owns it instead`);
         continue;
       }
+
       if (spec.startsWith('node:') || builtins.has(spec)) continue;
       const [pkg, sub] = splitSpec(spec);
+
       if (pkg.startsWith('@keystone/')) {
         const target = byName.get(pkg);
+
         if (!target) { flag(rel(file), `imports "${spec}", which is not a package in this workspace`); continue; }
+
         if (!deps.has(pkg) && pkg !== name) flag(rel(file), `imports "${pkg}" without declaring it in ${where}`);
+
         if (sub !== '.' && !(target.manifest.exports && sub in target.manifest.exports)) {
           flag(rel(file), `imports "${spec}", a file inside ${pkg}; use what ${pkg} exports from its entry`);
         }
+
         if (layer === 'app' && !isTest && /^@keystone\/(module|connector)-/.test(pkg)) {
           const list = pkg.startsWith('@keystone/module-') ? 'src/modules.ts' : 'src/connectors.ts';
+
           if (rel(file) !== `apps/keystone/${list}`) flag(rel(file), `imports "${pkg}"; only ${list} lists the installed ${list.includes('modules') ? 'modules' : 'connectors'}`);
         }
+
         continue;
       }
+
       if (!deps.has(pkg) && !(isTest && rootDev.has(pkg))) flag(rel(file), `imports "${pkg}" without declaring it in ${where}`);
     }
   }
@@ -152,4 +181,5 @@ if (violations.length) {
   console.error(`Boundary check failed (${violations.length}):\n  ` + violations.join('\n  '));
   process.exit(1);
 }
+
 console.log(`Boundaries hold across ${packages.length} packages: every dependency is declared, and no module or connector depends on another.`);

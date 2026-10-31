@@ -22,14 +22,19 @@ export const websiteConnector: Connector = {
 
   async health(env) {
     if (!env.http.native) return { state: 'unsupported', detail: 'Open Keystone’s desktop app to reach the website; browsers block it.' };
+
     if (!env.settings.email) return { state: 'setup', detail: 'Enter a website admin account to bring in inquiries, payments and new hires.' };
     resetWebsiteSession();
+
     try {
       const user = await websiteApi(env).signIn();
+
       return { state: 'ready', detail: `Signed in to ${websiteApi(env).base.replace('https://', '')} as ${user.name} (${user.role}).` };
     } catch (e) {
       if (e instanceof WebsiteError && e.status === 0) return { state: 'setup', detail: e.message };
+
       if (e instanceof WebsiteError) return { state: 'error', detail: e.message };
+
       return { state: 'offline', detail: 'The website did not answer. Check the internet connection.' };
     }
   },
@@ -38,11 +43,14 @@ export const websiteConnector: Connector = {
     const api = websiteApi(env);
     const [inq, apps] = await Promise.all([api.summary().catch(() => null), api.applicantsSummary().catch(() => null)]);
     const out = [];
+
     if (inq) {
       out.push({ label: 'Unread inquiries', value: String(inq.unread), caption: `${inq.by_kind.listing ?? 0} about listings` });
       out.push({ label: 'Payments reported', value: String(inq.by_kind.payment ?? 0), caption: 'From the website’s Pay page' });
     }
+
     if (apps) out.push({ label: 'Applicants', value: String(apps.new), caption: `new · ${apps.hired} hired` });
+
     return out;
   },
 
@@ -52,11 +60,14 @@ export const websiteConnector: Connector = {
       const api = websiteApi(env);
       const hired = await api.hired();
       const photos: ExternalPhoto[] = [];
+
       for (const a of hired.filter((x) => x.photo_path)) {
         const bytes = await api.photo(a.id).catch(() => null);
         const type = bytes && imageType(bytes);
+
         if (bytes && type) photos.push({ externalId: `applicant-${a.id}`, bytes, type });
       }
+
       return {
         people: hired.map((a) => ({ externalId: `applicant-${a.id}`, name: a.full_name, position: a.job_title, email: a.email, phone: a.phone })),
         photos,
@@ -71,6 +82,7 @@ export const websiteConnector: Connector = {
       label: 'Open admin portal',
       async run(env) {
         await env.system.openUrl(`${websiteApi(env).base}/admin`);
+
         return 'Opened the website’s admin portal.';
       },
     },

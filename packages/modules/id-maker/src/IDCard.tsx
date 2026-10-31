@@ -6,6 +6,7 @@ import { verificationCells, verificationSeed, VERIFICATION_SIZE } from './verifi
 function Pattern({ text }: { text: string }) {
   const cells = verificationCells(text);
   const n = VERIFICATION_SIZE;
+
   return (
     <svg viewBox={`0 0 ${n} ${n}`} className="block size-16 rounded-[3px] border-[3px] border-white bg-white" role="img" aria-label="Verification pattern" shapeRendering="crispEdges">
       {cells.flatMap((row, y) => row.map((dark, x) => (dark ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#111" /> : null)))}

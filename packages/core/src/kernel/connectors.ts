@@ -152,9 +152,11 @@ export interface Connector {
 /** Runs a connector call with a deadline; a slow system reports offline instead of hanging. */
 export async function withDeadline<T>(work: Promise<T>, ms: number, what: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
+
   const deadline = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error(`${what} did not answer within ${Math.round(ms / 1000)} seconds.`)), ms);
   });
+
   try {
     return await Promise.race([work, deadline]);
   } finally {
@@ -165,10 +167,15 @@ export async function withDeadline<T>(work: Promise<T>, ms: number, what: string
 /** Checks a connector definition when it registers, so a broken one is refused with a reason. */
 export function validateConnector(c: Connector, existing: string[]): string | null {
   if (!/^[a-z][a-z0-9-]{1,40}$/.test(c.id)) return `Connector id "${c.id}" must be lowercase letters, digits and dashes.`;
+
   if (existing.includes(c.id)) return `Two connectors use the id "${c.id}".`;
+
   if (!c.name.trim()) return `Connector "${c.id}" has no name.`;
+
   if (typeof c.health !== 'function') return `Connector "${c.id}" has no health check.`;
   const keys = c.settings.map((s) => s.key);
+
   if (new Set(keys).size !== keys.length) return `Connector "${c.id}" repeats a setting key.`;
+
   return null;
 }

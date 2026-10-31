@@ -25,6 +25,7 @@ function fromUtc(d: Date): ISODate {
 export function addDays(iso: ISODate, n: number): ISODate {
   const d = utc(iso);
   d.setUTCDate(d.getUTCDate() + n);
+
   return fromUtc(d);
 }
 
@@ -32,6 +33,7 @@ export function addDays(iso: ISODate, n: number): ISODate {
 export function addYears(iso: ISODate, n: number): ISODate {
   const [y, m, d] = iso.split('-').map(Number);
   const last = new Date(Date.UTC(y + n, m, 0)).getUTCDate();
+
   return `${pad(y + n, 4)}-${pad(m)}-${pad(Math.min(d, last))}`;
 }
 

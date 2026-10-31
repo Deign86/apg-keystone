@@ -38,16 +38,20 @@ describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
 
     const store = await KeystoneStore.open(platform, registry.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : [])));
     const connections = new Connections(platform, registry.connectors);
+
     for (const c of registry.connectors) await connections.refresh(c);
 
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     try {
       const routes = registry.modules.length ? registry.modules : [null];
+
       for (const m of routes) {
         window.location.hash = m ? `#${m.id}` : '';
         const view = render(<App store={store} registry={registry} connections={connections} />);
         await act(async () => {});
         expect(screen.queryByText('This screen hit a problem')).toBeNull();
+
         if (m) {
           const current = within(screen.getByRole('navigation', { name: 'Keystone' })).getByRole('button', { current: 'page' });
           expect(current).toHaveTextContent(m.title);
@@ -55,8 +59,10 @@ describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
         } else {
           expect(screen.getByText(/No screens are installed/)).toBeInTheDocument();
         }
+
         view.unmount();
       }
+
       expect(errors).not.toHaveBeenCalled();
     } finally {
       errors.mockRestore();

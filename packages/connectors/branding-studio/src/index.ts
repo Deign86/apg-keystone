@@ -34,9 +34,11 @@ export function isNewer(latest: string, installed: string): boolean {
   const parts = (v: string) => v.replace(/^v/i, '').split('.').map((n) => parseInt(n, 10) || 0);
   const a = parts(latest);
   const b = parts(installed);
+
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
   }
+
   return false;
 }
 
@@ -49,12 +51,14 @@ interface Release {
 /** The installer for this platform from the latest release. */
 export function installerFor(release: Release, platform: PlatformName): string {
   const want = platform === 'windows' ? /Setup\.exe$/i : platform === 'macos' ? /-macos\.pkg$/i : null;
+
   return (want && release.assets.find((a) => want.test(a.name))?.browser_download_url) || release.html_url || RELEASES_PAGE;
 }
 
 async function latestRelease(env: ConnectorEnv): Promise<Release | null> {
   try {
     const r = await env.http.request(RELEASES, { headers: { Accept: 'application/vnd.github+json' }, timeoutMs: 6000 });
+
     return r.ok ? await r.json<Release>() : null;
   } catch {
     return null;
@@ -63,7 +67,9 @@ async function latestRelease(env: ConnectorEnv): Promise<Release | null> {
 
 async function installed(env: ConnectorEnv) {
   const app = await env.system.locateApp(STUDIO);
+
   if (!app) throw new Error('Alpha Branding Studio is not installed on this computer.');
+
   return app;
 }
 
@@ -79,11 +85,14 @@ export const brandingStudioConnector: Connector = {
     if (env.system.platform === 'web') {
       return { state: 'unsupported', detail: 'Open Keystone’s desktop app on Windows or macOS to use Branding Studio from here.' };
     }
+
     if (env.system.platform === 'linux') {
       return { state: 'unsupported', detail: 'Branding Studio runs on Windows and macOS only.' };
     }
+
     const [app, release] = await Promise.all([env.system.locateApp(STUDIO), latestRelease(env)]);
     const latest = release?.tag_name.replace(/^v/i, '');
+
     if (!app) {
       return {
         state: 'setup',
@@ -91,8 +100,10 @@ export const brandingStudioConnector: Connector = {
         ...(release ? { update: { version: latest!, url: installerFor(release, env.system.platform) } } : {}),
       };
     }
+
     const version = app.version?.replace(/\.0$/, '');
     const behind = release && version && isNewer(release.tag_name, version);
+
     return {
       state: 'ready',
       detail: version ? `Version ${version} installed${behind ? `; ${latest} is out` : ', up to date'}.` : 'Installed.',
@@ -109,11 +120,14 @@ export const brandingStudioConnector: Connector = {
       async run(env) {
         const app = await installed(env);
         const videos = env.system.platform === 'windows' ? MEDIA.windowsVideos : MEDIA.macVideos;
+
         const files = await env.system.pickFiles('Choose listing photos or videos to brand', [
           { name: 'Photos and videos', extensions: [...MEDIA.photos, ...videos] },
         ], true);
+
         if (!files.length) return 'No photos chosen.';
         await env.system.launchApp(app, files);
+
         return `${files.length === 1 ? 'One file' : `${files.length} files`} handed to Branding Studio. Check the prefix there, then click Apply Branding.`;
       },
     },
@@ -122,6 +136,7 @@ export const brandingStudioConnector: Connector = {
       label: 'Open studio',
       async run(env) {
         await env.system.launchApp(await installed(env));
+
         return 'Opened Alpha Branding Studio.';
       },
     },
@@ -131,6 +146,7 @@ export const brandingStudioConnector: Connector = {
       async run(env) {
         const release = await latestRelease(env);
         await env.system.openUrl(release ? installerFor(release, env.system.platform) : RELEASES_PAGE);
+
         return release ? `Downloading Branding Studio ${release.tag_name}.` : 'Opened the Branding Studio releases page.';
       },
     },

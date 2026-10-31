@@ -49,6 +49,7 @@ describe('amount in words (prototype)', () => {
     [2000000000.07, 'Two Billion Pesos and 07/100 Only'],
     [586627.5, 'Five Hundred Eighty-Six Thousand Six Hundred Twenty-Seven Pesos and 50/100 Only'],
   ];
+
   it.each(cases)('%s', (pesos, words) => expect(amountInWords(toCentavos(pesos))).toBe(words));
 });
 
@@ -111,10 +112,12 @@ describe('directory (the shared kernel)', () => {
   it('imports employees from another system without duplicates', () => {
     const s = state();
     const src = { id: 'attendance', name: 'the attendance tracker' };
+
     const first = importEmployees(s, src, [
       { externalId: 'APG-2026-102', name: 'Rafael D. Mendoza', department: 'Property Management' },
       { externalId: 'APG-2026-103', name: 'Bea Santos', department: 'Leasing' },
     ], ctx);
+
     expect(first.record.added.map((d) => d.code)).toEqual(['E-005']);
     expect(first.record.updated.map((d) => d.code)).toEqual(['E-003']);
     expect(first.state.dir.find((d) => d.code === 'E-003')?.links).toEqual({ attendance: 'APG-2026-102' });

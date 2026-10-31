@@ -21,6 +21,7 @@ function Billing() {
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveStatement(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
+
     if (r.ok) setDraft(newStatement(store.getState(), ctx));
   }, [run, draft, ctx, setDraft, store]);
 
@@ -123,6 +124,7 @@ export const billingModule: ModuleDef = {
   waiting: billingWaiting,
   openWaiting: (no, app) => {
     const b = app.state.bs.find((x) => x.no === no);
+
     if (b) app.setDraft(DRAFT, statementDraftOf(b, app.ctx));
     app.go('billing');
   },

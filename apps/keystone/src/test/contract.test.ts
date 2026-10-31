@@ -15,12 +15,17 @@ const published = new Set<string>(Object.values(SERVICES));
 describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', (_id, m) => {
   it('contributes well-formed figures, findings and waiting items', () => {
     const s = state();
+
     if (m.stat) expect(m.stat(s, ctx)).toEqual([expect.any(String), expect.any(String)]);
+
     if (m.figure) expect(m.figure(s, ctx)).toEqual(expect.objectContaining({ label: expect.any(String), value: expect.any(String), caption: expect.any(String) }));
+
     if (m.finding) {
       const f = m.finding(s, ctx);
+
       if (f) expect(f).toEqual({ priority: expect.any(Number), text: expect.stringMatching(/\.$/) });
     }
+
     for (const w of m.waiting?.(s, ctx) ?? []) expect(w.no).toEqual(expect.any(String));
   });
 
@@ -28,14 +33,18 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
     const s = state();
     const before = JSON.stringify(s);
     m.stat?.(s, ctx); m.figure?.(s, ctx); m.finding?.(s, ctx); m.waiting?.(s, ctx);
+
     if (m.onOpen) m.onOpen(s, ctx);
     expect(JSON.stringify(s)).toBe(before);
   });
 
   it('names only parts and services that exist', () => {
     const ids = new Set(registry.modules.map((x) => x.id));
+
     for (const r of m.requires ?? []) expect(ids).toContain(r);
+
     for (const name of Object.keys(m.provides ?? {})) expect(published).toContain(name);
+
     for (const tag of Object.keys(m.logTags ?? {})) expect(tag).toMatch(/^[A-Z]{2,4}$/);
   });
 });

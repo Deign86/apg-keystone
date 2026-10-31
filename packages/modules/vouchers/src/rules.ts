@@ -19,6 +19,7 @@ export interface VoucherDraft extends Editing {
 
 export function newVoucher(s: TerminalState, ctx: Ctx): VoucherDraft {
   const d = ctx.seed.reference.defaults;
+
   return {
     no: nextVoucherNo(s, ctx), date: today(ctx), payee: payees(s)[0]?.code ?? '', bank: ctx.seed.reference.banks[0] ?? '',
     check: '', lines: [lineDraft({ acct: ctx.seed.reference.accounts[0] ?? '' })],
@@ -44,21 +45,28 @@ export const voucherOf = (d: VoucherDraft, status: VoucherStatus = 'For Approval
 export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew = false): Change<Voucher> {
   const v = voucherOf(d);
   const total = voucherTotal(v);
+
   if (!v.lines.length || total <= 0) throw new KeystoneError('Add at least one particular with an amount.');
+
   if (!recordOf(s, v.payee)) throw new KeystoneError('Choose a payee from the directory.');
 
   const original = d.editing ? s.cv.find((x) => x.no === d.editing) : undefined;
+
   if (original && !asNew) {
     if (original.status !== 'For Approval') {
       throw new KeystoneError(`${original.no} is ${original.status.toLowerCase()} and can no longer be changed. Save it as a new voucher instead.`);
     }
+
     const updated = { ...v, no: original.no, status: original.status };
+
     return {
       state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(total)}).`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
+
   const saved = { ...v, no: nextVoucherNo(s, ctx) };
+
   return {
     state: logged({ ...s, cv: [...s.cv, saved] }, 'CV', `${saved.no} for ${nameOf(s, v.payee)} saved and routed for approval (${peso(total)}).`, ctx),
     record: saved, message: `${saved.no} saved and routed for approval.`,
@@ -67,15 +75,21 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
 
 export function setVoucherStatus(s: TerminalState, no: string, status: VoucherStatus, ctx: Ctx): Change<Voucher> {
   const v = s.cv.find((x) => x.no === no);
+
   if (!v) throw new KeystoneError(`${no} is not in the register.`);
+
   if (v.status === status) return { state: s, record: v, message: `${no} is already ${status.toLowerCase()}.` };
+
   if (v.status === 'Void') throw new KeystoneError(`${no} is void and stays void.`);
+
   if (status === 'Released' && !v.check) throw new KeystoneError(`Enter the check number on ${no} before releasing it.`);
   const updated = { ...v, status };
+
   const text = status === 'Approved' ? `${no} approved by ${v.approved || 'the approver'}.`
     : status === 'Released' ? `${no} released; check ${v.check} to ${nameOf(s, v.payee)}.`
     : status === 'Void' ? `${no} voided (${peso(voucherTotal(v))}).`
     : `${no} returned for approval.`;
+
   return {
     state: logged({ ...s, cv: s.cv.map((x) => (x.no === no ? updated : x)) }, 'CV', text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
@@ -86,12 +100,15 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
 
 export function voucherFigure(s: TerminalState): Figure {
   const pending = awaitingApproval(s);
+
   return { label: 'Vouchers awaiting approval', value: String(pending.length), caption: `${peso(sumCentavos(pending, voucherTotal))} pending signature` };
 }
 
 export function voucherFinding(s: TerminalState): Finding | null {
   const pending = awaitingApproval(s);
+
   if (!pending.length) return null;
+
   return { priority: 20, text: `${count(pending.length, 'voucher')} worth ${peso(sumCentavos(pending, voucherTotal))} ${pending.length === 1 ? 'waits' : 'wait'} for approval.` };
 }
 

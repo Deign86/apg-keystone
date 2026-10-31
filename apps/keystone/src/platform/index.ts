@@ -9,5 +9,6 @@ export async function detectPlatform(): Promise<Platform> {
   const { desktopPlatform } = await import('./desktop');
   // The webview's user agent names the OS: WKWebView on macOS, WebView2 on Windows.
   const ua = navigator.userAgent;
+
   return desktopPlatform(/Windows/i.test(ua) ? 'windows' : /Mac OS X|Macintosh/i.test(ua) ? 'macos' : 'linux');
 }

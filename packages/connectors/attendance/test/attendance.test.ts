@@ -10,6 +10,7 @@ const system: SystemBridge = {
   platform: 'macos', locateApp: async () => null, launchApp: async () => {}, openUrl: async () => {},
   pickFiles: async () => [], readFile: async () => new Uint8Array(), listFiles: async () => [], appDataFolder: async () => null,
 };
+
 const require = createRequire(import.meta.url);
 const loadSql = () => initSqlJs({ locateFile: () => require.resolve('sql.js/dist/sql-wasm.wasm') });
 
@@ -23,9 +24,11 @@ async function fakeBackup() {
     payroll_profile_id TEXT, photo_url TEXT, revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL, gender TEXT,
     tin TEXT, bank_name TEXT NOT NULL DEFAULT 'CASH', account_number TEXT NOT NULL DEFAULT '0000', designation TEXT,
     card_type TEXT NOT NULL DEFAULT 'EMPLOYEE')`);
+
   const add = (id: string, name: string, dept: string | null, status: string, card: string, designation: string | null = null) =>
     db.run('INSERT INTO users (user_id, rfid_uid, full_name, department, status, created_at, updated_at, card_type, designation) VALUES (?,?,?,?,?,?,?,?,?)',
       [id, `00${id.length}${name.length}`, name, dept, status, '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z', card, designation]);
+
   add('APG-2026-102', 'Rafael D. Mendoza', 'Property Management', 'ACTIVE', 'EMPLOYEE', 'Property Manager');
   add('APG-2026-103', 'Bea Santos', 'Leasing', 'ACTIVE', 'EMPLOYEE');
   add('APG-2026-104', 'Left Already', 'Leasing', 'INACTIVE', 'EMPLOYEE');
@@ -33,6 +36,7 @@ async function fakeBackup() {
   const dbBytes = db.export();
   db.close();
   const webp = new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4]);
+
   return zipSync({
     'manifest.json': new TextEncoder().encode(JSON.stringify({ format: 'alpha-premier-application-backup', version: 1, database: 'database/attendance.db' })),
     'database/attendance.db': dbBytes,
@@ -63,6 +67,7 @@ describe('attendance connector', () => {
       { attendanceId: 'b', userId: '2', fullName: 'Sam Santos', department: null, timeIn: '2026-10-30T07:55:00+08:00', timeOut: '2026-10-30T18:20:00+08:00', status: 'LATE_TIMEOUT' },
       { attendanceId: 'c', userId: '3', fullName: 'Jamie Cruz', department: null, timeIn: '2026-10-30T07:40:00+08:00', timeOut: '2026-10-30T17:00:00+08:00', status: 'COMPLETED' },
     ];
+
     expect(attendanceFigures(rows, '2026-10-30')).toEqual([
       { label: 'In now', value: '1', caption: '3 scans today' },
       { label: 'Late arrivals', value: '1', caption: 'Alex' },
@@ -88,8 +93,16 @@ describe('attendance connector', () => {
   it('reports a kiosk that is not configured, refusing, or down', async () => {
     const env = (status: number | 'down', address = '192.168.1.50'): ConnectorEnv => ({
       settings: { address }, secret: async () => null, now: () => new Date(), system,
-      http: { native: true, request: async () => { if (status === 'down') throw new Error('ECONNREFUSED'); return response(status, { lan: { connectedSseClients: 2 } }); } },
+      http: {
+        native: true,
+        request: async () => {
+          if (status === 'down') throw new Error('ECONNREFUSED');
+
+          return response(status, { lan: { connectedSseClients: 2 } });
+        },
+      },
     });
+
     expect((await attendanceConnector.health(env(200, ''))).state).toBe('setup');
     expect(await attendanceConnector.health(env(200))).toEqual({ state: 'ready', detail: 'Kiosk online at 192.168.1.50:4173 · 2 live viewers.' });
     expect((await attendanceConnector.health(env(401))).state).toBe('setup');

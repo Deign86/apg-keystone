@@ -24,35 +24,53 @@ function fakeSite(opts: { password?: string; expireAfter?: number } = {}) {
   const calls: Call[] = [];
   let signedIn = false;
   let reads = 0;
+
   const http: HttpClient = {
     native: true,
     async request(url, init = {}) {
       const method = init.method ?? 'GET';
       calls.push({ url, method, headers: init.headers ?? {} });
       const path = url.replace('https://alphapremiergroup.com', '');
+
       if (path === '/api/admin/auth.php?action=check') return response(200, { authenticated: signedIn, user: signedIn ? { name: 'Keystone', role: 'admin' } : null });
+
       if (path === '/api/admin/auth.php' && method === 'POST') {
         const body = JSON.parse(String(init.body));
+
         if (body.password !== (opts.password ?? 'secret')) return response(401, { error: 'Invalid credentials' });
         signedIn = true;
+
         return response(200, { user: { name: 'Keystone', role: 'admin' } });
       }
+
       if (!signedIn) return response(401, { error: 'Not signed in' });
-      if (opts.expireAfter !== undefined && ++reads > opts.expireAfter) { signedIn = false; opts.expireAfter = undefined; return response(401, {}); }
+
+      if (opts.expireAfter !== undefined && ++reads > opts.expireAfter) {
+        signedIn = false;
+        opts.expireAfter = undefined;
+
+        return response(401, {});
+      }
+
       if (path.startsWith('/api/admin/applicants.php?status=hired')) {
         return response(200, { data: [
           { id: 7, full_name: 'Carlo Reyes', email: 'carlo.reyes@gmail.com', phone: '0917', job_title: 'Leasing Officer', enterprise_slug: 'apg', status: 'hired', photo_path: 'x.jpg', submitted_at: '' },
           { id: 8, full_name: 'Dina Cruz', email: 'dina.cruz@yahoo.com', phone: '0918', job_title: 'Accountant', enterprise_slug: 'apg', status: 'hired', photo_path: null, submitted_at: '' },
         ] });
       }
+
       if (path === '/api/admin/applicants.php?action=photo&id=7') return response(200, new Uint8Array([0xff, 0xd8, 0xff, 0xe0]));
+
       if (path.startsWith('/api/admin/inquiries.php?kind=payment')) return response(200, { data: [] });
+
       return response(404, {});
     },
   };
+
   const env = (settings: Record<string, string> = { email: 'keystone@alphapremiergroup.com' }): ConnectorEnv => ({
     settings, http, system, now: () => new Date(), secret: async (k) => (k === 'password' ? 'secret' : null),
   });
+
   return { http, env, calls };
 }
 
@@ -77,6 +95,7 @@ describe('reading what the website sends', () => {
       { no: 'BS-2026-002', client: 'Lopez Realty Corp.', due: '2026-11-05', amount: 250000 },
       { no: 'BS-2026-003', client: 'Harbor View Inc.', due: '2026-11-09', amount: 499900 },
     ];
+
     const paid = { name: 'Ana Lopez', meta: { amount: '4,999.00', company: '' } } as Inquiry;
     expect(candidates(open, paid).map((b) => b.no)).toEqual(['BS-2026-003', 'BS-2026-002', 'BS-2026-001']);
     expect(open[0].no).toBe('BS-2026-001'); // the input is left in order
@@ -105,7 +124,9 @@ describe('website connector', () => {
     await websiteApi(site.env()).signIn();
     const writes = site.calls.filter((c) => c.method !== 'GET');
     expect(writes.length).toBeGreaterThan(0);
+
     for (const w of writes) expect(w.headers.Origin).toBe('https://alphapremiergroup.com');
+
     for (const r of site.calls.filter((c) => c.method === 'GET')) expect(r.headers.Origin).toBeUndefined();
   });
 

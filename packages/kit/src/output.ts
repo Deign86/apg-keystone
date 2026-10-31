@@ -12,6 +12,7 @@ export async function savePdf(node: HTMLElement, name: string, platform: Platfor
   const scale = Math.min((page.w - margin * 2) / img.width, (page.h - margin * 2) / img.height);
   pdf.addImage(png, 'PNG', margin, margin, img.width * scale, img.height * scale);
   const bytes = new Uint8Array(pdf.output('arraybuffer'));
+
   return platform.saveFile(name, bytes, [{ name: 'PDF', extensions: ['pdf'] }]);
 }
 
@@ -19,6 +20,7 @@ export async function savePdf(node: HTMLElement, name: string, platform: Platfor
 export function printElement(node: HTMLElement) {
   node.setAttribute('data-print-root', '');
   const done = () => { node.removeAttribute('data-print-root'); window.removeEventListener('afterprint', done); };
+
   window.addEventListener('afterprint', done);
   window.print();
 }

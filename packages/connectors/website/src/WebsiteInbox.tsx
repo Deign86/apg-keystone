@@ -14,8 +14,10 @@ const when = (s: string) => shortDate(s.slice(0, 10));
 export function candidates(open: OpenStatement[], p: Inquiry) {
   const amount = paymentAmount(p);
   const payer = `${p.name} ${p.meta?.company ?? ''}`.toLowerCase();
+
   const score = (b: OpenStatement) => (amount !== null && toCentavos(amount) === b.amount ? 2 : 0)
     + (b.client.toLowerCase().split(/[\s,.]+/).some((w) => w.length > 3 && payer.includes(w)) ? 1 : 0);
+
   return [...open].sort((a, b) => score(b) - score(a));
 }
 
@@ -31,11 +33,14 @@ export function WebsiteInbox() {
 
   const refresh = useCallback(async () => {
     setLoad({ state: 'loading' });
+
     try {
       const [payments, inquiries] = await connections.safely(connector, 'inbox', (env) => {
         const api = websiteApi(env);
+
         return Promise.all([api.payments(), api.inquiries(30)]);
       }, 20000);
+
       setLoad({ state: 'ready', payments, inquiries });
     } catch (e) {
       setLoad({ state: 'failed', reason: e instanceof Error ? e.message : String(e) });
@@ -51,10 +56,12 @@ export function WebsiteInbox() {
   const settle = async (p: Inquiry, b: OpenStatement) => {
     if (!desk) return;
     const amount = paymentAmount(p) ?? 0;
+
     const r = run((s, c) => desk.record(s, b.no, {
       amount, method: p.meta?.payment_method, reference: p.meta?.reference_no,
       source: `the website${p.meta?.ticket ? ` (ticket ${p.meta.ticket})` : ''}`,
     }, c));
+
     if (r.ok) {
       setMatching(null);
       await markOnSite(p.id, 'archived');
@@ -64,6 +71,7 @@ export function WebsiteInbox() {
 
   const addClient = (i: Inquiry) => {
     const r = run((s, c) => saveDirectoryRecord(s, { ...newDirectoryDraft('Client'), name: i.meta?.company || i.name, email: i.email, phone: i.phone, detail: i.meta?.property ?? '' }, c));
+
     if (r.ok) void markOnSite(i.id, 'read');
   };
 
@@ -85,6 +93,7 @@ export function WebsiteInbox() {
   ];
 
   const open = desk ? desk.open(state) : [];
+
   const header = (
     <ScreenHeader
       eyebrow="Connected · alphapremiergroup.com"

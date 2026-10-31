@@ -30,6 +30,7 @@ const http: HttpClient = {
   async request(url, init = {}) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), init.timeoutMs ?? 10000);
+
     try {
       return response(await fetch(url, { method: init.method ?? 'GET', headers: init.headers, body: init.body, signal: ctrl.signal }));
     } finally {
@@ -50,6 +51,7 @@ function photoDb(): Promise<IDBDatabase> {
 
 async function photoOp<T>(mode: IDBTransactionMode, op: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await photoDb();
+
   return new Promise((resolve, reject) => {
     const req = op(db.transaction('photos', mode).objectStore('photos'));
     req.onsuccess = () => resolve(req.result);
@@ -85,6 +87,7 @@ export const browserPlatform: Platform = {
   putPhoto: async (name, bytes) => { await photoOp('readwrite', (s) => s.put(new Blob([bytes as BlobPart]), name)); },
   photoUrl: async (name) => {
     const blob = await photoOp<Blob | undefined>('readonly', (s) => s.get(name)).catch(() => undefined);
+
     return blob ? URL.createObjectURL(blob) : null;
   },
   saveFile: async (name, bytes) => {
@@ -92,10 +95,12 @@ export const browserPlatform: Platform = {
     const a = Object.assign(document.createElement('a'), { href: url, download: name });
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+
     return name;
   },
   openFile: async (filters) => {
     const file = await pick(filters.flatMap((f) => f.extensions.map((e) => `.${e}`)).join(','));
+
     return file ? { name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) } : null;
   },
   locateApp: async () => null,

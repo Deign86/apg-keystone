@@ -18,6 +18,7 @@ class ModuleBoundary extends Component<{ module: ModuleDef; children: ReactNode 
   }
   render() {
     if (!this.state.error) return this.props.children;
+
     return (
       <div role="alert" className="rounded-card border border-bad/50 bg-surface p-6">
         <p className="eyebrow m-0 text-bad">{this.props.module.title}</p>
@@ -34,6 +35,7 @@ class ModuleBoundary extends Component<{ module: ModuleDef; children: ReactNode 
 function Rail() {
   const { registry, route, go, store, platform } = useKeystone();
   const mod = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+';
+
   return (
     <nav aria-label="Keystone" className="flex h-dvh w-[var(--size-rail)] shrink-0 flex-col gap-6 border-r border-line bg-bg py-5 pr-3.5 pl-4">
       <button type="button" onClick={() => registry.modules[0] && go(registry.modules[0].id)} className="flex items-center gap-2.5 rounded-control text-left">
@@ -48,6 +50,7 @@ function Rail() {
       <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
         {registry.modules.map((m, i) => {
           const active = route === m.id;
+
           return (
             <li key={m.id}>
               <button
@@ -91,11 +94,14 @@ export function Shell() {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
       const n = Number(e.key);
+
       if (!Number.isInteger(n) || !registry.modules[n]) return;
       e.preventDefault();
       go(registry.modules[n].id);
     };
+
     window.addEventListener('keydown', onKey);
+
     return () => window.removeEventListener('keydown', onKey);
   }, [registry, go]);
 

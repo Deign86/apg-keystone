@@ -24,6 +24,7 @@ export class KeystoneStore {
   static async open(platform: Platform, housekeeping: ((s: TerminalState, ctx: Ctx) => TerminalState)[] = []): Promise<KeystoneStore> {
     let state = structuredClone(bundledSeed.state);
     const saved = await platform.loadState().catch(() => null);
+
     if (saved) {
       try {
         state = parseState(JSON.parse(saved));
@@ -32,8 +33,10 @@ export class KeystoneStore {
         // until the person changes something.
       }
     }
+
     const store = new KeystoneStore(platform, state);
     let tidied = state;
+
     for (const step of housekeeping) {
       try {
         tidied = step(tidied, store.ctx);
@@ -41,12 +44,15 @@ export class KeystoneStore {
         console.error('Housekeeping step failed; skipped.', e);
       }
     }
+
     if (tidied !== state) store.commit(tidied);
+
     return store;
   }
 
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
+
     return () => this.listeners.delete(fn);
   };
 
@@ -68,17 +74,21 @@ export class KeystoneStore {
   run<T>(rule: (s: TerminalState, ctx: Ctx) => Change<T>): Outcome<T> {
     try {
       const r = rule(this.state, this.ctx);
+
       if (r.state !== this.state) this.commit(r.state);
+
       return { ok: true, record: r.record, message: r.message };
     } catch (e) {
       if (e instanceof KeystoneError) return { ok: false, error: e.message };
       console.error(e);
+
       return { ok: false, error: `Something went wrong: ${e instanceof Error ? e.message : String(e)}` };
     }
   }
 
   draft<T>(key: string, make: () => T): T {
     if (!this.drafts.has(key)) this.drafts.set(key, make());
+
     return this.drafts.get(key) as T;
   }
 

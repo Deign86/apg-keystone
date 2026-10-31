@@ -17,10 +17,12 @@ function response(status: number, body: unknown): HttpResponse {
 /** A desktop platform whose website is signed in and has one payment reported for `amount` pesos. */
 function withWebsite(amount: number) {
   const archived: number[] = [];
+
   const payment = {
     id: 41, kind: 'payment', enterprise_slug: 'apg', name: 'Lopez Realty', email: 'accounts@lopezrealty.ph', phone: '', subject: 'Payment', excerpt: '',
     meta: { ticket: 'APG-1A2B3C4D', amount: amount.toFixed(2), payment_method: 'GCash', reference_no: '7788' }, status: 'new', created_at: '2026-10-30 09:00:00',
   };
+
   const platform: Platform = {
     ...browserPlatform,
     loadState: async () => null,
@@ -32,14 +34,24 @@ function withWebsite(amount: number) {
       native: true,
       async request(url, init = {}) {
         if (url.includes('auth.php?action=check')) return response(200, { authenticated: true, user: { name: 'Keystone', role: 'admin' } });
+
         if (url.includes('kind=payment')) return response(200, { data: [payment] });
+
         if (url.includes('exclude=newsletter')) return response(200, { data: [] });
+
         if (url.includes('action=summary')) return response(200, { summary: { unread: 0, by_kind: {}, total: 0, new: 0, interviewing: 0, hired: 0 } });
-        if (init.method === 'PUT') { archived.push(JSON.parse(String(init.body)).id); return response(200, { ok: true }); }
+
+        if (init.method === 'PUT') {
+          archived.push(JSON.parse(String(init.body)).id);
+
+          return response(200, { ok: true });
+        }
+
         return response(404, {});
       },
     },
   };
+
   return { platform, archived };
 }
 
@@ -48,11 +60,13 @@ async function openWebsite(platform: Platform, modules = builtInModules) {
   const store = await KeystoneStore.open(platform);
   const connections = new Connections(platform, registry.connectors);
   await connections.load();
+
   for (const c of registry.connectors) await connections.refresh(c);
   window.location.hash = '#website';
   const view = render(<App store={store} registry={registry} connections={connections} />);
   await act(async () => {});
   await screen.findByRole('cell', { name: /Lopez Realty/ });
+
   return { registry, store, view };
 }
 

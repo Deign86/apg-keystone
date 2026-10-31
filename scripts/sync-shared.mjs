@@ -22,8 +22,15 @@ function emit(rel, content) {
   const path = join(root, rel);
   const next = Buffer.isBuffer(content) ? content : Buffer.from(content);
   const prev = existsSync(path) ? readFileSync(path) : null;
+
   if (prev && prev.equals(next)) return;
-  if (check) { stale.push(rel); return; }
+
+  if (check) {
+    stale.push(rel);
+
+    return;
+  }
+
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, next);
   console.log('wrote', rel);
@@ -35,8 +42,10 @@ const kebab = (s) => s.replace(/([a-z])([A-Z0-9])/g, '$1-$2').toLowerCase();
 // "#rrggbbaa" -> "rgb(r g b / a)"; "#rrggbb" stays.
 function color(hex) {
   const h = hex.replace('#', '');
+
   if (h.length !== 8) return hex;
   const n = (i) => parseInt(h.slice(i, i + 2), 16);
+
   return `rgb(${n(0)} ${n(2)} ${n(4)} / ${(n(6) / 255).toFixed(3)})`;
 }
 
@@ -68,16 +77,20 @@ ${Object.entries(tokens.radius).map(([k, v]) => `  --radius-${kebab(k)}: ${v}px;
 ${Object.entries(tokens.layout).map(([k, v]) => `  --size-${kebab(k)}: ${v}px;`).join('\n')}
 }
 `;
+
 emit('packages/ui/src/theme.css', css);
 
 for (const f of readdirSync(join(root, 'shared/fonts'))) {
   emit(`packages/ui/src/assets/fonts/${f}`, readFileSync(join(root, 'shared/fonts', f)));
 }
+
 emit('packages/ui/src/assets/logo.png', readFileSync(join(root, 'shared/logo.png')));
+
 emit('packages/core/src/seed.json', readFileSync(join(root, 'shared/data/seed.json')));
 
 if (check && stale.length) {
   console.error('Generated files are out of date. Run `npm run sync` and commit:\n  ' + stale.join('\n  '));
   process.exit(1);
 }
+
 if (check) console.log('Generated files are up to date.');

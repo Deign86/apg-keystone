@@ -29,6 +29,7 @@ export class Connections {
 
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
+
     return () => this.listeners.delete(fn);
   };
 
@@ -53,6 +54,7 @@ export class Connections {
 
   settingsOf(c: Connector): Record<string, string> {
     const saved = this.settings[c.id] ?? {};
+
     return Object.fromEntries(c.settings.filter((f) => f.kind !== 'secret').map((f) => [f.key, saved[f.key] ?? f.default ?? '']));
   }
 
@@ -70,9 +72,11 @@ export class Connections {
   async configure(c: Connector, values: Record<string, string>, secrets: Record<string, string | null>) {
     this.settings = { ...this.settings, [c.id]: values };
     await this.platform.saveSettings(this.settings);
+
     for (const [key, value] of Object.entries(secrets)) {
       await this.platform.setSecret(`${c.id}.${key}`, value);
     }
+
     await this.refresh(c);
   }
 
@@ -86,15 +90,19 @@ export class Connections {
 
   async refresh(c: Connector) {
     let health: Health;
+
     try {
       health = await this.safely(c, 'health check', (env) => c.health(env));
     } catch (e) {
       health = { state: 'offline', detail: e instanceof Error ? e.message : String(e) };
     }
+
     let figures: Figure[] | null = null;
+
     if (health.state === 'ready' && c.figures) {
       figures = await this.safely(c, 'figures', (env) => c.figures!(env)).catch(() => null);
     }
+
     this.status.set(c.id, { health, figures, checkedAt: Date.now() });
     this.emit();
   }
