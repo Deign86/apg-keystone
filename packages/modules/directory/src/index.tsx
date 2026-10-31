@@ -43,6 +43,9 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
         <Field label="Phone"><TextInput type="tel" value={d.phone} onChange={(phone) => setD({ ...d, phone })} /></Field>
       </FieldRow>
       {d.type === 'Client' && (
+        <Field label="Attention" hint="Who billing statements are addressed to."><TextInput placeholder="Contact person" value={d.attention} onChange={(attention) => setD({ ...d, attention })} /></Field>
+      )}
+      {d.type === 'Client' && (
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           <Checkbox checked={d.vat} onChange={(vat) => setD({ ...d, vat })}>VAT-registered (statements add 12% VAT)</Checkbox>
           <Checkbox checked={d.ewt} onChange={(ewt) => setD({ ...d, ewt })}>Withholds 5% EWT</Checkbox>

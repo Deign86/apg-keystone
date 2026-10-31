@@ -17,7 +17,7 @@ export {
 
 export { ConnectorCard, Feed, FormCard, LineEditor, Workspace } from './components';
 
-export { Letterhead, Lines, Meta, orDash, Sheet, Signatures } from './documents';
+export { amountColumn, Letterhead, Lines, Meta, orDash, Sheet, Signatures, type LineColumn } from './documents';
 
 export { printElement, savePdf } from './output';
 

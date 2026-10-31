@@ -35,16 +35,16 @@ export const nextCode = (s: TerminalState, type: RecordType) =>
 
 export interface DirectoryDraft extends Editing {
   type: RecordType; name: string; tin: string; detail: string; dept: string; email: string; phone: string;
-  vat: boolean; ewt: boolean;
+  vat: boolean; ewt: boolean; attention: string;
 }
 
 export const newDirectoryDraft = (type: RecordType = 'Vendor'): DirectoryDraft => ({
-  type, name: '', tin: '', detail: '', dept: '', email: '', phone: '', vat: type === 'Client', ewt: false,
+  type, name: '', tin: '', detail: '', dept: '', email: '', phone: '', vat: type === 'Client', ewt: false, attention: '',
 });
 
 export const directoryDraftOf = (d: DirectoryRecord): DirectoryDraft => ({
   editing: d.code, type: d.type, name: d.name, tin: d.tin, detail: d.detail, dept: d.dept ?? '',
-  email: d.email ?? '', phone: d.phone ?? '', vat: d.vat ?? false, ewt: d.ewt ?? false,
+  email: d.email ?? '', phone: d.phone ?? '', vat: d.vat ?? false, ewt: d.ewt ?? false, attention: d.attention ?? '',
 });
 
 const clean = (x: string) => x.trim();
@@ -70,12 +70,15 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
   const dept = clean(d.dept);
   const email = clean(d.email);
   const phone = clean(d.phone);
+  const attention = clean(d.attention);
 
   if (d.type === 'Employee' && dept) base.dept = dept;
 
   if (d.type === 'Client') {
     base.vat = d.vat;
     base.ewt = d.ewt;
+
+    if (attention) base.attention = attention;
   }
 
   if (email) base.email = email;

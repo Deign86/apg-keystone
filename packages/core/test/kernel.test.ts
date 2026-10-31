@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, bundledSeed, editText, importEmployees, lineDraft, lineItemsOf, longDate, newDirectoryDraft,
-  nextCode, nextNumber, parseAmount, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
+  addDays, addYears, amountInWords, bundledSeed, editText, importEmployees, lineDraft, lineDraftOf, lineItemsOf, longDate, newDirectoryDraft,
+  nextCode, nextNumber, parseAmount, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   toCentavos, topFinding, validateConnector, withDeadline, type Ctx,
 } from '../src';
 
@@ -70,7 +70,7 @@ describe('seed', () => {
   it('loads', () => {
     expect(bundledSeed.state.dir).toHaveLength(11);
     expect(bundledSeed.state.cv).toHaveLength(3);
-    expect(bundledSeed.company.name).toBe('ALPHA PREMIER GROUP');
+    expect(bundledSeed.company.name).toBe('ALPHA PREMIER GROUP OF COMPANIES OPC');
   });
 });
 
@@ -82,8 +82,15 @@ describe('state and numbering', () => {
   });
 
   it('drops blank lines as the prototype did', () => {
-    const items = lineItemsOf([lineDraft({ desc: 'Rent', amount: '12,500' }), lineDraft()], 'ref');
-    expect(items).toEqual([{ desc: 'Rent', ref: '', amt: 12500 }]);
+    const items = lineItemsOf([lineDraft({ desc: 'Rent', amount: '12,500' }), lineDraft()], 'amount');
+    expect(items).toEqual([{ desc: 'Rent', amt: 12500 }]);
+  });
+
+  it('prices statement lines by quantity, and reads a typed quantity', () => {
+    const items = lineItemsOf([lineDraft({ desc: 'Virtual office', qty: '3', amount: '2,299' }), lineDraft({ desc: 'Mail', qty: '', amount: '0.333' })], 'unit');
+    expect(items).toEqual([{ desc: 'Virtual office', qty: 3, price: 2299, amt: 6897 }, { desc: 'Mail', qty: 1, price: 0.33, amt: 0.33 }]);
+    expect([parseQuantity('1,000'), parseQuantity(' '), parseQuantity('two'), parseQuantity('-1')]).toEqual([1000, 1, 0, 0]);
+    expect(lineDraftOf({ desc: 'Old', amt: 450 })).toMatchObject({ qty: '1', amount: '450' });
   });
 
   it('reads backups, keeps unknown module data, refuses other files', () => {

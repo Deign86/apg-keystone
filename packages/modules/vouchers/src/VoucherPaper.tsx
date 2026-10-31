@@ -1,25 +1,43 @@
 import { forwardRef } from 'react';
-import { amountInWords, longDate, peso, type Company, type DirectoryRecord, type Voucher } from '@keystone/core';
+import { longDate, peso, type Company, type DirectoryRecord, type Voucher } from '@keystone/core';
 import { voucherTotal } from './rules';
-import { Letterhead, Lines, Meta, orDash, Signatures, Sheet } from '@keystone/kit';
+import { amountColumn, Letterhead, Lines, Meta, orDash, Signatures, Sheet } from '@keystone/kit';
 
-export const VoucherPaper = forwardRef<HTMLDivElement, { voucher: Voucher; payee?: DirectoryRecord; company: Company }>(function VoucherPaper({ voucher: v, payee, company }, ref) {
-  const total = voucherTotal(v);
+// The company's Disbursement Voucher: three copies to a sheet, cut apart after printing.
+const COPIES = 3;
+const BLANK = '________';
 
+type Props = { voucher: Voucher; payee?: DirectoryRecord; company: Company };
+
+function Slip({ voucher: v, payee, company }: Props) {
   return (
-    <Sheet ref={ref} label={`Check voucher ${v.no}`}>
-      <Letterhead company={company} title="Check Voucher" no={v.no} />
+    <>
+      <Letterhead company={company} title="Disbursement Voucher" no={`CV No. ${v.no}`} date={`Date: ${longDate(v.date)}`} />
       <Meta rows={[
-        ['Payee', payee?.name ?? '—', true], ['Date', longDate(v.date)],
-        ['Address', orDash(payee?.detail)], ['TIN', orDash(payee?.tin)],
-        ['Bank', v.bank], ['Check No.', v.check || '________'],
+        ['Payee', payee?.name ?? '—', true], ['Check no.', v.check || BLANK],
+        ['Address', orDash(payee?.detail)], ['Date of check', v.checkDate ? longDate(v.checkDate) : BLANK],
       ]} />
-      <Lines middle="Account" lines={v.lines} empty="No particulars yet." middleOf={(l) => l.acct ?? ''} footer={[['Total', peso(total), true]]} />
-      <p className="my-2.5 border border-paper-line px-2.5 py-2 italic"><b className="not-italic">Amount in words:</b> {amountInWords(total)}</p>
-      <Signatures names={[[v.prepared, 'Prepared by'], [v.checked, 'Checked by'], [v.approved, 'Approved by'], ['', 'Received by / Date']]} />
-      <p className="mt-5 mb-0 border-t border-dashed border-paper-line pt-2.5 text-[11px] text-paper-muted">
-        Received from Alpha Premier Group the amount of {peso(total)} in full payment of the above. Signature over printed name: ____________________ Date: __________
-      </p>
+      <Lines
+        columns={[{ header: 'Particulars', cell: (l) => l.desc }, amountColumn()]}
+        lines={v.lines}
+        rows={3}
+        empty="No particulars yet."
+        footer={[['Total', peso(voucherTotal(v)), true]]}
+      />
+      <Signatures className="mt-5" names={[[v.prepared, 'Prepared by'], [v.checked, 'Audited by'], [v.approved, 'Approved by'], ['', 'Received by']]} />
+    </>
+  );
+}
+
+export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPaper(props, ref) {
+  return (
+    <Sheet ref={ref} onePage label={`Disbursement voucher ${props.voucher.no}, ${COPIES} copies`}>
+      {Array.from({ length: COPIES }, (_, i) => (
+        // The copies repeat the first, so only the first is read out.
+        <div key={i} aria-hidden={i > 0 || undefined} className={i > 0 ? 'mt-5 border-t border-dashed border-paper-line pt-5' : undefined}>
+          <Slip {...props} />
+        </div>
+      ))}
     </Sheet>
   );
 });

@@ -26,9 +26,9 @@ function Billing() {
   }, [run, draft, ctx, setDraft, store]);
 
   const columns: Column<Statement>[] = [
-    { key: 'no', header: 'BS No.', width: 128, cell: (b) => <span className="font-semibold text-gold-bright tabular-nums">{b.no}</span> },
+    { key: 'no', header: 'Invoice No.', width: 128, cell: (b) => <span className="font-semibold text-gold-bright tabular-nums">{b.no}</span> },
     { key: 'client', header: 'Client', cell: (b) => recordOf(state, b.client)?.name ?? b.client },
-    { key: 'period', header: 'Period', width: 176, cell: (b) => <span className="text-ink-2">{b.period}</span> },
+    { key: 'invoiced', header: 'Invoice date', width: 120, cell: (b) => <span className="text-ink-2 tabular-nums">{shortDate(b.invoiceDate ?? b.date)}</span> },
     { key: 'due', header: 'Due', width: 104, cell: (b) => <span className="text-ink-2 tabular-nums">{shortDate(b.due)}</span> },
     { key: 'amount', header: 'Amount due', width: 132, align: 'right', cell: (b) => <span className="font-semibold">{peso(statementTotals(b).due)}</span> },
     { key: 'status', header: 'Status', width: 150, align: 'right', cell: (b) => <StatusPill status={b.status} tone={toneOf(b.status)} /> },
@@ -79,19 +79,21 @@ function Billing() {
               <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and mark as sent'}</Button>
             </>}
           >
-            <FieldRow min={130}>
-              <Field label="BS No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
-              <Field label="Statement date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
+            <FieldRow>
+              <Field label="Invoice No." hint={editing ? undefined : 'The next number; change it if you need to.'}>
+                <TextInput figures readOnly={!!editing} value={draft.editing ?? draft.no} onChange={(no) => setDraft({ ...draft, no })} />
+              </Field>
+              <Field label="Date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
+            </FieldRow>
+            <FieldRow>
+              <Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field>
               <Field label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field>
             </FieldRow>
-            <Field label="Bill to" hint="VAT and withholding follow the client’s setup in the directory.">
+            <Field label="Bill to" hint="VAT, withholding and Attention follow the client’s setup in the directory.">
               <SelectInput value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} options={recordsOf(state, 'Client').map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
             </Field>
-            <FieldRow>
-              <Field label="Billing period"><TextInput value={draft.period} onChange={(period) => setDraft({ ...draft, period })} /></Field>
-              <Field label="Contract / unit reference"><TextInput placeholder="Lease No. L-2025-014" value={draft.ref} onChange={(r) => setDraft({ ...draft, ref: r })} /></Field>
-            </FieldRow>
-            <LineEditor title="Charges" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
+            <Field label="Attention"><TextInput placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field>
+            <LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               <Checkbox checked={draft.vat} onChange={(vat) => setDraft({ ...draft, vat })}>Add 12% VAT</Checkbox>
               <Checkbox checked={draft.ewt} onChange={(ewt) => setDraft({ ...draft, ewt })}>Less 5% expanded withholding tax</Checkbox>
@@ -102,7 +104,8 @@ function Billing() {
               </p>
               <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(t.due)}</p>
             </div>
-            <Field label="Payment instructions"><TextArea value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
+            <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
+            <Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
           </FormCard>
         }
         preview={<StatementPaper ref={paper} statement={{ ...live, no: draft.editing ?? draft.no }} client={recordOf(state, draft.client)} company={ctx.seed.company} terms={ctx.seed.reference.defaults.billingTerms} />}

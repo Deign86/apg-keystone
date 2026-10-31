@@ -5,7 +5,8 @@ import {
   type VoucherStatus, type WaitingItem
 } from '@keystone/core';
 
-// Check vouchers: disbursements routed for signatures. Reads the directory for payees.
+// Check vouchers: disbursements routed for signatures, printed as the company's
+// Disbursement Voucher. Reads the directory for payees.
 
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
@@ -13,7 +14,7 @@ export const nextVoucherNo = (s: TerminalState, ctx: Ctx) => nextNumber(s.cv.map
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
 export interface VoucherDraft extends Editing {
-  no: string; date: string; payee: string; bank: string; check: string;
+  no: string; date: string; payee: string; check: string; checkDate: string;
   lines: LineDraft[]; prepared: string; checked: string; approved: string;
 }
 
@@ -21,21 +22,26 @@ export function newVoucher(s: TerminalState, ctx: Ctx): VoucherDraft {
   const d = ctx.seed.reference.defaults;
 
   return {
-    no: nextVoucherNo(s, ctx), date: today(ctx), payee: payees(s)[0]?.code ?? '', bank: ctx.seed.reference.banks[0] ?? '',
-    check: '', lines: [lineDraft({ acct: ctx.seed.reference.accounts[0] ?? '' })],
-    prepared: d.preparedBy, checked: d.checkedBy, approved: d.approvedBy,
+    no: nextVoucherNo(s, ctx), date: today(ctx), payee: payees(s)[0]?.code ?? '', check: '', checkDate: '',
+    lines: [lineDraft()], prepared: d.preparedBy, checked: d.checkedBy, approved: d.approvedBy,
   };
 }
 
 export const voucherDraftOf = (v: Voucher): VoucherDraft => ({
-  editing: v.no, no: v.no, date: v.date, payee: v.payee, bank: v.bank, check: v.check,
+  editing: v.no, no: v.no, date: v.date, payee: v.payee, check: v.check, checkDate: v.checkDate ?? '',
   lines: v.lines.map(lineDraftOf), prepared: v.prepared, checked: v.checked, approved: v.approved,
 });
 
-export const voucherOf = (d: VoucherDraft, status: VoucherStatus = 'For Approval'): Voucher => ({
-  no: d.no, date: d.date, payee: d.payee, bank: d.bank, check: d.check.trim(), lines: lineItemsOf(d.lines, 'acct'),
-  status, prepared: d.prepared, checked: d.checked, approved: d.approved,
-});
+export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval'): Voucher {
+  const v: Voucher = {
+    no: d.no, date: d.date, payee: d.payee, check: d.check.trim(), lines: lineItemsOf(d.lines, 'amount'),
+    status, prepared: d.prepared, checked: d.checked, approved: d.approved,
+  };
+
+  if (d.checkDate) v.checkDate = d.checkDate;
+
+  return v;
+}
 
 /**
  * Saves a voucher. A draft loaded from the register updates that voucher while it is

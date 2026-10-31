@@ -30,13 +30,21 @@ export interface DirectoryRecord {
   links?: Record<string, string>;
   /** Employees: a photo file name in the app's photo folder, for the ID Maker. */
   photo?: string;
+  /** Clients: the person billing statements are addressed to ("Attention: …"). */
+  attention?: string;
 }
 
 export interface LineItem {
   desc: string;
+  /** Statement lines: how many, at `price` each. */
+  qty?: number;
+  /** Statement lines: the unit price in pesos, before tax. */
+  price?: number;
+  /** Older vouchers: the expense account. No longer entered. */
   acct?: string;
+  /** Older statements: a per-line reference. No longer entered. */
   ref?: string;
-  /** Pesos. */
+  /** Pesos: the line's amount before tax (qty × price on statement lines). */
   amt: number;
 }
 
@@ -69,27 +77,42 @@ export interface Voucher {
   date: ISODate;
   /** Directory code of the payee. */
   payee: string;
-  bank: string;
+  /** Older vouchers: the bank account drawn on. No longer entered. */
+  bank?: string;
   check: string;
+  /** The date written on the check. */
+  checkDate?: ISODate;
   lines: LineItem[];
   status: VoucherStatus;
   prepared: string;
+  /** Printed as "Audited by" (the key is the prototype's). */
   checked: string;
   approved: string;
 }
 
 export interface Statement {
+  /** The invoice number: a six-digit running number and the year, "010100-2026". */
   no: string;
+  /** The statement's date ("Date:" at the top). */
   date: ISODate;
+  /** The invoice date; older statements have only `date`. */
+  invoiceDate?: ISODate;
   due: ISODate;
   /** Directory code of the client. */
   client: string;
-  period: string;
-  ref: string;
+  /** Who the statement is addressed to at the client. */
+  attention?: string;
+  /** Older statements: the billing period. No longer entered. */
+  period?: string;
+  /** Older statements: the contract or unit reference. No longer entered. */
+  ref?: string;
   lines: LineItem[];
   vat: boolean;
   ewt: boolean;
+  /** Payment instructions. */
   notes?: string;
+  /** The closing note under the payment instructions. */
+  note?: string;
   status: StatementStatus;
 }
 
@@ -143,19 +166,21 @@ export interface Company {
 
 export interface Defaults {
   preparedBy: string;
+  /** The voucher's "Audited by". */
   checkedBy: string;
   approvedBy: string;
-  billingPeriod: string;
+  /** A statement's payment instructions: bank, account name and number, where to send proof. */
   paymentInstructions: string;
+  /** A statement's closing note. */
+  billingNote: string;
   signatory: string;
+  /** Printed under a statement's dates: the late-payment penalty. */
   billingTerms: string;
   dueInDays: number;
   idValidYears: number;
 }
 
 export interface ReferenceData {
-  accounts: string[];
-  banks: string[];
   bloodTypes: string[];
   defaults: Defaults;
 }

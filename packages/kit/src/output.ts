@@ -16,10 +16,34 @@ export async function savePdf(node: HTMLElement, name: string, platform: Platfor
   return platform.saveFile(name, bytes, [{ name: 'PDF', extensions: ['pdf'] }]);
 }
 
-/** Prints only this element (the print stylesheet hides everything else). */
+// The printable area of an A4 page with the print stylesheet's 12 mm margins, in CSS px,
+// less 2% so borders and rounding never push the last line onto a second page.
+const A4_PRINTABLE = { w: (186 / 25.4) * 96, h: (273 / 25.4) * 96 * 0.98 };
+
+/** Scales a document marked data-print-fit down to one page, as laid out at the page's width. */
+function fitToPage(node: HTMLElement) {
+  const width = node.style.width;
+  node.style.width = `${A4_PRINTABLE.w}px`;
+  const height = node.scrollHeight;
+  node.style.width = width;
+
+  if (height > A4_PRINTABLE.h) node.style.zoom = String(A4_PRINTABLE.h / height);
+}
+
+/**
+ * Prints only this element (the print stylesheet hides everything else). One marked
+ * data-print-fit, such as the voucher's three copies, is scaled to fit a single page.
+ */
 export function printElement(node: HTMLElement) {
   node.setAttribute('data-print-root', '');
-  const done = () => { node.removeAttribute('data-print-root'); window.removeEventListener('afterprint', done); };
+
+  if (node.hasAttribute('data-print-fit')) fitToPage(node);
+
+  const done = () => {
+    node.removeAttribute('data-print-root');
+    node.style.zoom = '';
+    window.removeEventListener('afterprint', done);
+  };
 
   window.addEventListener('afterprint', done);
   window.print();

@@ -14,7 +14,6 @@ function Vouchers() {
   const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
-  const ref = ctx.seed.reference;
   const pending = awaitingApproval(state);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
   const live = voucherOf(draft);
@@ -32,7 +31,7 @@ function Vouchers() {
     { key: 'no', header: 'CV No.', width: 128, cell: (v) => <span className="font-semibold text-gold-bright tabular-nums">{v.no}</span> },
     { key: 'date', header: 'Date', width: 104, cell: (v) => <span className="text-ink-2 tabular-nums">{shortDate(v.date)}</span> },
     { key: 'payee', header: 'Payee', cell: (v) => recordOf(state, v.payee)?.name ?? v.payee },
-    { key: 'check', header: 'Bank / Check', width: 168, cell: (v) => <><span className="tabular-nums">{v.check || '—'}</span> <span className="text-ink-2">{v.bank.split(' –')[0]}</span></> },
+    { key: 'check', header: 'Check', width: 168, cell: (v) => <><span className="tabular-nums">{v.check || '—'}</span> <span className="text-ink-2 tabular-nums">{v.checkDate ? shortDate(v.checkDate) : ''}</span></> },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (v) => <span className="font-semibold">{peso(voucherTotal(v))}</span> },
     { key: 'status', header: 'Status', width: 150, align: 'right', cell: (v) => <StatusPill status={v.status} tone={toneOf(v.status)} /> },
   ];
@@ -90,17 +89,17 @@ function Vouchers() {
               <SelectInput value={draft.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
             </Field>
             <FieldRow>
-              <Field label="Bank account"><SelectInput value={draft.bank} onChange={(bank) => setDraft({ ...draft, bank })} options={ref.banks.map((b) => ({ value: b, label: b }))} /></Field>
               <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={draft.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
+              <Field label="Date of check"><TextInput type="date" value={draft.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
             </FieldRow>
-            <LineEditor title="Particulars" lines={draft.lines} accounts={ref.accounts} onChange={(lines) => setDraft({ ...draft, lines })} />
+            <LineEditor title="Particulars" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
             <div className="text-right" aria-live="polite">
               <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
               <p className="m-0 text-xs text-ink-2">{amountInWords(total)}</p>
             </div>
             <FieldRow min={120}>
               <Field label="Prepared by"><TextInput value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
-              <Field label="Checked by"><TextInput value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
+              <Field label="Audited by"><TextInput value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
               <Field label="Approved by"><TextInput value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
             </FieldRow>
           </FormCard>
@@ -115,7 +114,7 @@ export const vouchersModule: ModuleDef = {
   id: 'vouchers',
   title: 'Check Vouchers',
   section: 'Disbursements',
-  blurb: 'Prepare disbursement vouchers, generate the amount in words, and route them for signatures.',
+  blurb: 'Prepare disbursement vouchers, print them three to a sheet, and route them for signatures.',
   order: 2,
   onHome: true,
   stat: (s) => ['Awaiting approval', String(awaitingApproval(s).length)],

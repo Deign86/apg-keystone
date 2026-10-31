@@ -14,11 +14,20 @@ describe('check vouchers', () => {
   });
 
   it('saves a voucher, drops blank lines and logs it', () => {
-    const d = { ...newVoucher(state(), ctx), payee: 'V-002', lines: [lineDraft({ desc: 'Water – Head Office', acct: '5210 Utilities', amount: '8,412.30' }), lineDraft()] };
+    const d = { ...newVoucher(state(), ctx), payee: 'V-002', lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' }), lineDraft()] };
     const r = saveVoucher(state(), d, ctx);
     expect(r.record.no).toBe('CV-2026-0142');
     expect(r.record.lines).toHaveLength(1);
     expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'CV', text: 'CV-2026-0142 for Manila Water Company saved and routed for approval (₱8,412.30).' });
+  });
+
+  it('keeps the date of check, and no longer carries a bank or account code', () => {
+    const d = { ...newVoucher(state(), ctx), check: '0004512', checkDate: '2026-11-02', lines: [lineDraft({ desc: 'Retainer – November 2026', amount: '35,000' })] };
+    const r = saveVoucher(state(), d, ctx);
+    expect(r.record).toMatchObject({ check: '0004512', checkDate: '2026-11-02', lines: [{ desc: 'Retainer – November 2026', amt: 35000 }] });
+    expect(r.record).not.toHaveProperty('bank');
+    expect(saveVoucher(state(), { ...d, checkDate: '' }, ctx).record).not.toHaveProperty('checkDate');
+    expect(voucherDraftOf({ ...state().cv[0], checkDate: undefined }).checkDate).toBe('');
   });
 
   it('refuses an empty voucher', () => {
