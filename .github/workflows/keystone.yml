@@ -24,11 +24,17 @@ jobs:
         run: npm run sync -- --check
       - name: Package boundaries (parts depend only on core, ui and kit; every import declared)
         run: npm run check:boundaries
+      - name: Agent skills load (every .agents/skills skill linked from .claude/skills)
+        run: npm run check:skills
       - name: Oxlint with the anti-slop rules
         run: npm run lint
       - run: npm run typecheck
       - name: Every package's tests, plus the removal, contract and service suites
         run: npm test
+      - name: Chromium for the end-to-end tests
+        run: npx @e2e-dev/web install chromium --with-deps
+      - name: End-to-end tests (every screen in Chromium, against the dev server)
+        run: npm run test:e2e
       - name: Taste Skill lint (app rules)
         run: npm run lint:taste
       - name: Linux libraries for the Tauri shell

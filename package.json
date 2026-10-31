@@ -18,12 +18,15 @@
     "build": "npm run sync -- --check && cd apps/keystone && tauri build",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
+    "test:e2e": "e2e run",
     "lint:taste": "node .agents/skills/design-taste-frontend/scripts/lint.mjs --app apps/keystone/src packages/ui/src packages/kit/src packages/modules packages/connectors",
     "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:skills": "node scripts/check-skills.mjs",
     "lint": "oxlint",
-    "check": "npm run sync -- --check && npm run check:boundaries && npm run lint && npm run typecheck && npm test && npm run lint:taste"
+    "check": "npm run sync -- --check && npm run check:boundaries && npm run check:skills && npm run lint && npm run typecheck && npm test && npm run lint:taste"
   },
   "devDependencies": {
+    "@e2e-dev/web": "^0.15.4",
     "@oxlint/plugins": "1.90.0",
     "@tauri-apps/cli": "^2.12.4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -31,6 +34,7 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@types/sql.js": "^1.4.11",
+    "e2e": "^0.22.0",
     "jsdom": "^25.0.1",
     "oxlint": "1.90.0",
     "typescript": "^5.9.3",

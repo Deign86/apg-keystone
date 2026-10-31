@@ -128,15 +128,20 @@ regression suites that guard the architecture live in the composition root:
 | Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
 | Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
 | Services | `apps/keystone/src/test/services.test.tsx` | The website settles a billing statement through the service, and still works without billing |
+| End to end | `e2e/screens.e2e.ts` (`npm run test:e2e`) | Every screen on the rail opens in Chromium against the dev server and shows its title |
 
 A new rule gets a test in its package. A bug fix gets the test that would have caught it.
 
 ## Before you commit
 
 ```bash
-npm run check   # generated files in sync · boundaries · typecheck · every package's tests · Taste Skill lint
+npm run check      # generated files in sync · boundaries · skills · Oxlint · typecheck · every package's tests · Taste Skill lint
+npm run test:e2e   # when you change a screen
 cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml   # when you touch src-tauri
 ```
+
+`npm run lint` is Oxlint with the anti-slop rules (`.oxlintrc.json`). Fix a finding; don't silence it. A type
+assertion needs a `SAFETY:` comment just above it, saying what makes it hold.
 
 UI changes also go through the design checks in `docs/DESIGN.md`:
 - **Skills to load:** the vendored `ui-skills` (`baseline-ui`, `fixing-accessibility`, `fixing-motion-performance`)

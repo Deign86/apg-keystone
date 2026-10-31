@@ -45,8 +45,9 @@ Needs Node 22 and Rust (stable). On Linux it also needs the WebKitGTK libraries 
 npm install
 npm run desktop     # the desktop app, with hot reload
 npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (connectors that need the desktop say so)
-npm run check       # everything CI checks: theme in sync, boundaries, typecheck, tests, Taste Skill lint
+npm run check       # everything CI checks: theme in sync, boundaries, skills, Oxlint, typecheck, tests, Taste Skill lint
 npm test            # every package's tests, plus the removal, contract and service regression suites
+npm run test:e2e    # every screen in Chromium against the dev server (e2e; starts `npm run dev` itself)
 npm run build       # installers for this OS into apps/keystone/src-tauri/target/release/bundle
 ```
 
@@ -78,7 +79,19 @@ In Keystone, open **Connections** (⌘8 / Ctrl+8):
 
 ## Agent skills
 
-`.claude/skills` vendors [ui-skills](https://github.com/ibelick/ui-skills). `.agents/skills` holds
-[Taste Skill](https://github.com/Leonxlnx/taste-skill) (`design-taste-frontend`) and the other installed skills
-(ponytail, unlazy, anti-slop, e2e, grill-me), each linked from `.claude/skills`. `.mcp.json` connects the ui-skills
-registry MCP. Keystone's screens are checked with ui-skills and Taste Skill (see `docs/DESIGN.md`).
+The skills live in the repo, so every clone has them. `.claude/skills` vendors
+[ui-skills](https://github.com/ibelick/ui-skills). `.agents/skills` holds the rest, each linked from `.claude/skills`
+(where Claude Code looks). `npm run check:skills` fails if a link is missing or broken.
+
+| Skill | What it is wired to |
+|---|---|
+| Taste Skill (`design-taste-frontend`) | `npm run lint:taste` in CI, and the screenshot inspector in `docs/DESIGN.md` |
+| ui-skills (`baseline-ui`, `fixing-*`, `improve-ui`, …) | The design checks in `docs/DESIGN.md`; the ui-skills registry MCP in `.mcp.json` |
+| anti-slop (`install-anti-slop`) | Oxlint with its rules: `.oxlintrc.json`, the plugin in `tools/oxlint/anti-slop`, `npm run lint` in CI |
+| e2e | `e2e.config.ts`, tests in `e2e/`, `npm run test:e2e` in CI, and its MCP server in `.mcp.json` |
+| unlazy | Works as is. Its optional Claude Code Stop hook is per machine: `node .agents/skills/unlazy/scripts/install-hooks.mjs` |
+| ponytail (and `-review`, `-audit`, `-debt`, `-gain`, `-help`), grilling, grill-me | Instructions only; nothing to set up. `grill-me` starts only when you type `/grill-me` |
+
+On Windows, Git checks the links out as plain files unless symlinks are on. Turn on Developer Mode, then clone with
+`git clone -c core.symlinks=true …`, or in an existing clone run `git config core.symlinks true` and
+`git checkout -- .claude/skills`.
