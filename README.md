@@ -12,9 +12,12 @@ It is **modular-first**: every screen and every connected system can be taken ou
 proves it on every push. Agents and co-developers start with [`AGENTS.md`](AGENTS.md).
 
 ```
-apps/keystone/   the app: screens (src/modules), connected systems (src/connectors), native side (src-tauri)
-packages/core/   every rule, tested: numbering, VAT/EWT, amount in words, saving, imports
-packages/ui/     the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
+apps/keystone/        the app: lists the installed modules and connectors, the platform, the native side (src-tauri)
+packages/modules/     one package per screen, with its rules and tests: vouchers, billing, id-maker, directory, …
+packages/connectors/  one package per connected system, with its client and tests: attendance, branding-studio, website
+packages/kit/         the app runtime: registries, services, store, connector runtime, shell, shared components
+packages/core/        the shared kernel: money, dates, the saved state, the directory, contracts
+packages/ui/          the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
 shared/          tokens, fonts, logo, sample data
 prototype/       the original single-page web prototype (2026-10-27), kept for reference
 docs/            MODULARITY.md (the contracts), ARCHITECTURE.md (how it fits), DESIGN.md (the look),
@@ -43,12 +46,13 @@ npm install
 npm run desktop     # the desktop app, with hot reload
 npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (connectors that need the desktop say so)
 npm run check       # everything CI checks: theme in sync, boundaries, typecheck, tests, Taste Skill lint
-npm test            # core rules, connectors, and the removal test (each part taken out in turn)
+npm test            # every package's tests, plus the removal, contract and service regression suites
 npm run build       # installers for this OS into apps/keystone/src-tauri/target/release/bundle
 ```
 
-Adding or removing a screen or a connected system is one folder plus one line; see `AGENTS.md` and the README in
-`apps/keystone/src/modules/` or `apps/keystone/src/connectors/`.
+Every screen and every connected system is its own package (`packages/modules/<id>`, `packages/connectors/<id>`).
+Adding or removing one is one package plus one line in `apps/keystone/src/modules.ts` or `src/connectors.ts`; see
+`AGENTS.md` and the README in `packages/modules/` or `packages/connectors/`.
 
 ## Setting up the connections
 

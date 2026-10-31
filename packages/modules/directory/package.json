@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/module-directory",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Directory: the screen for vendors, clients and employees (the data itself is the core\u2019s shared kernel).",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

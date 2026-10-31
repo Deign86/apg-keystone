@@ -153,12 +153,12 @@ Each principle gives its source, what Keystone does, and how it's checked.
 
 | # | Principle | From | In Keystone | Checked by |
 |---|---|---|---|---|
-| P1 | **Decompose by what changes together.** One part per business function or external system. | Parnas; Rengaiah's "business context" | Domains: directory, vouchers, billing, ids. Modules: one screen each. Connectors: one per APG system. | Review; folder READMEs |
-| P2 | **Physical boundaries, enforced.** A part never imports another part; the kernel never imports a part. | Rengaiah; Packwerk, Nx, ArchUnit | `scripts/check-boundaries.mjs`, failing CI | CI (verified by planting violations) |
-| P3 | **Dependencies point toward stability.** No cycles. | Martin (ADP, SDP) | Parts → kernel only; domains → kernel and the shared directory domain only. | Boundary check |
-| P4 | **Known by contributions, not references.** The host composes what parts declare. | VS Code contribution points | `ModuleDef` and `Connector` fields; registry-built Overview, Home, Activity | Removal test |
-| P5 | **Removable and testable alone.** | The 2026 reading of "deployable" | Delete one line | `removal.test.tsx` (every module and connector, in turn) |
-| P6 | **Contain failure at run time.** | VS Code extension isolation; Rengaiah's run-time modularity | Per-screen error boundaries, a deadline on every connector call, broken parts refused with a reason | `connectors.test.ts`, removal test |
+| P1 | **Decompose by what changes together.** One part per business function or external system. | Parnas; Rengaiah's "business context" | One package per module (a screen and its area's rules) and per connector (one APG system); the directory is shared kernel. | Review; package READMEs |
+| P2 | **Physical boundaries, enforced.** A part never depends on another part; the kernel never depends on a part. | Rengaiah; Packwerk, Nx, ArchUnit | Each part is a package; its `package.json` declares what it may use, and `scripts/check-boundaries.mjs` fails CI on an undeclared import or a dependency its layer may not have | CI (verified by planting twelve violations) |
+| P3 | **Dependencies point toward stability.** No cycles. | Martin (ADP, SDP) | Parts → kit → core and ui; core and ui depend on nothing in Keystone. Parts that need each other's behaviour meet at a service contract in core. | Boundary check |
+| P4 | **Known by contributions, not references.** The host composes what parts declare. | VS Code contribution points; OSGi services | `ModuleDef` and `Connector` fields; registry-built Overview, Home, Activity; named services (`provides`, `app.service`) | Removal, contract and services tests |
+| P5 | **Removable and testable alone.** | The 2026 reading of "deployable" | Delete one line and one manifest entry | `removal.test.tsx` (every module and connector removed in turn, and installed alone) |
+| P6 | **Contain failure at run time.** | VS Code extension isolation; Rengaiah's run-time modularity | Per-screen error boundaries, a deadline on every connector call, broken parts refused with a reason | `packages/kit/test/runtime.test.ts`, removal test |
 | P7 | **Deep modules.** Small interfaces that hide decisions likely to change. | Ousterhout | Connectors hide each system's API, auth and quirks; rules hide VAT and EWT, numbering and wording | Review: leaks are a red flag |
 | P8 | **Architecture as tests.** Every promise has a fitness function. | Ford, Parsons, Kua | `npm run check`: theme sync, boundaries, types, tests, design lint | CI on every push |
 | P9 | **One deployable until a real need says otherwise.** | Fowler; modular monolith practice | One Tauri app; the attendance roster hub is proposed, not assumed | ADRs |
@@ -179,15 +179,16 @@ Each principle gives its source, what Keystone does, and how it's checked.
   - **Why it's acceptable:** loading parts from separate bundles adds signing, versioning and compatibility work.
     That pays off only when other teams ship parts.
   - **What would change it:** declarative manifests first (§6), runtime loading only if needed.
-- **T3: Folders, not packages, for modules and connectors.**
-  - **The departure:** Boundaries are enforced by a script, not by package manifests.
-  - **Why it's acceptable:** it's the same guarantee in CI, with less ceremony while the team is small.
+- **T3 (resolved): Folders, not packages.** Keystone started with modules and connectors as folders, checked by a
+  script. Since ADR 0005 each one is an npm workspace package with its own manifest, rules and tests, the modern
+  equivalent of the article's JAR. The script now checks manifests, which is a stronger guarantee: a dependency has to
+  be written down before it can be used.
 
 ## 6. Where to go next (in order of value)
 
 1. **Write an ADR for each significant change.** The format and the first records are in `docs/adr/`.
-2. **Make each part a package** (`packages/modules/*`, `packages/connectors/*`), so allowed dependencies are declared
-   in each part's own manifest. This is the modern equivalent of the article's JAR.
+2. ~~**Make each part a package**~~ Done (ADR 0005): `packages/modules/*` and `packages/connectors/*`, each with its own
+   manifest, rules and tests, and a service registry for the one place two parts cooperate.
 3. **Add a static contribution manifest:** each part's title, rail order, Home tile and log tags in data, VS Code
    style. Keystone could then show a part before loading its code, and lazy-load heavy screens.
 4. **Add more fitness functions, but few:**
@@ -222,6 +223,8 @@ Each principle gives its source, what Keystone does, and how it's checked.
 **Plugin platforms**
 - VS Code extension anatomy and contribution points: https://code.visualstudio.com/api/get-started/extension-anatomy.md · https://vscode-docs1.readthedocs.io/en/latest/extensionAPI/extension-points/
 - VS Code, our approach to extensibility (isolation): https://vscode-docs1.readthedocs.io/en/stable/extensions/our-approach/
+- OSGi Core, the service layer (providers register a service by name; consumers look it up and cope with its absence): https://docs.osgi.org/specification/osgi.core/8.0.0/framework.service.html
+- npm workspaces (one manifest per package in one repository): https://docs.npmjs.com/cli/using-npm/workspaces
 
 **Theory**
 - D. L. Parnas (1972), commentary and notes: https://blog.acolyer.org/2016/09/05/on-the-criteria-to-be-used-in-decomposing-systems-into-modules/ · https://cs.uwaterloo.ca/~dberry/parnas.html

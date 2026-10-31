@@ -1,0 +1,18 @@
+{
+  "name": "@keystone/module-home",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Home: the kiosk-style front door. Collects tiles, the finding and connector cards from what is installed.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

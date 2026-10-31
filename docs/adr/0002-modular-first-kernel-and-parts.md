@@ -27,3 +27,4 @@ and principles.
   - Shared code has to move into the kernel kit.
   - Overview's ordering is spread across the domains' finding priorities.
 - **Still open:** parts are folders, not packages, and are compiled in. See trade-offs T2 and T3 in the reference.
+  (2026-10-31: T3 resolved by [0005](0005-one-package-per-module-and-connector.md); parts are now packages.)

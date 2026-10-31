@@ -16,9 +16,9 @@ The APG design system: the look shared with the attendance tracker and the websi
 
 ## Rules
 
-- It knows nothing of Keystone's rules: it does not import `@keystone/core` (checked by `npm run check:boundaries`).
+- It knows nothing of Keystone's rules: it depends on no Keystone package (checked by `npm run check:boundaries`).
   Any APG app could use it.
 - It follows ui-skills' `baseline-ui`, `fixing-accessibility` and `fixing-motion-performance`, and Taste Skill's app
   rules (see `docs/DESIGN.md`). Base UI is the only primitive layer; don't mix in another.
-- A component two Keystone modules need, but which is Keystone-specific, belongs in `apps/keystone/src/app/kit.tsx`,
+- A component two Keystone modules need, but which is Keystone-specific, belongs in `@keystone/kit`,
   not here.

@@ -139,11 +139,12 @@ export interface Figure {
 /** One container split by 1px lines: label, figure, and what the figure counts. No icons. */
 export function FigureStrip({ figures, lead }: { figures: Figure[]; lead?: number }) {
   return (
-    <dl className="m-0 grid rounded-card border border-line bg-surface" style={{ gridTemplateColumns: `repeat(${figures.length}, minmax(0, 1fr))` }}>
+    // The lead figure is drawn larger, so its column is wider: a peso amount must never be cut off.
+    <dl className="m-0 grid rounded-card border border-line bg-surface" style={{ gridTemplateColumns: figures.map((_, i) => `minmax(0, ${i === lead ? 1.6 : 1}fr)`).join(' ') }}>
       {figures.map((f, i) => (
         <div key={f.label} className={cn('min-w-0 p-[18px]', i > 0 && 'border-l border-line')}>
           <dt className="text-[12.5px] font-medium text-ink-2">{f.label}</dt>
-          <dd className={cn('m-0 mt-1.5 truncate font-display tabular-nums text-ink', i === lead ? 'text-[30px]' : 'text-[24px]')}>{f.value}</dd>
+          <dd title={f.value} className={cn('m-0 mt-1.5 truncate font-display tabular-nums text-ink', i === lead ? 'text-[30px]' : 'text-[24px]')}>{f.value}</dd>
           <dd className="m-0 mt-1 text-xs text-ink-3">{f.caption}</dd>
         </div>
       ))}

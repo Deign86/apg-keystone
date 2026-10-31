@@ -1,5 +1,5 @@
 import type { HttpClient, HttpResponse } from '@keystone/core';
-import type { Platform } from './types';
+import type { Platform } from '@keystone/kit';
 
 // The browser preview: everything that does not need the desktop works; the rest says so.
 

@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/connector-website",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Connector for alphapremiergroup.com: new hires, payments reported online, inquiries, and the Website screen.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

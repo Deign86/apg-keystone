@@ -4,7 +4,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import type { HttpClient, InstalledApp } from '@keystone/core';
-import type { Platform } from './types';
+import type { Platform } from '@keystone/kit';
 
 // The desktop app (Tauri). HTTP goes through the native side: no CORS, a cookie jar per
 // app, and headers a browser would refuse (Origin, User-Agent) can be set. File access

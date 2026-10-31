@@ -1,14 +1,11 @@
 import { createRoot } from 'react-dom/client';
-import { App } from './app/App';
-import { Connections } from './app/connections';
-import { buildRegistry } from './app/registry';
-import { KeystoneStore } from './app/store';
+import { App, buildRegistry, Connections, KeystoneStore } from '@keystone/kit';
 import { plugins } from './connectors';
 import { builtInModules } from './modules';
 import { detectPlatform } from './platform';
 import './styles.css';
 
-// The composition root: the only file that knows the full list of modules and connectors.
+// The composition root: with modules.ts and connectors.ts, the only place that names every part.
 async function start() {
   const platform = await detectPlatform();
   const registry = buildRegistry(builtInModules, plugins);

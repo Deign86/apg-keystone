@@ -1,16 +1,13 @@
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { App } from '../app/App';
-import { Connections } from '../app/connections';
-import { buildRegistry, type ConnectorPlugin, type ModuleDef } from '../app/registry';
-import { KeystoneStore } from '../app/store';
+import { App, buildRegistry, Connections, KeystoneStore, type ConnectorPlugin, type ModuleDef, type Platform } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
-import type { Platform } from '../platform';
 
 // The modular-first promise, tested: take any one module or any one connected system
-// out, and every screen that is left still renders, with no error and no broken link.
+// out, or install any one of them alone, and every screen there is still renders, with
+// no error and no broken link.
 
 const platform: Platform = {
   ...browserPlatform,
@@ -24,6 +21,8 @@ const scenarios: [string, ModuleDef[], ConnectorPlugin[]][] = [
   ['everything installed', builtInModules, plugins],
   ...builtInModules.map((m): [string, ModuleDef[], ConnectorPlugin[]] => [`without the ${m.id} module`, builtInModules.filter((x) => x !== m), plugins]),
   ...plugins.map((p): [string, ModuleDef[], ConnectorPlugin[]] => [`without the ${p.connector.id} connector`, builtInModules, plugins.filter((x) => x !== p)]),
+  ...builtInModules.map((m): [string, ModuleDef[], ConnectorPlugin[]] => [`the ${m.id} module on its own`, [m], []]),
+  ...plugins.map((p): [string, ModuleDef[], ConnectorPlugin[]] => [`the ${p.connector.id} connector on its own`, [], [p]]),
   ['nothing but the kernel', [], []],
 ];
 
@@ -34,8 +33,8 @@ afterEach(() => {
 describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
   it('renders every remaining screen without errors', async () => {
     const registry = buildRegistry(modules, connectorPlugins);
-    // Only ever refused for a missing requirement (the website inbox needs billing).
-    for (const r of registry.refused) expect(r.reason).toMatch(/needs .* not installed/);
+    // Nothing that ships is refused, whatever else is taken out.
+    expect(registry.refused).toEqual([]);
 
     const store = await KeystoneStore.open(platform, registry.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : [])));
     const connections = new Connections(platform, registry.connectors);
@@ -65,10 +64,12 @@ describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
   }, 30000);
 });
 
-it('a module whose requirement is removed is left out with its reason', () => {
-  const r = buildRegistry(builtInModules.filter((m) => m.id !== 'billing'), plugins);
-  expect(r.modules.map((m) => m.id)).not.toContain('website');
-  expect(r.refused).toEqual([{ id: 'website', reason: 'Website needs billing, which is not installed.' }]);
+it('every shipped part has a distinct id and loads without refusal', () => {
+  const r = buildRegistry(builtInModules, plugins);
+  expect(r.refused).toEqual([]);
+  expect(r.modules.map((m) => m.id)).toEqual([...new Set(r.modules.map((m) => m.id))]);
+  expect(r.modules.map((m) => m.id)).toEqual(expect.arrayContaining(['home', 'vouchers', 'billing', 'id-maker', 'directory', 'activity', 'connections', 'website']));
+  expect(r.connectors.map((c) => c.id)).toEqual(['attendance', 'branding-studio', 'website']);
 });
 
 it('a module that crashes shows its own error and leaves the rest working', async () => {

@@ -5,8 +5,8 @@ import type { Figure } from './insight';
 // never calls one that is missing. Every call is time-limited and caught, so a system
 // that is offline, not installed or misbehaving cannot break any other part of the app.
 //
-// Adding a system = adding one folder under apps/keystone/src/connectors/ and one line
-// to its index. Nothing else in Keystone changes.
+// Adding a system = adding one package under packages/connectors/ and one line to
+// apps/keystone/src/connectors.ts. Nothing else in Keystone changes.
 
 export type PlatformName = 'macos' | 'windows' | 'linux' | 'web';
 

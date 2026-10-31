@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/connector-attendance",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Connector for the RFID attendance tracker (alpha-premier-attendance): LAN viewer figures and backup imports.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "fflate": "^0.8.3",
+    "sql.js": "^1.15.2"
+  }
+}

@@ -1,7 +1,7 @@
 import { browserPlatform } from './browser';
-import type { Platform } from './types';
+import type { Platform } from '@keystone/kit';
 
-export type { Platform } from './types';
+export type { Platform } from '@keystone/kit';
 
 /** The desktop platform inside Tauri, the browser preview anywhere else. */
 export async function detectPlatform(): Promise<Platform> {

@@ -6,6 +6,9 @@
   "workspaces": [
     "packages/core",
     "packages/ui",
+    "packages/kit",
+    "packages/modules/*",
+    "packages/connectors/*",
     "apps/keystone"
   ],
   "scripts": {
@@ -13,13 +16,21 @@
     "dev": "npm run sync && npm run dev -w apps/keystone",
     "desktop": "npm run sync && cd apps/keystone && tauri dev",
     "build": "npm run sync -- --check && cd apps/keystone && tauri build",
-    "typecheck": "npm run typecheck -w packages/core && npm run typecheck -w packages/ui && npm run typecheck -w apps/keystone",
-    "test": "npm test -w packages/core && npm test -w apps/keystone",
-    "lint:taste": "node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "lint:taste": "node .claude/skills/taste-skill/scripts/lint.mjs --app apps/keystone/src packages/ui/src packages/kit/src packages/modules packages/connectors",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check": "npm run sync -- --check && npm run check:boundaries && npm run typecheck && npm test && npm run lint:taste"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.12.4"
+    "@tauri-apps/cli": "^2.12.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/sql.js": "^1.4.11",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
   }
 }

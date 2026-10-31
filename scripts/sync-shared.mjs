@@ -5,10 +5,10 @@
 //   node scripts/sync-shared.mjs          write the generated files
 //   node scripts/sync-shared.mjs --check  exit 1 if any generated file is stale (CI)
 //
-// Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png
+// Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png, shared/data/seed.json
 // Outputs: packages/ui/src/theme.css   Tailwind @theme + @font-face from the tokens
 //          packages/ui/src/assets/     fonts and logo
-// (shared/data/seed.json is imported directly by @keystone/core.)
+//          packages/core/src/seed.json the sample data, copied so the kernel package is self-contained
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -74,6 +74,7 @@ for (const f of readdirSync(join(root, 'shared/fonts'))) {
   emit(`packages/ui/src/assets/fonts/${f}`, readFileSync(join(root, 'shared/fonts', f)));
 }
 emit('packages/ui/src/assets/logo.png', readFileSync(join(root, 'shared/logo.png')));
+emit('packages/core/src/seed.json', readFileSync(join(root, 'shared/data/seed.json')));
 
 if (check && stale.length) {
   console.error('Generated files are out of date. Run `npm run sync` and commit:\n  ' + stale.join('\n  '));

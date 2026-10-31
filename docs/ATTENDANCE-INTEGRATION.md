@@ -32,5 +32,5 @@ existing subnet check:
 - The data comes from the same query `admin_users` already runs.
 
 **What it costs:** it changes the LAN policy written in that repo, so it is your call, not Keystone's. The Keystone
-side would be a few lines in `apps/keystone/src/connectors/attendance/index.ts`: try the integration route first,
+side would be a few lines in `packages/connectors/attendance/src/index.ts`: try the integration route first,
 fall back to the backup.

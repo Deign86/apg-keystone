@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/module-id-maker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "ID Maker: employee ID cards (CR80, front and back, verification pattern) and their rules.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

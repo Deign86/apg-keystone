@@ -14,6 +14,7 @@ Consequences**.
 | [0002](0002-modular-first-kernel-and-parts.md) | Modular-first: a fixed kernel and removable parts | Accepted |
 | [0003](0003-keep-the-prototype-state-schema.md) | Keep the prototype's saved-state schema | Accepted |
 | [0004](0004-integrate-through-what-systems-expose.md) | Integrate other APG systems only through what they already expose | Accepted |
+| [0005](0005-one-package-per-module-and-connector.md) | One package per module and connector, and named services between them | Accepted |
 
 Template:
 

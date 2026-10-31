@@ -1,6 +1,6 @@
 # AGENTS.md: working on Keystone
 
-For AI coding agents and human co-developers. Read this first, then the README.md in the folder you are about to
+For AI coding agents and human co-developers. Read this first, then the README.md in the package you are about to
 change. Keystone is **modular-first**: every screen and every connected system is a part you can delete without
 breaking anything else. Keep it that way. The rules below are enforced by CI.
 
@@ -23,84 +23,116 @@ activity log. It connects to the other APG systems: the attendance tracker (`Dei
 Alpha Branding Studio (`Deign86/Alpha_Branding`) and the website (`Deign86/apg-website`). It is one Tauri 2 + React 18
 + TypeScript codebase for macOS and Windows.
 
-## The map: a fixed kernel and removable parts
+## The map: a fixed kernel and removable packages
+
+Every part is its own npm workspace package with its own `package.json`, `README.md`, `src/` and, where it has rules,
+`test/`. A package can use only what its manifest declares, and CI checks what each layer may declare.
 
 ```
-KERNEL (always present; other code may depend on it)
-  packages/core/src/kernel/   data schema, money, dates, formats, the log, numbering, the connector contract, insight types
-  packages/ui/                the APG design system (tokens → Tailwind theme, Base UI controls). Knows nothing of Keystone's rules.
-  apps/keystone/src/app/      shell, store, module and connector registries, connector runtime, the module kit, document kit
-  apps/keystone/src/platform/ desktop (Tauri) and browser implementations of one Platform interface
-  apps/keystone/src-tauri/    the native side: files, keychain, finding and launching other apps
+KERNEL (always present; anything may depend on it)
+  packages/core     @keystone/core   money, dates, formats, the saved state, the log, numbering, the shared directory,
+                                     the connector contract, insight types, published service contracts. No UI.
+  packages/ui       @keystone/ui     the APG design system (tokens → Tailwind theme, Base UI controls). Knows no Keystone rule.
+  packages/kit      @keystone/kit    the app runtime: shell, store, module and connector registries, service lookup,
+                                     connector runtime, building blocks for screens, document kit, the Platform interface.
 
 PARTS (removable; nothing may depend on them)
-  packages/core/src/domains/<domain>.ts      rules for one area. May import the kernel and domains/directory only.
-  apps/keystone/src/modules/<module>/        one screen and what it contributes. Listed in modules/index.ts.
-  apps/keystone/src/connectors/<system>/     one connected system, and any screens it brings. Listed in connectors/index.ts.
+  packages/modules/<id>      @keystone/module-<id>      one screen, its rules, its tests, what it contributes and provides.
+  packages/connectors/<id>   @keystone/connector-<id>   one connected system, its client, its tests, any screens it brings.
 
 COMPOSITION (the only place that knows the full list)
-  apps/keystone/src/main.tsx  +  modules/index.ts  +  connectors/index.ts
+  apps/keystone     @keystone/app    src/modules.ts lists the modules, src/connectors.ts the connectors, src/main.tsx
+                                     starts the app; src/platform/ implements Platform for Tauri and the browser;
+                                     src-tauri/ is the native side (files, keychain, finding and launching other apps).
 ```
 
 ## The rules (CI fails if you break one)
 
-1. **A part never imports another part.**
-   - A module does not import another module or a connector.
-   - A connector does not import another connector or a module.
-   - A core domain imports only the kernel and `domains/directory`.
+1. **A part never depends on another part.**
+   - A module package may depend on `@keystone/core`, `@keystone/ui` and `@keystone/kit` only. Not on another
+     module, not on a connector.
+   - A connector package: the same three only. Not on another connector, not on a module.
+   - Every import must be declared in the importing package's `package.json`, another package is imported by its
+     name (never `@keystone/x/src/...`), and no relative import leaves the package folder.
    - Checked by `npm run check:boundaries`.
-2. **The kernel never imports a part.** `app/`, `platform/` and `core/kernel/` know no module, connector or domain.
+2. **The kernel never depends on a part.** `core` and `ui` depend on no Keystone package; `kit` only on `core` and `ui`.
+   Only `apps/keystone/src/modules.ts` and `src/connectors.ts` import module and connector packages.
 3. **Parts talk through contributions, not references.**
    - A module that wants to appear on Overview, Home or in the Activity filters declares it on its `ModuleDef` (`figure`,
      `finding`, `waiting`, `openWaiting`, `create`, `stat`, `logTags`, `onOpen`).
    - A screen that collects these (Overview, Home, Activity) reads them from the registry. It never names another
      module.
-4. **Jumping to another screen is always guarded.** Use `useModuleApp()`: `app.has('connections') && app.go('connections')`.
+4. **When a part needs another part's behaviour, it asks for a service.**
+   - The contract (types and the published name) lives in `packages/core/src/kernel/services.ts` under `SERVICES`.
+   - The provider offers it on its `ModuleDef`: `provides: { [SERVICES.statementPayments]: statementPayments }`.
+   - The consumer asks by name: `const desk = useModuleApp().service<StatementPayments>(SERVICES.statementPayments)`
+     and **works without it** (`desk` is `undefined` when the provider is not installed). One provider per service;
+     the registry refuses a second.
+5. **Jumping to another screen is always guarded.** Use `useModuleApp()`: `app.has('connections') && app.go('connections')`.
    Never assume a module is installed.
-5. **A hard dependency is declared, not assumed.** If a module cannot work without another, set `requires: ['billing']`.
-   Without it, the registry leaves the module out with a reason (shown under Connections) instead of breaking.
-6. **Rules live in `@keystone/core`, never in a screen.**
+6. **A hard dependency is declared, not assumed.** Prefer a service and degrade. If a module truly cannot work without
+   another, set `requires: ['billing']`; the registry then leaves it out with a reason (shown under Connections).
+7. **Rules live in the part that owns them, in plain functions, never in a screen.**
+   - A module's rules are in its `src/rules.ts`; rules every part shares (money, numbering, the directory) are in core.
    - A screen calls `run((state, ctx) => someRule(state, …, ctx))`.
    - A rule returns `{ state, record, message }` or throws `KeystoneError` with the sentence to show.
    - Rules are pure: no I/O and no `Date.now()` (use `ctx.now()`).
-7. **Connectors reach the world only through `env`:** `env.http`, `env.system`, `env.secret`, `env.settings`. Never import
-   `@tauri-apps/*` outside `platform/`. Every connector call is time-limited and caught by the runtime. A failing
-   system shows on its own card and nowhere else.
-8. **The saved state keeps the prototype's schema.**
+8. **Connectors reach the world only through `env`:** `env.http`, `env.system`, `env.secret`, `env.settings`. Never import
+   `@tauri-apps/*` outside `apps/keystone/src/platform/`. Every connector call is time-limited and caught by the
+   runtime. A failing system shows on its own card and nowhere else.
+9. **The saved state keeps the prototype's schema.**
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.
    - A new module keeps its own data under `state.ext[<module id>]`. Never rename or remove a key.
-9. **Shared UI goes in the kernel.** If two modules need the same component, move it to `app/kit.tsx` (Keystone-specific)
-   or `packages/ui` (generic), never import it across modules.
+10. **Shared UI goes in the kernel.** If two parts need the same component, move it to `@keystone/kit`
+    (Keystone-specific) or `@keystone/ui` (generic), never import it across parts.
 
 ## Removing a part
 
 | To remove | Do this | What disappears | Nothing else changes because |
 |---|---|---|---|
-| A module | Delete its line in `apps/keystone/src/modules/index.ts` (and its folder) | Its rail entry, Home tile, Overview figure, finding, waiting items, "New …" button, log filter | Overview, Home and Activity read contributions from the registry; links to it are guarded by `app.has` |
-| A connector | Delete its line in `apps/keystone/src/connectors/index.ts` (and its folder) | Its Home card, its settings, its import button, any screens it brought | The runtime only knows connectors through the registry |
-| A domain | Delete `packages/core/src/domains/<x>.ts` and its export, plus the module that uses it | Its rules | No other domain imports it (directory is the only shared domain) |
+| A module | Delete its line in `apps/keystone/src/modules.ts` and its entry in `apps/keystone/package.json` (then, if you like, its folder) and run `npm install` | Its rail entry, Home tile, Overview figure, finding, waiting items, "New …" button, log filter, the services it provides | Overview, Home and Activity read contributions from the registry; links are guarded by `app.has`; consumers of its services work without them |
+| A connector | Delete its line in `apps/keystone/src/connectors.ts` and its entry in `apps/keystone/package.json`, then `npm install` | Its Home card, its settings, its import button, any screens it brought | The runtime only knows connectors through the registry |
 
-`apps/keystone/src/test/removal.test.tsx` proves this. It removes each module and each connector in turn and renders
-every screen that is left. **When you add a module or a connector, it joins that test automatically.**
+`apps/keystone/src/test/removal.test.tsx` proves this. It removes each module and each connector in turn, installs
+each one alone, and renders every screen that is left. **A module or connector you add joins that test
+automatically.**
 
 ## Adding a part
 
-- **A screen:** copy `apps/keystone/src/modules/README.md` › Template into `modules/<id>/index.tsx`, then add one line to
-  `modules/index.ts`.
-- **A connected system:** copy `apps/keystone/src/connectors/README.md` › Template into `connectors/<id>/index.ts`, then
-  add one line to `connectors/index.ts`.
-- **Rules for a new area:** a new `packages/core/src/domains/<area>.ts` with tests in `packages/core/test/`. Export it
-  from `packages/core/src/index.ts`.
-- Write a `README.md` in the new folder using the same headings as the existing ones: Owns, Contributes, Needs,
+- **A screen:** copy `packages/modules/README.md` › Template into `packages/modules/<id>/` (it includes the
+  `package.json`, `tsconfig.json` and `vitest.config.ts`), then add one import and one list entry to
+  `apps/keystone/src/modules.ts`, add `"@keystone/module-<id>": "*"` to `apps/keystone/package.json`, and run
+  `npm install`.
+- **A connected system:** the same with `packages/connectors/README.md` › Template, `apps/keystone/src/connectors.ts`
+  and `@keystone/connector-<id>`.
+- **Something another part needs from yours:** publish a service. Add its name to `SERVICES` and its types to
+  `packages/core/src/kernel/services.ts`, provide it from your `ModuleDef`, and test both sides.
+- Write the package's `README.md` with the same headings as the existing ones: Owns, Contributes, Needs,
   Removing it.
 - For a significant change, add an Architecture Decision Record in `docs/adr/`. That means a change to the kernel, a
-  new or removed part, a new saved-state format, or a new way of talking to another system.
+  new or removed part, a new service, a new saved-state format, or a new way of talking to another system.
+
+## Tests
+
+Each package tests itself in its own `test/` folder; `npm test` runs every package (`vitest.workspace.ts`). The
+regression suites that guard the architecture live in the composition root:
+
+| Suite | Where | Guards |
+|---|---|---|
+| Rules | `packages/modules/<id>/test/`, `packages/core/test/` | Numbering, tax math, amount in words, statuses, findings, the prototype's results kept exactly |
+| Connectors | `packages/connectors/<id>/test/` | Each system's client against a fake of that system (never a real one): address and version parsing, sign-in, the website's Origin rule, backup reading |
+| Kit | `packages/kit/test/` | Registry refusals, one provider per service, store saves and damaged files, connector isolation (throws, hangs), secrets never in the settings file |
+| Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
+| Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
+| Services | `apps/keystone/src/test/services.test.tsx` | The website settles a billing statement through the service, and still works without billing |
+
+A new rule gets a test in its package. A bug fix gets the test that would have caught it.
 
 ## Before you commit
 
 ```bash
-npm run check   # generated theme in sync · boundaries · typecheck · all tests (incl. removal) · Taste Skill lint
+npm run check   # generated files in sync · boundaries · typecheck · every package's tests · Taste Skill lint
 cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml   # when you touch src-tauri
 ```
 
@@ -116,10 +148,11 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
   - Module ids are lowercase with dashes (`id-maker`), and the id is also the route (`#id-maker`).
   - Log tags are short capitals (`CV`, `BS`, `ID`, `DIR`).
   - Draft keys are `<module id>.draft`.
-- **Copy:** sentences a person reads come from `@keystone/core` (findings, messages, log lines), so wording stays
-  consistent. Use plain English, peso amounts as `₱1,234.56`, and dates as `Oct 30, 2026` (`shortDate`).
+- **Copy:** sentences a person reads come from rules (findings, messages, log lines), not from screens, so wording
+  stays consistent. Use plain English, peso amounts as `₱1,234.56`, and dates as `Oct 30, 2026` (`shortDate`).
 - **No secrets in files:** passwords and tokens go through `env.secret` and the OS keychain.
-- **Don't edit generated files:** `packages/ui/src/theme.css` is regenerated by `npm run sync`.
+- **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/` and
+  `packages/core/src/seed.json` are regenerated from `shared/` by `npm run sync`.
 - **The other APG repos:**
   - Treat them as external systems: integrate through what they already expose.
   - A change to them (for example `docs/ATTENDANCE-INTEGRATION.md`) is the owner's decision, made in that repo.
@@ -132,4 +165,4 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
 - `docs/MODULARITY.md`: the contracts in full, and why the kernel and parts are split this way.
 - `docs/ARCHITECTURE.md`: how a change flows, where data lives, the three connectors.
 - `docs/DESIGN.md`: the look and where it comes from.
-- `README.md` in each folder: what that part owns and what removing it does.
+- `README.md` in each package: what that part owns and what removing it does.

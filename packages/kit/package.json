@@ -1,0 +1,21 @@
+{
+  "name": "@keystone/kit",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The app runtime every module and connector builds on: registries, store, connector runtime, shell, and shared components. Knows no module and no connector.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/ui": "*",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^1.65.0",
+    "react": "^18.3.1"
+  }
+}

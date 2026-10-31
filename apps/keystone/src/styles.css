@@ -1,6 +1,10 @@
 @import "@keystone/ui/styles.css";
 
 @source "./";
+/* The kit and every part ship their own Tailwind classes. */
+@source "../../../packages/kit/src";
+@source "../../../packages/modules";
+@source "../../../packages/connectors";
 
 @keyframes fade-in {
   from { opacity: 0; }
