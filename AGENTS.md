@@ -4,6 +4,18 @@ For AI coding agents and human co-developers. Read this first, then the README.m
 change. Keystone is **modular-first**: every screen and every connected system is a part you can delete without
 breaking anything else. Keep it that way. The rules below are enforced by CI.
 
+**What we are building toward.** Our reference is Param Rengaiah's *On Modular Architectures*, summarised and mapped to
+Keystone in `docs/references/on-modular-architectures.md`. It defines a module (after Kirk Knoernschild) as a
+*"deployable, manageable, natively reusable, composable, stateless unit of software that provides a concise interface
+to consumers."* Before you add or change a part, ask:
+
+- Does it have one clear business purpose?
+- Does it only use the context it is given?
+- Does it expose only its `ModuleDef` or `Connector`?
+- Can it be removed alone?
+
+Modularity comes from design, not from tools, so don't expect a framework to fix a dependency you have tangled.
+
 ## What Keystone is
 
 Alpha Premier Group's admin app: check vouchers, billing statements, employee IDs, a shared directory and an
@@ -112,6 +124,8 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
 
 ## Further reading
 
+- `docs/references/on-modular-architectures.md`: the reference article, how Keystone applies each idea, where it falls
+  short, and what "going all the way" would mean.
 - `docs/MODULARITY.md`: the contracts in full, and why the kernel and parts are split this way.
 - `docs/ARCHITECTURE.md`: how a change flows, where data lives, the three connectors.
 - `docs/DESIGN.md`: the look and where it comes from.

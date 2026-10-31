@@ -4,6 +4,21 @@
 everything else keeps working. This document explains the design that makes that true and the contracts a new part
 has to follow. `AGENTS.md` has the short rules; this is the reasoning behind them.
 
+**The reference this is measured against:** Param Rengaiah, *On Modular Architectures* (2014). It is summarised, with
+each principle mapped to Keystone and the honest gaps, in
+[`docs/references/on-modular-architectures.md`](references/on-modular-architectures.md). Its core ideas, as Keystone
+uses them:
+
+- **Modules are physical units.** Each has a clear business context, works within the context it is given, and has a
+  concise public interface. In Keystone that interface is `ModuleDef` or `Connector`, and the context is `ModuleApp` or
+  `ConnectorEnv`.
+- **Modularity has to hold at design time and at run time.** At design time, the boundary check and folder layout
+  enforce it. At run time, the registry, per-screen error boundaries, isolated connector calls and the removal test do.
+- **Design creates modularity; tools don't.** The stack was chosen for one codebase. What keeps Keystone modular is
+  this design and the checks that hold it.
+- **A modularity release comes before the next big exercise.** Keystone shipped this restructure before adding more
+  features.
+
 ## Kernel and parts
 
 Keystone is a small, fixed **kernel** with **parts** plugged into it.

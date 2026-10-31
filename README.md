@@ -18,7 +18,8 @@ packages/ui/     the APG design system: Tailwind theme from shared/design/tokens
 shared/          tokens, fonts, logo, sample data
 prototype/       the original single-page web prototype (2026-10-27), kept for reference
 docs/            MODULARITY.md (the contracts), ARCHITECTURE.md (how it fits), DESIGN.md (the look),
-                 ATTENDANCE-INTEGRATION.md (one open decision)
+                 ATTENDANCE-INTEGRATION.md (one open decision),
+                 references/on-modular-architectures.md (the article we measure modularity against)
 AGENTS.md        the rules for anyone changing Keystone (CLAUDE.md points here)
 ```
 
