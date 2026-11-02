@@ -5,9 +5,10 @@
 //   node scripts/sync-shared.mjs          write the generated files
 //   node scripts/sync-shared.mjs --check  exit 1 if any generated file is stale (CI)
 //
-// Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png, shared/data/seed.json
+// Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png, shared/brand/keystone-mark-ui.png,
+//          shared/data/seed.json
 // Outputs: packages/ui/src/theme.css   Tailwind @theme + @font-face from the tokens
-//          packages/ui/src/assets/     fonts and logo
+//          packages/ui/src/assets/     fonts, the APG logo and Keystone's mark
 //          packages/core/src/seed.json the sample data, copied so the kernel package is self-contained
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
@@ -85,6 +86,8 @@ for (const f of readdirSync(join(root, 'shared/fonts'))) {
 }
 
 emit('packages/ui/src/assets/logo.png', readFileSync(join(root, 'shared/logo.png')));
+
+emit('packages/ui/src/assets/keystone-mark.png', readFileSync(join(root, 'shared/brand/keystone-mark-ui.png')));
 
 emit('packages/core/src/seed.json', readFileSync(join(root, 'shared/data/seed.json')));
 

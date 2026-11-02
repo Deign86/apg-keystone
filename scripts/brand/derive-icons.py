@@ -6,6 +6,7 @@ Needs Python 3 with Pillow. Run it only when the logo changes; it writes the sou
 every platform's icons:
 
     shared/brand/keystone-mark.png     the gold mark alone on transparency (light or dark backgrounds, documents)
+    shared/brand/keystone-mark-ui.png  the same, 160 px tall: the app's own UI (npm run sync copies it into @keystone/ui)
     shared/brand/icon-app.png          the mark on APG's black tile, rounded: Windows, Linux, the web
     shared/brand/icon-macos.png        the same tile on Apple's 1024 grid (824 px squircle, 100 px margin): macOS
     shared/brand/icon-ios.png          the mark on a full-bleed black square, no hairline: iOS rounds its own corners
@@ -112,13 +113,14 @@ def main() -> None:
     BRAND.mkdir(parents=True, exist_ok=True)
 
     mark.save(BRAND / 'keystone-mark.png', optimize=True)
+    fit(mark, 160).save(BRAND / 'keystone-mark-ui.png', optimize=True)
     tile(inset=40, radius=200, mark=mark, mark_height=660).save(BRAND / 'icon-app.png', optimize=True)
     tile(inset=100, radius=185, mark=mark, mark_height=560).save(BRAND / 'icon-macos.png', optimize=True)
     full_bleed(mark).convert('RGB').save(BRAND / 'icon-ios.png', optimize=True)
     safe_zone(mark).save(BRAND / 'icon-android-fg.png', optimize=True)
 
     print(f'From {SOURCE.relative_to(ROOT) if SOURCE.is_relative_to(ROOT) else SOURCE} ({artwork.width}×{artwork.height}):')
-    for name in ('keystone-mark.png', 'icon-app.png', 'icon-macos.png', 'icon-ios.png', 'icon-android-fg.png'):
+    for name in ('keystone-mark.png', 'keystone-mark-ui.png', 'icon-app.png', 'icon-macos.png', 'icon-ios.png', 'icon-android-fg.png'):
         print(f'  shared/brand/{name}')
 
 

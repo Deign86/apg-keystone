@@ -1,5 +1,5 @@
 import { KeyBadge, cn } from '@keystone/ui';
-import logo from '@keystone/ui/logo.png';
+import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { useKeystone } from './context';
 import type { ModuleDef } from './registry';
@@ -41,7 +41,7 @@ function Rail() {
   return (
     <nav aria-label="Keystone" className="flex h-dvh w-[var(--size-rail)] shrink-0 flex-col gap-6 border-r border-line bg-bg py-5 pr-3.5 pl-4">
       <button type="button" onClick={() => registry.modules[0] && go(registry.modules[0].id)} className="flex items-center gap-2.5 rounded-control text-left">
-        <img src={logo} alt="" className="size-[38px] shrink-0 object-contain" />
+        <img src={keystoneMark} alt="" className="size-[38px] shrink-0 object-contain" />
         <span className="min-w-0">
           <span className="block font-display text-[11px] leading-tight font-bold text-ink">
             ALPHA PREMIER <span className="text-gold-bright">KEYSTONE</span>
