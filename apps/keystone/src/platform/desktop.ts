@@ -1,10 +1,13 @@
+import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { check } from '@tauri-apps/plugin-updater';
 import type { HttpClient, InstalledApp } from '@keystone/core';
-import type { Platform } from '@keystone/kit';
+import type { AppUpdater, Platform } from '@keystone/kit';
 
 // The desktop app (Tauri). HTTP goes through the native side: no CORS, a cookie jar per
 // app, and headers a browser would refuse (Origin, User-Agent) can be set. File access
@@ -29,6 +32,36 @@ const http: HttpClient = {
       // Response.json(): each connector names T for the endpoint it calls.
       json: <T,>() => r.json() as Promise<T>,
       bytes: async () => new Uint8Array(await r.arrayBuffer()),
+    };
+  },
+};
+
+// Keystone's own updates, the way the attendance app does it: Tauri's updater reads latest.json from the latest
+// GitHub release (plugins.updater in tauri.conf.json), checks the download against the public key there, installs
+// it, and the app restarts into the new version.
+const updater: AppUpdater = {
+  currentVersion: () => getVersion(),
+  async check() {
+    const update = await check({ timeout: 10_000 });
+
+    if (!update) return null;
+
+    return {
+      version: update.version,
+      notesUrl: `https://github.com/Deign86/apg-keystone/releases/tag/v${update.version}`,
+      async install(onProgress) {
+        let total = 0;
+        let done = 0;
+
+        await update.downloadAndInstall((event) => {
+          if (event.event === 'Started') total = event.data.contentLength ?? 0;
+          else if (event.event === 'Progress') {
+            done += event.data.chunkLength;
+            onProgress(total ? Math.min(1, done / total) : null);
+          } else onProgress(1);
+        });
+        await relaunch();
+      },
     };
   },
 };
@@ -91,4 +124,5 @@ export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => 
   readFile: readBytes,
   listFiles: (folder) => invoke<{ path: string; modified: number }[]>('list_files', { folder }),
   appDataFolder: (identifier) => invoke<string | null>('app_data_folder', { identifier }),
+  updater,
 });

@@ -15,6 +15,7 @@ Consequences**.
 | [0003](0003-keep-the-prototype-state-schema.md) | Keep the prototype's saved-state schema | Accepted |
 | [0004](0004-integrate-through-what-systems-expose.md) | Integrate other APG systems only through what they already expose | Accepted |
 | [0005](0005-one-package-per-module-and-connector.md) | One package per module and connector, and named services between them | Accepted |
+| [0006](0006-keystone-updates-itself.md) | Keystone updates itself from its signed GitHub releases | Accepted |
 
 Template:
 

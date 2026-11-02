@@ -29,4 +29,22 @@ export interface Platform extends SystemBridge {
   saveFile(suggestedName: string, bytes: Uint8Array, filters: FileFilter[]): Promise<string | null>;
   /** Asks for one file and reads it. Null if cancelled. */
   openFile(filters: FileFilter[]): Promise<{ name: string; bytes: Uint8Array } | null>;
+
+  /** Keystone's own updates, from its signed GitHub releases. The desktop app only; absent in the browser. */
+  readonly updater?: AppUpdater;
+}
+
+export interface AppUpdater {
+  /** The version running now ("0.2.0"). */
+  currentVersion(): Promise<string>;
+  /** A newer published version, or null when this one is the latest. Throws when the check cannot run (offline). */
+  check(): Promise<AppUpdate | null>;
+}
+
+export interface AppUpdate {
+  version: string;
+  /** Where to read what changed. */
+  notesUrl?: string;
+  /** Downloads and installs it, reporting the share done (0 to 1, null while the size is unknown), then restarts Keystone. */
+  install(onProgress: (done: number | null) => void): Promise<void>;
 }
