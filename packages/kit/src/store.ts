@@ -62,12 +62,22 @@ export class KeystoneStore {
     this.state = next;
     this.listeners.forEach((fn) => fn());
     clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => {
-      this.platform.saveState(JSON.stringify(this.state, null, 2)).then(
-        () => { this.saveError = null; },
-        (e) => { this.saveError = `Could not save: ${String(e)}`; this.listeners.forEach((fn) => fn()); },
-      );
-    }, 250);
+    this.saveTimer = setTimeout(() => void this.flush(), 250);
+  }
+
+  /**
+   * Writes a change still waiting out its 250 ms now. The app calls it when the window is hidden or the page goes
+   * away (a reload, closing the window), so a save made just before is not lost. Nothing waiting: nothing written.
+   */
+  flush(): Promise<void> {
+    if (this.saveTimer === undefined) return Promise.resolve();
+    clearTimeout(this.saveTimer);
+    this.saveTimer = undefined;
+
+    return this.platform.saveState(JSON.stringify(this.state, null, 2)).then(
+      () => { this.saveError = null; },
+      (e) => { this.saveError = `Could not save: ${String(e)}`; this.listeners.forEach((fn) => fn()); },
+    );
   }
 
   /** Runs a core rule. A refusal comes back as the sentence to show, never as a crash. */

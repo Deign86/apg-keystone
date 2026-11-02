@@ -56,6 +56,25 @@ test('Ctrl+1 to Ctrl+8 open the screens in rail order, and Ctrl+0 goes home', as
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
 });
 
+// The store writes a change 250 ms after it is made; leaving the page writes it at once (apps/keystone/src/main.tsx).
+test('keeps a save made just before the page reloads', async ({ app, screen, browser }) => {
+  await app.open('/#vouchers');
+  const form = screen.getByRole('form', 'New voucher');
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
+
+  // Save and reload in the same instant, as someone closing the window right after saving: well inside the 250 ms.
+  await browser.evaluate(() => {
+    const save = [...document.querySelectorAll('button')].find((b) => b.textContent === 'Save and route for approval');
+
+    save?.click();
+    setTimeout(() => location.reload(), 0);
+  });
+
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 .* For Approval/)).toBeVisible();
+});
+
 test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
