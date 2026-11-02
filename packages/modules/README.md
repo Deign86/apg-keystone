@@ -44,6 +44,7 @@ packages/modules/payroll/
   src/index.tsx       the screen and its ModuleDef
   src/rules.ts        its rules: pure functions over the state
   test/rules.test.ts
+e2e/modules/payroll.e2e.ts   at the repo root: what a person does on the screen, end to end (npm run check:e2e)
 ```
 
 ```json

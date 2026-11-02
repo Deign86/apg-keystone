@@ -92,12 +92,16 @@ COMPOSITION (the only place that knows the full list)
 
 | To remove | Do this | What disappears | Nothing else changes because |
 |---|---|---|---|
-| A module | Delete its line in `apps/keystone/src/modules.ts` and its entry in `apps/keystone/package.json` (then, if you like, its folder) and run `npm install` | Its rail entry, Home tile, Overview figure, finding, waiting items, "New …" button, log filter, the services it provides | Overview, Home and Activity read contributions from the registry; links are guarded by `app.has`; consumers of its services work without them |
-| A connector | Delete its line in `apps/keystone/src/connectors.ts` and its entry in `apps/keystone/package.json`, then `npm install` | Its Home card, its settings, its import button, any screens it brought | The runtime only knows connectors through the registry |
+| A module | Delete its line in `apps/keystone/src/modules.ts`, its entry in `apps/keystone/package.json` and its `e2e/modules/<id>.e2e.ts` (then, if you like, its folder) and run `npm install` | Its rail entry, Home tile, Overview figure, finding, waiting items, "New …" button, log filter, the services it provides | Overview, Home and Activity read contributions from the registry; links are guarded by `app.has`; consumers of its services work without them |
+| A connector | Delete its line in `apps/keystone/src/connectors.ts`, its entry in `apps/keystone/package.json` and its `e2e/connectors/<id>.e2e.ts`, then `npm install` | Its Home card, its settings, its import button, any screens it brought | The runtime only knows connectors through the registry |
 
 `apps/keystone/src/test/removal.test.tsx` proves this. It removes each module and each connector in turn, installs
 each one alone, and renders every screen that is left. **A module or connector you add joins that test
 automatically.**
+
+The end-to-end suite is different: it tests the app as shipped, so a test that follows one part's work onto another
+screen (a saved voucher on Home, Overview or the Activity Log) names both. After removing a part, `npm run test:e2e`
+names the tests that still expect it.
 
 ## Adding a part
 
@@ -107,6 +111,8 @@ automatically.**
   `npm install`.
 - **A connected system:** the same with `packages/connectors/README.md` › Template, `apps/keystone/src/connectors.ts`
   and `@keystone/connector-<id>`.
+- **Its end-to-end tests:** add `e2e/modules/<id>.e2e.ts` (or `e2e/connectors/<id>.e2e.ts`) that walks what a person
+  does on it and checks the outcome on screen. `npm run check` fails until it exists.
 - **Something another part needs from yours:** publish a service. Add its name to `SERVICES`, its types and its
   `ServiceContracts` line to `packages/core/src/kernel/services.ts`, provide it from your `ModuleDef`, and test both
   sides.
@@ -128,15 +134,21 @@ regression suites that guard the architecture live in the composition root:
 | Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
 | Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
 | Services | `apps/keystone/src/test/services.test.tsx` | The website settles a billing statement through the service, and still works without billing |
-| End to end | `e2e/screens.e2e.ts` (`npm run test:e2e`) | Every screen on the rail opens in Chromium against the dev server and shows its title |
+| End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or card and what it shows after, including what it contributes to Home, Overview and the Activity Log |
 
-A new rule gets a test in its package. A bug fix gets the test that would have caught it.
+A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's
+`e2e/` file. A bug fix gets the test that would have caught it.
+
+End-to-end tests use exact locators (roles and names from the screen, never CSS) and start from the sample data at
+10:00 on Nov 2, 2026 in Manila (`e2e/support/fixed-clock.js`), so dates and overdue statuses never drift. Each test
+gets a fresh browser, so nothing one saves reaches another. A failed run leaves a trace page per test in
+`.e2e/results/`; CI keeps them as the `e2e-results` artifact.
 
 ## Before you commit
 
 ```bash
-npm run check      # generated files in sync · boundaries · skills · Oxlint · typecheck · every package's tests · Taste Skill lint
-npm run test:e2e   # when you change a screen
+npm run check      # generated files in sync · boundaries · skills · e2e files · Oxlint · typecheck · every package's tests · Taste Skill lint
+npm run test:e2e   # when you change a screen or a flow
 cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml   # when you touch src-tauri
 ```
 
