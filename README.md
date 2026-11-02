@@ -106,7 +106,7 @@ The skills live in the repo, so every clone has them. `.claude/skills` vendors
 | ui-skills (`baseline-ui`, `fixing-*`, `improve-ui`, …) | The design checks in `docs/DESIGN.md`; the ui-skills registry MCP in `.mcp.json` |
 | anti-slop (`install-anti-slop`) | Oxlint with its rules: `.oxlintrc.json`, the plugin in `tools/oxlint/anti-slop`, `npm run lint` in CI |
 | e2e | `e2e.config.ts`, tests in `e2e/`, `npm run test:e2e` in CI, and its MCP server in `.mcp.json` |
-| unlazy | Works as is. Its optional Claude Code Stop hook is per machine: `node .agents/skills/unlazy/scripts/install-hooks.mjs` |
+| unlazy | Its Claude Code Stop hook is on for everyone in `.claude/settings.json`: while an unlazy task has unmet gates, Claude can't end its turn. With no task open it does nothing. `npm run check:skills` fails if the hook's script goes missing |
 | ponytail (and `-review`, `-audit`, `-debt`, `-gain`, `-help`), grilling, grill-me | Instructions only; nothing to set up. `grill-me` starts only when you type `/grill-me` |
 
 On Windows, Git checks the links out as plain files unless symlinks are on. Turn on Developer Mode, then clone with

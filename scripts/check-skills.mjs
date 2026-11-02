@@ -1,5 +1,6 @@
 // Checks that every agent skill in the repo loads: each one in .agents/skills is reachable from
-// .claude/skills (where Claude Code looks), and each skill's SKILL.md names its own folder.
+// .claude/skills (where Claude Code looks), each skill's SKILL.md names its own folder, and every hook in
+// .claude/settings.json that runs a script from the repo finds it.
 //
 //   node scripts/check-skills.mjs
 
@@ -36,9 +37,21 @@ for (const name of readdirSync('.claude/skills')) {
   }
 }
 
+if (existsSync('.claude/settings.json')) {
+  const settings = JSON.parse(readFileSync('.claude/settings.json', 'utf8'));
+
+  for (const groups of Object.values(settings.hooks ?? {})) {
+    for (const { command } of groups.flatMap((group) => group.hooks)) {
+      for (const [, path] of command.matchAll(/\$CLAUDE_PROJECT_DIR\/([^"'\s]+)/g)) {
+        if (!existsSync(path)) problems.push(`.claude/settings.json has a hook that runs ${path}, which does not exist.`);
+      }
+    }
+  }
+}
+
 if (problems.length) {
   console.error('Agent skills that will not load:\n  ' + problems.join('\n  '));
   process.exit(1);
 }
 
-console.log('Agent skills: every one in .agents/skills and .claude/skills loads.');
+console.log('Agent skills: every one in .agents/skills and .claude/skills loads, and every hook finds its script.');
