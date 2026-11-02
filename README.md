@@ -1,7 +1,7 @@
 # Keystone
 
-Alpha Premier Group's admin app. It covers Check Vouchers, Billing Statements, the ID Maker, a shared Directory and
-an Activity Log. Home also has a shortcut to each of the other APG apps, its logo, which opens it:
+Alpha Premier Group's admin app. It covers Check Vouchers, Billing Statements, the ID Maker, a shared Directory, an
+Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
 - **The attendance tracker:** starts the app, or opens its download page when it is not installed.
 - **Alpha Branding Studio:** the same.
@@ -13,7 +13,7 @@ proves it on every push. Agents and co-developers start with [`AGENTS.md`](AGENT
 
 ```
 apps/keystone/        the app: lists the installed modules and connectors, the platform, the native side (src-tauri)
-packages/modules/     one package per screen, with its rules and tests: vouchers, billing, id-maker, directory, …
+packages/modules/     one package per screen, with its rules and tests: vouchers, billing, id-maker, directory, timekeeping, payroll, …
 packages/connectors/  one package per connected system, its logo and how to open it: attendance, branding-studio, website
 packages/kit/         the app runtime: registries, services, store, connector shortcuts, shell, shared components
 packages/core/        the shared kernel: money, dates, the saved state, the directory, contracts

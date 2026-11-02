@@ -38,3 +38,45 @@ export function addYears(iso: ISODate, n: number): ISODate {
 }
 
 export const monthKey = (iso: ISODate) => iso.slice(0, 7);
+
+/** 0 for Sunday to 6 for Saturday. */
+export const weekdayOf = (iso: ISODate) => utc(iso).getUTCDay();
+
+/** Monday to Friday. */
+export const isWeekday = (iso: ISODate) => weekdayOf(iso) >= 1 && weekdayOf(iso) <= 5;
+
+/** The Monday of the week a date falls in (weeks run Monday to Sunday). */
+export const mondayOf = (iso: ISODate) => addDays(iso, -((weekdayOf(iso) + 6) % 7));
+
+/** Every date from one to another, both included; empty when `to` comes first. */
+export function datesBetween(from: ISODate, to: ISODate): ISODate[] {
+  const out: ISODate[] = [];
+
+  for (let d = from; d <= to; d = addDays(d, 1)) out.push(d);
+
+  return out;
+}
+
+/** A pay period: from one date to another, both included. */
+export interface Period {
+  from: ISODate;
+  to: ISODate;
+}
+
+/** The semi-monthly cut-off a date falls in: the 1st to the 15th, or the 16th to the month's last day. */
+export function halfMonthOf(iso: ISODate): Period {
+  const month = monthKey(iso);
+
+  if (Number(iso.slice(8, 10)) <= 15) return { from: `${month}-01`, to: `${month}-15` };
+
+  return { from: `${month}-16`, to: addDays(addDays(`${month}-01`, 31).slice(0, 7) + '-01', -1) };
+}
+
+/** The cut-offs up to the one a date falls in, newest first. */
+export function halfMonthsTo(iso: ISODate, n: number): Period[] {
+  const out = [halfMonthOf(iso)];
+
+  while (out.length < n) out.push(halfMonthOf(addDays(out[out.length - 1].from, -1)));
+
+  return out;
+}

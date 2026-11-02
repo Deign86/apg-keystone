@@ -17,6 +17,7 @@ Consequences**.
 | [0005](0005-one-package-per-module-and-connector.md) | One package per module and connector, and named services between them | Accepted |
 | [0006](0006-keystone-updates-itself.md) | Keystone updates itself from its signed GitHub releases | Accepted |
 | [0007](0007-connected-systems-are-shortcuts.md) | Connected systems are shortcuts to their apps | Accepted |
+| [0008](0008-employee-timekeeping-and-payroll.md) | Employee timekeeping and payroll live in Keystone | Accepted |
 
 Template:
 

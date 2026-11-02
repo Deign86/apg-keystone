@@ -12,6 +12,8 @@ import type { Change, Ctx } from './state';
 export const SERVICES = {
   /** Offered by the billing module, for settling statements from outside it. */
   statementPayments: 'billing.statement-payments',
+  /** Offered by the timekeeping module: an employee's days over a period, for pricing a payroll cut-off. */
+  employeeAttendance: 'timekeeping.employee-attendance',
 } as const;
 
 /**
@@ -20,6 +22,7 @@ export const SERVICES = {
  */
 export interface ServiceContracts {
   [SERVICES.statementPayments]: StatementPayments;
+  [SERVICES.employeeAttendance]: EmployeeAttendance;
 }
 
 export type ServiceName = keyof ServiceContracts;
@@ -50,4 +53,37 @@ export interface StatementPayments {
   open(state: TerminalState): OpenStatement[];
   /** Settles a statement with a reported payment; refuses a short one. */
   record(state: TerminalState, no: string, payment: Payment, ctx: Ctx): Change<Statement>;
+}
+
+/**
+ * An employee's days over a period, counted by the attendance rules and not yet priced. Payroll turns these into
+ * pesos with the employee's own rates; the attendance rules (schedule, grace, half days) stay with timekeeping. A type,
+ * not an interface, so a payroll can keep a copy in its saved data.
+ */
+export type AttendanceTally = {
+  /** Scheduled working days in the period, holidays included: the payroll sheet's "Standard Working Days". */
+  scheduled: number;
+  /** Scheduled days so far with a time-in, half days included. */
+  worked: number;
+  /** Of the days worked, those that count as half a day. */
+  halfDays: number;
+  /** Scheduled days so far with no time-in, holidays not counted. */
+  absent: number;
+  /** Regular holidays on a scheduled day that were not worked: paid all the same. */
+  regularHolidaysOff: number;
+  /** Days worked that were special non-working holidays. */
+  specialHolidaysWorked: number;
+  /** Days worked that were regular holidays. */
+  regularHolidaysWorked: number;
+  /** Minutes late (after the weekly grace) and minutes left early, on days that are not half days. */
+  shortMinutes: number;
+  /** Approved overtime, in hours. */
+  overtimeHours: number;
+  /** Paid minutes in a full working day, to price a minute or an hour. */
+  dayMinutes: number;
+};
+
+export interface EmployeeAttendance {
+  /** The tally for one employee (a directory code) from one date to another, both included. */
+  tally(state: TerminalState, emp: string, from: ISODate, to: ISODate, ctx: Ctx): AttendanceTally;
 }
