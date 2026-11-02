@@ -4,6 +4,7 @@ import {
   toCentavos, today, withModuleData, type AttendanceTally, type Centavos, type Change, type Ctx, type EmployeeAttendance,
   type Figure, type Finding, type JsonObject, type JsonValue, type Period, type TerminalState,
 } from '@keystone/core';
+import { tableShares, type Shares } from './contributions';
 
 // Employee payroll: each employee's own pay setup, which the HR supervisor keeps, and the semi-monthly cut-off priced
 // the way the HR payroll sheet prices it. Attendance comes from the timekeeping service when it is installed. Kept
@@ -21,7 +22,8 @@ export const REGULAR_HOLIDAY_PERCENT = 100;
 
 /**
  * One employee's pay, as the HR supervisor sets it. Pesos, as everywhere in the saved state. Allowances and
- * deductions are per cut-off, except the special allowance, which is per day worked.
+ * deductions are per cut-off, except the special allowance, which is per day worked. A government share left null
+ * comes from the contribution tables; an amount (0 included) is that employee's own.
  */
 export type PaySetup = {
   /** Directory code of the employee. */
@@ -32,9 +34,9 @@ export type PaySetup = {
   incentive: number;
   housing: number;
   special: number;
-  sss: number;
-  philhealth: number;
-  pagibig: number;
+  sss: number | null;
+  philhealth: number | null;
+  pagibig: number | null;
   /** A salary advance repaid each cut-off until it is set back to zero. */
   advance: number;
   /** "Cash", or the bank paid into. */
@@ -43,7 +45,7 @@ export type PaySetup = {
 };
 
 /** A closed cut-off keeps who was paid and on what, as it was, so later corrections never reprice it. */
-export type PayRunRow = { setup: PaySetup; tally: AttendanceTally; name: string; position: string; dept: string; tin: string };
+export type PayRunRow = { setup: PaySetup; tally: AttendanceTally; shares: Shares; name: string; position: string; dept: string; tin: string };
 
 export type PayRun = { from: string; to: string; closed: string; rows: PayRunRow[] };
 
@@ -51,12 +53,21 @@ export type PayrollData = { setups: PaySetup[]; runs: PayRun[] };
 
 // ---------- reading and writing the saved data ----------
 
+/** An employee's own share, or null for the tables. */
+const ownShare = (v: JsonValue | undefined) => (Number.isFinite(v) ? jsonNumber(v) : null);
+
 function setupOf(o: JsonObject): PaySetup {
   return {
     emp: jsonText(o.emp), empNo: jsonText(o.empNo), daily: jsonNumber(o.daily), incentive: jsonNumber(o.incentive), housing: jsonNumber(o.housing),
-    special: jsonNumber(o.special), sss: jsonNumber(o.sss), philhealth: jsonNumber(o.philhealth), pagibig: jsonNumber(o.pagibig),
+    special: jsonNumber(o.special), sss: ownShare(o.sss), philhealth: ownShare(o.philhealth), pagibig: ownShare(o.pagibig),
     advance: jsonNumber(o.advance), bank: jsonText(o.bank), account: jsonText(o.account),
   };
+}
+
+function sharesOf(o: JsonValue | undefined, setup: PaySetup, p: Period): Shares {
+  if (!isJsonObject(o)) return sharesFor(setup, p);
+
+  return { sss: jsonNumber(o.sss), philhealth: jsonNumber(o.philhealth), pagibig: jsonNumber(o.pagibig) };
 }
 
 function tallyOf(o: JsonValue | undefined): AttendanceTally {
@@ -81,10 +92,15 @@ export function dataOf(s: TerminalState): PayrollData {
     runs: jsonObjects(raw.runs)
       .map((r): PayRun => ({
         from: jsonText(r.from), to: jsonText(r.to), closed: jsonText(r.closed),
-        rows: jsonObjects(r.rows).flatMap((x) => (isJsonObject(x.setup) ? [{
-          setup: setupOf(x.setup), tally: tallyOf(x.tally),
-          name: jsonText(x.name), position: jsonText(x.position), dept: jsonText(x.dept), tin: jsonText(x.tin),
-        }] : [])),
+        rows: jsonObjects(r.rows).flatMap((x) => {
+          if (!isJsonObject(x.setup)) return [];
+          const setup = setupOf(x.setup);
+
+          return [{
+            setup, tally: tallyOf(x.tally), shares: sharesOf(x.shares, setup, { from: jsonText(r.from), to: jsonText(r.to) }),
+            name: jsonText(x.name), position: jsonText(x.position), dept: jsonText(x.dept), tin: jsonText(x.tin),
+          }];
+        }),
       }))
       .filter((r) => isISODate(r.from) && isISODate(r.to)),
   };
@@ -93,6 +109,13 @@ export function dataOf(s: TerminalState): PayrollData {
 const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, MODULE, data);
 
 export const setupFor = (s: TerminalState, emp: string) => dataOf(s).setups.find((x) => x.emp === emp);
+
+/** The shares this employee pays in this cut-off: their own amount where HR typed one, the tables' otherwise. */
+export function sharesFor(setup: PaySetup, p: Period): Shares {
+  const table = tableShares(setup.daily, p);
+
+  return { sss: setup.sss ?? table.sss, philhealth: setup.philhealth ?? table.philhealth, pagibig: setup.pagibig ?? table.pagibig };
+}
 
 // ---------- pricing ----------
 
@@ -132,8 +155,8 @@ export interface Pay {
   net: Centavos;
 }
 
-/** Prices a tally with an employee's pay setup. */
-export function price(setup: PaySetup, t: AttendanceTally): Pay {
+/** Prices a tally with an employee's pay setup and the government shares for the cut-off. */
+export function price(setup: PaySetup, t: AttendanceTally, shares: Shares): Pay {
   const daily = toCentavos(setup.daily);
   const paidDays = t.worked + t.regularHolidaysOff;
   const basic = daily * paidDays;
@@ -148,9 +171,9 @@ export function price(setup: PaySetup, t: AttendanceTally): Pay {
   const halfDay = Math.round((daily * t.halfDays) / 2);
   const overtime = Math.round((daily * t.overtimeHours * 60 * OVERTIME_PERCENT) / (t.dayMinutes * 100));
   const gross = compensation + allowances - late - halfDay + overtime;
-  const sss = toCentavos(setup.sss);
-  const philhealth = toCentavos(setup.philhealth);
-  const pagibig = toCentavos(setup.pagibig);
+  const sss = toCentavos(shares.sss);
+  const philhealth = toCentavos(shares.philhealth);
+  const pagibig = toCentavos(shares.pagibig);
   const advance = toCentavos(setup.advance);
   const deductions = sss + philhealth + pagibig + advance;
 
@@ -191,13 +214,14 @@ export const runFor = (s: TerminalState, p: Period) => dataOf(s).runs.find((r) =
 export function cutoffOf(s: TerminalState, p: Period, attendance: EmployeeAttendance | undefined, ctx: Ctx): Cutoff {
   const run = runFor(s, p);
 
-  if (run) return { period: p, closed: run.closed, assumed: false, lines: run.rows.map((r) => ({ ...r, pay: price(r.setup, r.tally) })) };
+  if (run) return { period: p, closed: run.closed, assumed: false, lines: run.rows.map((r) => ({ ...r, pay: price(r.setup, r.tally, r.shares) })) };
 
   const lines = dataOf(s).setups.map((setup): PayLine => {
     const e = recordOf(s, setup.emp);
     const tally = attendance ? attendance.tally(s, setup.emp, p.from, p.to, ctx) : fullAttendance(p);
+    const shares = sharesFor(setup, p);
 
-    return { setup, tally, name: e?.name ?? setup.emp, position: e?.detail ?? '', dept: e?.dept ?? '', tin: e?.tin ?? '', pay: price(setup, tally) };
+    return { setup, tally, shares, name: e?.name ?? setup.emp, position: e?.detail ?? '', dept: e?.dept ?? '', tin: e?.tin ?? '', pay: price(setup, tally, shares) };
   }).sort((a, b) => a.name.localeCompare(b.name));
 
   return { period: p, lines, assumed: !attendance };
@@ -218,7 +242,7 @@ export function closeCutoff(s: TerminalState, p: Period, attendance: EmployeeAtt
 
   if (!c.lines.length) throw new KeystoneError('Set up pay for at least one employee first.');
   const data = dataOf(s);
-  const run: PayRun = { from: p.from, to: p.to, closed: stamp(ctx.now()), rows: c.lines.map((l) => ({ setup: l.setup, tally: l.tally, name: l.name, position: l.position, dept: l.dept, tin: l.tin })) };
+  const run: PayRun = { from: p.from, to: p.to, closed: stamp(ctx.now()), rows: c.lines.map((l) => ({ setup: l.setup, tally: l.tally, shares: l.shares, name: l.name, position: l.position, dept: l.dept, tin: l.tin })) };
   const line = `Payroll for ${label} closed: ${count(run.rows.length, 'employee')}, ${peso(totalOf(c, 'net'))} net.`;
 
   return { state: logged(saved(s, { ...data, runs: [...data.runs, run] }), TAG, line, ctx), record: run, message: line };
@@ -239,6 +263,11 @@ export function reopenCutoff(s: TerminalState, p: Period, ctx: Ctx): Change<PayR
 
 export const AMOUNTS = ['daily', 'incentive', 'housing', 'special', 'sss', 'philhealth', 'pagibig', 'advance'] as const;
 
+/** The government shares: from the tables unless HR types the employee's own amount. */
+export const SHARES = ['sss', 'philhealth', 'pagibig'] as const;
+
+type ShareField = (typeof SHARES)[number];
+
 export type AmountField = (typeof AMOUNTS)[number];
 
 export const AMOUNT_LABEL: Record<AmountField, string> = {
@@ -255,6 +284,7 @@ const AMOUNT_WORDS: Record<AmountField, string> = {
 export type SetupDraft = { emp: string; empNo: string; bank: string; account: string } & Record<AmountField, string>;
 
 const amountText = (pesos: number) => (pesos ? String(pesos) : '');
+const shareText = (pesos: number | null | undefined) => (pesos === null || pesos === undefined ? '' : String(pesos));
 
 export function setupDraftOf(s: TerminalState, emp: string): SetupDraft {
   const x = setupFor(s, emp);
@@ -262,8 +292,8 @@ export function setupDraftOf(s: TerminalState, emp: string): SetupDraft {
   return {
     emp, empNo: x?.empNo ?? '', bank: x?.bank ?? '', account: x?.account ?? '',
     daily: amountText(x?.daily ?? 0), incentive: amountText(x?.incentive ?? 0), housing: amountText(x?.housing ?? 0),
-    special: amountText(x?.special ?? 0), sss: amountText(x?.sss ?? 0), philhealth: amountText(x?.philhealth ?? 0),
-    pagibig: amountText(x?.pagibig ?? 0), advance: amountText(x?.advance ?? 0),
+    special: amountText(x?.special ?? 0), sss: shareText(x?.sss), philhealth: shareText(x?.philhealth),
+    pagibig: shareText(x?.pagibig), advance: amountText(x?.advance ?? 0),
   };
 }
 
@@ -277,6 +307,9 @@ function pesosIn(d: SetupDraft, field: AmountField): number {
 
   return c / 100;
 }
+
+/** A government share as typed: empty means the tables, so it is null; anything else is the employee's own amount. */
+const shareIn = (d: SetupDraft, field: ShareField) => (d[field].trim() ? pesosIn(d, field) : null);
 
 export function saveSetup(s: TerminalState, d: SetupDraft, ctx: Ctx): Change<PaySetup> {
   const e = recordOf(s, d.emp);
@@ -293,7 +326,7 @@ export function saveSetup(s: TerminalState, d: SetupDraft, ctx: Ctx): Change<Pay
 
   const setup: PaySetup = {
     emp: d.emp, empNo, daily, incentive: pesosIn(d, 'incentive'), housing: pesosIn(d, 'housing'), special: pesosIn(d, 'special'),
-    sss: pesosIn(d, 'sss'), philhealth: pesosIn(d, 'philhealth'), pagibig: pesosIn(d, 'pagibig'), advance: pesosIn(d, 'advance'),
+    sss: shareIn(d, 'sss'), philhealth: shareIn(d, 'philhealth'), pagibig: shareIn(d, 'pagibig'), advance: pesosIn(d, 'advance'),
     bank: d.bank.trim(), account: d.account.trim(),
   };
 
@@ -332,7 +365,7 @@ export function payrollFigure(s: TerminalState): Figure {
   const latest = [...runs].sort((a, b) => b.to.localeCompare(a.to))[0];
 
   if (!latest) return { label: 'Last payroll', value: '—', caption: 'No cut-off closed yet' };
-  const net = sumCentavos(latest.rows, (r) => price(r.setup, r.tally).net);
+  const net = sumCentavos(latest.rows, (r) => price(r.setup, r.tally, r.shares).net);
 
   return { label: 'Last payroll', value: peso(net), caption: `${periodLabel(latest)} · ${count(latest.rows.length, 'employee')}` };
 }

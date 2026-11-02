@@ -44,5 +44,6 @@ Status: Accepted · Date: 2026-11-02
   - Keystone has no sign-in, so anyone who can open Keystone can change a pay setup. Every change is written to the
     Activity log with the time.
   - Days are entered in Keystone, by an employee at the computer or by HR. There is no card reader.
-  - Government contributions are entered as amounts per cut-off. Keystone does not compute them from contribution
-    tables.
+  - Government shares come from the 2026 SSS, PhilHealth and Pag-IBIG tables in `contributions.ts`, on monthly pay
+    of daily × 261 ÷ 12. When a table changes, that file changes with it. HR can type any employee's own amount
+    instead, since shares differ per employee.

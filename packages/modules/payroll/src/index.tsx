@@ -4,20 +4,22 @@ import {
 } from '@keystone/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import {
-  count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
-  type DirectoryRecord,
+  count, halfMonthsTo, parseAmount, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
+  type DirectoryRecord, type Period,
 } from '@keystone/core';
 import { printElement, savePdf, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
+import { tableShares } from './contributions';
 import { Payslip, PayrollSheet } from './PayrollPapers';
 import {
   AMOUNT_LABEL, closeCutoff, cutoffOf, lastCutoff, payrollFigure, payrollFinding, payrollStat, removeSetup,
-  reopenCutoff, saveSetup, setupDraftOf, setupFor, TAG, totalOf, type AmountField, type PayLine, type SetupDraft,
+  reopenCutoff, saveSetup, setupDraftOf, setupFor, sharesFor, SHARES, TAG, totalOf, type AmountField, type PayLine,
+  type SetupDraft,
 } from './rules';
 
-function Amount({ field, d, set }: { field: AmountField; d: SetupDraft; set: (d: SetupDraft) => void }) {
+function Amount({ field, d, set, placeholder = '0.00' }: { field: AmountField; d: SetupDraft; set: (d: SetupDraft) => void; placeholder?: string }) {
   return (
     <Field label={AMOUNT_LABEL[field]}>
-      <TextInput figures align="right" placeholder="0.00" value={d[field]} onChange={(v) => set({ ...d, [field]: v })} />
+      <TextInput figures align="right" placeholder={placeholder} value={d[field]} onChange={(v) => set({ ...d, [field]: v })} />
     </Field>
   );
 }
@@ -31,11 +33,12 @@ function Group({ legend, children }: { legend: string; children: ReactNode }) {
   );
 }
 
-function SetupForm({ draft, onDone }: { draft: SetupDraft; onDone: () => void }) {
+function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Period; onDone: () => void }) {
   const { state, run } = useKeystone();
   const [d, setD] = useState(draft);
   const [error, setError] = useState<string | null>(null);
   const name = recordOf(state, d.emp)?.name ?? d.emp;
+  const table = tableShares((parseAmount(d.daily) ?? 0) / 100, period);
 
   const save = () => {
     const r = run((s, c) => saveSetup(s, d, c));
@@ -58,11 +61,10 @@ function SetupForm({ draft, onDone }: { draft: SetupDraft; onDone: () => void })
       </Group>
       <Group legend="Deductions, each cut-off">
         <FieldRow min={100}>
-          <Amount field="sss" d={d} set={setD} />
-          <Amount field="philhealth" d={d} set={setD} />
-          <Amount field="pagibig" d={d} set={setD} />
+          {SHARES.map((f) => <Amount key={f} field={f} d={d} set={setD} placeholder={table[f].toFixed(2)} />)}
           <Amount field="advance" d={d} set={setD} />
         </FieldRow>
+        <p className="m-0 text-xs text-ink-2">Empty uses the 2026 contribution tables (shown in grey). Type an amount, 0 included, to use this employee's own instead.</p>
       </Group>
       <Group legend="Paid by">
         <FieldRow>
@@ -121,7 +123,10 @@ function Payroll() {
       key: 'ded', header: 'Deductions', width: 116, align: 'right', cell: (e) => {
         const x = setupFor(state, e.code);
 
-        return x ? peso(toCentavos(x.sss + x.philhealth + x.pagibig + x.advance)) : '—';
+        if (!x) return '—';
+        const g = sharesFor(x, period);
+
+        return <span title="SSS, PhilHealth, Pag-IBIG and salary advance, this cut-off">{peso(toCentavos(g.sss + g.philhealth + g.pagibig + x.advance))}</span>;
       },
     },
     { key: 'bank', header: 'Paid by', width: 96, cell: (e) => <span className="text-ink-2">{setupFor(state, e.code) ? setupFor(state, e.code)?.bank || 'Cash' : '—'}</span> },
@@ -240,7 +245,7 @@ function Payroll() {
         title={editing ? `Pay setup: ${recordOf(state, editing.emp)?.name ?? editing.emp}` : 'Pay setup'}
         description={`${editing ? [recordOf(state, editing.emp)?.detail, recordOf(state, editing.emp)?.dept].filter(Boolean).join(' · ') + '. ' : ''}Each change is written to the Activity log.`}
       >
-        {editing && <SetupForm key={editing.emp} draft={editing} onDone={() => setEditing(null)} />}
+        {editing && <SetupForm key={editing.emp} draft={editing} period={period} onDone={() => setEditing(null)} />}
       </Sheet>
     </>
   );

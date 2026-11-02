@@ -38,7 +38,8 @@ test('HR sets each employee\'s own pay, and it needs a daily rate', async ({ app
   await expect(row.getByRole('cell', 'APGCO-0013')).toBeVisible();
   await expect(row.getByRole('cell', '₱760.00')).toBeVisible();
   await expect(row.getByRole('cell', '₱1,000.00 + ₱150.00 a day')).toBeVisible();
-  await expect(row.getByRole('cell', '₱450.00')).toBeVisible();
+  // His own SSS of 450, and the tables' PhilHealth (206.62 for the 16th to the 31st) and Pag-IBIG (100).
+  await expect(row.getByRole('cell', '₱756.62')).toBeVisible();
   await expect(row.getByRole('cell', 'Cash')).toBeVisible();
 });
 
@@ -60,28 +61,30 @@ test('prices the cut-off from Timekeeping, closes it, and prints the payslip', a
   await app.open('/#payroll');
   await setJuansPay(screen);
 
-  // 760 × 2 days; 1,000 + 150 × 2 allowances; 30 minutes late at 760 / 480 a minute; 450 SSS.
+  // 760 × 2 days; 1,000 + 150 × 2 allowances; 30 minutes late at 760 / 480 a minute; his own 450 SSS, and the tables'
+  // PhilHealth (206.62) and Pag-IBIG (100) for 760 a day.
   const cutoff = screen.getByRole('table', 'Cut-off');
 
-  await expect(cutoff.getByRole('row', 'Juan Miguel P. Reyes 2/11 ₱1,520.00 ₱1,300.00 -₱47.50 ₱0.00 ₱2,772.50 -₱450.00 ₱2,322.50')).toBeVisible();
-  await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱2,322.50 net so far.')).toBeVisible();
+  await expect(cutoff.getByRole('row', 'Juan Miguel P. Reyes 2/11 ₱1,520.00 ₱1,300.00 -₱47.50 ₱0.00 ₱2,772.50 -₱756.62 ₱2,015.88')).toBeVisible();
+  await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱2,015.88 net so far.')).toBeVisible();
 
   await screen.getByRole('button', 'Close cut-off').tap();
-  await expect(screen.getByRole('dialog', 'Payroll for Oct 16–31, 2026 closed: 1 employee, ₱2,322.50 net.')).toBeVisible();
-  await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱2,322.50 net, closed.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'Payroll for Oct 16–31, 2026 closed: 1 employee, ₱2,015.88 net.')).toBeVisible();
+  await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱2,015.88 net, closed.')).toBeVisible();
   await expect(screen.getByRole('button', 'Reopen cut-off')).toBeVisible();
 
   const sheet = screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026');
 
   await expect(sheet).toContainText('APGCO-0013');
-  await expect(sheet).toContainText('2,322.50');
+  await expect(sheet).toContainText('2,015.88');
 
   await cutoff.getByRole('row', /^Juan Miguel P\. Reyes /).tap();
   const slip = screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026');
 
   await expect(slip).toContainText('Total earnings ₱2,820.00');
-  await expect(slip).toContainText('Total deductions ₱497.50');
-  await expect(slip).toContainText('₱2,322.50');
+  await expect(slip).toContainText('Total deductions ₱804.12');
+  await expect(slip).toContainText('PhilHealth employee share 206.62');
+  await expect(slip).toContainText('₱2,015.88');
 
   await app.open('/#overview');
   await expect(screen.getByRole('definition').filter({ hasText: 'Oct 16–31, 2026 · 1 employee' })).toBeVisible();
