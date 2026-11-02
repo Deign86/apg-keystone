@@ -18,8 +18,7 @@
 - **Draft key:** `id-maker.draft`.
 
 ## Needs
-Nothing. Employees come from the directory when present. People imported by a connector (attendance, website) bring
-their photo.
+Nothing. Employees come from the directory when present.
 
 ## Removing it
 The above disappear. Saved cards stay in `state.json`.

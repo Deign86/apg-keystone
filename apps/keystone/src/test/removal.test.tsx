@@ -1,6 +1,6 @@
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { App, buildRegistry, Connections, KeystoneStore, type ConnectorPlugin, type ModuleDef, type Platform } from '@keystone/kit';
+import { App, buildRegistry, KeystoneStore, type ConnectorPlugin, type ModuleDef, type Platform } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
@@ -13,8 +13,6 @@ const platform: Platform = {
   ...browserPlatform,
   loadState: async () => null,
   saveState: async () => {},
-  loadSettings: async () => ({}),
-  saveSettings: async () => {},
 };
 
 const scenarios: [string, ModuleDef[], ConnectorPlugin[]][] = [
@@ -37,9 +35,6 @@ describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
     expect(registry.refused).toEqual([]);
 
     const store = await KeystoneStore.open(platform, registry.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : [])));
-    const connections = new Connections(platform, registry.connectors);
-
-    for (const c of registry.connectors) await connections.refresh(c);
 
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -48,7 +43,7 @@ describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
 
       for (const m of routes) {
         window.location.hash = m ? `#${m.id}` : '';
-        const view = render(<App store={store} registry={registry} connections={connections} />);
+        const view = render(<App store={store} registry={registry} />);
         await act(async () => {});
         expect(screen.queryByText('This screen hit a problem')).toBeNull();
 
@@ -74,7 +69,7 @@ it('every shipped part has a distinct id and loads without refusal', () => {
   const r = buildRegistry(builtInModules, plugins);
   expect(r.refused).toEqual([]);
   expect(r.modules.map((m) => m.id)).toEqual([...new Set(r.modules.map((m) => m.id))]);
-  expect(r.modules.map((m) => m.id)).toEqual(expect.arrayContaining(['home', 'vouchers', 'billing', 'id-maker', 'directory', 'activity', 'connections', 'website']));
+  expect(r.modules.map((m) => m.id)).toEqual(expect.arrayContaining(['home', 'vouchers', 'billing', 'id-maker', 'directory', 'activity', 'data']));
   expect(r.connectors.map((c) => c.id)).toEqual(['attendance', 'branding-studio', 'website']);
 });
 
@@ -82,10 +77,9 @@ it('a module that crashes shows its own error and leaves the rest working', asyn
   const Broken = () => { throw new Error('Kaput'); };
   const registry = buildRegistry([...builtInModules, { id: 'broken', title: 'Broken', section: '', blurb: '', order: 50, Screen: Broken }], []);
   const store = await KeystoneStore.open(platform);
-  const connections = new Connections(platform, []);
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
   window.location.hash = '#broken';
-  const view = render(<App store={store} registry={registry} connections={connections} />);
+  const view = render(<App store={store} registry={registry} />);
   await act(async () => {});
   expect(screen.getByRole('alert')).toHaveTextContent('Kaput');
   // The rail still works: open another module.

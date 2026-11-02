@@ -199,7 +199,7 @@ export function billingWaiting(s: TerminalState): WaitingItem[] {
 
 // ---------- the service billing offers other parts ----------
 
-/** Published as SERVICES.statementPayments; the website's payment matching uses it. */
+/** Published as SERVICES.statementPayments, for any part that settles statements from outside billing. */
 export const statementPayments: StatementPayments = {
   open: (s) => [...outstanding(s)].sort((a, b) => a.due.localeCompare(b.due))
     .map((b) => ({ no: b.no, client: nameOf(s, b.client), due: b.due, amount: statementTotals(b).due })),

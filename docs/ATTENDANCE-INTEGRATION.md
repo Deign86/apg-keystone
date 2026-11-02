@@ -1,5 +1,9 @@
 # Attendance tracker ↔ Keystone: the one open decision
 
+> **Withdrawn (2026-11-02).** Keystone no longer reads anything from the attendance app: its card on Home is a
+> shortcut that opens the app ([ADR 0007](adr/0007-connected-systems-are-shortcuts.md)). Nothing below needs
+> deciding. It is kept as the record of what was proposed.
+
 ## Today (no change to the attendance app)
 
 - **Live figures:** read from the kiosk's LAN viewer, the same feed the `/attendance` dashboard uses.

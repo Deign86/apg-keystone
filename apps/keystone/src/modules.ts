@@ -1,7 +1,7 @@
 import type { ModuleDef } from '@keystone/kit';
 import { activityModule } from '@keystone/module-activity';
 import { billingModule } from '@keystone/module-billing';
-import { connectionsModule } from '@keystone/module-connections';
+import { dataModule } from '@keystone/module-data';
 import { directoryModule } from '@keystone/module-directory';
 import { homeModule } from '@keystone/module-home';
 import { idMakerModule } from '@keystone/module-id-maker';
@@ -14,5 +14,5 @@ import { vouchersModule } from '@keystone/module-vouchers';
  * tile, Overview figure, finding, waiting items, log filter and services go with it.
  */
 export const builtInModules: ModuleDef[] = [
-  homeModule, overviewModule, vouchersModule, billingModule, idMakerModule, directoryModule, activityModule, connectionsModule,
+  homeModule, overviewModule, vouchersModule, billingModule, idMakerModule, directoryModule, activityModule, dataModule,
 ];

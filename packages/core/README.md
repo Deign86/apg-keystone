@@ -13,8 +13,8 @@ numbering, blank lines dropped).
 | `src/kernel/state.ts` | `KeystoneError`, `Ctx`, `Change`, `logged`, `nextNumber`, `parseState` |
 | `src/kernel/lines.ts` | Line-item drafts for documents: an amount per line (vouchers), or a quantity at a unit price (statements) |
 | `src/kernel/insight.ts` | `Figure`, `Finding`, `WaitingItem`, `topFinding` |
-| `src/kernel/directory.ts` | The shared directory: records, payees, codes, saving and removing, importing people from a connected system |
-| `src/kernel/connectors.ts` | The connector contract and `withDeadline` |
+| `src/kernel/directory.ts` | The shared directory: records, payees, codes, saving and removing |
+| `src/kernel/connectors.ts` | The connector contract (a shortcut to another app), `openDesktopApp` and `withDeadline` |
 | `src/kernel/services.ts` | Published service contracts: `SERVICES` names and their types (`StatementPayments`) |
 | `src/seed.json` | The sample data. Generated from `shared/data/seed.json` by `npm run sync`; don't edit it here |
 

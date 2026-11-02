@@ -1,6 +1,6 @@
 # 0004. Integrate other APG systems only through what they already expose
 
-Status: Accepted · Date: 2026-10-30
+Status: Superseded by [0007](0007-connected-systems-are-shortcuts.md) · Date: 2026-10-30
 
 ## Context
 

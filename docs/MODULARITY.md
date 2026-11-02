@@ -78,43 +78,47 @@ Everything else it needs comes from `@keystone/core`, `@keystone/ui` and `@keyst
 ### Services (`packages/core/src/kernel/services.ts`)
 
 Contributions flow one way, from a part to the kernel's collecting screens. Sometimes a part needs another part's
-*behaviour*: the website's screen has to settle a billing statement. Importing the billing package would weld the two
-together, so instead:
+*behaviour*: say a part has to settle a billing statement. Importing the billing package would weld the two together,
+so instead:
 
 ```
 core: SERVICES.statementPayments = 'billing.statement-payments', interface StatementPayments
         ▲                                                      ▲
         │ implements                                           │ asks for, by name
-module-billing: provides: { [SERVICES.statementPayments]: … }  connector-website: app.service(SERVICES.statementPayments)
+module-billing: provides: { [SERVICES.statementPayments]: … }  any part: app.service(SERVICES.statementPayments)
 ```
+
+Billing provides this one today; no part that ships asks for it (the Website screen that did was removed in
+docs/adr/0007).
 
 This is the OSGi service-registry pattern, and the "published interface" of Fowler and of Spring Modulith's named
 interfaces. The rules:
 - the contract (name and types) lives in core, owned by neither side;
 - one provider per service: the registry refuses a second, with a reason;
 - a module that was left out (a missing `requires`) offers nothing;
-- the consumer gets `undefined` when the provider is not installed and must still work. The Website screen lists
-  payments and inquiries and says matching needs Billing.
+- the consumer gets `undefined` when the provider is not installed, and must still work and say what it cannot do.
 
 Prefer a service to `requires`: it keeps the consumer installable without the provider.
 
 ### `Connector` (`packages/core/src/kernel/connectors.ts`)
 
+A connector is a shortcut to another APG app (docs/adr/0007).
+
 | Field | Required | What it is for |
 |---|---|---|
-| `id`, `name`, `about`, `platforms`, `settings` | yes | Identity, where it works, and its settings form, drawn automatically |
-| `health(env)` | yes | Is it there? `ready`, `setup`, `offline`, `error` or `unsupported`, with one sentence |
-| `figures(env)` | | Live figures on its Home card |
-| `people` | | An import into the Directory. People are matched by link or name and never duplicated. |
-| `actions` | | Buttons on its card |
-| `tag`, `refreshSeconds` | | Short label for linked records; how often to check it |
+| `id`, `name` | yes | Identity; the name is shown under the logo and read out as "Open <name>" |
+| `logo` | yes | The app's own logo, imported from the package (`import logo from './logo.png'`) |
+| `open(env)` | yes | Opens the app. `env.system` finds and starts installed apps and opens URLs. It may return a sentence to show |
+| `tag` | | Short label for directory records linked to this system |
 
-`buildRegistry` validates every connector; a broken one is refused, not loaded. The runtime (`@keystone/kit`'s `connections.ts`)
-runs every call through `safely()`: an 8-second deadline (longer for imports), with any failure turned into a health
-state. So a connector that hangs, throws or isn't installed can only affect its own card.
+Desktop apps use `openDesktopApp(system, { name, locator, downloads })` from core: it starts the installed app or
+opens its download page, and in the browser preview says the desktop app is needed.
 
-A connector may bring its own screens (`ConnectorPlugin.modules`), the way the website brings the Website inbox. Those
-screens follow the module rules.
+`buildRegistry` validates every connector; a broken one (no name, no logo) is refused, not loaded. The kit's
+`ConnectorShortcut` runs `open` under a 15-second deadline and shows any failure as a message, so a connector that
+hangs, throws or isn't installed affects nothing else.
+
+A connector may bring its own screens (`ConnectorPlugin.modules`). Those screens follow the module rules.
 
 ### Rules (`packages/modules/<id>/src/rules.ts`)
 
@@ -124,7 +128,7 @@ contributions there (`voucherFigure`, `billingFinding`, …) and tests them in i
 removes its rules with it; nothing else could have been using them.
 
 **Why the directory is in the kernel:** it is master data every area refers to by code (payees, clients, card
-holders), and connectors import people into it. So its records and rules are shared kernel (`core/kernel/directory.ts`);
+holders). So its records and rules are shared kernel (`core/kernel/directory.ts`);
 only its screen is a module.
 
 **Integrity is data-level.** `usedBy` reads the saved records, not the installed modules. A vendor that a voucher
@@ -148,23 +152,21 @@ every version. The rules for it:
 | Removal | `npm test` → `apps/keystone/src/test/removal.test.tsx` | Removing any one module or connector, or installing any one alone, makes a screen throw, log an error, or lose its title; a crashing screen takes down the rail |
 | Contract | `apps/keystone/src/test/contract.test.ts` | A module's contributions are malformed or mutate the state; it names a part or service that doesn't exist; two modules claim a log tag; a published service has no provider; the most urgent finding stops winning |
 | End to end | `npm run check:e2e` (`scripts/check-e2e.mjs`), then `npm run test:e2e` | An installed module or connector has no `e2e/modules/<id>.e2e.ts` or `e2e/connectors/<id>.e2e.ts`, or one is left for a part that is gone; a screen or flow stops working in Chromium |
-| Services | `apps/keystone/src/test/services.test.tsx` | The website stops settling statements through the service, or stops working without billing |
-| Isolation | `packages/kit/test/` | A crashing or hanging connector affects another; secrets reach the settings file; a broken plugin stops the app loading; a second provider of a service is accepted |
+| Services | `apps/keystone/src/test/services.test.tsx` | Billing stops providing its service under the published name, or leaving billing out refuses a part |
+| Isolation | `packages/kit/test/` | A hanging connector freezes its shortcut; a failure goes unreported; a broken plugin stops the app loading; a second provider of a service is accepted |
 
 All of these run in CI on every push, and each was verified by breaking what it guards:
 - **Boundaries:** twelve planted violations (a connector importing a module, declared and undeclared; a module's
   manifest listing another module; a relative import into another package; a deep import into the kit; the kit
   depending on a module; core importing ui; ui depending on core; an undeclared library; `main.tsx` importing a
   module; a misnamed package; a dynamic import of a connector). It reported each one.
-- **Tests:** fourteen planted defects (service lookup ignoring the name, two providers accepted, `requires` ignored, a
-  damaged file overwritten, a secret saved in settings, no deadline on connectors, the website screen crashing,
-  ignoring or refusing without billing, no `Origin` header, no re-sign-in, billing not providing its service, a
-  module mutating state, a duplicate log tag). Each made at least one test fail.
+- **Tests:** planted defects (service lookup ignoring the name, two providers accepted, `requires` ignored, a damaged
+  file overwritten, no deadline on opening a connector, refusing a part without billing, billing not providing its
+  service, a module mutating state, a duplicate log tag). Each made at least one test fail.
 
 ## When modularity costs something
 
-- **A screen with nothing to show:** a module that is installed while its source is missing shows that honestly. The
-  Website screen without a website account says so and offers setup (if Connections is installed).
+- **A screen with nothing to show:** a module that is installed while its source is missing shows that honestly.
 - **Shared code:** anything two modules need moves into the kernel (`@keystone/kit`, `@keystone/ui`, or core for
   rules). The kernel grows a little; the parts stay independent.
 - **Contracts in core:** a new service adds a name and types to core, which every part then sees. It is the price of

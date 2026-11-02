@@ -1,7 +1,6 @@
 import { FeedbackProvider } from '@keystone/ui';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Connections } from '../src/connections';
 import { KeystoneProvider } from '../src/context';
 import type { AppUpdate, AppUpdater, Platform } from '../src/platform';
 import { buildRegistry } from '../src/registry';
@@ -32,7 +31,7 @@ async function mount(answers: (AppUpdate | null | Error)[], platformOverrides: P
 
   const view = render(
     <FeedbackProvider>
-      <KeystoneProvider store={store} registry={registry} connections={new Connections(withUpdater, [])}>
+      <KeystoneProvider store={store} registry={registry}>
         <UpdateNotice />
       </KeystoneProvider>
     </FeedbackProvider>,
@@ -134,7 +133,7 @@ describe('Keystone updating itself', () => {
     const store = await KeystoneStore.open(platform);
     render(
       <FeedbackProvider>
-        <KeystoneProvider store={store} registry={buildRegistry([], [])} connections={new Connections(platform, [])}>
+        <KeystoneProvider store={store} registry={buildRegistry([], [])}>
           <span data-testid="notice"><UpdateNotice /></span>
         </KeystoneProvider>
       </FeedbackProvider>,

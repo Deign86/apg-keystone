@@ -61,7 +61,7 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
 }
 
 function Directory() {
-  const { state, run, connections } = useKeystone();
+  const { state, run, registry } = useKeystone();
   const confirm = useConfirm();
   const [filter, setFilter] = useState<RecordType | 'All'>('All');
   const [query, setQuery] = useState('');
@@ -72,7 +72,8 @@ function Directory() {
   const rows = state.dir.filter((d) => (filter === 'All' || d.type === filter)
     && (!q || [d.code, d.name, d.tin, d.detail, d.dept, d.email].some((x) => x?.toLowerCase().includes(q))));
 
-  const sourceName = (id: string) => connections.get(id)?.name ?? id;
+  const connector = (id: string) => registry.connectors.find((c) => c.id === id);
+  const sourceName = (id: string) => connector(id)?.name ?? id;
 
   const columns: Column<DirectoryRecord>[] = [
     { key: 'code', header: 'Code', width: 68, cell: (d) => <span className="font-semibold text-gold-bright tabular-nums">{d.code}</span> },
@@ -94,7 +95,7 @@ function Directory() {
         return used.length || linked.length ? (
           <span className="flex flex-wrap gap-1" title={linked.length ? `Linked to ${linked.map(sourceName).join(', ')}` : undefined}>
             {used.map((u) => <Tag key={u}>{u}</Tag>)}
-            {linked.map((l) => <Tag key={l}>{connections.get(l)?.tag ?? l.slice(0, 3).toUpperCase()}</Tag>)}
+            {linked.map((l) => <Tag key={l}>{connector(l)?.tag ?? l.slice(0, 3).toUpperCase()}</Tag>)}
           </span>
         ) : <span className="text-ink-3">—</span>;
       },
