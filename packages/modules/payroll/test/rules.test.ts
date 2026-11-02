@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { bundledSeed, peso, withModuleData, type AttendanceTally, type Ctx, type EmployeeAttendance } from '@keystone/core';
+import type { Shares } from '../src/contributions';
 import {
   closeCutoff, cutoffOf, dataOf, fullAttendance, payrollFigure, payrollFinding, payrollStat, price, removeSetup,
-  reopenCutoff, saveSetup, setupDraftOf, totalOf, type PaySetup,
+  reopenCutoff, saveSetup, setupDraftOf, sharesFor, totalOf, type PaySetup,
 } from '../src/rules';
 
 const at = (y: number, m: number, d: number, h = 10): Ctx => ({ seed: bundledSeed, now: () => new Date(y, m - 1, d, h) });
@@ -10,9 +11,12 @@ const state = () => structuredClone(bundledSeed.state);
 const oct1 = { from: '2026-10-01', to: '2026-10-15' };
 
 const setup = (x: Partial<PaySetup> = {}): PaySetup => ({
-  emp: 'E-001', empNo: 'APGCO-0013', daily: 760, incentive: 1000, housing: 0, special: 150, sss: 0, philhealth: 0,
-  pagibig: 0, advance: 0, bank: 'Cash', account: '', ...x,
+  emp: 'E-001', empNo: 'APGCO-0013', daily: 760, incentive: 1000, housing: 0, special: 150, sss: null, philhealth: null,
+  pagibig: null, advance: 0, bank: 'Cash', account: '', ...x,
 });
+
+/** No government shares, as on the HR sheet's PAYROLL tab, which stops at gross. */
+const none: Shares = { sss: 0, philhealth: 0, pagibig: 0 };
 
 const days = (x: Partial<AttendanceTally> = {}): AttendanceTally => ({
   scheduled: 11, worked: 11, halfDays: 0, absent: 0, regularHolidaysOff: 0, specialHolidaysWorked: 0,
@@ -25,7 +29,7 @@ const attendance = (t: AttendanceTally): EmployeeAttendance => ({ tally: () => t
 describe('pricing a cut-off', () => {
   it('reproduces the HR payroll sheet for Oct 1–15, 2026', () => {
     // 760 a day, 11 standard days, 9 worked, one of them a special holiday; 1,000 incentives, 150 a day special allowance.
-    const p = price(setup(), days({ worked: 9, absent: 2, specialHolidaysWorked: 1 }));
+    const p = price(setup(), days({ worked: 9, absent: 2, specialHolidaysWorked: 1 }), none);
 
     expect(p.cutoffRate).toBe(836000);
     expect(p.basic).toBe(684000);
@@ -39,8 +43,9 @@ describe('pricing a cut-off', () => {
 
   it('takes off late minutes, half days and the payslip deductions, and adds holidays and overtime', () => {
     const p = price(
-      setup({ daily: 800, housing: 500, sss: 450, philhealth: 200, pagibig: 100, advance: 1000 }),
+      setup({ daily: 800, housing: 500, advance: 1000 }),
       days({ worked: 10, regularHolidaysOff: 1, halfDays: 1, regularHolidaysWorked: 0, shortMinutes: 45, overtimeHours: 2 }),
+      { sss: 450, philhealth: 200, pagibig: 100 },
     );
 
     expect(p.paidDays).toBe(11);
@@ -74,8 +79,8 @@ describe('the pay setup HR keeps', () => {
     expect(r.message).toBe('Pay setup saved for Angelica S. Bautista.');
     expect(r.state.log[0]).toMatchObject({ mod: 'PAY', text: 'Pay set up for Angelica S. Bautista: ₱1,250.50 a day.' });
     expect(dataOf(r.state).setups).toEqual([{
-      emp: 'E-002', empNo: 'APGCO-0021', daily: 1250.5, incentive: 2000, housing: 0, special: 150, sss: 675, philhealth: 0,
-      pagibig: 0, advance: 0, bank: 'BPI', account: '1234-5678',
+      emp: 'E-002', empNo: 'APGCO-0021', daily: 1250.5, incentive: 2000, housing: 0, special: 150, sss: 675, philhealth: null,
+      pagibig: null, advance: 0, bank: 'BPI', account: '1234-5678',
     }]);
     expect(setupDraftOf(r.state, 'E-002')).toMatchObject({ daily: '1250.5', sss: '675', philhealth: '' });
 
@@ -107,19 +112,37 @@ describe('the pay setup HR keeps', () => {
   });
 });
 
+describe('government shares', () => {
+  it('come from the tables unless HR types the employee\'s own amount, 0 included', () => {
+    expect(sharesFor(setup(), oct1)).toEqual({ sss: 412.5, philhealth: 206.63, pagibig: 100 });
+    expect(sharesFor(setup(), { from: '2026-10-16', to: '2026-10-31' })).toEqual({ sss: 412.5, philhealth: 206.62, pagibig: 100 });
+    expect(sharesFor(setup({ sss: 450, philhealth: 0 }), oct1)).toEqual({ sss: 450, philhealth: 0, pagibig: 100 });
+  });
+
+  it('keep an empty field on the tables and a typed one as the employee\'s own', () => {
+    const ctx = at(2026, 11, 2);
+    const s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760', sss: '450', philhealth: '0' }, ctx).state;
+
+    expect(dataOf(s).setups[0]).toMatchObject({ sss: 450, philhealth: 0, pagibig: null });
+    expect(setupDraftOf(s, 'E-001')).toMatchObject({ sss: '450', philhealth: '0', pagibig: '' });
+  });
+});
+
 describe('closing a cut-off', () => {
   const after = at(2026, 10, 16);
   const withPay = () => saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760', incentive: '1000', special: '150' }, after).state;
 
   it('freezes the pay so later corrections and rate changes do not reprice it', () => {
     const r = closeCutoff(withPay(), oct1, attendance(days({ worked: 9, absent: 2, specialHolidaysWorked: 1 })), after);
-    expect(r.message).toBe('Payroll for Oct 1–15, 2026 closed: 1 employee, ₱9,418.00 net.');
+    // Gross 9,418.00 less the table shares for 760 a day: SSS 412.50, PhilHealth 206.63, Pag-IBIG 100.00.
+    expect(r.message).toBe('Payroll for Oct 1–15, 2026 closed: 1 employee, ₱8,698.87 net.');
 
-    const raised = saveSetup(r.state, { ...setupDraftOf(r.state, 'E-001'), daily: '900' }, after).state;
+    const raised = saveSetup(r.state, { ...setupDraftOf(r.state, 'E-001'), daily: '900', sss: '500' }, after).state;
     const c = cutoffOf(raised, oct1, attendance(days()), after);
     expect(c.closed).toBe('2026-10-16 10:00');
     expect(peso(totalOf(c, 'gross'))).toBe('₱9,418.00');
-    expect(payrollFigure(raised)).toEqual({ label: 'Last payroll', value: '₱9,418.00', caption: 'Oct 1–15, 2026 · 1 employee' });
+    expect(peso(totalOf(c, 'sss'))).toBe('₱412.50');
+    expect(payrollFigure(raised)).toEqual({ label: 'Last payroll', value: '₱8,698.87', caption: 'Oct 1–15, 2026 · 1 employee' });
 
     const reopened = reopenCutoff(raised, oct1, after).state;
     expect(peso(totalOf(cutoffOf(reopened, oct1, attendance(days()), after), 'basic'))).toBe('₱9,900.00');
