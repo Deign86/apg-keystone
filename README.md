@@ -41,15 +41,18 @@ Download the installers from the repository's **Releases** page:
 Every push also builds both installers: open the workflow **Keystone**, pick a run, and download them from
 **Artifacts** (kept 90 days).
 
-**Making a release.** Tag a commit on `main` with its version and push the tag, or create a release with a new
-`v…` tag on the Releases page:
+**Making a release.** Any one of these:
+
+- **Actions › Keystone › Run workflow** on `main`, with the version (`0.2.0`) in *Version to release*.
+- **Releases › Draft a new release** with a new `v…` tag on `main`.
+- Tag a commit on `main` and push the tag:
 
 ```bash
 git tag v0.2.0 && git push origin v0.2.0
 ```
 
-The workflow runs every check, builds the macOS `.dmg` and the Windows setup `.exe` with that version (the tag
-overrides `tauri.conf.json`), and attaches both to the release, with install notes.
+The workflow runs every check, builds the macOS `.dmg` and the Windows setup `.exe` with that version (it overrides
+`tauri.conf.json`), and attaches both to the release, with install notes.
 
 ## Develop
 
