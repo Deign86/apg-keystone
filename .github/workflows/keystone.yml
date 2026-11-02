@@ -1,7 +1,11 @@
 name: Keystone
 
 on:
+  # Not on other branch pushes: a branch is checked by its pull request, so the checks are still pending when the
+  # pull request opens and auto-merge can be turned on (GitHub refuses it once they have passed).
   push:
+    branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
   # A release made on GitHub's Releases page. A tag pushed from git (v1.2.3) arrives as a push. Either way the

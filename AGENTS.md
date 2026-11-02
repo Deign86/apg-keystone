@@ -153,7 +153,9 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
 
 Every change reaches `main` through a pull request, and every pull request merges itself once CI is green.
 - **When you open one,** turn on auto-merge with a merge commit, so it merges as soon as the Keystone workflow
-  passes: checks, end-to-end tests, and both installer builds.
+  passes: checks, end-to-end tests, and both installer builds. CI runs on pull requests, `main` and `v…` tags, not on
+  a bare branch push, so the checks are still pending when the pull request opens; GitHub only accepts auto-merge
+  while they are.
 - **Agents watch the pull request until it merges:** they fix CI failures, merge conflicts and review comments on
   it, and never skip or weaken a check to get green.
 - **After the merge** the branch is deleted (the repository deletes merged branches).
