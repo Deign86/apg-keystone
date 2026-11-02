@@ -45,6 +45,8 @@ jobs:
         run: npm run check:boundaries
       - name: Agent skills load (every .agents/skills skill linked from .claude/skills)
         run: npm run check:skills
+      - name: Every installed module and connector has its own end-to-end tests
+        run: npm run check:e2e
       - name: Oxlint with the anti-slop rules
         run: npm run lint
       - run: npm run typecheck
@@ -52,8 +54,16 @@ jobs:
         run: npm test
       - name: Chromium for the end-to-end tests
         run: npx @e2e-dev/web install chromium --with-deps
-      - name: End-to-end tests (every screen in Chromium, against the dev server)
+      - name: End-to-end tests (every screen and its flows in Chromium, against the dev server)
         run: npm run test:e2e
+      - name: Keep the end-to-end traces and screenshots of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: .e2e/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Taste Skill lint (app rules)
         run: npm run lint:taste
       - name: Linux libraries for the Tauri shell

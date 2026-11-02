@@ -22,8 +22,9 @@
     "lint:taste": "node .agents/skills/design-taste-frontend/scripts/lint.mjs --app apps/keystone/src packages/ui/src packages/kit/src packages/modules packages/connectors",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:skills": "node scripts/check-skills.mjs",
+    "check:e2e": "node scripts/check-e2e.mjs",
     "lint": "oxlint",
-    "check": "npm run sync -- --check && npm run check:boundaries && npm run check:skills && npm run lint && npm run typecheck && npm test && npm run lint:taste"
+    "check": "npm run sync -- --check && npm run check:boundaries && npm run check:skills && npm run check:e2e && npm run lint && npm run typecheck && npm test && npm run lint:taste"
   },
   "devDependencies": {
     "@e2e-dev/web": "^0.15.4",

@@ -38,7 +38,8 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
 ## Template
 
 The package layout, `package.json`, `tsconfig.json` and `vitest.config.ts` are as in `packages/modules/README.md`,
-with the name `@keystone/connector-<id>` and the entry `src/index.ts`.
+with the name `@keystone/connector-<id>` and the entry `src/index.ts`. Its end-to-end tests go in
+`e2e/connectors/<id>.e2e.ts` at the repo root (`npm run check:e2e` fails without them).
 
 ```ts
 // packages/connectors/payroll-sheet/src/index.ts

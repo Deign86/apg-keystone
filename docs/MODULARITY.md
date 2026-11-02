@@ -147,6 +147,7 @@ every version. The rules for it:
 | Boundaries | `npm run check:boundaries` (`scripts/check-boundaries.mjs`) | A package's manifest lists a Keystone package its layer may not use; an import isn't declared in the manifest; an import reaches into another package's files; a relative import leaves its package; an app file other than `modules.ts`/`connectors.ts` imports a part; a package is misnamed |
 | Removal | `npm test` → `apps/keystone/src/test/removal.test.tsx` | Removing any one module or connector, or installing any one alone, makes a screen throw, log an error, or lose its title; a crashing screen takes down the rail |
 | Contract | `apps/keystone/src/test/contract.test.ts` | A module's contributions are malformed or mutate the state; it names a part or service that doesn't exist; two modules claim a log tag; a published service has no provider; the most urgent finding stops winning |
+| End to end | `npm run check:e2e` (`scripts/check-e2e.mjs`), then `npm run test:e2e` | An installed module or connector has no `e2e/modules/<id>.e2e.ts` or `e2e/connectors/<id>.e2e.ts`, or one is left for a part that is gone; a screen or flow stops working in Chromium |
 | Services | `apps/keystone/src/test/services.test.tsx` | The website stops settling statements through the service, or stops working without billing |
 | Isolation | `packages/kit/test/` | A crashing or hanging connector affects another; secrets reach the settings file; a broken plugin stops the app loading; a second provider of a service is accepted |
 
