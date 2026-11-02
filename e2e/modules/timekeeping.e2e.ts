@@ -78,3 +78,31 @@ test('keeps the office\'s holidays', async ({ app, screen }) => {
   await expect(entries).toHaveCount(1);
   await expect(entries.first()).toContainText('DTR Nov 30, 2026 set as a regular holiday: Bonifacio Day.');
 });
+
+test('marks a half day, undertime and approved overtime in the daily time record', async ({ app, screen }) => {
+  await app.open('/#timekeeping');
+  await screen.getByRole('combobox', 'Cut-off').tap();
+  await screen.getByRole('option', 'Oct 16–31, 2026').tap();
+  const record = screen.getByRole('table', 'Daily time record');
+
+  for (const [row, date, timeIn, timeOut, overtime] of [
+    [/^Wed · Oct 21 /, 'Oct 21, 2026', '08:00', '19:00', '2'],
+    [/^Thu · Oct 22 /, 'Oct 22, 2026', '12:30', '17:00', ''],
+    [/^Mon · Oct 26 /, 'Oct 26, 2026', '07:50', '16:30', ''],
+  ] as const) {
+    await record.getByRole('row', row).tap();
+    const form = screen.getByRole('form', `Correct ${date}`);
+
+    await form.getByRole('textbox', 'Time in').fill(timeIn);
+    await form.getByRole('textbox', 'Time out').fill(timeOut);
+    await form.getByRole('textbox', 'Approved overtime (hours)').fill(overtime);
+    await form.getByRole('button', 'Save day').tap();
+    await expect(form).toBeHidden();
+  }
+
+  // Staying until 7:00 PM is not overtime by itself; the two approved hours are.
+  await expect(record.getByRole('row', /^Wed · Oct 21 /).getByRole('cell', '2 hr')).toBeVisible();
+  await expect(record.getByRole('row', /^Thu · Oct 22 /).getByRole('cell', 'Half day')).toBeVisible();
+  await expect(record.getByRole('row', /^Mon · Oct 26 /).getByRole('cell', '30 min undertime')).toBeVisible();
+  await expect(screen.getByText(/^3 of 11 working days worked so far · 8 absences · 1 half day · 30 min late or undertime · 2 hr approved overtime\./)).toBeVisible();
+});

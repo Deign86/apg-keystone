@@ -1,22 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { bundledSeed, peso, withModuleData, type AttendanceTally, type Ctx, type EmployeeAttendance } from '@keystone/core';
-import type { Shares } from '../src/contributions';
+import { type PaySetup } from '../src/pay';
 import {
-  closeCutoff, cutoffOf, dataOf, fullAttendance, payrollFigure, payrollFinding, payrollStat, price, removeSetup,
-  reopenCutoff, saveSetup, setupDraftOf, sharesFor, totalOf, type PaySetup,
+  closeCutoff, cutoffOf, dataOf, payrollFigure, payrollFinding, payrollStat, removeSetup, reopenCutoff, saveSetup,
+  setupDraftOf, totalOf, workedOut,
 } from '../src/rules';
+
+// The pay setup, the saved data, and assembling, closing and reopening a cut-off. The amounts themselves come from the
+// engine (src/pay.ts), which test/pay.test.ts pins down; here they check that the right inputs reach it.
 
 const at = (y: number, m: number, d: number, h = 10): Ctx => ({ seed: bundledSeed, now: () => new Date(y, m - 1, d, h) });
 const state = () => structuredClone(bundledSeed.state);
 const oct1 = { from: '2026-10-01', to: '2026-10-15' };
 
 const setup = (x: Partial<PaySetup> = {}): PaySetup => ({
-  emp: 'E-001', empNo: 'APGCO-0013', daily: 760, incentive: 1000, housing: 0, special: 150, sss: null, philhealth: null,
-  pagibig: null, advance: 0, bank: 'Cash', account: '', ...x,
+  emp: 'E-001', empNo: 'APGCO-0013', daily: 760, monthly: null, incentive: 1000, housing: 0, special: 150, sss: null,
+  philhealth: null, pagibig: null, advance: 0, bank: 'Cash', account: '', ...x,
 });
-
-/** No government shares, as on the HR sheet's PAYROLL tab, which stops at gross. */
-const none: Shares = { sss: 0, philhealth: 0, pagibig: 0 };
 
 const days = (x: Partial<AttendanceTally> = {}): AttendanceTally => ({
   scheduled: 11, worked: 11, halfDays: 0, absent: 0, regularHolidaysOff: 0, specialHolidaysWorked: 0,
@@ -26,46 +26,34 @@ const days = (x: Partial<AttendanceTally> = {}): AttendanceTally => ({
 /** A stand-in for the timekeeping service: the same tally for everyone. */
 const attendance = (t: AttendanceTally): EmployeeAttendance => ({ tally: () => t });
 
-describe('pricing a cut-off', () => {
-  it('reproduces the HR payroll sheet for Oct 1–15, 2026', () => {
-    // 760 a day, 11 standard days, 9 worked, one of them a special holiday; 1,000 incentives, 150 a day special allowance.
-    const p = price(setup(), days({ worked: 9, absent: 2, specialHolidaysWorked: 1 }), none);
-
-    expect(p.cutoffRate).toBe(836000);
-    expect(p.basic).toBe(684000);
-    expect(p.specialHoliday).toBe(22800);
-    expect(p.compensation).toBe(706800);
-    expect(p.allowances).toBe(235000);
-    expect(p.absentAmount).toBe(152000);
-    expect(p.gross).toBe(941800);
-    expect(p.net).toBe(941800);
-  });
-
-  it('takes off late minutes, half days and the payslip deductions, and adds holidays and overtime', () => {
-    const p = price(
-      setup({ daily: 800, housing: 500, advance: 1000 }),
-      days({ worked: 10, regularHolidaysOff: 1, halfDays: 1, regularHolidaysWorked: 0, shortMinutes: 45, overtimeHours: 2 }),
-      { sss: 450, philhealth: 200, pagibig: 100 },
-    );
-
-    expect(p.paidDays).toBe(11);
-    expect(p.basic).toBe(880000); // 11 paid days, the regular holiday off included
-    expect(p.late).toBe(7500); // 45 minutes at 800 / 480 a minute
-    expect(p.halfDay).toBe(40000);
-    expect(p.overtime).toBe(25000); // 2 hours at 100 an hour, at 125%
-    expect(p.allowances).toBe(100000 + 50000 + 15000 * 10);
-    expect(p.gross).toBe(880000 + 300000 - 7500 - 40000 + 25000);
-    expect(p.deductions).toBe(175000);
-    expect(p.net).toBe(p.gross - 175000);
-  });
-
+describe('assembling a cut-off', () => {
   it('pays every weekday in full when timekeeping is not installed', () => {
-    expect(fullAttendance(oct1)).toMatchObject({ scheduled: 11, worked: 11, absent: 0 });
     const s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760' }, at(2026, 11, 2)).state;
     const c = cutoffOf(s, oct1, undefined, at(2026, 11, 2));
 
     expect(c.assumed).toBe(true);
     expect(peso(totalOf(c, 'gross'))).toBe('₱8,360.00');
+  });
+
+  it('asks the attendance service for each employee on the payroll, for exactly this cut-off', () => {
+    const asked: string[] = [];
+
+    const spy: EmployeeAttendance = {
+      tally: (_s, emp, from, to) => {
+        asked.push(`${emp} ${from} ${to}`);
+
+        return days();
+      },
+    };
+
+    let s = saveSetup(state(), { ...setupDraftOf(state(), 'E-002'), daily: '700' }, at(2026, 11, 2)).state;
+
+    s = saveSetup(s, { ...setupDraftOf(s, 'E-001'), daily: '760' }, at(2026, 11, 2)).state;
+    const c = cutoffOf(s, oct1, spy, at(2026, 11, 2));
+
+    expect(asked.sort()).toEqual(['E-001 2026-10-01 2026-10-15', 'E-002 2026-10-01 2026-10-15']);
+    // Listed by name, each priced by the engine with its own setup.
+    expect(c.lines.map((l) => [l.name, peso(l.pay.basic)])).toEqual([['Angelica S. Bautista', '₱7,700.00'], ['Juan Miguel P. Reyes', '₱8,360.00']]);
   });
 });
 
@@ -79,8 +67,8 @@ describe('the pay setup HR keeps', () => {
     expect(r.message).toBe('Pay setup saved for Angelica S. Bautista.');
     expect(r.state.log[0]).toMatchObject({ mod: 'PAY', text: 'Pay set up for Angelica S. Bautista: ₱1,250.50 a day.' });
     expect(dataOf(r.state).setups).toEqual([{
-      emp: 'E-002', empNo: 'APGCO-0021', daily: 1250.5, incentive: 2000, housing: 0, special: 150, sss: 675, philhealth: null,
-      pagibig: null, advance: 0, bank: 'BPI', account: '1234-5678',
+      emp: 'E-002', empNo: 'APGCO-0021', daily: 1250.5, monthly: null, incentive: 2000, housing: 0, special: 150, sss: 675,
+      philhealth: null, pagibig: null, advance: 0, bank: 'BPI', account: '1234-5678',
     }]);
     expect(setupDraftOf(r.state, 'E-002')).toMatchObject({ daily: '1250.5', sss: '675', philhealth: '' });
 
@@ -94,6 +82,7 @@ describe('the pay setup HR keeps', () => {
     expect(() => saveSetup(state(), blank, ctx)).toThrow('Enter Juan Miguel P. Reyes\'s daily rate.');
     expect(() => saveSetup(state(), { ...blank, daily: '760', sss: 'some' }, ctx)).toThrow('Enter the SSS employee share as an amount in pesos.');
     expect(() => saveSetup(state(), { ...blank, daily: '760', advance: '-5' }, ctx)).toThrow('Enter the salary advance as an amount in pesos.');
+    expect(() => saveSetup(state(), { ...blank, daily: '760', monthly: 'a lot' }, ctx)).toThrow('Enter the monthly pay basis as an amount in pesos.');
     expect(() => saveSetup(state(), { ...blank, emp: 'V-001', daily: '760' }, ctx)).toThrow('Pick an employee from the directory.');
 
     const s = saveSetup(state(), { ...blank, daily: '760', empNo: 'APGCO-0013' }, ctx).state;
@@ -112,19 +101,88 @@ describe('the pay setup HR keeps', () => {
   });
 });
 
-describe('government shares', () => {
-  it('come from the tables unless HR types the employee\'s own amount, 0 included', () => {
-    expect(sharesFor(setup(), oct1)).toEqual({ sss: 412.5, philhealth: 206.63, pagibig: 100 });
-    expect(sharesFor(setup(), { from: '2026-10-16', to: '2026-10-31' })).toEqual({ sss: 412.5, philhealth: 206.62, pagibig: 100 });
-    expect(sharesFor(setup({ sss: 450, philhealth: 0 }), oct1)).toEqual({ sss: 450, philhealth: 0, pagibig: 100 });
+describe('government shares and the monthly pay basis in the pay setup', () => {
+  const ctx = at(2026, 11, 2);
+
+  it('keep an empty field worked out and a typed one, 0 included, as the employee\'s own', () => {
+    const s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760', monthly: '25,000', sss: '450', philhealth: '0' }, ctx).state;
+
+    expect(dataOf(s).setups[0]).toMatchObject({ monthly: 25_000, sss: 450, philhealth: 0, pagibig: null });
+    expect(setupDraftOf(s, 'E-001')).toMatchObject({ monthly: '25000', sss: '450', philhealth: '0', pagibig: '' });
+
+    const cleared = saveSetup(s, { ...setupDraftOf(s, 'E-001'), monthly: '', sss: '' }, ctx).state;
+
+    expect(dataOf(cleared).setups[0]).toMatchObject({ monthly: null, sss: null, philhealth: 0, pagibig: null });
   });
 
-  it('keep an empty field on the tables and a typed one as the employee\'s own', () => {
-    const ctx = at(2026, 11, 2);
-    const s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760', sss: '450', philhealth: '0' }, ctx).state;
+  it('price a cut-off with the shares the setup leads to', () => {
+    const s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760', monthly: '25000', pagibig: '150' }, ctx).state;
+    const [line] = cutoffOf(s, oct1, attendance(days()), ctx).lines;
 
-    expect(dataOf(s).setups[0]).toMatchObject({ sss: 450, philhealth: 0, pagibig: null });
-    expect(setupDraftOf(s, 'E-001')).toMatchObject({ sss: '450', philhealth: '0', pagibig: '' });
+    expect(line.shares).toEqual({ sss: 625, philhealth: 312.5, pagibig: 150 });
+    expect(peso(line.pay.deductions)).toBe('₱1,087.50');
+  });
+
+  it('show in grey what an empty field will be, from what is typed so far, and never refuse while typing', () => {
+    const d = { ...setupDraftOf(state(), 'E-001'), daily: '760' };
+
+    expect(workedOut(d, oct1)).toEqual({ monthly: 16_530, shares: { sss: 412.5, philhealth: 206.63, pagibig: 100 } });
+    expect(workedOut({ ...d, monthly: '25000' }, oct1)).toEqual({ monthly: 16_530, shares: { sss: 625, philhealth: 312.5, pagibig: 100 } });
+    // A monthly basis that would be refused on saving is left out of the preview rather than shown.
+    expect(workedOut({ ...d, monthly: '-3' }, oct1).shares).toEqual({ sss: 412.5, philhealth: 206.63, pagibig: 100 });
+    // Nothing typed yet: the minimums, half a month each (SSS 250 and PhilHealth 250 a month), and no Pag-IBIG.
+    expect(workedOut(setupDraftOf(state(), 'E-001'), oct1)).toEqual({ monthly: 0, shares: { sss: 125, philhealth: 125, pagibig: 0 } });
+  });
+
+  it('show in grey exactly what saving the form will deduct', () => {
+    const drafts = [
+      { daily: '760' }, { daily: '1,250.50' }, { daily: '610', monthly: '12000' }, { daily: '5000', monthly: '' },
+      { daily: '760', monthly: '120000' }, { daily: '76o' },
+    ];
+
+    for (const typed of drafts) {
+      const d = { ...setupDraftOf(state(), 'E-001'), ...typed };
+      const saved = saveSetup(state(), d, ctx).state;
+      const [line] = cutoffOf(saved, oct1, attendance(days()), ctx).lines;
+
+      expect(line.shares).toEqual(workedOut(d, oct1).shares);
+    }
+  });
+});
+
+describe('regressions: saved pay never changes behind HR\'s back', () => {
+  it('keeps a setup saved before the tables deducting exactly what it did (0, not the tables)', () => {
+    // The first release saved an empty share as 0, and had no monthly basis.
+    const v1 = { emp: 'E-001', empNo: '', daily: 760, incentive: 0, housing: 0, special: 0, sss: 0, philhealth: 0, pagibig: 0, advance: 0, bank: '', account: '' };
+    const s = withModuleData(state(), 'payroll', { setups: [v1], runs: [] });
+    const [line] = cutoffOf(s, oct1, attendance(days()), at(2026, 11, 2)).lines;
+
+    expect(dataOf(s).setups[0]).toMatchObject({ monthly: null, sss: 0, philhealth: 0, pagibig: 0 });
+    expect(line.pay.deductions).toBe(0);
+  });
+
+  it('keeps a cut-off closed by the first release at the pay it was closed with', () => {
+    const row = {
+      setup: { emp: 'E-001', empNo: '', daily: 760, incentive: 1000, housing: 0, special: 150, sss: 450, philhealth: 0, pagibig: 0, advance: 0, bank: '', account: '' },
+      tally: days({ worked: 9, absent: 2, specialHolidaysWorked: 1 }), name: 'Juan Miguel P. Reyes', position: '', dept: '', tin: '',
+    };
+
+    const s = withModuleData(state(), 'payroll', { setups: [], runs: [{ from: '2026-10-01', to: '2026-10-15', closed: '2026-10-16 10:00', rows: [row] }] });
+    const c = cutoffOf(s, oct1, attendance(days()), at(2026, 11, 2));
+
+    expect(c.closed).toBe('2026-10-16 10:00');
+    expect(c.lines[0].shares).toEqual({ sss: 450, philhealth: 0, pagibig: 0 });
+    expect(peso(totalOf(c, 'net'))).toBe('₱8,968.00');
+  });
+
+  it('keeps a closed cut-off\'s shares when the employee\'s own amounts or monthly pay change later', () => {
+    const after = at(2026, 10, 16);
+    let s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760' }, after).state;
+
+    s = closeCutoff(s, oct1, attendance(days()), after).state;
+    s = saveSetup(s, { ...setupDraftOf(s, 'E-001'), monthly: '30000', sss: '1000' }, after).state;
+
+    expect(cutoffOf(s, oct1, attendance(days()), after).lines[0].shares).toEqual({ sss: 412.5, philhealth: 206.63, pagibig: 100 });
   });
 });
 

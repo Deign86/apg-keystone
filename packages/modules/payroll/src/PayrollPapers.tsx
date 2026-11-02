@@ -3,6 +3,9 @@ import { peso, periodLabel, type Centavos, type Company } from '@keystone/core';
 import { Letterhead, Meta, Sheet, Signatures, orDash } from '@keystone/kit';
 import { totalOf, type Cutoff, type PayKey, type PayLine } from './rules';
 
+// These documents only lay out the fields of a Pay (./pay.ts). They add up nothing themselves: the payslip's late and
+// half-day lines sit under deductions, so its totals are the engine's `earnings` and `totalDeductions`.
+
 // The two documents a cut-off produces, laid out as the HR supervisor's spreadsheet lays them out: the payroll sheet
 // everyone signs, and one payslip per employee.
 
@@ -97,9 +100,6 @@ function Rows({ title, rows, total }: { title: string; rows: [string, Centavos][
 export const Payslip = forwardRef<HTMLDivElement, { line: PayLine; cutoff: Cutoff; company: Company }>(function Payslip({ line, cutoff, company }, ref) {
   const p = line.pay;
   const label = periodLabel(cutoff.period);
-  // Late and half days are shown as deductions here, as on the payslip; the payroll sheet nets them out of gross.
-  const earnings = p.gross + p.late + p.halfDay;
-  const deductions = p.deductions + p.late + p.halfDay;
 
   return (
     <Sheet ref={ref} label={`Payslip, ${line.name}, ${label}`}>
@@ -119,7 +119,7 @@ export const Payslip = forwardRef<HTMLDivElement, { line: PayLine; cutoff: Cutof
             ['Basic', p.basic], ['HRA', p.housing], ['Incentives allowance', p.incentive], ['Special allowance', p.specialAllowance],
             ['Regular holiday', p.regularHoliday], ['Special holiday', p.specialHoliday], ['Overtime pay', p.overtime],
           ]}
-          total={['Total earnings', earnings]}
+          total={['Total earnings', p.earnings]}
         />
         <Rows
           title="Deductions"
@@ -127,7 +127,7 @@ export const Payslip = forwardRef<HTMLDivElement, { line: PayLine; cutoff: Cutof
             ['SSS employee share', p.sss], ['PhilHealth employee share', p.philhealth], ['Pag-IBIG employee share', p.pagibig],
             ['Salary advance', p.advance], ['Late / undertime', p.late], ['Half day', p.halfDay],
           ]}
-          total={['Total deductions', deductions]}
+          total={['Total deductions', p.totalDeductions]}
         />
       </div>
       <div className="mt-4 flex items-baseline justify-between border-y-2 border-paper-gold px-1.5 py-2">

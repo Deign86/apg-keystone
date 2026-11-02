@@ -4,15 +4,15 @@ import {
 } from '@keystone/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import {
-  count, halfMonthsTo, parseAmount, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
+  count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
   type DirectoryRecord, type Period,
 } from '@keystone/core';
 import { printElement, savePdf, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
-import { tableShares } from './contributions';
+import { setupSummary } from './pay';
 import { Payslip, PayrollSheet } from './PayrollPapers';
 import {
   AMOUNT_LABEL, closeCutoff, cutoffOf, lastCutoff, payrollFigure, payrollFinding, payrollStat, removeSetup,
-  reopenCutoff, saveSetup, setupDraftOf, setupFor, sharesFor, SHARES, TAG, totalOf, type AmountField, type PayLine,
+  reopenCutoff, saveSetup, setupDraftOf, setupFor, SHARES, TAG, totalOf, workedOut, type AmountField, type PayLine,
   type SetupDraft,
 } from './rules';
 
@@ -38,7 +38,7 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
   const [d, setD] = useState(draft);
   const [error, setError] = useState<string | null>(null);
   const name = recordOf(state, d.emp)?.name ?? d.emp;
-  const table = tableShares((parseAmount(d.daily) ?? 0) / 100, period);
+  const grey = workedOut(d, period);
 
   const save = () => {
     const r = run((s, c) => saveSetup(s, d, c));
@@ -51,6 +51,7 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
       <FieldRow>
         <Field label="Employee no."><TextInput autoFocus placeholder="APGCO-0013" value={d.empNo} onChange={(empNo) => setD({ ...d, empNo })} /></Field>
         <Amount field="daily" d={d} set={setD} />
+        <Amount field="monthly" d={d} set={setD} placeholder={grey.monthly.toFixed(2)} />
       </FieldRow>
       <Group legend="Allowances (special allowance is per day worked)">
         <FieldRow min={130}>
@@ -61,10 +62,10 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
       </Group>
       <Group legend="Deductions, each cut-off">
         <FieldRow min={100}>
-          {SHARES.map((f) => <Amount key={f} field={f} d={d} set={setD} placeholder={table[f].toFixed(2)} />)}
+          {SHARES.map((f) => <Amount key={f} field={f} d={d} set={setD} placeholder={grey.shares[f].toFixed(2)} />)}
           <Amount field="advance" d={d} set={setD} />
         </FieldRow>
-        <p className="m-0 text-xs text-ink-2">Empty uses the 2026 contribution tables (shown in grey). Type an amount, 0 included, to use this employee's own instead.</p>
+        <p className="m-0 text-xs text-ink-2">Empty fields are worked out (shown in grey): monthly pay as the daily rate × 261 ÷ 12, shares from the 2026 tables on it. Type an amount, 0 included, to use this employee's own.</p>
       </Group>
       <Group legend="Paid by">
         <FieldRow>
@@ -116,7 +117,10 @@ function Payroll() {
       key: 'allow', header: 'Allowances', width: 212, cell: (e) => {
         const x = setupFor(state, e.code);
 
-        return x ? <span className="text-ink-2 tabular-nums">{peso(toCentavos(x.incentive + x.housing))} + {peso(toCentavos(x.special))} a day</span> : '—';
+        if (!x) return '—';
+        const sum = setupSummary(x, period);
+
+        return <span className="text-ink-2 tabular-nums">{peso(sum.fixedAllowances)} + {peso(sum.perDayAllowance)} a day</span>;
       },
     },
     {
@@ -124,9 +128,8 @@ function Payroll() {
         const x = setupFor(state, e.code);
 
         if (!x) return '—';
-        const g = sharesFor(x, period);
 
-        return <span title="SSS, PhilHealth, Pag-IBIG and salary advance, this cut-off">{peso(toCentavos(g.sss + g.philhealth + g.pagibig + x.advance))}</span>;
+        return <span title="SSS, PhilHealth, Pag-IBIG and salary advance, this cut-off">{peso(setupSummary(x, period).deductions)}</span>;
       },
     },
     { key: 'bank', header: 'Paid by', width: 96, cell: (e) => <span className="text-ink-2">{setupFor(state, e.code) ? setupFor(state, e.code)?.bank || 'Cash' : '—'}</span> },
@@ -141,7 +144,7 @@ function Payroll() {
     { key: 'days', header: 'Days', width: 64, align: 'right', cell: (l) => `${l.pay.paidDays}/${l.pay.scheduled}` },
     money('comp', 'Compensation', (l) => l.pay.compensation),
     money('allow', 'Allowances', (l) => l.pay.allowances),
-    money('short', 'Late, half day', (l) => -(l.pay.late + l.pay.halfDay)),
+    money('short', 'Late, half day', (l) => -l.pay.shortfall),
     money('ot', 'Overtime', (l) => l.pay.overtime),
     money('gross', 'Gross', (l) => l.pay.gross),
     money('ded', 'Deductions', (l) => -l.pay.deductions),

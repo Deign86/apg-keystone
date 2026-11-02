@@ -19,6 +19,10 @@ Status: Accepted · Date: 2026-11-02
   - `timekeeping`: time in and out, corrections, holidays, and the office day with its weekly grace.
   - `payroll`: each employee's pay setup, the semi-monthly cut-off priced as HR's sheet prices it, closing a
     cut-off, and the payroll sheet and payslips.
+- **One payroll engine.** Every peso is computed in `packages/modules/payroll/src/pay.ts` and nowhere else; days and
+  minutes are counted only by timekeeping's rules. Screens and documents show fields, never add them up. The intern
+  app's payroll was fragile with two engines, so this is held by golden cases, identities over many inputs, a
+  cross-part regression in the composition root, and end-to-end tests of the same cut-off.
 - **One new service,** `timekeeping.employee-attendance`, so payroll prices days without importing timekeeping. Its
   contract, `AttendanceTally`, counts days and minutes and holds no pesos.
   - Payroll works without it: every weekday is paid in full, and the screen says so.
@@ -44,6 +48,6 @@ Status: Accepted · Date: 2026-11-02
   - Keystone has no sign-in, so anyone who can open Keystone can change a pay setup. Every change is written to the
     Activity log with the time.
   - Days are entered in Keystone, by an employee at the computer or by HR. There is no card reader.
-  - Government shares come from the 2026 SSS, PhilHealth and Pag-IBIG tables in `contributions.ts`, on monthly pay
-    of daily × 261 ÷ 12. When a table changes, that file changes with it. HR can type any employee's own amount
-    instead, since shares differ per employee.
+  - Government shares come from the 2026 SSS, PhilHealth and Pag-IBIG tables in the engine, on monthly pay of daily ×
+    261 ÷ 12. When a table changes, the engine changes with it. HR can type any employee's own monthly pay basis or
+    share instead, since they differ per employee.

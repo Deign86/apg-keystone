@@ -133,6 +133,7 @@ regression suites that guard the architecture live in the composition root:
 | Kit | `packages/kit/test/` | Registry refusals, one provider per service, store saves and damaged files, a connector shortcut that says what happened or gives up on a hang |
 | Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
 | Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
+| Payroll | `apps/keystone/src/test/payroll.test.tsx` | One cut-off with every kind of day, from saved days through Timekeeping, its service and Payroll's engine to the screen, sheet and payslip, to the centavo; and without Timekeeping |
 | Services | `apps/keystone/src/test/services.test.tsx` | Billing provides the statement-payments service and timekeeping the employee-attendance service as shipped, and each one's absence refuses nothing |
 | End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or shortcut and what it shows after, including what it contributes to Home, Overview and the Activity Log |
 

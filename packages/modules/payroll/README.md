@@ -5,13 +5,15 @@ has their own pay setup, which the HR supervisor keeps. The cut-off is priced th
 it (the `PAYROLL` and `PAYSLIP` tabs), from the days Timekeeping counted.
 
 ## Owns
-- `src/rules.ts`: the pay setup and its checks, pricing (`price`), the cut-off (`cutoffOf`), closing and reopening
-  it, and what it contributes. Tested in `test/rules.test.ts`, including HR's Oct 1–15, 2026 row to the centavo.
+- `src/pay.ts`: **the payroll engine, the only place pay is computed.** Pricing (`price`), the 2026 SSS, PhilHealth
+  and Pag-IBIG tables, the monthly pay basis, each employee's shares, and the payslip's totals. Pure functions over
+  whole centavos. The screen, the payroll sheet, the payslip and Overview only show fields of the `Pay` it returns;
+  none of them adds anything up. Tested in `test/pay.test.ts`.
+- `src/rules.ts`: the pay setup and its checks, the saved data, assembling a cut-off (`cutoffOf`), closing and
+  reopening it, and what it contributes. It calls the engine for every amount. Tested in `test/rules.test.ts`.
 - `src/index.tsx`: the screen. **Pay setup** lists every employee in the Directory; opening one sets their pay.
   **Cut-off** shows the pay for a semi-monthly cut-off and closes or reopens it. Under it, the **payroll sheet** and
   each employee's **payslip**, with Print and Export PDF.
-- `src/contributions.ts`: the 2026 SSS, PhilHealth and Pag-IBIG tables, which set each employee's share unless HR
-  types the employee's own. Tested in `test/contributions.test.ts`.
 - `src/PayrollPapers.tsx`: the payroll sheet (the spreadsheet's columns, totals, signatures) and the payslip
   (earnings, deductions, net pay).
 - Its data: `state.ext.payroll` = `{ setups: [PaySetup], runs: [{ from, to, closed, rows }] }`.
@@ -21,6 +23,7 @@ it (the `PAYROLL` and `PAYSLIP` tabs), from the days Timekeeping counted.
 |---|---|
 | Employee no. | Printed on the sheet and the payslip ("APGCO-0013"); no two employees share one |
 | Daily rate | Required. Cut-off rate = daily rate × standard working days; basic = daily rate × days paid |
+| Monthly pay basis | What the government shares are worked out on. Empty: daily rate × 261 ÷ 12. An amount: that employee's own |
 | Incentives allowance, Housing allowance (HRA) | Added once each cut-off |
 | Special allowance | Added for each day worked |
 | SSS, PhilHealth and Pag-IBIG employee shares | Deducted each cut-off. Empty: from the contribution tables (below). An amount, 0 included: that employee's own, used instead |
@@ -41,8 +44,9 @@ Name, designation, department and TIN come from the employee's Directory record.
 - **Absent** is shown for the record; basic already leaves the day out.
 
 ### Government shares, from the 2026 tables
-Each is worked out from the daily rate as monthly pay (daily × 261 ÷ 12, a Monday-to-Friday employee), and half of the
-month's share is deducted each cut-off (the 16th–end takes what rounding leaves, so a month adds up).
+Each is worked out on the employee's monthly pay basis (their own, or daily × 261 ÷ 12 for a Monday-to-Friday
+employee), and half of the month's share is deducted each cut-off (the 16th–end takes what rounding leaves, so a month
+adds up).
 - **SSS:** 5% of the monthly salary credit: monthly pay to the nearest ₱500 (₱x,250 rounds up), from ₱5,000 to ₱35,000.
 - **PhilHealth:** 2.5% of monthly pay, floored at ₱10,000 and capped at ₱100,000.
 - **Pag-IBIG:** 2% of monthly pay up to ₱10,000 (1% at ₱1,500 or less).
@@ -52,6 +56,21 @@ later change to a table or to an employee's own amount never reprices it.
 
 **Closing** a cut-off (from the day after it ends) freezes each employee's setup and days as they were, so later
 corrections and rate changes never reprice it. **Reopening** lets it follow them again. Both go to the Activity log.
+
+### Tests
+Pay proved fragile in the intern attendance app, so it is tested from four sides:
+- **The engine** (`test/pay.test.ts`):
+  - golden cut-offs worked out by hand, HR's own sheet row and the regression cut-off among them;
+  - identities checked over every combination of rate, days and shares: gross, net, payslip totals, and the register
+    matching the payslip;
+  - every SSS bracket edge, the PhilHealth floor and ceiling, Pag-IBIG's 1% band and cap;
+  - a month adding up to the centavo across its two cut-offs.
+- **The rules** (`test/rules.test.ts`): what reaches the engine, the grey preview equal to what saving deducts,
+  refusals, and regressions (data saved by earlier releases keeps its pay; a closed cut-off never reprices).
+- **Across the parts** (`apps/keystone/src/test/payroll.test.tsx`): the regression cut-off's saved days rendered
+  through Timekeeping, the attendance service and this screen, with and without Timekeeping.
+- **End to end** (`e2e/modules/payroll.e2e.ts`): the regression cut-off entered in Timekeeping and paid here, the
+  shares and monthly pay basis, and a closed cut-off ignoring a later correction until it is reopened.
 
 ## Contributes
 - **Home:** a tile with "On payroll, N".
