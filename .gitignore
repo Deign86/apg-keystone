@@ -5,7 +5,11 @@ apps/keystone/dist/
 apps/keystone/src-tauri/target/
 apps/keystone/src-tauri/gen/
 .e2e/
-# unlazy: its gate ledgers and Stop-hook state, and per-machine Claude Code settings
+# unlazy: its gate ledgers (a task's own GATES.md or gates/, or .unlazy/ for a pipeline), status log and Stop-hook
+# state, and per-machine Claude Code settings
 .unlazy/
+/GATES.md
+/gates/
+/unlazy-status.log
 .unlazy-hook-state.json
 .claude/settings.local.json
