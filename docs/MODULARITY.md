@@ -43,6 +43,8 @@ module-vouchers   ──contributes──▶  figure · finding · waiting · op
 module-billing    ──contributes──▶  figure · finding · waiting · openWaiting · create · stat · logTags · onOpen
 module-id-maker   ──contributes──▶  figure · finding · waiting · openWaiting · create · stat · logTags · onOpen
 module-directory  ──contributes──▶  figure · stat · logTags
+module-timekeeping ─contributes──▶  figure · finding · stat · logTags
+module-payroll    ──contributes──▶  figure · finding · stat · logTags
                                          │
                               @keystone/kit registry (buildRegistry)
                                          │
@@ -89,7 +91,12 @@ module-billing: provides: { [SERVICES.statementPayments]: … }  any part: app.s
 ```
 
 Billing provides this one today; no part that ships asks for it (the Website screen that did was removed in
-docs/adr/0007).
+docs/adr/0007). The same pattern links timekeeping and payroll:
+
+```
+core: SERVICES.employeeAttendance = 'timekeeping.employee-attendance', interface EmployeeAttendance
+module-timekeeping: provides it            module-payroll: app.service(SERVICES.employeeAttendance), or pays in full
+```
 
 This is the OSGi service-registry pattern, and the "published interface" of Fowler and of Spring Modulith's named
 interfaces. The rules:

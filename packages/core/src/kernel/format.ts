@@ -1,5 +1,5 @@
 import type { Centavos } from './money';
-import type { ISODate } from './dates';
+import type { ISODate, Period } from './dates';
 
 // Fixed English (Philippines) formats, written out by hand so every machine prints the
 // same strings whatever its locale.
@@ -26,6 +26,19 @@ export function shortDate(iso: ISODate | null | undefined): string {
   const p = parts(iso);
 
   return p ? `${MONTHS[p.m - 1].slice(0, 3)} ${p.d}, ${p.y}` : '—';
+}
+
+/** A pay period: "Nov 1–15, 2026", or across months "Oct 26 – Nov 8, 2026". */
+export function periodLabel(p: Period): string {
+  const a = parts(p.from);
+  const b = parts(p.to);
+
+  if (!a || !b) return '—';
+  const mon = (m: number) => MONTHS[m - 1].slice(0, 3);
+
+  if (a.y !== b.y) return `${shortDate(p.from)} – ${shortDate(p.to)}`;
+
+  return a.m === b.m ? `${mon(a.m)} ${a.d}–${b.d}, ${a.y}` : `${mon(a.m)} ${a.d} – ${mon(b.m)} ${b.d}, ${a.y}`;
 }
 
 /** "Friday, October 30, 2026" */

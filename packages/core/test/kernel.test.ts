@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, bundledSeed, editText, lineDraft, lineDraftOf, lineItemsOf, longDate,
+  addDays, addYears, amountInWords, bundledSeed, datesBetween, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
+  isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   openDesktopApp, toCentavos, topFinding, validateConnector, withDeadline, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
 } from '../src';
@@ -63,6 +64,44 @@ describe('dates', () => {
     expect(longDate('2026-10-05')).toBe('October 5, 2026');
     expect(shortDate('2026-10-05')).toBe('Oct 5, 2026');
     expect(shortDate(null)).toBe('—');
+  });
+  it('finds the semi-monthly cut-off a date falls in', () => {
+    expect(halfMonthOf('2026-10-01')).toEqual({ from: '2026-10-01', to: '2026-10-15' });
+    expect(halfMonthOf('2026-10-15')).toEqual({ from: '2026-10-01', to: '2026-10-15' });
+    expect(halfMonthOf('2026-10-16')).toEqual({ from: '2026-10-16', to: '2026-10-31' });
+    expect(halfMonthOf('2026-11-30')).toEqual({ from: '2026-11-16', to: '2026-11-30' });
+    expect(halfMonthOf('2028-02-20')).toEqual({ from: '2028-02-16', to: '2028-02-29' });
+    expect(halfMonthOf('2026-12-31')).toEqual({ from: '2026-12-16', to: '2026-12-31' });
+    expect(halfMonthsTo('2026-11-02', 3).map(periodLabel)).toEqual(['Nov 1–15, 2026', 'Oct 16–31, 2026', 'Oct 1–15, 2026']);
+    expect(periodLabel({ from: '2026-12-28', to: '2027-01-03' })).toBe('Dec 28, 2026 – Jan 3, 2027');
+  });
+  it('counts weekdays and weeks', () => {
+    // The HR sheet's Oct 1–15, 2026 cut-off has 11 standard working days.
+    expect(datesBetween('2026-10-01', '2026-10-15').filter(isWeekday)).toHaveLength(11);
+    expect(datesBetween('2026-10-02', '2026-10-01')).toEqual([]);
+    expect(mondayOf('2026-11-02')).toBe('2026-11-02');
+    expect(mondayOf('2026-11-08')).toBe('2026-11-02');
+    expect(mondayOf('2026-10-01')).toBe('2026-09-28');
+  });
+});
+
+describe('module data', () => {
+  it('keeps each module\'s data apart and leaves the rest alone', () => {
+    const s = { ...state(), ext: { other: { kept: true } } };
+    const next = withModuleData(s, 'timekeeping', { days: [] });
+
+    expect(moduleData(next, 'timekeeping')).toEqual({ days: [] });
+    expect(moduleData(next, 'other')).toEqual({ kept: true });
+    expect(moduleData(state(), 'timekeeping')).toBeUndefined();
+    expect(s.ext).toEqual({ other: { kept: true } });
+  });
+
+  it('decodes saved fields into what they should be, or a safe fallback', () => {
+    expect([jsonText('8:00'), jsonText(8), jsonText(null), jsonText(undefined)]).toEqual(['8:00', '', '', '']);
+    expect([jsonNumber(760), jsonNumber('760'), jsonNumber(null), jsonNumber(Number.NaN)]).toEqual([760, 0, 0, 0]);
+    expect([isJsonObject({}), isJsonObject([]), isJsonObject('x'), isJsonObject(null), isJsonObject(3)]).toEqual([true, false, false, false, false]);
+    expect(jsonObjects([{ a: 1 }, 'b', [2], null])).toEqual([{ a: 1 }]);
+    expect(jsonObjects({ a: 1 })).toEqual([]);
   });
 });
 

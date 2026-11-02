@@ -80,5 +80,28 @@ export function parseState(text: string): TerminalState {
   return state;
 }
 
+/** What a module keeps under `state.ext[id]`, or undefined when it has kept nothing yet (rule 9 in AGENTS.md). */
+export const moduleData = (s: TerminalState, id: string): JsonValue | undefined => s.ext?.[id];
+
+/** The state with a module's own data replaced. Every other module's data is kept untouched. */
+export const withModuleData = (s: TerminalState, id: string, data: JsonValue): TerminalState => ({ ...s, ext: { ...s.ext, [id]: data } });
+
+// Decoding module data read back from a file: each field becomes the value it should be, or a safe fallback when the
+// file holds something else (an older build's data, a hand-edited backup).
+
+export type JsonObject = { [key: string]: JsonValue };
+
+/** A JSON object: not null, not a list, not a string or number (Object() wraps those in a new object). */
+export const isJsonObject = (v: JsonValue | undefined): v is JsonObject => v !== null && v !== undefined && !Array.isArray(v) && v === Object(v);
+
+/** The string, or "" for anything else. */
+export const jsonText = (v: JsonValue | undefined): string => (v === String(v) ? String(v) : '');
+
+/** The finite number, or 0 for anything else. */
+export const jsonNumber = (v: JsonValue | undefined): number => (Number.isFinite(v) ? Number(v) : 0);
+
+/** The objects in a list; anything that is not a list, or not an object, is left out. */
+export const jsonObjects = (v: JsonValue | undefined): JsonObject[] => (Array.isArray(v) ? v.filter(isJsonObject) : []);
+
 /** The date of the newest log entry, or a dash. */
 export const lastEntryDate = (s: TerminalState) => (s.log.length ? shortDate(s.log[0].when.slice(0, 10)) : '—');

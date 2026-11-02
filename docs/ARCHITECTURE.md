@@ -12,7 +12,8 @@ packages/ui                @keystone/ui     APG design system on Base UI; theme 
 packages/kit               @keystone/kit    registries, services, store, connector shortcuts, shell,
                                             screen and document building blocks, Platform interface    (kernel)
 packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · billing · id-maker ·
-                                                      directory · activity · data                      (parts)
+                                                      directory · activity · timekeeping · payroll ·
+                                                      data                                             (parts)
 packages/connectors/<id>   @keystone/connector-<id>   attendance · branding-studio · website           (parts)
 apps/keystone              @keystone/app    the composition root
   src/modules.ts, src/connectors.ts           the only files that list the parts
@@ -46,7 +47,9 @@ the registry. Removing a module removes its contributions and changes nothing el
 Through a service, never an import. The contract is in core (`SERVICES` and its types in `kernel/services.ts`). The
 billing module provides `billing.statement-payments` on its `ModuleDef`; a part that settles statements from outside
 billing asks for it with `useModuleApp().service(SERVICES.statementPayments)` and gets `undefined`, and says so, when
-billing is not installed. No part that ships asks for it today. The registry allows one provider per service.
+billing is not installed. No part that ships asks for it today. Likewise timekeeping provides
+`timekeeping.employee-attendance`, and payroll asks for it to price a cut-off; without it, payroll pays every weekday
+in full and says so (docs/adr/0008). The registry allows one provider per service.
 
 ## How connected systems plug in
 

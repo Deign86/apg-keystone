@@ -23,6 +23,8 @@
     "@keystone/module-home": "*",
     "@keystone/module-id-maker": "*",
     "@keystone/module-overview": "*",
+    "@keystone/module-payroll": "*",
+    "@keystone/module-timekeeping": "*",
     "@keystone/module-vouchers": "*",
     "@keystone/ui": "*",
     "@tauri-apps/api": "^2.12.4",
