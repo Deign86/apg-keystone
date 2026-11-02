@@ -34,7 +34,7 @@ KERNEL (always present; anything may depend on it)
                                      the connector contract, insight types, published service contracts. No UI.
   packages/ui       @keystone/ui     the APG design system (tokens → Tailwind theme, Base UI controls). Knows no Keystone rule.
   packages/kit      @keystone/kit    the app runtime: shell, store, module and connector registries, service lookup,
-                                     connector runtime, building blocks for screens, document kit, the Platform interface.
+                                     connector shortcuts, building blocks for screens, document kit, the Platform interface.
 
 PARTS (removable; nothing may depend on them)
   packages/modules/<id>      @keystone/module-<id>      one screen, its rules, its tests, what it contributes and provides.
@@ -43,7 +43,7 @@ PARTS (removable; nothing may depend on them)
 COMPOSITION (the only place that knows the full list)
   apps/keystone     @keystone/app    src/modules.ts lists the modules, src/connectors.ts the connectors, src/main.tsx
                                      starts the app; src/platform/ implements Platform for Tauri and the browser;
-                                     src-tauri/ is the native side (files, keychain, finding and launching other apps).
+                                     src-tauri/ is the native side (files, finding and starting other apps).
 ```
 
 ## The rules (CI fails if you break one)
@@ -69,18 +69,18 @@ COMPOSITION (the only place that knows the full list)
    - The consumer asks by name: `const desk = useModuleApp().service(SERVICES.statementPayments)`, typed from
      `ServiceContracts`, and **works without it** (`desk` is `undefined` when the provider is not installed). One
      provider per service; the registry refuses a second.
-5. **Jumping to another screen is always guarded.** Use `useModuleApp()`: `app.has('connections') && app.go('connections')`.
+5. **Jumping to another screen is always guarded.** Use `useModuleApp()`: `app.has('directory') && app.go('directory')`.
    Never assume a module is installed.
 6. **A hard dependency is declared, not assumed.** Prefer a service and degrade. If a module truly cannot work without
-   another, set `requires: ['billing']`; the registry then leaves it out with a reason (shown under Connections).
+   another, set `requires: ['billing']`; the registry then leaves it out with a reason (shown on the Data screen).
 7. **Rules live in the part that owns them, in plain functions, never in a screen.**
    - A module's rules are in its `src/rules.ts`; rules every part shares (money, numbering, the directory) are in core.
    - A screen calls `run((state, ctx) => someRule(state, …, ctx))`.
    - A rule returns `{ state, record, message }` or throws `KeystoneError` with the sentence to show.
    - Rules are pure: no I/O and no `Date.now()` (use `ctx.now()`).
-8. **Connectors reach the world only through `env`:** `env.http`, `env.system`, `env.secret`, `env.settings`. Never import
-   `@tauri-apps/*` outside `apps/keystone/src/platform/`. Every connector call is time-limited and caught by the
-   runtime. A failing system shows on its own card and nowhere else.
+8. **A connector is a shortcut that opens its app** (docs/adr/0007). It reaches the world only through `env.system`:
+   find an installed app, start it, open a URL. Never import `@tauri-apps/*` outside `apps/keystone/src/platform/`.
+   Opening is time-limited and caught; a failure is a message on screen and nothing else.
 9. **The saved state keeps the prototype's schema.**
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.
@@ -93,7 +93,7 @@ COMPOSITION (the only place that knows the full list)
 | To remove | Do this | What disappears | Nothing else changes because |
 |---|---|---|---|
 | A module | Delete its line in `apps/keystone/src/modules.ts`, its entry in `apps/keystone/package.json` and its `e2e/modules/<id>.e2e.ts` (then, if you like, its folder) and run `npm install` | Its rail entry, Home tile, Overview figure, finding, waiting items, "New …" button, log filter, the services it provides | Overview, Home and Activity read contributions from the registry; links are guarded by `app.has`; consumers of its services work without them |
-| A connector | Delete its line in `apps/keystone/src/connectors.ts`, its entry in `apps/keystone/package.json` and its `e2e/connectors/<id>.e2e.ts`, then `npm install` | Its Home card, its settings, its import button, any screens it brought | The runtime only knows connectors through the registry |
+| A connector | Delete its line in `apps/keystone/src/connectors.ts`, its entry in `apps/keystone/package.json` and its `e2e/connectors/<id>.e2e.ts`, then `npm install` | Its shortcut on Home, any screens it brought | The runtime only knows connectors through the registry |
 
 `apps/keystone/src/test/removal.test.tsx` proves this. It removes each module and each connector in turn, installs
 each one alone, and renders every screen that is left. **A module or connector you add joins that test
@@ -129,12 +129,12 @@ regression suites that guard the architecture live in the composition root:
 | Suite | Where | Guards |
 |---|---|---|
 | Rules | `packages/modules/<id>/test/`, `packages/core/test/` | Numbering, tax math, amount in words, statuses, findings, the prototype's results kept exactly |
-| Connectors | `packages/connectors/<id>/test/` | Each system's client against a fake of that system (never a real one): address and version parsing, sign-in, the website's Origin rule, backup reading |
-| Kit | `packages/kit/test/` | Registry refusals, one provider per service, store saves and damaged files, connector isolation (throws, hangs), secrets never in the settings file |
+| Connectors | `packages/connectors/<id>/test/` | Each shortcut against a fake computer (never a real one): which app it looks for, that it starts it, the download page when it is missing, the website's admin portal |
+| Kit | `packages/kit/test/` | Registry refusals, one provider per service, store saves and damaged files, a connector shortcut that says what happened or gives up on a hang |
 | Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
 | Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
-| Services | `apps/keystone/src/test/services.test.tsx` | The website settles a billing statement through the service, and still works without billing |
-| End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or card and what it shows after, including what it contributes to Home, Overview and the Activity Log |
+| Services | `apps/keystone/src/test/services.test.tsx` | Billing provides the statement-payments service as shipped, and its absence without billing refuses nothing |
+| End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or shortcut and what it shows after, including what it contributes to Home, Overview and the Activity Log |
 
 A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's
 `e2e/` file. A bug fix gets the test that would have caught it.
@@ -187,12 +187,12 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
   merging a `feat` publishes the next minor version, a `fix` or `perf` the next patch, and `docs`, `test`, `ci`,
   `chore`, `refactor`, `style` and `build` publish nothing (README › Making a release). Pick the type for what a
   person using Keystone gets.
-- **No secrets in files:** passwords and tokens go through `env.secret` and the OS keychain.
+- **No secrets in Keystone:** it keeps no passwords or tokens. The apps it opens sign people in themselves.
 - **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/` and
   `packages/core/src/seed.json` are regenerated from `shared/` by `npm run sync`.
 - **The other APG repos:**
-  - Treat them as external systems: integrate through what they already expose.
-  - A change to them (for example `docs/ATTENDANCE-INTEGRATION.md`) is the owner's decision, made in that repo.
+  - Treat them as external systems. Keystone only opens them; it reads nothing from them (docs/adr/0007).
+  - A change to them is the owner's decision, made in that repo.
 
 ## Further reading
 

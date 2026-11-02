@@ -1,5 +1,3 @@
-import type { ExternalPerson } from './connectors';
-import { count } from './format';
 import { CODE_PREFIX, USED_IN, type DirectoryRecord, type ModuleTag, type RecordType, type TerminalState } from './schema';
 import { KeystoneError, logged, nextNumber, type Change, type Ctx, type Editing } from './state';
 
@@ -115,57 +113,4 @@ export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx):
     state: logged({ ...s, dir: s.dir.filter((x) => x.code !== code) }, 'DIR', `${code} ${d.name} removed from the directory.`, ctx),
     record: d, message: `${code} removed.`,
   };
-}
-
-export interface ImportResult { added: DirectoryRecord[]; updated: DirectoryRecord[]; unchanged: number }
-
-/**
- * Brings a connected system's people into the directory as employees. A person already
- * linked (or with the same name) is updated, never duplicated, and keeps their code.
- */
-export function importEmployees(s: TerminalState, source: { id: string; name: string }, people: ExternalPerson[], ctx: Ctx): Change<ImportResult> {
-  const dir = [...s.dir];
-  const result: ImportResult = { added: [], updated: [], unchanged: 0 };
-
-  for (const p of people) {
-    const name = clean(p.name);
-
-    if (!name) continue;
-    const i = dir.findIndex((d) => d.type === 'Employee' && (d.links?.[source.id] === p.externalId || d.name.toLowerCase() === name.toLowerCase()));
-
-    const fields: Pick<DirectoryRecord, 'name' | 'detail' | 'dept' | 'email' | 'phone' | 'photo'> = {
-      name, detail: clean(p.position ?? '') || (i >= 0 ? dir[i].detail : ''),
-    };
-
-    const dept = clean(p.department ?? '');
-
-    if (dept) fields.dept = dept;
-
-    if (p.email) fields.email = p.email;
-
-    if (p.phone) fields.phone = p.phone;
-
-    if (p.photo) fields.photo = p.photo;
-
-    if (i >= 0) {
-      const merged: DirectoryRecord = { ...dir[i], ...fields, links: { ...dir[i].links, [source.id]: p.externalId } };
-
-      if (JSON.stringify(merged) === JSON.stringify(dir[i])) { result.unchanged++; continue; }
-
-      dir[i] = merged;
-      result.updated.push(merged);
-    } else {
-      const rec: DirectoryRecord = { code: nextCode({ ...s, dir }, 'Employee'), type: 'Employee', tin: '', ...fields, links: { [source.id]: p.externalId } };
-      dir.push(rec);
-      result.added.push(rec);
-    }
-  }
-
-  const changed = result.added.length + result.updated.length;
-
-  const summary = changed
-    ? `${count(result.added.length, 'employee')} added and ${count(result.updated.length, 'employee')} updated from ${source.name}.`
-    : `Employees already match ${source.name}.`;
-
-  return { state: changed ? logged({ ...s, dir }, 'DIR', summary, ctx) : s, record: result, message: summary };
 }

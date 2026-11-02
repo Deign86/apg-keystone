@@ -1,33 +1,35 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
-// APG Website (packages/connectors/website), which also brings the Website screen. Browsers block the website's
-// admin API, so the preview says so; the client is tested against a fake website in the package's own tests.
+// APG Website (packages/connectors/website): a shortcut on Home, the website's logo, that opens its admin portal in
+// the browser. That works the same in the browser preview, where the new tab is caught here instead of opened.
 
-test('the Website screen says it needs the desktop app, and links to its setup', async ({ app, screen }) => {
-  await app.open('/#website');
+test('is the website’s logo on Home', async ({ app, screen, browser }) => {
+  await app.open('/');
 
-  await expect(screen.getByRole('heading', { name: 'Website', level: 1 })).toBeVisible();
-  await expect(screen.getByText('Open Keystone’s desktop app to reach the website; browsers block it.')).toBeVisible();
-  await expect(screen.getByRole('button', 'Refresh')).toBeDisabled();
+  await expect(screen.getByRole('button', 'Open APG Website')).toBeVisible();
 
-  await screen.getByRole('button', 'Set up the website').tap();
+  const width = await browser.evaluate(async () => {
+    const img = document.querySelector('button[aria-label="Open APG Website"] img');
 
-  await expect(screen.getByRole('heading', { name: 'Connections', level: 1 })).toBeVisible();
+    return img instanceof HTMLImageElement ? img.decode().then(() => img.naturalWidth, () => 0) : 0;
+  });
+
+  expect(width).toBeGreaterThan(0);
 });
 
-test('keeps the admin password out of the saved data', async ({ app, screen, browser }) => {
-  await app.open('/#connections');
-  const card = screen.getByRole('region', 'APG Website');
+test('opens the admin portal', async ({ app, screen, browser }) => {
+  await app.open('/');
+  // Write what would open in a new tab onto the page, where the locator below waits for it.
+  await browser.evaluate(() => {
+    window.open = (url) => {
+      document.body.append(Object.assign(document.createElement('output'), { textContent: `Opened ${String(url)}` }));
 
-  await card.getByRole('textbox', 'Admin email').fill('keystone@alphapremiergroup.com');
-  await card.getByRole('textbox', 'Password').fill('e2e-only-password-7731');
-  await card.getByRole('button', 'Save and connect').tap();
+      return null;
+    };
+  });
 
-  await expect(card.getByRole('textbox', 'Admin email')).toHaveValue('keystone@alphapremiergroup.com');
-  // The browser preview's stand-in for the keychain is sessionStorage; Keystone's saved data is in localStorage.
-  const saved = await browser.evaluate(() => Object.values(localStorage).join('\n'));
+  await screen.getByRole('button', 'Open APG Website').tap();
 
-  expect(saved).toContain('keystone@alphapremiergroup.com');
-  expect(saved).not.toContain('e2e-only-password-7731');
+  await expect(screen.getByText('Opened https://alphapremiergroup.com/admin')).toBeVisible();
 });

@@ -39,8 +39,7 @@ describe('registry', () => {
   });
 
   it('a refused connector takes its screens with it', () => {
-    // SAFETY: a deliberately broken connector with no health check; the registry must refuse it.
-    const r = buildRegistry([], [{ connector: { ...okConnector('lease'), health: undefined as never }, modules: [mod('lease')] }]);
+    const r = buildRegistry([], [{ connector: okConnector('lease', { logo: '' }), modules: [mod('lease')] }]);
     expect(r.modules).toEqual([]);
     expect(r.refused.map((x) => x.id)).toEqual(['lease']);
   });

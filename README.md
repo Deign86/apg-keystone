@@ -1,11 +1,11 @@
 # Keystone
 
 Alpha Premier Group's admin app. It covers Check Vouchers, Billing Statements, the ID Maker, a shared Directory and
-an Activity Log, and it connects to the other APG systems:
+an Activity Log. Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
-- **The attendance tracker:** live attendance from the front-desk kiosk, plus its employees and photos.
-- **Alpha Branding Studio:** hands it listing photos, checks its version.
-- **The website:** new hires, payments reported online, inquiries.
+- **The attendance tracker:** starts the app, or opens its download page when it is not installed.
+- **Alpha Branding Studio:** the same.
+- **The website:** opens its admin portal in the browser.
 
 It is one Tauri 2 + React + TypeScript codebase for macOS and Windows: the same stack as the attendance tracker.
 It is **modular-first**: every screen and every connected system can be taken out without breaking the rest, and CI
@@ -14,8 +14,8 @@ proves it on every push. Agents and co-developers start with [`AGENTS.md`](AGENT
 ```
 apps/keystone/        the app: lists the installed modules and connectors, the platform, the native side (src-tauri)
 packages/modules/     one package per screen, with its rules and tests: vouchers, billing, id-maker, directory, …
-packages/connectors/  one package per connected system, with its client and tests: attendance, branding-studio, website
-packages/kit/         the app runtime: registries, services, store, connector runtime, shell, shared components
+packages/connectors/  one package per connected system, its logo and how to open it: attendance, branding-studio, website
+packages/kit/         the app runtime: registries, services, store, connector shortcuts, shell, shared components
 packages/core/        the shared kernel: money, dates, the saved state, the directory, contracts
 packages/ui/          the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
 shared/          tokens, fonts, logo, sample data
@@ -91,7 +91,7 @@ Needs Node 22 and Rust (stable). On Linux it also needs the WebKitGTK libraries 
 ```bash
 npm install
 npm run desktop     # the desktop app, with hot reload
-npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (connectors that need the desktop say so)
+npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (shortcuts to desktop apps say they need it)
 npm run check       # everything CI checks: theme in sync, boundaries, skills, Oxlint, typecheck, tests, Taste Skill lint
 npm test            # every package's tests, plus the removal, contract and service regression suites
 npm run test:e2e    # every screen and its flows in Chromium against the dev server (e2e; starts `npm run dev` itself)
@@ -103,25 +103,12 @@ Every screen and every connected system is its own package (`packages/modules/<i
 Adding or removing one is one package plus one line in `apps/keystone/src/modules.ts` or `src/connectors.ts`; see
 `AGENTS.md` and the README in `packages/modules/` or `packages/connectors/`.
 
-## Setting up the connections
-
-In Keystone, open **Connections** (⌘8 / Ctrl+8):
-
-- **Attendance tracker:**
-  - **Kiosk address:** enter the address the attendance app shows under Live attendance › Share on the LAN.
-  - **Viewer token:** only needed if the kiosk asks for one.
-  - **Employees and photos:** these come from the attendance app's backups. On the kiosk PC that needs nothing. On
-    another PC, set **Backup folder** to where the backups are shared.
-- **Alpha Branding Studio:** nothing to set; Keystone finds it if it's installed.
-- **Website:** a website admin account (ideally a dedicated one for Keystone). The password is kept in the computer's
-  keychain.
-
 ## Data
 
 - Saved on each computer:
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`
   - Windows: `%APPDATA%\com.alphapremier.keystone\`
-- **Connections › Data** has back up, restore and reset to the sample set. A backup is one JSON file in the
+- **Data** (⌘7 / Ctrl+7) has back up, restore and reset to the sample set. A backup is one JSON file in the
   prototype's own format.
 - Sample records are made up; company details are APG's real ones.
 

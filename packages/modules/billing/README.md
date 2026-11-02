@@ -32,5 +32,4 @@ matching uses it.
 Clients in the directory (data).
 
 ## Removing it
-The above disappear. The Website screen stays and still lists payments and inquiries, but says matching needs
-Billing. Saved statements stay in `state.json`.
+The above disappear, and so does the statement-payments service. Saved statements stay in `state.json`.

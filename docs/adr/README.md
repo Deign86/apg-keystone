@@ -13,9 +13,10 @@ Consequences**.
 | [0001](0001-one-codebase-tauri-react-typescript.md) | One codebase: Tauri 2 + React + TypeScript | Accepted |
 | [0002](0002-modular-first-kernel-and-parts.md) | Modular-first: a fixed kernel and removable parts | Accepted |
 | [0003](0003-keep-the-prototype-state-schema.md) | Keep the prototype's saved-state schema | Accepted |
-| [0004](0004-integrate-through-what-systems-expose.md) | Integrate other APG systems only through what they already expose | Accepted |
+| [0004](0004-integrate-through-what-systems-expose.md) | Integrate other APG systems only through what they already expose | Superseded by 0007 |
 | [0005](0005-one-package-per-module-and-connector.md) | One package per module and connector, and named services between them | Accepted |
 | [0006](0006-keystone-updates-itself.md) | Keystone updates itself from its signed GitHub releases | Accepted |
+| [0007](0007-connected-systems-are-shortcuts.md) | Connected systems are shortcuts to their apps | Accepted |
 
 Template:
 

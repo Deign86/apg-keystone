@@ -7,15 +7,13 @@ export { Shell } from './Shell';
 
 export { KeystoneStore, type Outcome } from './store';
 
-export { Connections, type ConnectorStatus } from './connections';
-
 export { buildRegistry, findService, type ConnectorPlugin, type ModuleApp, type ModuleDef, type Registry } from './registry';
 
 export {
-  KeystoneProvider, useAllConnectorStatuses, useConnectorStatus, useDraft, useImportPeople, useKeystone, useModuleApp, usePhoto,
+  KeystoneProvider, useDraft, useKeystone, useModuleApp, useOpenConnector, usePhoto,
 } from './context';
 
-export { ConnectorCard, Feed, FormCard, LineEditor, Workspace } from './components';
+export { ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';
 
 export { amountColumn, Letterhead, Lines, Meta, orDash, Sheet, Signatures, type LineColumn } from './documents';
 

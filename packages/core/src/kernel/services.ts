@@ -10,7 +10,7 @@ import type { Change, Ctx } from './state';
 // is not installed, the consumer gets `undefined` and says so, or declares `requires`.
 
 export const SERVICES = {
-  /** Offered by the billing module; used by the website's payment matching. */
+  /** Offered by the billing module, for settling statements from outside it. */
   statementPayments: 'billing.statement-payments',
 } as const;
 
@@ -32,7 +32,7 @@ export interface Payment {
   amount: number;
   method?: string;
   reference?: string;
-  /** Where the payment was reported: "the website (ticket APG-1A2B3C4D)". */
+  /** Where the payment was reported: "the bank deposit slip of Oct 30". */
   source: string;
 }
 

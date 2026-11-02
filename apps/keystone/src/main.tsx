@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { App, buildRegistry, Connections, KeystoneStore } from '@keystone/kit';
+import { App, buildRegistry, KeystoneStore } from '@keystone/kit';
 import { plugins } from './connectors';
 import { builtInModules } from './modules';
 import { detectPlatform } from './platform';
@@ -11,14 +11,7 @@ async function start() {
   const registry = buildRegistry(builtInModules, plugins);
 
   for (const r of registry.refused) console.warn(`Keystone left out ${r.id}: ${r.reason}`);
-  const connections = new Connections(platform, registry.connectors);
-
-  const [store] = await Promise.all([
-    KeystoneStore.open(platform, registry.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : []))),
-    connections.load(),
-  ]);
-
-  connections.start();
+  const store = await KeystoneStore.open(platform, registry.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : [])));
 
   // A change is written 250 ms after it is made. Hiding or leaving the page (a reload, closing the window) writes it
   // at once, so a save made just before is not lost.
@@ -26,7 +19,7 @@ async function start() {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') void store.flush();
   });
-  createRoot(document.getElementById('root')!).render(<App store={store} registry={registry} connections={connections} />);
+  createRoot(document.getElementById('root')!).render(<App store={store} registry={registry} />);
 }
 
 void start();

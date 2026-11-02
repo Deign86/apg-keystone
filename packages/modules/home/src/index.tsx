@@ -2,7 +2,7 @@ import { KeyBadge, SectionLabel } from '@keystone/ui';
 import logo from '@keystone/ui/logo.png';
 import { useEffect, useState } from 'react';
 import { clockTime, greeting, topFinding, weekdayLong } from '@keystone/core';
-import { useAllConnectorStatuses, useKeystone, ConnectorCard, type ModuleDef } from '@keystone/kit';
+import { ConnectorShortcut, useKeystone, type ModuleDef } from '@keystone/kit';
 
 function useNow() {
   const [now, setNow] = useState(() => new Date());
@@ -15,23 +15,6 @@ function useNow() {
   return now;
 }
 
-function SystemsReady() {
-  const { registry } = useKeystone();
-
-  const problems = useAllConnectorStatuses()
-    .filter(({ status }) => status.health && (status.health.state === 'offline' || status.health.state === 'error'))
-    .map(({ id }) => ({ c: registry.connectors.find((x) => x.id === id)! }));
-
-  const ok = problems.length === 0;
-
-  return (
-    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${ok ? 'border-good/40 text-good' : 'border-bad/40 text-bad'}`}>
-      <span aria-hidden="true" className={`size-[7px] rounded-full ${ok ? 'bg-good' : 'bg-bad'}`} />
-      {ok ? 'All systems ready' : `${problems.map(({ c }) => c.name).join(', ')} ${problems.length === 1 ? 'needs' : 'need'} attention`}
-    </span>
-  );
-}
-
 /** The kiosk-style front door shared with the attendance tracker. */
 function Home() {
   const { state, ctx, registry, go } = useKeystone();
@@ -41,8 +24,7 @@ function Home() {
 
   return (
     <div className="mx-auto max-w-[1120px]">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
-        <SystemsReady />
+      <div className="flex justify-end border-b border-line pb-4">
         <div className="text-right">
           <p className="m-0 text-xs text-ink-2">{weekdayLong(now)}</p>
           <p className="m-0 font-display text-xl font-semibold text-gold-bright tabular-nums" aria-live="off">{clockTime(now)}</p>
@@ -89,11 +71,11 @@ function Home() {
       {registry.connectors.length > 0 && <>
       <div className="mt-8 mb-3 flex flex-wrap items-baseline justify-between gap-3 border-t border-line pt-5">
         <SectionLabel>Connected systems</SectionLabel>
-        <p className="m-0 text-[12.5px] text-ink-2">The other APG apps, live. Each keeps running on its own.</p>
+        <p className="m-0 text-[12.5px] text-ink-2">Shortcuts to the other APG apps.</p>
       </div>
-      <div className="grid items-start gap-4 min-[900px]:grid-cols-2">
-        {registry.connectors.map((c) => <ConnectorCard key={c.id} connector={c} />)}
-      </div>
+      <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 min-[700px]:grid-cols-2 min-[1000px]:grid-cols-3">
+        {registry.connectors.map((c) => <li key={c.id}><ConnectorShortcut connector={c} /></li>)}
+      </ul>
       </>}
     </div>
   );

@@ -1,9 +1,9 @@
 {
-  "name": "@keystone/module-connections",
+  "name": "@keystone/module-data",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Connections: settings for every connected system, plus data backup, restore and reset.",
+  "description": "Data: back up, restore and reset what Keystone holds, and the parts that were left out.",
   "main": "src/index.tsx",
   "types": "src/index.tsx",
   "scripts": {

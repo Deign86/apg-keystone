@@ -9,10 +9,10 @@ connected systems), each its own npm workspace package. The rules are in `AGENTS
 packages/core              @keystone/core   schema, money, dates, formats, log, numbering, the directory,
                                             insight types, connector contract, service contracts       (kernel)
 packages/ui                @keystone/ui     APG design system on Base UI; theme from shared/design/tokens.json (kernel)
-packages/kit               @keystone/kit    registries, services, store, connector runtime, shell,
+packages/kit               @keystone/kit    registries, services, store, connector shortcuts, shell,
                                             screen and document building blocks, Platform interface    (kernel)
 packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · billing · id-maker ·
-                                                      directory · activity · connections               (parts)
+                                                      directory · activity · data                      (parts)
 packages/connectors/<id>   @keystone/connector-<id>   attendance · branding-studio · website           (parts)
 apps/keystone              @keystone/app    the composition root
   src/modules.ts, src/connectors.ts           the only files that list the parts
@@ -44,33 +44,30 @@ the registry. Removing a module removes its contributions and changes nothing el
 ## How one part uses another
 
 Through a service, never an import. The contract is in core (`SERVICES` and its types in `kernel/services.ts`). The
-billing module provides `billing.statement-payments` on its `ModuleDef`; the website's screen asks for it with
-`useModuleApp().service(SERVICES.statementPayments)`. With billing installed, a payment reported online settles its
-statement; without it, the screen still lists payments and says matching needs Billing. The registry allows one
-provider per service.
+billing module provides `billing.statement-payments` on its `ModuleDef`; a part that settles statements from outside
+billing asks for it with `useModuleApp().service(SERVICES.statementPayments)` and gets `undefined`, and says so, when
+billing is not installed. No part that ships asks for it today. The registry allows one provider per service.
 
 ## How connected systems plug in
 
-A connector implements `Connector` (`packages/core/src/kernel/connectors.ts`). Its settings, health, live figures,
-people import and actions are discovered from its fields. Every call goes through `Connections.safely`, which adds a
-deadline and catches any failure, so a system that is down only marks its own card.
+A connector implements `Connector` (`packages/core/src/kernel/connectors.ts`): an id, a name, its app's logo and
+`open(env)`. Home shows each as a shortcut (`ConnectorShortcut` in the kit), the logo with the name under it.
+Clicking it calls `open` with only the operating system (`env.system`), under a 15-second deadline; anything it says,
+or any failure, is a message on screen (docs/adr/0007).
 
-| System | How Keystone reaches it | What it gives Keystone |
+| System | How Keystone finds it | What its shortcut does |
 |---|---|---|
-| Attendance tracker | Bundle id or registry key; GitHub releases; its LAN viewer on port 4173; its `.apbackup` files | Opens the app; version and update check; who's in, late arrivals, time-outs; the live dashboard; employees and photos |
-| Alpha Branding Studio | Bundle id or registry key; launch with files; GitHub releases | Version and update check; hands it listing photos |
-| Website | Admin API as an admin account (cookie, `Origin`, user agent) | New hires with photos; payments matched to statements; inquiries |
+| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app, or opens its latest release page when it is not installed |
+| Alpha Branding Studio | Bundle id `com.alphapremier.brandingstudio` (macOS) or its Uninstall registry key (Windows) | Starts the studio, or opens its latest release page |
+| Website | Nothing to find | Opens `alphapremiergroup.com/admin` in the browser |
 
-None of the three needed a change to work. The one gap, the attendance roster on the network, is a decision for that
-repo (`docs/ATTENDANCE-INTEGRATION.md`).
+Keystone reads nothing from these systems and keeps no password for any of them.
 
 ## Data
 
 - **`state.json`:** the prototype's schema; new fields are optional. Modules keep their own data under
   `ext.<module id>`, which survives builds without that module.
 - **Photos:** in `photos/`.
-- **Connection settings:** in `connections.json`.
-- **Secrets:** in the OS keychain (service `com.alphapremier.keystone`).
 - **Folder:**
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`
   - Windows: `%APPDATA%\com.alphapremier.keystone\`

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, bundledSeed, editText, importEmployees, isNewer, latestRelease, lineDraft, lineDraftOf, lineItemsOf, longDate,
+  addDays, addYears, amountInWords, bundledSeed, editText, lineDraft, lineDraftOf, lineItemsOf, longDate,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  toCentavos, topFinding, validateConnector, withDeadline, type ConnectorEnv, type Ctx,
+  openDesktopApp, toCentavos, topFinding, validateConnector, withDeadline, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
 } from '../src';
 
 // The kernel only. Each module's rules are tested in its own package
@@ -116,78 +116,53 @@ describe('directory (the shared kernel)', () => {
     expect(removeDirectoryRecord(add.state, 'C-004', ctx).state.dir).toHaveLength(11);
     expect(payees(s).slice(0, 4).map((d) => d.code)).toEqual(['V-001', 'V-002', 'V-003', 'V-004']);
   });
-
-  it('imports employees from another system without duplicates', () => {
-    const s = state();
-    const src = { id: 'attendance', name: 'the attendance tracker' };
-
-    const first = importEmployees(s, src, [
-      { externalId: 'APG-2026-102', name: 'Rafael D. Mendoza', department: 'Property Management' },
-      { externalId: 'APG-2026-103', name: 'Bea Santos', department: 'Leasing' },
-    ], ctx);
-
-    expect(first.record.added.map((d) => d.code)).toEqual(['E-005']);
-    expect(first.record.updated.map((d) => d.code)).toEqual(['E-003']);
-    expect(first.state.dir.find((d) => d.code === 'E-003')?.links).toEqual({ attendance: 'APG-2026-102' });
-    const again = importEmployees(first.state, src, [{ externalId: 'APG-2026-103', name: 'Bea Santos', department: 'Leasing' }], ctx);
-    expect(again.record.unchanged).toBe(1);
-    expect(again.state).toBe(first.state);
-  });
 });
 
 describe('connector contract', () => {
-  const base = { id: 'attendance', name: 'Attendance', about: '', platforms: [], settings: [], health: async () => ({ state: 'ready' as const, detail: '' }) };
+  const base = { id: 'attendance', name: 'Attendance', logo: 'attendance.png', open: async () => {} };
   it('validates definitions', () => {
     expect(validateConnector(base, [])).toBeNull();
     expect(validateConnector(base, ['attendance'])).toMatch(/Two connectors/);
     expect(validateConnector({ ...base, id: 'Bad Id' }, [])).toMatch(/lowercase/);
-    expect(validateConnector({ ...base, settings: [{ key: 'a', label: 'A', kind: 'text' }, { key: 'a', label: 'B', kind: 'text' }] }, [])).toMatch(/repeats/);
+    expect(validateConnector({ ...base, logo: '' }, [])).toMatch(/no logo/);
   });
   it('turns a hang into an error', async () => {
     await expect(withDeadline(new Promise(() => {}), 20, 'The kiosk')).rejects.toThrow('The kiosk did not answer within 0 seconds.');
   });
-});
 
-describe('releases of other APG apps', () => {
-  it('compares versions the way the installers write them', () => {
-    expect(isNewer('v2.6.0', '2.5.0.0')).toBe(true);
-    expect(isNewer('v2.5.0', '2.5.0.0')).toBe(false);
-    expect(isNewer('v2.5.0', '2.10.0')).toBe(false);
-    expect(isNewer('v0.2.29', '0.2.28')).toBe(true);
+  const studio = { name: 'Alpha Branding Studio', locator: { macBundleId: 'com.alphapremier.brandingstudio' }, downloads: 'https://example.test/releases/latest' };
+
+  function computer(platform: PlatformName, installed: InstalledApp | null) {
+    const did: string[] = [];
+
+    const system: SystemBridge = {
+      platform,
+      locateApp: async () => installed,
+      launchApp: async (app) => { did.push(`launch ${app.path}`); },
+      openUrl: async (url) => { did.push(`open ${url}`); },
+    };
+
+    return { system, did };
+  }
+
+  it('starts a desktop app that is installed, and says nothing more', async () => {
+    const { system, did } = computer('macos', { path: '/Applications/Alpha Branding Studio.app' });
+
+    expect(await openDesktopApp(system, studio)).toBeUndefined();
+    expect(did).toEqual(['launch /Applications/Alpha Branding Studio.app']);
   });
 
-  it('reads the latest release, and gives null when GitHub cannot be reached or says no', async () => {
-    const asked: string[] = [];
+  it('opens the download page of an app that is not installed, and says so', async () => {
+    const { system, did } = computer('windows', null);
 
-    const env = (answer: 'ok' | 'missing' | 'down' | 'not-a-release'): ConnectorEnv => ({
-      settings: {}, secret: async () => null, now: () => new Date(),
-      system: {
-        platform: 'macos', locateApp: async () => null, launchApp: async () => {}, openUrl: async () => {},
-        pickFiles: async () => [], readFile: async () => new Uint8Array(), listFiles: async () => [], appDataFolder: async () => null,
-      },
-      http: {
-        native: true,
-        request: async (url) => {
-          asked.push(url);
+    expect(await openDesktopApp(system, studio)).toBe('Alpha Branding Studio is not on this computer, so its download page is open.');
+    expect(did).toEqual(['open https://example.test/releases/latest']);
+  });
 
-          if (answer === 'down') throw new Error('offline');
+  it('asks for the desktop app in the browser preview', async () => {
+    const { system, did } = computer('web', null);
 
-          const body = answer === 'not-a-release'
-            ? { lan: { connectedSseClients: 1 } }
-            : { tag_name: 'v0.2.29', html_url: 'https://github.com/x/y/releases/tag/v0.2.29', assets: [] };
-
-          const ok = answer === 'ok' || answer === 'not-a-release';
-
-          // SAFETY: a fake GitHub. latestRelease reads the body as a partial GitHubRelease and checks it.
-          return { status: ok ? 200 : 404, ok, text: async () => '', json: async <T,>() => body as T, bytes: async () => new Uint8Array() };
-        },
-      },
-    });
-
-    expect((await latestRelease(env('ok'), 'Deign86/alpha-premier-attendance'))?.tag_name).toBe('v0.2.29');
-    expect(asked[0]).toBe('https://api.github.com/repos/Deign86/alpha-premier-attendance/releases/latest');
-    expect(await latestRelease(env('missing'), 'x/y')).toBeNull();
-    expect(await latestRelease(env('down'), 'x/y')).toBeNull();
-    expect(await latestRelease(env('not-a-release'), 'x/y')).toBeNull();
+    await expect(openDesktopApp(system, studio)).rejects.toThrow('Open Keystone’s desktop app to open Alpha Branding Studio.');
+    expect(did).toEqual([]);
   });
 });

@@ -5,14 +5,14 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 
 | Package | Rail | Owns | Contributes | Provides |
 |---|---|---|---|---|
-| `home/` | 0 | The kiosk-style front door | Nothing; it collects tiles, the finding and connector cards | |
+| `home/` | 0 | The kiosk-style front door | Nothing; it collects tiles, the finding and the connected systems' shortcuts | |
 | `overview/` | 1 | Summary for the CEO | Nothing; it collects figures, waiting items, the finding and "New …" buttons | |
 | `vouchers/` | 2 | Check vouchers, their rules and the voucher document | figure, finding, waiting, create, stat, log tag `CV` | |
 | `billing/` | 3 | Billing statements, their rules (VAT, EWT, payments) and the statement document | figure (lead), finding, waiting, create, stat, log tag `BS`, overdue on open | `billing.statement-payments` |
 | `id-maker/` | 4 | Employee ID cards, their rules and the verification pattern | figure, finding, waiting, create, stat, log tag `ID`, expiry on open | |
 | `directory/` | 5 | The directory screen (the records themselves are shared kernel, in core) | figure, stat, log tag `DIR` | |
 | `activity/` | 6 | The audit trail | Nothing; its filters come from every module's `logTags` | |
-| `connections/` | last | Connector settings, backup, restore and reset | Nothing | |
+| `data/` | last | Backup, restore and reset, and the parts left out | Nothing | |
 
 The website connector adds a `website` screen (rail 7). It settles statements through `billing.statement-payments`
 and keeps working, without matching, when billing is not installed.

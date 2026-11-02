@@ -1,8 +1,8 @@
-import { Button, CellInput, EmptyState, FigureStrip, Panel, SectionLabel, StatusPill, Tag, cn } from '@keystone/ui';
+import { Button, CellInput, EmptyState, Panel, SectionLabel, Tag, cn } from '@keystone/ui';
 import { X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { lineDraft, shortDate, type Connector, type HealthState, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
-import { useConnectorStatus, useImportPeople, useKeystone, useModuleApp } from './context';
+import { lineDraft, shortDate, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
+import { useOpenConnector } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
@@ -86,84 +86,31 @@ export function FormCard({
   );
 }
 
-const HEALTH: Record<HealthState, { label: string; tone: 'good' | 'warn' | 'bad' | 'neutral' }> = {
-  ready: { label: 'Connected', tone: 'good' },
-  setup: { label: 'Set up', tone: 'warn' },
-  offline: { label: 'Offline', tone: 'bad' },
-  error: { label: 'Problem', tone: 'bad' },
-  unsupported: { label: 'Desktop only', tone: 'neutral' },
-};
-
-/** A connected system's card: health, live figures, and its actions. Works for any connector. */
-export function ConnectorCard({ connector, compact = false }: { connector: Connector; compact?: boolean }) {
-  const { connections, notify } = useKeystone();
-  const app = useModuleApp();
-  const status = useConnectorStatus(connector.id);
-  const importPeople = useImportPeople();
-  const [busy, setBusy] = useState<string | null>(null);
-  const h = status.health;
-  const tone = h ? HEALTH[h.state] : { label: 'Checking', tone: 'neutral' as const };
-
-  const act = async (id: string, work: () => Promise<string | void>) => {
-    setBusy(id);
-
-    try {
-      const r = await work();
-
-      if (r) notify(r);
-    } catch (e) {
-      notify(e instanceof Error ? e.message : String(e), 'error');
-    } finally {
-      setBusy(null);
-    }
-  };
+/**
+ * A connected system's shortcut: its app's logo, which opens the app. Works for any connector. What the app does is
+ * the app's business; this only starts it (docs/adr/0007).
+ */
+export function ConnectorShortcut({ connector }: { connector: Connector }) {
+  const open = useOpenConnector();
+  const [opening, setOpening] = useState(false);
 
   return (
-    <Panel className="flex flex-col gap-3" aria-label={connector.name} aria-busy={!h}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="m-0 font-display text-sm font-semibold">{connector.name}</h3>
-          {!compact && <p className="mt-1 mb-0 text-[13px] text-ink-2">{connector.about}</p>}
-        </div>
-        <StatusPill status={tone.label} tone={tone.tone} />
-      </div>
-      <p className="m-0 rounded-control bg-gold-tint px-3 py-2.5 text-[12.5px] text-ink" aria-live="polite">
-        {h ? h.detail : 'Checking…'}
-      </p>
-      {status.figures && status.figures.length > 0 && <FigureStrip figures={status.figures} />}
-      <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-        {h?.update && (
-          <Button size="sm" kind="secondary" onClick={() => act('update', async () => {
-            await connections.env(connector).system.openUrl(h.update!.url);
-
-            return `Downloading ${connector.name} ${h.update!.version}.`;
-          })}>
-            Get {h.update.version}
-          </Button>
-        )}
-        {h?.state !== 'unsupported' && connector.actions?.map((a) => (
-          <Button
-            key={a.id}
-            size="sm"
-            kind={a.primary && h?.state === 'ready' ? 'primary' : 'secondary'}
-            disabled={busy !== null}
-            onClick={() => act(a.id, () => connections.safely(connector, a.label, (env) => a.run(env), 300000))}
-          >
-            {busy === a.id ? 'Working…' : a.label}
-          </Button>
-        ))}
-        {connector.people && (
-          <Button size="sm" disabled={busy !== null || h?.state === 'unsupported'} onClick={() => act('people', async () => { await importPeople(connector); })}>
-            {busy === 'people' ? 'Importing…' : connector.people.label}
-          </Button>
-        )}
-        {app.has('connections') && (h?.state === 'setup' || h?.state === 'error' || connector.settings.length > 0) && (
-          <Button size="sm" kind="quiet" className={cn('ml-auto')} onClick={() => app.go('connections')}>
-            Settings
-          </Button>
-        )}
-      </div>
-    </Panel>
+    <button
+      type="button"
+      aria-label={`Open ${connector.name}`}
+      aria-busy={opening}
+      disabled={opening}
+      onClick={() => { setOpening(true); void open(connector).finally(() => setOpening(false)); }}
+      className="group flex aspect-[16/9] w-full flex-col items-center gap-2.5 overflow-hidden rounded-tile border border-line bg-surface px-4 pt-5 pb-3.5 transition-[border-color,background-color,transform] duration-200 ease-out hover:border-gold hover:bg-surface-2 disabled:cursor-progress motion-safe:hover:-translate-y-0.5"
+    >
+      <img
+        src={connector.logo}
+        alt=""
+        draggable={false}
+        className="pointer-events-none min-h-0 w-full flex-1 object-contain transition-transform duration-300 ease-out select-none motion-safe:group-hover:scale-[1.04]"
+      />
+      <span className="font-display text-[13px] font-semibold text-ink">{connector.name}</span>
+    </button>
   );
 }
 

@@ -2,7 +2,7 @@ import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sec
 import { useCallback, useRef, useState } from 'react';
 import { count, ID_STATUSES, recordsOf, shortDate, toneOf, type IDRecord } from '@keystone/core';
 import { idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee } from './rules';
-import { useDraft, useKeystone, useModuleApp, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
+import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
 /** The select's value for "no directory record"; Base UI treats an empty value as unselected. */
@@ -23,9 +23,7 @@ async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
 const DRAFT = 'id-maker.draft';
 
 function IDMaker() {
-  const { state, ctx, run, platform, notify, store, registry } = useKeystone();
-  const app = useModuleApp();
-  const peopleSource = registry.connectors.find((c) => c.people);
+  const { state, ctx, run, platform, notify, store } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -110,7 +108,7 @@ function IDMaker() {
           >
             <FieldRow>
               <Field label="ID No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
-              <Field label="Employee" hint={!employees.some((e) => e.links) && peopleSource && (app.has('home') || app.has('connections')) ? `Bring people in from ${peopleSource.name} on ${app.has('home') ? 'Home' : 'Connections'}.` : undefined}>
+              <Field label="Employee">
                 <SelectInput value={draft.emp || MANUAL} onChange={(emp) => setDraft(withEmployee(state, draft, emp === MANUAL ? '' : emp))} options={[{ value: MANUAL, label: 'Type details by hand' }, ...employees.map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))]} />
               </Field>
             </FieldRow>
@@ -129,7 +127,7 @@ function IDMaker() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <Button size="sm" onClick={choosePhoto}>{draft.photo ? 'Replace photo…' : 'Choose photo…'}</Button>
                 {draft.photo && <Button size="sm" kind="quiet" onClick={() => setDraft({ ...draft, photo: undefined })}>Remove</Button>}
-                <span className="text-xs text-ink-2">Cropped square from the centre.{peopleSource ? ` People imported from ${peopleSource.name} bring their photo.` : ''}</span>
+                <span className="text-xs text-ink-2">Cropped square from the centre.</span>
               </div>
             </div>
             <FieldRow>
