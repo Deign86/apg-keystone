@@ -59,5 +59,13 @@
         "installMode": "currentUser"
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJCQkZBQzI1Qjg5NzJCNUIKUldSYks1ZTRKYXkvdThEL1ZLdXhaWlEzVUtlOVB1Wmp3K1RwVW1VSnJ1UmptV2JETTVmVDd2VlMK",
+      "endpoints": [
+        "https://github.com/Deign86/apg-keystone/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

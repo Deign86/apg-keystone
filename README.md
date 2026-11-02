@@ -38,6 +38,14 @@ Download the installers from the repository's **Releases** page:
 - **Windows** (`Keystone_<version>_x64-setup.exe`): run it. It installs for the current user. SmartScreen may ask
   once; choose *More info › Run anyway*.
 
+**Updates.** Keystone updates itself, the way the attendance app does.
+- **When it checks:** a few seconds after it starts, and every 8 hours.
+- **When a new version is out:** the foot of the sidebar shows "Keystone 0.x is ready" with **Update and restart**.
+  That saves your work, installs the update and opens Keystone again. On a Mac there is no Open Anyway step for an
+  update.
+- **Your version:** the version you are running is shown there too.
+- **First install:** a copy older than the first version with updates needs one manual install.
+
 Every push also builds both installers: open the workflow **Keystone**, pick a run, and download them from
 **Artifacts** (kept 90 days).
 
@@ -64,6 +72,17 @@ git tag v0.2.0 && git push origin v0.2.0
 Either way the workflow runs every check, builds the macOS `.dmg` and the Windows setup `.exe` with that version (it
 overrides `tauri.conf.json`), and publishes the release with both attached and install notes. A release stays a draft
 until both installers are on it.
+
+**Signing updates.** Installed copies only accept updates signed with Keystone's updater key.
+- **Public half:** in `apps/keystone/src-tauri/tauri.conf.json` (`plugins.updater`).
+- **Private half:** goes in the repository secret `TAURI_SIGNING_PRIVATE_KEY`, under Settings › Secrets and variables
+  › Actions. With it set, a release also publishes the signed update files and `latest.json`, after checking every
+  signature (`scripts/updater-manifest.mjs`).
+- **Without it:** the release still has its installers, but installed copies cannot update to it, and the run says
+  so.
+- **Keep a copy of the private key somewhere safe.** Copies that trust this key cannot update from releases signed
+  with another one.
+
 
 ## Develop
 

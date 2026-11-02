@@ -3,6 +3,7 @@ import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { useKeystone } from './context';
 import type { ModuleDef } from './registry';
+import { UpdateNotice } from './UpdateNotice';
 
 /** One module failing to render shows its own error; the rail and every other module keep working. */
 interface BoundaryState { error: Error | null }
@@ -75,6 +76,7 @@ function Rail() {
         })}
       </ul>
       <div className="mt-auto text-[11.5px] leading-relaxed text-ink-2">
+        <UpdateNotice />
         <p className="m-0 flex items-center gap-1.5 font-semibold text-ink">
           <span aria-hidden="true" className="size-[7px] rounded-full bg-good" />
           Administrator access
