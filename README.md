@@ -41,7 +41,17 @@ Download the installers from the repository's **Releases** page:
 Every push also builds both installers: open the workflow **Keystone**, pick a run, and download them from
 **Artifacts** (kept 90 days).
 
-**Making a release.** Any one of these:
+**Making a release.** Releases are automatic. When a merge into `main` brings a feature or a fix, the workflow
+publishes the next version once every check and both installer builds pass. The commit subjects since the last
+release decide it:
+
+| Commit subject starts with | Release |
+|---|---|
+| `feat` | The next minor version: 0.1.2 → 0.2.0 |
+| `fix` or `perf` | The next patch version: 0.1.2 → 0.1.3 |
+| `docs`, `test`, `ci`, `chore`, `refactor`, `style`, `build` | None |
+
+Merges that land together go out as one release. To release a version you choose instead, use any one of these:
 
 - **Actions › Keystone › Run workflow** on `main`, with the version (`0.2.0`) in *Version to release*.
 - **Releases › Draft a new release** with a new `v…` tag on `main`.
@@ -51,8 +61,9 @@ Every push also builds both installers: open the workflow **Keystone**, pick a r
 git tag v0.2.0 && git push origin v0.2.0
 ```
 
-The workflow runs every check, builds the macOS `.dmg` and the Windows setup `.exe` with that version (it overrides
-`tauri.conf.json`), and attaches both to the release, with install notes.
+Either way the workflow runs every check, builds the macOS `.dmg` and the Windows setup `.exe` with that version (it
+overrides `tauri.conf.json`), and publishes the release with both attached and install notes. A release stays a draft
+until both installers are on it.
 
 ## Develop
 

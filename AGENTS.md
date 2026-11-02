@@ -183,6 +183,10 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
   - Draft keys are `<module id>.draft`.
 - **Copy:** sentences a person reads come from rules (findings, messages, log lines), not from screens, so wording
   stays consistent. Use plain English, peso amounts as `₱1,234.56`, and dates as `Oct 30, 2026` (`shortDate`).
+- **Commit subjects** follow Conventional Commits (`feat(attendance): …`, `fix(store): …`), and they decide releases:
+  merging a `feat` publishes the next minor version, a `fix` or `perf` the next patch, and `docs`, `test`, `ci`,
+  `chore`, `refactor`, `style` and `build` publish nothing (README › Making a release). Pick the type for what a
+  person using Keystone gets.
 - **No secrets in files:** passwords and tokens go through `env.secret` and the OS keychain.
 - **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/` and
   `packages/core/src/seed.json` are regenerated from `shared/` by `npm run sync`.

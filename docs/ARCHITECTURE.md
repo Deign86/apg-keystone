@@ -83,4 +83,5 @@ cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml
 ```
 
 CI (`.github/workflows/keystone.yml`) runs all of these, then builds the macOS `.dmg` and the Windows setup `.exe`.
-For a `v…` tag it also attaches both installers to that GitHub release.
+On a merge into `main` that brings a `feat` or a `fix`, and for a `v…` tag or Run workflow with a version, it also
+publishes a GitHub release with both installers (README › Making a release).
