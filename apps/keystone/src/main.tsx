@@ -19,6 +19,13 @@ async function start() {
   ]);
 
   connections.start();
+
+  // A change is written 250 ms after it is made. Hiding or leaving the page (a reload, closing the window) writes it
+  // at once, so a save made just before is not lost.
+  addEventListener('pagehide', () => void store.flush());
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void store.flush();
+  });
   createRoot(document.getElementById('root')!).render(<App store={store} registry={registry} connections={connections} />);
 }
 

@@ -62,6 +62,7 @@ jobs:
         with:
           name: e2e-results
           path: .e2e/
+          include-hidden-files: true  # .e2e/ itself is a hidden folder, which upload-artifact skips by default
           if-no-files-found: ignore
           retention-days: 14
       - name: Taste Skill lint (app rules)

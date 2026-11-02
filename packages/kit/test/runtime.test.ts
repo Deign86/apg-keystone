@@ -47,6 +47,24 @@ describe('store', () => {
     expect(files.writes).toBe(1);
   });
 
+  it('writes a waiting change at once when asked to flush, and nothing when none is waiting', async () => {
+    vi.useFakeTimers();
+    const { platform, files } = memoryPlatform();
+    const store = await KeystoneStore.open(platform);
+
+    await store.flush();
+    expect(files.writes).toBe(0);
+
+    store.commit({ ...store.state, ext: { ...store.state.ext, leases: { open: 1 } } });
+    await store.flush();
+    expect(files.writes).toBe(1);
+    expect(JSON.parse(files.state!).ext).toEqual({ leases: { open: 1 } });
+
+    // The delayed write it replaced does not run again.
+    await vi.advanceTimersByTimeAsync(300);
+    expect(files.writes).toBe(1);
+  });
+
   it('skips a housekeeping step that throws and runs the rest', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const tidy = (s: TerminalState): TerminalState => ({ ...s, ext: { tidied: true } });
