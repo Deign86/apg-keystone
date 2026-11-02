@@ -57,7 +57,7 @@ deadline and catches any failure, so a system that is down only marks its own ca
 
 | System | How Keystone reaches it | What it gives Keystone |
 |---|---|---|
-| Attendance tracker | Its LAN viewer on port 4173; its `.apbackup` files | Who's in, late arrivals, time-outs; the live dashboard; employees and photos |
+| Attendance tracker | Bundle id or registry key; GitHub releases; its LAN viewer on port 4173; its `.apbackup` files | Opens the app; version and update check; who's in, late arrivals, time-outs; the live dashboard; employees and photos |
 | Alpha Branding Studio | Bundle id or registry key; launch with files; GitHub releases | Version and update check; hands it listing photos |
 | Website | Admin API as an admin account (cookie, `Origin`, user agent) | New hires with photos; payments matched to statements; inquiries |
 

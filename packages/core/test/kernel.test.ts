@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, bundledSeed, editText, importEmployees, lineDraft, lineDraftOf, lineItemsOf, longDate, newDirectoryDraft,
-  nextCode, nextNumber, parseAmount, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  toCentavos, topFinding, validateConnector, withDeadline, type Ctx,
+  addDays, addYears, amountInWords, bundledSeed, editText, importEmployees, isNewer, latestRelease, lineDraft, lineDraftOf, lineItemsOf, longDate,
+  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
+  toCentavos, topFinding, validateConnector, withDeadline, type ConnectorEnv, type Ctx,
 } from '../src';
 
 // The kernel only. Each module's rules are tested in its own package
@@ -145,5 +145,49 @@ describe('connector contract', () => {
   });
   it('turns a hang into an error', async () => {
     await expect(withDeadline(new Promise(() => {}), 20, 'The kiosk')).rejects.toThrow('The kiosk did not answer within 0 seconds.');
+  });
+});
+
+describe('releases of other APG apps', () => {
+  it('compares versions the way the installers write them', () => {
+    expect(isNewer('v2.6.0', '2.5.0.0')).toBe(true);
+    expect(isNewer('v2.5.0', '2.5.0.0')).toBe(false);
+    expect(isNewer('v2.5.0', '2.10.0')).toBe(false);
+    expect(isNewer('v0.2.29', '0.2.28')).toBe(true);
+  });
+
+  it('reads the latest release, and gives null when GitHub cannot be reached or says no', async () => {
+    const asked: string[] = [];
+
+    const env = (answer: 'ok' | 'missing' | 'down' | 'not-a-release'): ConnectorEnv => ({
+      settings: {}, secret: async () => null, now: () => new Date(),
+      system: {
+        platform: 'macos', locateApp: async () => null, launchApp: async () => {}, openUrl: async () => {},
+        pickFiles: async () => [], readFile: async () => new Uint8Array(), listFiles: async () => [], appDataFolder: async () => null,
+      },
+      http: {
+        native: true,
+        request: async (url) => {
+          asked.push(url);
+
+          if (answer === 'down') throw new Error('offline');
+
+          const body = answer === 'not-a-release'
+            ? { lan: { connectedSseClients: 1 } }
+            : { tag_name: 'v0.2.29', html_url: 'https://github.com/x/y/releases/tag/v0.2.29', assets: [] };
+
+          const ok = answer === 'ok' || answer === 'not-a-release';
+
+          // SAFETY: a fake GitHub. latestRelease reads the body as a partial GitHubRelease and checks it.
+          return { status: ok ? 200 : 404, ok, text: async () => '', json: async <T,>() => body as T, bytes: async () => new Uint8Array() };
+        },
+      },
+    });
+
+    expect((await latestRelease(env('ok'), 'Deign86/alpha-premier-attendance'))?.tag_name).toBe('v0.2.29');
+    expect(asked[0]).toBe('https://api.github.com/repos/Deign86/alpha-premier-attendance/releases/latest');
+    expect(await latestRelease(env('missing'), 'x/y')).toBeNull();
+    expect(await latestRelease(env('down'), 'x/y')).toBeNull();
+    expect(await latestRelease(env('not-a-release'), 'x/y')).toBeNull();
   });
 });

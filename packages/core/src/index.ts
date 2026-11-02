@@ -18,6 +18,8 @@ export * from './kernel/insight';
 
 export * from './kernel/connectors';
 
+export * from './kernel/releases';
+
 export * from './kernel/services';
 
 // The directory is the shared kernel every area refers to by code (docs/adr/0003).

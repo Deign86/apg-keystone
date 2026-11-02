@@ -1,4 +1,4 @@
-import type { AppLocator, Connector, ConnectorEnv, Health, PlatformName } from '@keystone/core';
+import { isNewer, latestRelease, type AppLocator, type Connector, type ConnectorEnv, type GitHubRelease, type Health, type PlatformName } from '@keystone/core';
 import type { ConnectorPlugin } from '@keystone/kit';
 
 // Alpha Branding Studio (Alpha_Branding): frames listing photos in the official gold
@@ -19,7 +19,7 @@ export const STUDIO: AppLocator = {
   windowsExe: 'Alpha.Branding.exe',
 };
 
-const RELEASES = 'https://api.github.com/repos/Deign86/Alpha_Branding/releases/latest';
+const REPO = 'Deign86/Alpha_Branding';
 const RELEASES_PAGE = 'https://github.com/Deign86/Alpha_Branding/releases/latest';
 
 /** Same extensions both studios accept (ImageEngine.swift, MainWindowViewModel.IsSupportedMedia). */
@@ -29,40 +29,11 @@ export const MEDIA = {
   windowsVideos: ['mp4', 'mov', 'wmv', 'avi', 'm4v', 'mkv', 'webm'],
 };
 
-/** "2.5.0.0" and "v2.5.0" compare as equal; true when `latest` is newer. */
-export function isNewer(latest: string, installed: string): boolean {
-  const parts = (v: string) => v.replace(/^v/i, '').split('.').map((n) => parseInt(n, 10) || 0);
-  const a = parts(latest);
-  const b = parts(installed);
-
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
-  }
-
-  return false;
-}
-
-interface Release {
-  tag_name: string;
-  html_url: string;
-  assets: { name: string; browser_download_url: string }[];
-}
-
 /** The installer for this platform from the latest release. */
-export function installerFor(release: Release, platform: PlatformName): string {
+export function installerFor(release: GitHubRelease, platform: PlatformName): string {
   const want = platform === 'windows' ? /Setup\.exe$/i : platform === 'macos' ? /-macos\.pkg$/i : null;
 
   return (want && release.assets.find((a) => want.test(a.name))?.browser_download_url) || release.html_url || RELEASES_PAGE;
-}
-
-async function latestRelease(env: ConnectorEnv): Promise<Release | null> {
-  try {
-    const r = await env.http.request(RELEASES, { headers: { Accept: 'application/vnd.github+json' }, timeoutMs: 6000 });
-
-    return r.ok ? await r.json<Release>() : null;
-  } catch {
-    return null;
-  }
 }
 
 async function installed(env: ConnectorEnv) {
@@ -90,7 +61,7 @@ export const brandingStudioConnector: Connector = {
       return { state: 'unsupported', detail: 'Branding Studio runs on Windows and macOS only.' };
     }
 
-    const [app, release] = await Promise.all([env.system.locateApp(STUDIO), latestRelease(env)]);
+    const [app, release] = await Promise.all([env.system.locateApp(STUDIO), latestRelease(env, REPO)]);
     const latest = release?.tag_name.replace(/^v/i, '');
 
     if (!app) {
@@ -148,7 +119,7 @@ export const brandingStudioConnector: Connector = {
       id: 'download',
       label: 'Download latest',
       async run(env) {
-        const release = await latestRelease(env);
+        const release = await latestRelease(env, REPO);
         await env.system.openUrl(release ? installerFor(release, env.system.platform) : RELEASES_PAGE);
 
         return release ? `Downloading Branding Studio ${release.tag_name}.` : 'Opened the Branding Studio releases page.';
