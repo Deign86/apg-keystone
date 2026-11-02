@@ -66,6 +66,7 @@ npm run check       # everything CI checks: theme in sync, boundaries, skills, O
 npm test            # every package's tests, plus the removal, contract and service regression suites
 npm run test:e2e    # every screen and its flows in Chromium against the dev server (e2e; starts `npm run dev` itself)
 npm run build       # installers for this OS into apps/keystone/src-tauri/target/release/bundle
+npm run icons       # every platform's icons from shared/brand (after the logo changes; see shared/brand/README.md)
 ```
 
 Every screen and every connected system is its own package (`packages/modules/<id>`, `packages/connectors/<id>`).
