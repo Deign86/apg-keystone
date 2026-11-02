@@ -29,13 +29,27 @@ AGENTS.md        the rules for anyone changing Keystone (CLAUDE.md points here)
 
 ## Get the app
 
-Every push builds installers on GitHub Actions: open the workflow **Keystone**, pick the latest run, and download
-from **Artifacts**.
+Download the installers from the repository's **Releases** page:
 
-- **macOS** (`Keystone-macOS`): open the `.dmg` and drag Keystone to Applications. It is ad-hoc signed, so on first
-  launch use right-click › Open, or *System Settings › Privacy & Security › Open Anyway*.
-- **Windows** (`Keystone-Windows`): run the setup `.exe`. It installs for the current user. SmartScreen may ask once;
-  choose *More info › Run anyway*.
+- **macOS** (`Keystone_<version>_universal.dmg`, Apple silicon and Intel, macOS 11 or later): open the `.dmg` and drag
+  Keystone to Applications. It is ad-hoc signed, not notarized, so the first time you open it macOS refuses: choose
+  *Done*, then *System Settings › Privacy & Security › Open Anyway*. If macOS says the app "is damaged", run
+  `xattr -dr com.apple.quarantine /Applications/Keystone.app` in Terminal and open it again.
+- **Windows** (`Keystone_<version>_x64-setup.exe`): run it. It installs for the current user. SmartScreen may ask
+  once; choose *More info › Run anyway*.
+
+Every push also builds both installers: open the workflow **Keystone**, pick a run, and download them from
+**Artifacts** (kept 90 days).
+
+**Making a release.** Tag a commit on `main` with its version and push the tag, or create a release with a new
+`v…` tag on the Releases page:
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+The workflow runs every check, builds the macOS `.dmg` and the Windows setup `.exe` with that version (the tag
+overrides `tauri.conf.json`), and attaches both to the release, with install notes.
 
 ## Develop
 

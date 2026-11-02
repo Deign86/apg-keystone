@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  # A release made on GitHub's Releases page. A tag pushed from git (v1.2.3) arrives as a push. Either way the
+  # release job below attaches both installers; both events share the tag's concurrency group, so one run finishes.
+  release:
+    types: [published]
 
 concurrency:
   group: keystone-${{ github.ref }}
@@ -77,6 +81,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/keystone/src-tauri
+      - name: Stamp the release's version (tag v1.2.3 → 1.2.3) on the app and its installers
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs"), file = "apps/keystone/src-tauri/tauri.conf.json";
+            const conf = JSON.parse(fs.readFileSync(file, "utf8"));
+            conf.version = process.env.GITHUB_REF_NAME.slice(1);
+            fs.writeFileSync(file, JSON.stringify(conf, null, 2) + "\n");
+          '
       - name: Build Keystone
         working-directory: apps/keystone
         run: npx tauri build ${{ matrix.args }}
@@ -85,3 +99,36 @@ jobs:
           name: Keystone-${{ matrix.name }}
           path: ${{ matrix.bundle }}
           if-no-files-found: error
+
+  release:
+    name: Release
+    needs: desktop
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+      - name: Publish the macOS and Windows installers on the release
+        run: |
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --title "Keystone ${TAG#v}" --generate-notes --notes "$(cat <<'NOTES'
+          ## Install
+
+          - **macOS** (Apple silicon and Intel, macOS 11 or later): download the `.dmg`, open it and drag Keystone to
+            Applications. Keystone is not notarized by Apple, so the first time you open it macOS refuses: choose
+            *Done*, then *System Settings › Privacy & Security › Open Anyway*. If macOS says the app "is damaged",
+            run `xattr -dr com.apple.quarantine /Applications/Keystone.app` in Terminal and open it again.
+          - **Windows** (10 or 11): run the `-setup.exe`. It installs for the current user. If SmartScreen asks,
+            choose *More info › Run anyway*.
+          NOTES
+          )"
+          fi
+          gh release upload "$TAG" installers/* --clobber
