@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { bundledSeed, withModuleData, type Ctx, type TerminalState } from '@keystone/core';
 import {
-  clock12, dataOf, daysOf, duration, missingTimeOuts, removeHoliday, saveDay, saveHoliday, tally, timeIn,
+  clock12, dataOf, daysOf, duration, employeeAttendance, missingTimeOuts, removeHoliday, saveDay, saveHoliday, tally, timeIn,
   timekeepingFigure, timekeepingFinding, timekeepingStat, timeOut, todayBoard, type TimeDay,
 } from '../src/rules';
 
@@ -165,5 +165,117 @@ describe('what timekeeping contributes', () => {
   it('writes times the way people read them', () => {
     expect([clock12('00:05'), clock12('12:00'), clock12('17:30'), clock12('')]).toEqual(['12:05 AM', '12:00 PM', '5:30 PM', '—']);
     expect([duration(5), duration(60), duration(75), duration(0)]).toEqual(['5 min', '1 hr', '1 hr 15 min', '0 min']);
+  });
+});
+
+// ---------- edges and regressions: where day-counting rules break ----------
+
+/** One employee's days, keyed by date, with the given holidays. */
+function scenario(days: Record<string, [string, string, number?]>, holidays: { date: string; name: string; kind: 'Regular' | 'Special' }[] = []) {
+  return withModuleData(state(), 'timekeeping', {
+    days: Object.entries(days).map(([date, [tin, tout, ot]]) => ({ emp: 'E-001', date, in: tin, out: tout, ot: ot ?? 0, note: '' })),
+    holidays,
+  });
+}
+
+const statusOf = (s: TerminalState, date: string, now = at(2027, 2, 1)) => {
+  const [d] = daysOf(s, 'E-001', date, date, now);
+
+  return [d.status, d.late, d.undertime];
+};
+
+describe('the weekly grace, at its edges', () => {
+  it('covers 15 minutes late but not 16', () => {
+    expect(statusOf(scenario({ '2026-11-02': ['08:15', '17:00'] }), '2026-11-02')).toEqual(['Grace', 0, 0]);
+    expect(statusOf(scenario({ '2026-11-02': ['08:16', '17:00'] }), '2026-11-02')).toEqual(['Late', 16, 0]);
+    expect(statusOf(scenario({ '2026-11-02': ['08:00', '17:00'] }), '2026-11-02')).toEqual(['On time', 0, 0]);
+  });
+
+  it('is not spent by an arrival too late for it, by a half day, or by a rest day', () => {
+    const s = scenario({
+      '2026-11-02': ['09:30', '17:00'], // 90 minutes: late, grace kept
+      '2026-11-03': ['12:10', '17:00'], // a half day: never late, grace kept
+      '2026-11-07': ['08:10', '12:00'], // Saturday: not a working day, grace kept
+      '2026-11-04': ['08:07', '17:00'], // the grace
+      '2026-11-05': ['08:07', '17:00'], // late
+    });
+
+    expect(daysOf(s, 'E-001', '2026-11-02', '2026-11-07', at(2026, 11, 9)).map((d) => [d.date, d.status, d.late])).toEqual([
+      ['2026-11-02', 'Late', 90], ['2026-11-03', 'Half day', 0], ['2026-11-04', 'Grace', 0], ['2026-11-05', 'Late', 7],
+      ['2026-11-06', 'Absent', 0], ['2026-11-07', 'Rest day', 0],
+    ]);
+  });
+
+  it('applies on a holiday worked like any other day', () => {
+    const s = scenario({ '2026-11-30': ['08:05', '17:00'], '2026-12-01': ['08:05', '17:00'] }, [{ date: '2026-11-30', name: 'Bonifacio Day', kind: 'Regular' }]);
+
+    expect(daysOf(s, 'E-001', '2026-11-30', '2026-12-01', at(2026, 12, 2)).map((d) => d.status)).toEqual(['Grace', 'Late']);
+  });
+
+  it('runs Monday to Sunday across a month end and a year end', () => {
+    // Mon Dec 28, 2026 to Sun Jan 3, 2027 is one week; Mon Jan 4 starts the next.
+    const s = scenario({ '2026-12-29': ['08:05', '17:00'], '2027-01-01': ['08:05', '17:00'], '2027-01-04': ['08:05', '17:00'] });
+
+    expect(daysOf(s, 'E-001', '2026-12-28', '2027-01-04', at(2027, 1, 5)).filter((d) => d.record).map((d) => [d.date, d.status]))
+      .toEqual([['2026-12-29', 'Grace'], ['2027-01-01', 'Late'], ['2027-01-04', 'Grace']]);
+  });
+
+  it('gives the same answer for a day whether its week is read from Monday or from the cut-off', () => {
+    const s = scenario({ '2026-10-13': ['08:05', '17:00'], '2026-10-16': ['08:05', '17:00'] });
+
+    expect(statusOf(s, '2026-10-16')).toEqual(['Late', 5, 0]);
+    expect(daysOf(s, 'E-001', '2026-10-12', '2026-10-31', at(2026, 11, 2)).find((d) => d.date === '2026-10-16')?.status).toBe('Late');
+  });
+});
+
+describe('half days and undertime, at their edges', () => {
+  it('counts an arrival from 12:00 as a half day, and 11:59 as very late', () => {
+    expect(statusOf(scenario({ '2026-11-02': ['11:59', '17:00'] }), '2026-11-02')).toEqual(['Late', 239, 0]);
+    expect(statusOf(scenario({ '2026-11-02': ['12:00', '17:00'] }), '2026-11-02')).toEqual(['Half day', 0, 0]);
+  });
+
+  it('counts leaving by 1:00 PM as a half day, and 1:01 PM as undertime', () => {
+    expect(statusOf(scenario({ '2026-11-02': ['08:00', '13:00'] }), '2026-11-02')).toEqual(['Half day', 0, 0]);
+    expect(statusOf(scenario({ '2026-11-02': ['08:00', '13:01'] }), '2026-11-02')).toEqual(['On time', 0, 239]);
+    expect(statusOf(scenario({ '2026-11-02': ['08:00', '16:59'] }), '2026-11-02')).toEqual(['On time', 0, 1]);
+    expect(statusOf(scenario({ '2026-11-02': ['08:00', '23:00'] }), '2026-11-02')).toEqual(['On time', 0, 0]);
+  });
+
+  it('adds late and undertime on the same day', () => {
+    expect(statusOf(scenario({ '2026-11-02': ['08:40', '16:00'] }), '2026-11-02')).toEqual(['Late', 40, 60]);
+  });
+});
+
+describe('the regression cut-off', () => {
+  // Juan, Oct 16–31, 2026: every kind of day once. Payroll's engine prices exactly this tally in test/pay.test.ts
+  // (packages/modules/payroll), and the app and end-to-end suites walk the same days.
+  const s = scenario({
+    '2026-10-16': ['07:58', '17:00'], // on time
+    '2026-10-19': ['08:12', '17:00'], // the week's grace
+    '2026-10-20': ['08:05', '17:00'], // late 5
+    '2026-10-21': ['08:00', '19:00', 2], // two hours approved overtime
+    '2026-10-22': ['12:30', '17:00'], // half day
+    // Oct 23: absent
+    '2026-10-26': ['07:50', '16:30'], // undertime 30
+    '2026-10-27': ['08:20', '17:00'], // late 20, too late for the grace
+    '2026-10-28': ['08:10', '17:00'], // the week's grace
+    '2026-10-29': ['08:00', '17:00'], // a special holiday, worked
+    // Oct 30: a regular holiday, not worked
+  }, [{ date: '2026-10-29', name: 'Special day', kind: 'Special' }, { date: '2026-10-30', name: 'Regular day', kind: 'Regular' }]);
+
+  it('counts every kind of day', () => {
+    expect(tally(s, 'E-001', '2026-10-16', '2026-10-31', at(2026, 11, 2))).toEqual({
+      scheduled: 11, worked: 9, halfDays: 1, absent: 1, regularHolidaysOff: 1, specialHolidaysWorked: 1,
+      regularHolidaysWorked: 0, shortMinutes: 55, overtimeHours: 2, dayMinutes: 480,
+    });
+  });
+
+  it('gives the same tally through the service it publishes', () => {
+    expect(employeeAttendance.tally(s, 'E-001', '2026-10-16', '2026-10-31', at(2026, 11, 2))).toEqual(tally(s, 'E-001', '2026-10-16', '2026-10-31', at(2026, 11, 2)));
+  });
+
+  it('counts only the days asked for, and nobody else\'s', () => {
+    expect(tally(s, 'E-002', '2026-10-16', '2026-10-31', at(2026, 11, 2))).toMatchObject({ worked: 0, absent: 9, regularHolidaysOff: 1 }); // neither holiday is an absence
+    expect(tally(s, 'E-001', '2026-10-16', '2026-10-16', at(2026, 11, 2))).toMatchObject({ scheduled: 1, worked: 1, shortMinutes: 0 });
   });
 });

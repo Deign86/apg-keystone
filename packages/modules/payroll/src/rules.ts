@@ -1,48 +1,18 @@
 import {
-  addDays, count, datesBetween, halfMonthOf, isISODate, isJsonObject, isWeekday, jsonNumber, jsonObjects, jsonText,
-  KeystoneError, logged, moduleData, parseAmount, percent, periodLabel, peso, recordOf, shortDate, stamp, sumCentavos,
-  toCentavos, today, withModuleData, type AttendanceTally, type Centavos, type Change, type Ctx, type EmployeeAttendance,
-  type Figure, type Finding, type JsonObject, type JsonValue, type Period, type TerminalState,
+  addDays, count, halfMonthOf, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
+  moduleData, parseAmount, periodLabel, peso, recordOf, shortDate, stamp, sumCentavos, toCentavos, toPesos, today,
+  withModuleData, type AttendanceTally, type Centavos, type Change, type Ctx, type EmployeeAttendance, type Figure,
+  type Finding, type JsonObject, type JsonValue, type Period, type TerminalState,
 } from '@keystone/core';
-import { tableShares, type Shares } from './contributions';
+import { basisOf, fullAttendance, price, sharesFor, tableShares, type Pay, type PaySetup, type Shares } from './pay';
 
-// Employee payroll: each employee's own pay setup, which the HR supervisor keeps, and the semi-monthly cut-off priced
-// the way the HR payroll sheet prices it. Attendance comes from the timekeeping service when it is installed. Kept
-// under state.ext.payroll; nothing leaves Keystone.
+// Employee payroll: each employee's own pay setup, which the HR supervisor keeps, and the semi-monthly cut-off. This
+// file keeps the saved data, checks what HR types and assembles a cut-off; every peso in it is computed by the engine
+// in ./pay.ts. Attendance comes from the timekeeping service when it is installed. Kept under state.ext.payroll;
+// nothing leaves Keystone.
 
 export const MODULE = 'payroll';
 export const TAG = 'PAY';
-
-/** Overtime is paid at 125% of the hourly rate (Labor Code, Art. 87). */
-export const OVERTIME_PERCENT = 125;
-
-/** Working a special non-working day adds 30% of the daily rate; a regular holiday adds 100%. */
-export const SPECIAL_HOLIDAY_PERCENT = 30;
-export const REGULAR_HOLIDAY_PERCENT = 100;
-
-/**
- * One employee's pay, as the HR supervisor sets it. Pesos, as everywhere in the saved state. Allowances and
- * deductions are per cut-off, except the special allowance, which is per day worked. A government share left null
- * comes from the contribution tables; an amount (0 included) is that employee's own.
- */
-export type PaySetup = {
-  /** Directory code of the employee. */
-  emp: string;
-  /** The payroll's own employee number, "APGCO-0013". */
-  empNo: string;
-  daily: number;
-  incentive: number;
-  housing: number;
-  special: number;
-  sss: number | null;
-  philhealth: number | null;
-  pagibig: number | null;
-  /** A salary advance repaid each cut-off until it is set back to zero. */
-  advance: number;
-  /** "Cash", or the bank paid into. */
-  bank: string;
-  account: string;
-};
 
 /** A closed cut-off keeps who was paid and on what, as it was, so later corrections never reprice it. */
 export type PayRunRow = { setup: PaySetup; tally: AttendanceTally; shares: Shares; name: string; position: string; dept: string; tin: string };
@@ -53,13 +23,14 @@ export type PayrollData = { setups: PaySetup[]; runs: PayRun[] };
 
 // ---------- reading and writing the saved data ----------
 
-/** An employee's own share, or null for the tables. */
-const ownShare = (v: JsonValue | undefined) => (Number.isFinite(v) ? jsonNumber(v) : null);
+/** An employee's own amount, or null where it is worked out. */
+const ownAmount = (v: JsonValue | undefined) => (Number.isFinite(v) ? jsonNumber(v) : null);
 
 function setupOf(o: JsonObject): PaySetup {
   return {
-    emp: jsonText(o.emp), empNo: jsonText(o.empNo), daily: jsonNumber(o.daily), incentive: jsonNumber(o.incentive), housing: jsonNumber(o.housing),
-    special: jsonNumber(o.special), sss: ownShare(o.sss), philhealth: ownShare(o.philhealth), pagibig: ownShare(o.pagibig),
+    emp: jsonText(o.emp), empNo: jsonText(o.empNo), daily: jsonNumber(o.daily), monthly: ownAmount(o.monthly),
+    incentive: jsonNumber(o.incentive), housing: jsonNumber(o.housing), special: jsonNumber(o.special),
+    sss: ownAmount(o.sss), philhealth: ownAmount(o.philhealth), pagibig: ownAmount(o.pagibig),
     advance: jsonNumber(o.advance), bank: jsonText(o.bank), account: jsonText(o.account),
   };
 }
@@ -77,7 +48,7 @@ function tallyOf(o: JsonValue | undefined): AttendanceTally {
     scheduled: jsonNumber(t.scheduled), worked: jsonNumber(t.worked), halfDays: jsonNumber(t.halfDays), absent: jsonNumber(t.absent),
     regularHolidaysOff: jsonNumber(t.regularHolidaysOff), specialHolidaysWorked: jsonNumber(t.specialHolidaysWorked),
     regularHolidaysWorked: jsonNumber(t.regularHolidaysWorked), shortMinutes: jsonNumber(t.shortMinutes),
-    overtimeHours: jsonNumber(t.overtimeHours), dayMinutes: jsonNumber(t.dayMinutes) || 480,
+    overtimeHours: jsonNumber(t.overtimeHours), dayMinutes: jsonNumber(t.dayMinutes),
   };
 }
 
@@ -109,91 +80,6 @@ export function dataOf(s: TerminalState): PayrollData {
 const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, MODULE, data);
 
 export const setupFor = (s: TerminalState, emp: string) => dataOf(s).setups.find((x) => x.emp === emp);
-
-/** The shares this employee pays in this cut-off: their own amount where HR typed one, the tables' otherwise. */
-export function sharesFor(setup: PaySetup, p: Period): Shares {
-  const table = tableShares(setup.daily, p);
-
-  return { sss: setup.sss ?? table.sss, philhealth: setup.philhealth ?? table.philhealth, pagibig: setup.pagibig ?? table.pagibig };
-}
-
-// ---------- pricing ----------
-
-/** One employee's pay for a cut-off, in centavos, column for column with the HR payroll sheet and the payslip. */
-export interface Pay {
-  daily: Centavos;
-  /** The daily rate times the standard working days. */
-  cutoffRate: Centavos;
-  scheduled: number;
-  worked: number;
-  /** Days worked plus regular holidays not worked. */
-  paidDays: number;
-  /** Leave without pay: absences. */
-  absent: number;
-  halfDays: number;
-  basic: Centavos;
-  specialHoliday: Centavos;
-  regularHoliday: Centavos;
-  /** Basic plus holiday pay: the sheet's "Total compensation". */
-  compensation: Centavos;
-  incentive: Centavos;
-  housing: Centavos;
-  specialAllowance: Centavos;
-  allowances: Centavos;
-  /** Late and undertime, by the minute. */
-  late: Centavos;
-  halfDay: Centavos;
-  /** What the absences cost, for the record; basic already leaves them out. */
-  absentAmount: Centavos;
-  overtime: Centavos;
-  gross: Centavos;
-  sss: Centavos;
-  philhealth: Centavos;
-  pagibig: Centavos;
-  advance: Centavos;
-  deductions: Centavos;
-  net: Centavos;
-}
-
-/** Prices a tally with an employee's pay setup and the government shares for the cut-off. */
-export function price(setup: PaySetup, t: AttendanceTally, shares: Shares): Pay {
-  const daily = toCentavos(setup.daily);
-  const paidDays = t.worked + t.regularHolidaysOff;
-  const basic = daily * paidDays;
-  const specialHoliday = percent(daily, SPECIAL_HOLIDAY_PERCENT) * t.specialHolidaysWorked;
-  const regularHoliday = percent(daily, REGULAR_HOLIDAY_PERCENT) * t.regularHolidaysWorked;
-  const compensation = basic + specialHoliday + regularHoliday;
-  const incentive = toCentavos(setup.incentive);
-  const housing = toCentavos(setup.housing);
-  const specialAllowance = toCentavos(setup.special) * t.worked;
-  const allowances = incentive + housing + specialAllowance;
-  const late = Math.round((daily * t.shortMinutes) / t.dayMinutes);
-  const halfDay = Math.round((daily * t.halfDays) / 2);
-  const overtime = Math.round((daily * t.overtimeHours * 60 * OVERTIME_PERCENT) / (t.dayMinutes * 100));
-  const gross = compensation + allowances - late - halfDay + overtime;
-  const sss = toCentavos(shares.sss);
-  const philhealth = toCentavos(shares.philhealth);
-  const pagibig = toCentavos(shares.pagibig);
-  const advance = toCentavos(setup.advance);
-  const deductions = sss + philhealth + pagibig + advance;
-
-  return {
-    daily, cutoffRate: daily * t.scheduled, scheduled: t.scheduled, worked: t.worked, paidDays, absent: t.absent,
-    halfDays: t.halfDays, basic, specialHoliday, regularHoliday, compensation, incentive, housing, specialAllowance,
-    allowances, late, halfDay, absentAmount: daily * t.absent, overtime, gross, sss, philhealth, pagibig, advance,
-    deductions, net: gross - deductions,
-  };
-}
-
-/** Without timekeeping: every weekday of the cut-off paid in full, nothing late, no overtime. */
-export function fullAttendance(p: Period): AttendanceTally {
-  const scheduled = datesBetween(p.from, p.to).filter(isWeekday).length;
-
-  return {
-    scheduled, worked: scheduled, halfDays: 0, absent: 0, regularHolidaysOff: 0, specialHolidaysWorked: 0,
-    regularHolidaysWorked: 0, shortMinutes: 0, overtimeHours: 0, dayMinutes: 480,
-  };
-}
 
 // ---------- a cut-off ----------
 
@@ -261,23 +147,24 @@ export function reopenCutoff(s: TerminalState, p: Period, ctx: Ctx): Change<PayR
 
 // ---------- the pay setup HR keeps ----------
 
-export const AMOUNTS = ['daily', 'incentive', 'housing', 'special', 'sss', 'philhealth', 'pagibig', 'advance'] as const;
+export const AMOUNTS = ['daily', 'monthly', 'incentive', 'housing', 'special', 'sss', 'philhealth', 'pagibig', 'advance'] as const;
 
 /** The government shares: from the tables unless HR types the employee's own amount. */
 export const SHARES = ['sss', 'philhealth', 'pagibig'] as const;
 
-type ShareField = (typeof SHARES)[number];
+/** Fields that are worked out when left empty, and the employee's own when typed. */
+type OwnField = (typeof SHARES)[number] | 'monthly';
 
 export type AmountField = (typeof AMOUNTS)[number];
 
 export const AMOUNT_LABEL: Record<AmountField, string> = {
-  daily: 'Daily rate', incentive: 'Incentives allowance', housing: 'HRA', special: 'Special allowance',
+  daily: 'Daily rate', monthly: 'Monthly pay basis', incentive: 'Incentives allowance', housing: 'HRA', special: 'Special allowance',
   sss: 'SSS', philhealth: 'PhilHealth', pagibig: 'Pag-IBIG', advance: 'Salary advance',
 };
 
 /** The same, inside a sentence. */
 const AMOUNT_WORDS: Record<AmountField, string> = {
-  daily: 'daily rate', incentive: 'incentives allowance', housing: 'housing allowance', special: 'special allowance',
+  daily: 'daily rate', monthly: 'monthly pay basis', incentive: 'incentives allowance', housing: 'housing allowance', special: 'special allowance',
   sss: 'SSS employee share', philhealth: 'PhilHealth employee share', pagibig: 'Pag-IBIG employee share', advance: 'salary advance',
 };
 
@@ -291,7 +178,7 @@ export function setupDraftOf(s: TerminalState, emp: string): SetupDraft {
 
   return {
     emp, empNo: x?.empNo ?? '', bank: x?.bank ?? '', account: x?.account ?? '',
-    daily: amountText(x?.daily ?? 0), incentive: amountText(x?.incentive ?? 0), housing: amountText(x?.housing ?? 0),
+    daily: amountText(x?.daily ?? 0), monthly: shareText(x?.monthly), incentive: amountText(x?.incentive ?? 0), housing: amountText(x?.housing ?? 0),
     special: amountText(x?.special ?? 0), sss: shareText(x?.sss), philhealth: shareText(x?.philhealth),
     pagibig: shareText(x?.pagibig), advance: amountText(x?.advance ?? 0),
   };
@@ -308,8 +195,24 @@ function pesosIn(d: SetupDraft, field: AmountField): number {
   return c / 100;
 }
 
-/** A government share as typed: empty means the tables, so it is null; anything else is the employee's own amount. */
-const shareIn = (d: SetupDraft, field: ShareField) => (d[field].trim() ? pesosIn(d, field) : null);
+/** A share or the monthly basis as typed: empty means worked out, so it is null; anything else is the employee's own. */
+const ownIn = (d: SetupDraft, field: OwnField) => (d[field].trim() ? pesosIn(d, field) : null);
+
+/** The monthly pay basis and the shares an empty field stands for, in pesos. */
+export type WorkedOut = { monthly: number; shares: Shares };
+
+/** What the form shows in grey for the fields left empty, from what is typed so far: never a refusal, only a preview. */
+export function workedOut(d: SetupDraft, p: Period): WorkedOut {
+  const typed = (field: AmountField) => {
+    const c = d[field].trim() ? parseAmount(d[field]) : null;
+
+    return c === null || c < 0 ? null : toPesos(c);
+  };
+
+  const daily = typed('daily') ?? 0;
+
+  return { monthly: basisOf({ daily, monthly: null }), shares: tableShares(basisOf({ daily, monthly: typed('monthly') }), p) };
+}
 
 export function saveSetup(s: TerminalState, d: SetupDraft, ctx: Ctx): Change<PaySetup> {
   const e = recordOf(s, d.emp);
@@ -325,8 +228,8 @@ export function saveSetup(s: TerminalState, d: SetupDraft, ctx: Ctx): Change<Pay
   if (clash) throw new KeystoneError(`${empNo} is already the employee number of ${recordOf(s, clash.emp)?.name ?? clash.emp}.`);
 
   const setup: PaySetup = {
-    emp: d.emp, empNo, daily, incentive: pesosIn(d, 'incentive'), housing: pesosIn(d, 'housing'), special: pesosIn(d, 'special'),
-    sss: shareIn(d, 'sss'), philhealth: shareIn(d, 'philhealth'), pagibig: shareIn(d, 'pagibig'), advance: pesosIn(d, 'advance'),
+    emp: d.emp, empNo, daily, monthly: ownIn(d, 'monthly'), incentive: pesosIn(d, 'incentive'), housing: pesosIn(d, 'housing'), special: pesosIn(d, 'special'),
+    sss: ownIn(d, 'sss'), philhealth: ownIn(d, 'philhealth'), pagibig: ownIn(d, 'pagibig'), advance: pesosIn(d, 'advance'),
     bank: d.bank.trim(), account: d.account.trim(),
   };
 
