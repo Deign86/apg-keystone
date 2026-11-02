@@ -15,6 +15,16 @@ test('asks to be set up on Home, and Settings opens Connections', async ({ app, 
   await expect(screen.getByRole('heading', { name: 'Connections', level: 1 })).toBeVisible();
 });
 
+test('offers to open the attendance app, which the browser preview hands to the desktop app', async ({ app, screen }) => {
+  await app.open('/');
+  const card = screen.getByRole('region', 'Attendance Tracker');
+
+  await expect(card.getByRole('button', 'Download latest')).toBeVisible();
+  await card.getByRole('button', 'Open attendance app').tap();
+
+  await expect(screen.getByRole('region', 'Notifications').getByText('Open Keystone’s desktop app to open the attendance app.', { exact: false })).toBeVisible();
+});
+
 test('a kiosk it cannot reach shows offline on its own card only, and the address is kept', async ({ app, screen }) => {
   await app.open('/#connections');
   const card = screen.getByRole('region', 'Attendance Tracker');

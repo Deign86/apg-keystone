@@ -2,8 +2,8 @@ import { createRequire } from 'node:module';
 import { zipSync } from 'fflate';
 import initSqlJs from 'sql.js';
 import { describe, expect, it } from 'vitest';
-import type { ConnectorEnv, HttpResponse, JsonValue, SystemBridge } from '@keystone/core';
-import { attendanceConnector, attendanceFigures, isLate, kioskBase } from '../src';
+import type { ConnectorEnv, HttpResponse, InstalledApp, JsonValue, PlatformName, SystemBridge } from '@keystone/core';
+import { ATTENDANCE_APP, attendanceConnector, attendanceFigures, attendanceInstallerFor, isLate, kioskBase } from '../src';
 import { readAttendanceBackup } from '../src/backup';
 
 const system: SystemBridge = {
@@ -108,6 +108,125 @@ describe('attendance connector', () => {
     expect((await attendanceConnector.health(env(401))).state).toBe('setup');
     expect((await attendanceConnector.health(env(403))).detail).toMatch(/allowed_subnets/);
     expect((await attendanceConnector.health(env('down'))).state).toBe('offline');
+  });
+});
+
+describe('the attendance app on this computer', () => {
+  const RELEASE = {
+    tag_name: 'v0.2.29', html_url: 'https://github.com/Deign86/alpha-premier-attendance/releases/tag/v0.2.29',
+    assets: [
+      { name: 'Alpha Premier Attendance_0.2.29_x64-setup.exe', browser_download_url: 'https://x/setup.exe' },
+      { name: 'Alpha Premier Attendance_0.2.29_aarch64.dmg', browser_download_url: 'https://x/arm.dmg' },
+      { name: 'Alpha Premier Attendance_0.2.29_x64.dmg', browser_download_url: 'https://x/intel.dmg' },
+      { name: 'latest.json', browser_download_url: 'https://x/latest.json' },
+    ],
+  };
+
+  /** A computer with the attendance app at `version` (or none), GitHub answering, and a kiosk at `address` if set. */
+  function machine(options: { platform?: PlatformName; version?: string | null; address?: string; github?: boolean }) {
+    const { platform = 'macos', version = '0.2.29', address = '', github = true } = options;
+    const app: InstalledApp | null = version === null ? null : { path: '/Applications/Alpha Premier Attendance.app', version };
+    const located: unknown[] = [];
+    const launched: InstalledApp[] = [];
+    const opened: string[] = [];
+    const calls = { located, launched, opened };
+
+    const env: ConnectorEnv = {
+      settings: { address }, secret: async () => null, now: () => new Date(),
+      system: {
+        ...system, platform,
+        locateApp: async (l) => { calls.located.push(l);
+
+ return app; },
+        launchApp: async (a) => { calls.launched.push(a); },
+        openUrl: async (u) => { calls.opened.push(u); },
+      },
+      http: {
+        native: true,
+        request: async (url) => {
+          if (url.startsWith('https://api.github.com/')) {
+            if (!github) throw new Error('offline');
+
+            return response(200, RELEASE);
+          }
+
+          return response(200, { lan: { connectedSseClients: 1 } });
+        },
+      },
+    };
+
+    return { env, calls };
+  }
+
+  it('looks for it by the attendance app’s own bundle id and Windows uninstall key', async () => {
+    const { env, calls } = machine({});
+    await attendanceConnector.health(env);
+
+    expect(calls.located).toEqual([ATTENDANCE_APP]);
+    expect(ATTENDANCE_APP).toEqual({
+      macBundleId: 'com.alphapremier.attendance', macAppName: 'Alpha Premier Attendance',
+      windowsUninstallKey: 'Alpha Premier Attendance', windowsExe: 'alpha-premier-attendance.exe',
+    });
+  });
+
+  it('is connected when installed here, up to date or with the update offered', async () => {
+    expect(await attendanceConnector.health(machine({}).env)).toEqual({
+      state: 'ready', version: '0.2.29',
+      detail: 'Version 0.2.29 on this computer, up to date; add the kiosk’s LAN address in Settings for live figures.',
+    });
+
+    const behind = await attendanceConnector.health(machine({ version: '0.2.28', platform: 'windows' }).env);
+
+    expect(behind.state).toBe('ready');
+    expect(behind.detail).toBe('Version 0.2.28 on this computer; 0.2.29 is out; add the kiosk’s LAN address in Settings for live figures.');
+    expect(behind.update).toEqual({ version: '0.2.29', url: 'https://x/setup.exe' });
+  });
+
+  it('asks to be set up, and offers the download, when it is not installed', async () => {
+    const health = await attendanceConnector.health(machine({ version: null }).env);
+
+    expect(health.state).toBe('setup');
+    expect(health.detail).toMatch(/or install the attendance app on this computer \(version 0\.2\.29\)/);
+    expect(health.update).toEqual({ version: '0.2.29', url: RELEASE.html_url });
+  });
+
+  it('keeps the kiosk’s own state when an address is set, and adds the installed version', async () => {
+    const health = await attendanceConnector.health(machine({ address: '192.168.1.50' }).env);
+
+    expect(health).toEqual({ state: 'ready', version: '0.2.29', detail: 'Kiosk online at 192.168.1.50:4173 · 1 live viewer.' });
+  });
+
+  it('still works when GitHub cannot be reached', async () => {
+    expect((await attendanceConnector.health(machine({ github: false }).env)).detail).toMatch(/^Version 0\.2\.29 on this computer, up to date/);
+  });
+
+  it('does not look for the app or GitHub in the browser preview', async () => {
+    const { env, calls } = machine({ platform: 'web' });
+
+    expect(await attendanceConnector.health(env)).toEqual({ state: 'setup', detail: 'Enter the kiosk’s address to see today’s attendance here.' });
+    expect(calls.located).toEqual([]);
+  });
+
+  it('opens the installed app, and says how to get it when it is missing', async () => {
+    const open = attendanceConnector.actions!.find((a) => a.id === 'open')!;
+    const installed = machine({});
+
+    expect(await open.run(installed.env)).toBe('Opened Alpha Premier Attendance.');
+    expect(installed.calls.launched).toEqual([{ path: '/Applications/Alpha Premier Attendance.app', version: '0.2.29' }]);
+    await expect(open.run(machine({ version: null }).env)).rejects.toThrow('not installed on this computer');
+    await expect(open.run(machine({ platform: 'web' }).env)).rejects.toThrow('desktop app');
+  });
+
+  it('downloads the Windows installer, and opens the release page on a Mac to choose the chip', async () => {
+    const download = attendanceConnector.actions!.find((a) => a.id === 'download')!;
+    const windows = machine({ platform: 'windows' });
+    const mac = machine({ platform: 'macos' });
+
+    expect(await download.run(windows.env)).toBe('Downloading the attendance app v0.2.29.');
+    expect(windows.calls.opened).toEqual(['https://x/setup.exe']);
+    expect(await download.run(mac.env)).toMatch(/aarch64 \.dmg for Apple silicon/);
+    expect(mac.calls.opened).toEqual([RELEASE.html_url]);
+    expect(attendanceInstallerFor({ ...RELEASE, assets: [] }, 'windows')).toBe(RELEASE.html_url);
   });
 });
 
