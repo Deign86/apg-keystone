@@ -96,6 +96,15 @@
     filter: invert(0.75) sepia(0.4) saturate(2) hue-rotate(5deg);
     cursor: pointer;
   }
+  /* A record that can no longer change: the value on the card's own ground, nothing to click. */
+  .input-chrome:disabled {
+    border-color: var(--color-line);
+    background: transparent;
+    cursor: default;
+  }
+  .input-chrome:disabled::-webkit-calendar-picker-indicator {
+    display: none;
+  }
 }
 
 /* A field whose label is read by screen readers but not shown (search boxes). */
@@ -126,10 +135,20 @@
   [data-print-root] * {
     visibility: visible;
   }
+  /* Centred, so a sheet scaled down to one page keeps even margins either side. */
   [data-print-root] {
     position: absolute;
-    inset: 0 auto auto 0;
+    inset: 0 0 auto 0;
     width: 100%;
+    margin-inline: auto;
+  }
+  /* The on-screen preview scales the paper to fit its column; the page gets it at full size. */
+  [data-sheet-frame] {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  [data-sheet-scale] {
+    transform: none !important;
   }
   @page {
     size: A4;

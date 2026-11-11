@@ -1,17 +1,57 @@
 import logo from '@keystone/ui/logo.png';
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
 // one that is printed and turned into a PDF, so the preview is exactly the output.
 
-/** `onePage` prints the sheet scaled to a single page, however long it is. */
-export const Sheet = forwardRef<HTMLDivElement, { children: ReactNode; label: string; onePage?: boolean }>(function Sheet({ children, label, onePage }, ref) {
+/** The paper's width in CSS px: an A4 page less the print stylesheet's 12 mm margins (186 mm). */
+export const PAPER_WIDTH = Math.round((186 / 25.4) * 96);
+
+/**
+ * A document, always laid out at the paper's width. Where the column is narrower, the
+ * preview is scaled down to fit (a transform on a wrapper, so the paper itself, which
+ * Print and Export PDF take, stays at full size). `onePage` prints the sheet scaled to
+ * a single page, however long it is.
+ */
+export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; onePage?: boolean }>(function Sheet({ children, label, onePage }, ref) {
+  const frame = useRef<HTMLDivElement>(null);
+  // Holds only the paper, so its height is the paper's; a transform leaves that height unscaled.
+  const scaler = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState<{ scale: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const f = frame.current;
+    const s = scaler.current;
+
+    if (!f || !s) return;
+
+    const measure = () => {
+      // A column with no width yet (a hidden screen) is measured again when it gets one.
+      if (!f.clientWidth) return;
+
+      const scale = Math.min(1, f.clientWidth / PAPER_WIDTH);
+      const next = scale < 1 ? { scale, height: s.offsetHeight * scale } : null;
+      setFit((old) => (old?.scale === next?.scale && old?.height === next?.height ? old : next));
+    };
+
+    const watch = new ResizeObserver(measure);
+    watch.observe(f);
+    watch.observe(s);
+    measure();
+
+    return () => watch.disconnect();
+  }, []);
+
   return (
-    <article ref={ref} data-ui="document" data-print-fit={onePage || undefined} aria-label={label} className="min-h-[420px] overflow-x-auto border border-line bg-paper px-[30px] py-7 font-body text-[12.5px] leading-snug text-paper-ink">
-      {children}
-    </article>
+    <div ref={frame} data-sheet-frame="" className="overflow-hidden" style={fit ? { height: fit.height } : undefined}>
+      <div ref={scaler} data-sheet-scale="" className="mx-auto w-fit origin-top-left" style={fit ? { transform: `scale(${fit.scale})`, marginInline: 0 } : undefined}>
+        <article ref={ref} data-ui="document" data-print-fit={onePage || undefined} aria-label={label} style={{ width: PAPER_WIDTH }} className="min-h-[420px] border border-line bg-paper px-[30px] py-7 font-body text-[12.5px] leading-snug text-paper-ink">
+          {children}
+        </article>
+      </div>
+    </div>
   );
 });
 
