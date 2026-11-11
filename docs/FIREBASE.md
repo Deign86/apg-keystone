@@ -53,3 +53,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
   `state.json`.
 - **Starting over:** delete the `keystone/apg` document and its collections. The next computer to open a Firebase
   build with records of its own moves them in again.
+- **Tests never touch the project.** The end-to-end cloud suite (`npm run test:e2e:cloud`, `e2e/cloud/`) runs the
+  cloud build against the Firebase Auth and Firestore emulators with `firestore.rules`, as the demo project
+  `demo-keystone`, which exists only in the emulators. A build connects to emulators only for a `demo-` project
+  (`VITE_FIREBASE_AUTH_EMULATOR` and `VITE_FIREBASE_FIRESTORE_EMULATOR`, set by `e2e.cloud.config.ts`), so the
+  variables can never point a real build at one.

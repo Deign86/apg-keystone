@@ -1,8 +1,10 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
+import { readFile } from 'node:fs/promises';
 
-// Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved and 0141 for
-// approval, so a new voucher is CV-2026-0142.
+// Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved (₱13,150.00 to
+// JL Santos Printing Services) and 0141 for approval (₱35,000.00 to Vergara & Associates Law Office, check 0001188),
+// so a new voucher is CV-2026-0142.
 
 test('writes a voucher and routes it for approval', async ({ app, screen }) => {
   await app.open('/#vouchers');
@@ -180,4 +182,139 @@ test('a saved voucher shows in the activity log', async ({ app, screen }) => {
 
   await expect(first).toContainText('CV-2026-0142');
   await expect(first).toContainText('Manila Electric Company (Meralco)');
+});
+
+test('New voucher puts away the voucher open in the form and starts a blank one', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await screen.getByRole('table', 'Voucher register').getByRole('cell', 'CV-2026-0141').tap();
+
+  await expect(screen.getByRole('dialog', 'CV-2026-0141 loaded into the form.')).toBeVisible();
+  await expect(screen.getByRole('form', 'Editing CV-2026-0141')).toBeVisible();
+
+  await screen.getByRole('button', 'New voucher').tap();
+  const form = screen.getByRole('form', 'New voucher');
+
+  await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('CV-2026-0142');
+  await expect(form.getByRole('textbox', 'Line 1 description')).toHaveValue('');
+  await expect(form.getByRole('textbox', 'Check No.')).toHaveValue('');
+  await expect(form.getByRole('button', 'Save as new')).toBeHidden();
+});
+
+test('returns an approved voucher for approval, and Home and Overview count it again', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const row = screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0140 /);
+
+  await row.getByRole('button', 'Actions for CV-2026-0140').tap();
+  await screen.getByRole('menuitem', 'Mark for approval').tap();
+
+  await expect(screen.getByRole('dialog', 'CV-2026-0140 marked for approval.')).toBeVisible();
+  await expect(row.getByRole('cell', 'For Approval')).toBeVisible();
+  await expect(screen.getByText('2 vouchers worth ₱48,150.00 wait for approval.')).toBeVisible();
+
+  await app.open('/');
+  await expect(screen.getByRole('button', /^Check Vouchers .* Awaiting approval 2$/)).toBeVisible();
+
+  await app.open('/#overview');
+  await expect(screen.getByRole('definition').filter({ hasText: '₱48,150.00 pending signature' })).toBeVisible();
+  await expect(screen.getByRole('region', 'Waiting on you').getByRole('button', /^CV-2026-0140 JL Santos Printing Services · voucher ₱13,150\.00 For Approval$/)).toBeVisible();
+
+  await app.open('/#activity');
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('CV-2026-0140 returned for approval.');
+});
+
+test('exports the voucher as a PDF named after its number', async ({ app, screen, browser }) => {
+  await app.open('/#vouchers');
+  const form = screen.getByRole('form', 'New voucher');
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
+
+  // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
+  // the voucher into a PDF takes several seconds on a busy machine.
+  const file = await browser.waitForDownload(async () => {
+    await form.getByRole('button', 'Export PDF').tap();
+    await expect(screen.getByRole('dialog', 'Saved CV-2026-0142.pdf.')).toBeVisible({ timeout: 20_000 });
+  });
+
+  expect(file.suggestedFilename).toBe('CV-2026-0142.pdf');
+  expect((await readFile(file.absolutePath)).subarray(0, 5).toString()).toBe('%PDF-');
+});
+
+test('Ctrl+S saves the voucher being written', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const form = screen.getByRole('form', 'New voucher');
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await form.getByRole('textbox', 'Line 1 amount').fill('980');
+  await form.getByRole('textbox', 'Line 1 amount').press('Control+s');
+
+  await expect(screen.getByRole('dialog', 'CV-2026-0142 saved and routed for approval.')).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 .* ₱980\.00 For Approval/)).toBeVisible();
+  await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('CV-2026-0143');
+});
+
+test('adds and removes particulars, and always keeps one line', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const form = screen.getByRole('form', 'New voucher');
+
+  await expect(form.getByRole('button', 'Remove line 1')).toBeDisabled();
+  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('textbox', 'Line 1 amount').fill('1000');
+  await form.getByRole('button', 'Add line').tap();
+  await form.getByRole('textbox', 'Line 2 description').fill('Courier');
+  await form.getByRole('textbox', 'Line 2 amount').fill('500');
+  await expect(form.getByText('₱1,500.00')).toBeVisible();
+  await expect(form.getByRole('button', 'Remove line 1')).toBeEnabled();
+
+  await form.getByRole('button', 'Remove line 2').tap();
+
+  await expect(form.getByRole('textbox', 'Line 2 description')).toBeHidden();
+  await expect(form.getByText('₱1,000.00')).toBeVisible();
+  await expect(form.getByRole('button', 'Remove line 1')).toBeDisabled();
+
+  await form.getByRole('button', 'Save and route for approval').tap();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 .* ₱1,000\.00 For Approval/)).toBeVisible();
+});
+
+test('logs each edit, approval, release and void, under the Vouchers filter', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const register = screen.getByRole('table', 'Voucher register');
+
+  await register.getByRole('cell', 'CV-2026-0141').tap();
+  const form = screen.getByRole('form', 'Editing CV-2026-0141');
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Retainer – October 2026, with court filings');
+  await form.getByRole('button', 'Save changes').tap();
+  await expect(screen.getByRole('dialog', 'CV-2026-0141 updated.')).toBeVisible();
+
+  const row = register.getByRole('row', /^CV-2026-0141 /);
+
+  await row.getByRole('button', 'Actions for CV-2026-0141').tap();
+  await screen.getByRole('menuitem', 'Mark approved').tap();
+  await expect(row.getByRole('cell', 'Approved')).toBeVisible();
+  await row.getByRole('button', 'Actions for CV-2026-0141').tap();
+  await screen.getByRole('menuitem', 'Mark released').tap();
+  await expect(row.getByRole('cell', 'Released')).toBeVisible();
+
+  // The approved CV-2026-0140 is cancelled before its check goes out.
+  await register.getByRole('button', 'Actions for CV-2026-0140').tap();
+  await screen.getByRole('menuitem', 'Void voucher…').tap();
+  await screen.getByRole('alertdialog', 'Void CV-2026-0140?').getByRole('button', 'Void voucher').tap();
+  await expect(register.getByRole('row', /^CV-2026-0140 /).getByRole('cell', 'Void')).toBeVisible();
+
+  await app.open('/#activity');
+  await screen.getByRole('group', 'Module').getByRole('button', 'Vouchers').tap();
+  const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
+
+  // Four new entries, newest first, then the sample data's three voucher entries; no Billing or ID entry.
+  await expect(entries).toHaveCount(7);
+  await expect(entries).toContainText([
+    'CV-2026-0140 voided (₱13,150.00).',
+    'CV-2026-0141 released; check 0001188 to Vergara & Associates Law Office.',
+    'CV-2026-0141 approved by CEO.',
+    'CV-2026-0141 for Vergara & Associates Law Office edited (₱35,000.00).',
+    'CV-2026-0141 for Vergara & Associates Law Office saved and routed for approval (₱35,000.00).',
+    'CV-2026-0140 approved by CEO.',
+    'CV-2026-0139 released; check 0004509 picked up by Meralco collector.',
+  ]);
 });

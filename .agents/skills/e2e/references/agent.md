@@ -49,14 +49,14 @@ under `executor`. `openai.decisionModel('gpt-6-luna')` from `@ai-sdk/openai`
 4.0.90 or later works too and takes the `vision: true` screenshot.
 Tests stay plain language with no params. The text model writes field values
 and upload paths. See the shipped `docs/decision-models.mdx` or
-[the online guide](https://e2e.tester.army/docs/decision-models) for setup,
+[the online guide](https://e2e.com/docs/decision-models) for setup,
 gates, and limits.
 
 A coding agent the user already signs in to runs agent steps over the Agent Client Protocol:
 install `@e2e-dev/acp` and its adapter, and put
 `claudeCode({ model: 'sonnet' })` or `codex()` under
 `executor`; no model provider is needed. See the shipped `docs/subscriptions.mdx` or
-[the online guide](https://e2e.tester.army/docs/subscriptions#use-your-coding-agent).
+[the online guide](https://e2e.com/docs/subscriptions#use-your-coding-agent).
 
 - Pass a model instance, not a string (`INVALID_CONFIG`).
 - An agents entry is one plain object of `model`, `judge`, `system`,
@@ -154,6 +154,9 @@ The tools, one per engine action. Name the target as the screen names it
   native file chooser; outside it or hidden (`.env`) is `POLICY_DENIED`.
 - `navigate`: a URL or app-relative path.
 - `back`: browser history or in-app back.
+- `resize_viewport`: set the viewport size (200 to 4096 CSS px) to check a
+  layout at phone, tablet, or desktop width. Engines with `session.resize`,
+  such as web.
 - `type_secret`: a declared secret by name; plaintext never reaches the model.
   Offered only when the step declares secrets and the engine can fill them.
 - `screenshot`: attach viewport pixels; every later result then carries one.
@@ -241,6 +244,10 @@ For a debug view that pairs each action with the screen it started on, give
 each capture to `onAction` by `index`, which restarts at 1 in each `act` call.
 It runs before replayed actions too, does not wait for the screen to settle,
 and a failed action gets a capture but no `onAction`.
+Narrow `onAction`'s event on `action` for coordinates, replay included:
+`point` for `tapAt`/`hoverAt`, `from`/`to` for `dragAt`. They are in the
+same space as `screen.tapAt` and `boundingBox()`, rounded and clamped to the
+viewport. Mobile engines have no `hoverAt` or `dragAt`.
 
 `vision` on a judgment picks the evidence: `false` (default) the tree;
 `true` the tree plus a masked screenshot; `'only'` the screenshot alone, for
@@ -428,7 +435,7 @@ make no model calls.
   `executor`; the runner still owns observations, actions, budgets, and the
   report, and `system` or `tools` beside `executor` is `INVALID_CONFIG`.
 
-Reference: https://e2e.tester.army/docs/agents
+Reference: https://e2e.com/docs/agents
 
 ## In CI
 

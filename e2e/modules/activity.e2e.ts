@@ -30,6 +30,40 @@ test('filters by the screen that wrote the entry', async ({ app, screen }) => {
   await expect(entries).toHaveCount(6);
 });
 
+test('shows one screen\'s entries, and says when a screen has written nothing yet', async ({ app, screen }) => {
+  await app.open('/#activity');
+  const filters = screen.getByRole('group', 'Module');
+  const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
+
+  await filters.getByRole('button', 'Vouchers').tap();
+  await expect(filters.getByRole('button', 'Vouchers')).toHaveAttribute('aria-pressed', 'true');
+  await expect(entries).toHaveCount(3);
+  await expect(entries).toContainText([
+    'CV CV-2026-0141 for Vergara & Associates Law Office saved and routed for approval',
+    'CV CV-2026-0140 approved by CEO.',
+    'CV CV-2026-0139 released; check 0004509 picked up by Meralco collector.',
+  ]);
+
+  // The sample data has no Directory entries.
+  await filters.getByRole('button', 'Directory').tap();
+  await expect(entries).toHaveCount(0);
+  await expect(screen.getByRole('region', 'Entries').getByText('No activity yet.')).toBeVisible();
+});
+
+test('says when a search matches nothing, and clears the search', async ({ app, screen }) => {
+  await app.open('/#activity');
+  const search = screen.getByRole('textbox', 'Search the log');
+  const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
+
+  await search.fill('zzz');
+  await expect(entries).toHaveCount(0);
+  await expect(screen.getByText('Nothing matches “zzz”.')).toBeVisible();
+
+  await screen.getByRole('region', 'Entries').getByRole('button', 'Clear search').tap();
+  await expect(search).toHaveValue('');
+  await expect(entries).toHaveCount(6);
+});
+
 test('searches the log', async ({ app, screen }) => {
   await app.open('/#activity');
   await screen.getByRole('textbox', 'Search the log').fill('Meralco');

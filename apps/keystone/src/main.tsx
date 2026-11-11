@@ -5,7 +5,7 @@ import { SignIn, StartFailed } from './Gate';
 import { builtInModules } from './modules';
 import { detectPlatform } from './platform';
 import { cloudPlatform } from './platform/cloud';
-import { firebaseConfig } from './platform/config';
+import { firebaseConfig, firebaseEmulators } from './platform/config';
 import './styles.css';
 
 // The composition root: with modules.ts and connectors.ts, the only place that names every part.
@@ -24,7 +24,7 @@ async function start() {
 
   if (options) {
     const { openFirebase } = await import('./platform/firestore');
-    const cloud = openFirebase(options);
+    const cloud = openFirebase(options, firebaseEmulators(import.meta.env));
 
     if (!(await cloud.signedIn())) {
       await new Promise<void>((signedIn) => root.render(<SignIn signIn={async (email, password) => { await cloud.signIn(email, password); signedIn(); }} />));

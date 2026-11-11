@@ -94,7 +94,7 @@ npm run desktop     # the desktop app, with hot reload
 npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (shortcuts to desktop apps say they need it)
 npm run check       # everything CI checks: theme in sync, boundaries, skills, Oxlint, typecheck, tests, Taste Skill lint
 npm test            # every package's tests, plus the removal, contract and service regression suites
-npm run test:e2e    # every screen and its flows in Chromium against the dev server (e2e; starts `npm run dev` itself)
+npm run test:e2e    # every screen and its flows in Chromium against a dev server it starts, then the cloud build against the Firebase emulators (needs Java 21)
 npm run build       # installers for this OS into apps/keystone/src-tauri/target/release/bundle
 npm run icons       # every platform's icons from shared/brand (after the logo changes; see shared/brand/README.md)
 ```
@@ -123,7 +123,7 @@ The skills live in the repo, so every clone has them. `.claude/skills` vendors
 | Taste Skill (`design-taste-frontend`) | `npm run lint:taste` in CI, and the screenshot inspector in `docs/DESIGN.md` |
 | ui-skills (`baseline-ui`, `fixing-*`, `improve-ui`, …) | The design checks in `docs/DESIGN.md`; the ui-skills registry MCP in `.mcp.json` |
 | anti-slop (`install-anti-slop`) | Oxlint with its rules: `.oxlintrc.json`, the plugin in `tools/oxlint/anti-slop`, `npm run lint` in CI |
-| e2e | `e2e.config.ts`; tests in `e2e/`, one file per module and connector (`npm run check:e2e` fails without it); `npm run test:e2e` in CI; its MCP server in `.mcp.json` |
+| e2e | `e2e.config.ts`; tests in `e2e/`, one file per module and connector (`npm run check:e2e` fails without it); `e2e.cloud.config.ts` and `e2e/cloud/` for the cloud build against the Firebase emulators (`e2e.firebase.json`); `npm run test:e2e` in CI; its MCP server in `.mcp.json` |
 | unlazy | Its Claude Code Stop hook is on for everyone in `.claude/settings.json`: while an unlazy task has unmet gates, Claude can't end its turn. With no task open it does nothing. `npm run check:skills` fails if the hook's script goes missing |
 | ponytail (and `-review`, `-audit`, `-debt`, `-gain`, `-help`), grilling, grill-me | Instructions only; nothing to set up. `grill-me` starts only when you type `/grill-me` |
 

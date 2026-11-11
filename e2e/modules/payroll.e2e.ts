@@ -74,6 +74,169 @@ test('HR sets each employee\'s own pay, and it needs a daily rate', async ({ app
   await expect(row.getByRole('cell', 'Cash')).toBeVisible();
 });
 
+test('edits pay from the row menu, refuses a rate it cannot read and an employee number in use, and shows how each is paid', async ({ app, screen }) => {
+  await app.open('/#payroll');
+  const setups = screen.getByRole('table', 'Pay setup');
+
+  // Cancel saves nothing.
+  await setups.getByRole('button', 'Actions for E-001').tap();
+  await screen.getByRole('menuitem', 'Edit pay…').tap();
+  let form = screen.getByRole('form', 'Pay setup for Juan Miguel P. Reyes');
+
+  await form.getByRole('textbox', 'Daily rate').fill('760');
+  await form.getByRole('button', 'Cancel').tap();
+  await expect(form).toBeHidden();
+  await expect(setups.getByRole('row', /Juan Miguel P\. Reyes/).getByRole('cell', 'Not set up')).toBeVisible();
+
+  form = await openJuansPay(screen);
+  await form.getByRole('textbox', 'Daily rate').fill('seven hundred');
+  await form.getByRole('button', 'Save pay setup').tap();
+  await expect(form.getByRole('alert')).toHaveText('Enter the daily rate as an amount in pesos.');
+
+  await fillPay(form, { ...JUAN, Bank: 'BDO', 'Account no.': '0012-3456-7890' });
+  await expect(setups.getByRole('row', /Juan Miguel P\. Reyes/).getByRole('cell', 'BDO')).toBeVisible();
+
+  // His payslip names the bank and the account.
+  await screen.getByRole('group', 'Show').getByRole('button', 'Payslip: Juan Miguel P. Reyes').tap();
+  const slip = screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026');
+
+  await expect(slip).toContainText('Bank BDO');
+  await expect(slip).toContainText('Account no. 0012-3456-7890');
+
+  // Two employees cannot share a number. By now the messages at the foot of the window stack over the Save button,
+  // so this form is saved with Enter.
+  await setups.getByRole('row', /Angelica S\. Bautista/).tap();
+  form = screen.getByRole('form', 'Pay setup for Angelica S. Bautista');
+  const employeeNo = form.getByRole('textbox', 'Employee no.');
+
+  await employeeNo.fill('APGCO-0013');
+  await form.getByRole('textbox', 'Daily rate').fill('900');
+  await employeeNo.press('Enter');
+  await expect(form.getByRole('alert')).toHaveText('APGCO-0013 is already the employee number of Juan Miguel P. Reyes.');
+
+  // Anyone without a bank is paid in cash.
+  await employeeNo.fill('APGCO-0021');
+  await employeeNo.press('Enter');
+  await expect(form).toBeHidden();
+  await expect(setups.getByRole('row', /Angelica S\. Bautista/).getByRole('cell', 'Cash')).toBeVisible();
+});
+
+test('takes an employee off the payroll only after asking, and a closed cut-off keeps their pay', async ({ app, screen }) => {
+  await app.open('/#timekeeping');
+  await recordDays(screen, [[/^Fri · Oct 30 /, 'Oct 30, 2026', '08:00', '17:00']]);
+  await app.open('/#payroll');
+  const setups = screen.getByRole('table', 'Pay setup');
+
+  // There is nothing to take off before a pay setup.
+  await setups.getByRole('button', 'Actions for E-001').tap();
+  await expect(screen.getByRole('menuitem', 'Take off payroll…')).toBeDisabled();
+  await screen.getByRole('menuitem', 'Edit pay…').tap();
+  await fillPay(screen.getByRole('form', 'Pay setup for Juan Miguel P. Reyes'), JUAN);
+  await screen.getByRole('button', 'Close cut-off').tap();
+  await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱1,190.88 net, closed.')).toBeVisible();
+
+  await setups.getByRole('button', 'Actions for E-001').tap();
+  await screen.getByRole('menuitem', 'Take off payroll…').tap();
+  await screen.getByRole('alertdialog', 'Take Juan Miguel P. Reyes off the payroll?').getByRole('button', 'Take off payroll').tap();
+  await expect(screen.getByRole('dialog', 'Juan Miguel P. Reyes taken off the payroll. Closed cut-offs keep their pay.')).toBeVisible();
+  await expect(setups.getByRole('row', /Juan Miguel P\. Reyes/).getByRole('cell', 'Not set up')).toBeVisible();
+
+  // The closed cut-off still pays him what it did.
+  await expect(screen.getByRole('table', 'Cut-off').getByRole('row', /^Juan Miguel P\. Reyes 1\/11 /)).toBeVisible();
+  await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱1,190.88 net, closed.')).toBeVisible();
+
+  await app.open('/#home');
+  await expect(screen.getByRole('button', /^Payroll /)).toContainText('On payroll 0');
+
+  await app.open('/#activity');
+  await screen.getByRole('group', 'Module').getByRole('button', 'Payroll').tap();
+  const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
+
+  await expect(entries).toHaveCount(3);
+  await expect(entries).toContainText([
+    'PAY Juan Miguel P. Reyes taken off the payroll. Closed cut-offs keep their pay.',
+    'PAY Payroll for Oct 16–31, 2026 closed: 1 employee, ₱1,190.88 net.',
+    'PAY Pay set up for Juan Miguel P. Reyes: ₱760.00 a day.',
+  ]);
+});
+
+test('refuses to close a cut-off with no one on it or before it ends, and sets up pay from the empty cut-off', async ({ app, screen }) => {
+  await app.open('/#payroll');
+  const cutoff = screen.getByRole('table', 'Cut-off');
+
+  await screen.getByRole('button', 'Close cut-off').tap();
+  await expect(screen.getByRole('dialog', 'Set up pay for at least one employee first.')).toBeVisible();
+
+  await expect(screen.getByText('No one has a pay setup yet.')).toBeVisible();
+  await screen.getByRole('button', 'Set up pay').tap();
+  await fillPay(screen.getByRole('form', 'Pay setup for Juan Miguel P. Reyes'), JUAN);
+  await expect(cutoff.getByRole('row', /^Juan Miguel P\. Reyes 0\/11 /)).toBeVisible();
+
+  // The cut-off today falls in cannot be closed yet.
+  await screen.getByRole('combobox', 'Cut-off').tap();
+  await screen.getByRole('option', 'Nov 1–15, 2026').tap();
+  await screen.getByRole('button', 'Close cut-off').tap();
+  await expect(screen.getByRole('dialog', 'The Nov 1–15, 2026 cut-off ends Nov 15, 2026; close it from Nov 16, 2026.')).toBeVisible();
+
+  // Still open: no day worked yet, so the ₱1,000 incentive less the first half's shares (412.50 + 206.63 + 100).
+  await expect(screen.getByText('Nov 1–15, 2026: 1 employee, ₱280.87 net so far.')).toBeVisible();
+});
+
+test('shows the payroll sheet or one payslip, and saves the sheet as a PDF', async ({ app, screen, browser }) => {
+  await app.open('/#payroll');
+  await fillPay(await openJuansPay(screen), JUAN);
+  const show = screen.getByRole('group', 'Show');
+
+  await expect(show.getByRole('button', 'Payroll sheet')).toHaveAttribute('aria-pressed', 'true');
+  await show.getByRole('button', 'Payslip: Juan Miguel P. Reyes').tap();
+  await expect(screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026')).toBeVisible();
+  await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeHidden();
+
+  await show.getByRole('button', 'Payroll sheet').tap();
+  await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeVisible();
+
+  const file = await browser.waitForDownload(() => screen.getByRole('button', 'Export PDF').tap());
+
+  expect(file.suggestedFilename).toBe('Payroll Oct 16–31, 2026.pdf');
+  await expect(screen.getByRole('dialog', 'Saved Payroll Oct 16–31, 2026.pdf.')).toBeVisible();
+});
+
+test('closes and reopens a cut-off, and Overview and the Activity Log follow', async ({ app, screen }) => {
+  await app.open('/#overview');
+  await expect(screen.getByRole('definition').filter({ hasText: 'No cut-off closed yet' })).toBeVisible();
+
+  await app.open('/#timekeeping');
+  await recordDays(screen, [[/^Fri · Oct 30 /, 'Oct 30, 2026', '08:00', '17:00']]);
+  await app.open('/#payroll');
+  await fillPay(await openJuansPay(screen), JUAN);
+  await screen.getByRole('button', 'Close cut-off').tap();
+  await expect(screen.getByRole('dialog', 'Payroll for Oct 16–31, 2026 closed: 1 employee, ₱1,190.88 net.')).toBeVisible();
+
+  // Overview's last payroll is the one just closed.
+  await app.open('/#overview');
+  await expect(screen.getByRole('definition').filter({ hasText: '₱1,190.88' })).toBeVisible();
+  await expect(screen.getByRole('definition').filter({ hasText: 'Oct 16–31, 2026 · 1 employee' })).toBeVisible();
+
+  await app.open('/#payroll');
+  await screen.getByRole('button', 'Reopen cut-off').tap();
+  await screen.getByRole('alertdialog', 'Reopen Oct 16–31, 2026?').getByRole('button', 'Reopen cut-off').tap();
+  await expect(screen.getByRole('dialog', 'Payroll for Oct 16–31, 2026 reopened; it follows timekeeping and the pay setups again.')).toBeVisible();
+
+  await app.open('/#overview');
+  await expect(screen.getByRole('definition').filter({ hasText: 'No cut-off closed yet' })).toBeVisible();
+
+  await app.open('/#activity');
+  await screen.getByRole('group', 'Module').getByRole('button', 'Payroll').tap();
+  const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
+
+  await expect(entries).toHaveCount(3);
+  await expect(entries).toContainText([
+    'PAY Payroll for Oct 16–31, 2026 reopened; it follows timekeeping and the pay setups again.',
+    'PAY Payroll for Oct 16–31, 2026 closed: 1 employee, ₱1,190.88 net.',
+    'PAY Pay set up for Juan Miguel P. Reyes: ₱760.00 a day.',
+  ]);
+});
+
 test('works out the monthly pay and the shares from the tables, and takes the employee\'s own instead', async ({ app, screen }) => {
   await app.open('/#payroll');
   let form = await openJuansPay(screen);

@@ -1,11 +1,14 @@
 import { COLLECTIONS, jsonText, type DocumentChanges, type JsonValue, type StateDocument } from '@keystone/core';
 import { FirebaseError, initializeApp, type FirebaseOptions } from 'firebase/app';
-import { browserLocalPersistence, indexedDBLocalPersistence, initializeAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import {
-  collection, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, runTransaction,
-  serverTimestamp, setDoc, writeBatch, type WriteBatch,
+  browserLocalPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth, signInWithEmailAndPassword, signOut,
+} from 'firebase/auth';
+import {
+  collection, connectFirestoreEmulator, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  runTransaction, serverTimestamp, setDoc, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
+import type { FirebaseEmulators } from './config';
 
 // The company's records in Firestore, behind the RemoteDocs interface (docs/adr/0009). Loaded only when the build
 // has a Firebase project (VITE_FIREBASE_*), so the SDK never reaches a build without one.
@@ -59,12 +62,21 @@ export function explainCloudError(cause: unknown): string {
   }
 }
 
-export function openFirebase(options: FirebaseOptions): CloudSession {
+/** The emulators, when given (config.ts › firebaseEmulators), stand in for Google's servers: the end-to-end tests'. */
+export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulators | null = null): CloudSession {
   const app = initializeApp(options);
   // Signed in until signing out, on this computer only. No popup or redirect sign-in, so no Google frames.
   const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
   // A copy of the records on this computer: Keystone opens and saves offline, and catches up when back online.
   const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+
+  if (emulators) {
+    const [host, port] = emulators.firestore.split(':');
+
+    connectAuthEmulator(auth, `http://${emulators.auth}`, { disableWarnings: true });
+    connectFirestoreEmulator(db, host, Number(port));
+  }
+
   const company = doc(db, 'keystone', COMPANY);
   const me = () => auth.currentUser?.uid ?? null;
 
