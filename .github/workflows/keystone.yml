@@ -91,14 +91,27 @@ jobs:
         run: npm test
       - name: Chromium for the end-to-end tests
         run: npx @e2e-dev/web install chromium --with-deps
-      - name: End-to-end tests (every screen and its flows in Chromium, against the dev server)
+      # The cloud suite (e2e.cloud.config.ts) runs against the Firebase Auth and Firestore emulators of a demo project,
+      # never a real one. The Firestore emulator is a Java program (Java 21 for firebase-tools 15), downloaded once.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('package.json') }}
+          restore-keys: firebase-emulators-
+      - name: End-to-end tests (every screen and its flows in Chromium against the dev server, then the cloud build against the Firebase emulators)
         run: npm run test:e2e
       - name: Keep the end-to-end traces and screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-results
-          path: .e2e/
+          path: |
+            .e2e/
+            firestore-debug.log
           include-hidden-files: true  # .e2e/ itself is a hidden folder, which upload-artifact skips by default
           if-no-files-found: ignore
           retention-days: 14
