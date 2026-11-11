@@ -13,7 +13,7 @@ no module and no connector (`npm run check:boundaries`). Parts import it by name
 | `src/Session.tsx` | Signing out of the records in the cloud (docs/adr/0012): `SignOutButton` in the rail, and `IdleSignOut`, which asks "Still there?" a minute before and signs out once Keystone has sat unused for the session's `idleMs`. Nothing without `Platform.session` |
 | `src/App.tsx` | The provider tree, used by the app's `main.tsx` and by its tests |
 | `src/components.tsx` | Building blocks for screens: `LineEditor` (amounts, or `pricing="unit"` for quantity × unit price), `Workspace`, `FormCard`, `ConnectorShortcut` (a connected system's logo, which opens it), `Feed` |
-| `src/documents.tsx` | Building blocks for printed documents: `Sheet` (always laid out at the paper's width, `PAPER_WIDTH`, and scaled down on screen to fit its column, so the preview, the print and the PDF are one layout; `onePage` prints it scaled to one page), `Letterhead` (with an optional date), `Meta`, `Lines` (the document chooses its columns; `amountColumn`), `Signatures` |
+| `src/documents.tsx` | Building blocks for printed documents: `Sheet` (always laid out at the paper's width, `PAPER_WIDTH`, and scaled down on screen to fit its column, so the preview, the print and the PDF are one layout; `onePage` prints it scaled to one page), `Letterhead` (with an optional date; `nameOnly` keeps the company's name alone, on one line, as the check voucher does), `Meta`, `Lines` (the document chooses its columns; `amountColumn`), `Signatures` |
 | `src/output.ts` | `savePdf` and `printElement`: the element on screen is the one printed; a `Sheet onePage` is scaled to fit one A4 page |
 | `src/platform.ts` | The `Platform` interface the app implements for Tauri and for the browser |
 

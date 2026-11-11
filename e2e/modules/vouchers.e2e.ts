@@ -176,6 +176,9 @@ test('prints one voucher on half an A4 sheet, ruled into boxes like the cash vou
   await expect(paper).toHaveAttribute('data-print-fit', 'half');
   await expect(paper.getByText('ALPHA PREMIER GROUP OF COMPANIES OPC')).toBeVisible();
   await expect(paper.getByText('No. 888-001')).toBeVisible();
+  // The company's name alone at the top left, on one line: no address or contact under it.
+  await expect(paper.getByText(/Philippine Stock Exchange Centre/)).toBeHidden();
+  await expect(paper.getByText(/02 8650 2540/)).toBeHidden();
 
   const box = (text: string) => paper.getByRole('definition').filter({ hasText: text });
 
