@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SignIn, StartFailed } from '../Gate';
 import { browserPlatform } from '../platform/browser';
 import { cloudPlatform, MOVING_ELSEWHERE, NOT_MOVED_IN, NOT_READ, type RemoteDocs } from '../platform/cloud';
-import { firebaseConfig } from '../platform/config';
+import { firebaseConfig, firebaseEmulators } from '../platform/config';
 
 // The records in the cloud (docs/adr/0009), against a cloud held in memory: moving in once, reading back, writing only
 // what changed, and never saving over records it could not read.
@@ -165,6 +165,15 @@ describe('the Firebase project a build uses', () => {
     expect(firebaseConfig({ VITE_FIREBASE_API_KEY: 'key', VITE_FIREBASE_PROJECT_ID: 'apg-keystone', VITE_FIREBASE_APP_ID: 'app' })).toEqual({
       apiKey: 'key', projectId: 'apg-keystone', appId: 'app', authDomain: 'apg-keystone.firebaseapp.com',
     });
+  });
+
+  it('talks to the emulators only for a demo project that names both', () => {
+    const emulators = { VITE_FIREBASE_AUTH_EMULATOR: '127.0.0.1:9099', VITE_FIREBASE_FIRESTORE_EMULATOR: '127.0.0.1:8085' };
+
+    expect(firebaseEmulators({ ...emulators, VITE_FIREBASE_PROJECT_ID: 'demo-keystone' })).toEqual({ auth: '127.0.0.1:9099', firestore: '127.0.0.1:8085' });
+    expect(firebaseEmulators({ ...emulators, VITE_FIREBASE_PROJECT_ID: 'apg-keystone' })).toBeNull();
+    expect(firebaseEmulators({ ...emulators })).toBeNull();
+    expect(firebaseEmulators({ VITE_FIREBASE_PROJECT_ID: 'demo-keystone', VITE_FIREBASE_AUTH_EMULATOR: '127.0.0.1:9099' })).toBeNull();
   });
 });
 

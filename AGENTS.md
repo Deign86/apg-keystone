@@ -138,20 +138,29 @@ regression suites that guard the architecture live in the composition root:
 | Payroll | `apps/keystone/src/test/payroll.test.tsx` | One cut-off with every kind of day, from saved days through Timekeeping, its service and Payroll's engine to the screen, sheet and payslip, to the centavo; and without Timekeeping |
 | Services | `apps/keystone/src/test/services.test.tsx` | Billing provides the statement-payments service and timekeeping the employee-attendance service as shipped, and each one's absence refuses nothing |
 | End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or shortcut and what it shows after, including what it contributes to Home, Overview and the Activity Log |
+| Cloud end to end | `e2e/cloud/` (`npm run test:e2e:cloud`, part of `npm run test:e2e`), the cloud build against the Firebase Auth and Firestore emulators | Signing in and its refusals, the first computer moving its records in, each change written to Firestore under `firestore.rules`, and another computer opening the same records; never a real project or account |
 
 A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's
 `e2e/` file. A bug fix gets the test that would have caught it.
 
 End-to-end tests use exact locators (roles and names from the screen, never CSS) and start from the sample data at
 10:00 on Nov 2, 2026 in Manila (`e2e/support/fixed-clock.js`), so dates and overdue statuses never drift. Each test
-gets a fresh browser, so nothing one saves reaches another. A failed run leaves a trace page per test in
-`.e2e/results/`; CI keeps them as the `e2e-results` artifact.
+gets a fresh browser, so nothing one saves reaches another. Each run starts its own dev server on a free port with the
+`VITE_FIREBASE_*` variables blanked, so a cloud `.env.local` or a dev server already running never changes what it
+tests. A failed run leaves a trace page per test in `.e2e/results/` (`.e2e/cloud/results/` for the cloud suite); CI
+keeps them as the `e2e-results` artifact.
+
+The cloud suite (`e2e.cloud.config.ts`) needs Java 21 for the Firestore emulator. `npm run test:e2e:cloud` wraps the
+run in `firebase emulators:exec` (`e2e.firebase.json`), with the demo project `demo-keystone`, which exists only in
+the emulators. Each test empties them and makes throwaway accounts (`e2e/cloud/emulators.ts`), so the suite runs one
+test at a time. Run one file with `npx e2e run <file>` (or, for the cloud suite, the `test:e2e:cloud` command with the
+file after the config).
 
 ## Before you commit
 
 ```bash
 npm run check      # generated files in sync · boundaries · skills · e2e files · Oxlint · typecheck · every package's tests · Taste Skill lint
-npm run test:e2e   # when you change a screen or a flow
+npm run test:e2e   # when you change a screen or a flow (both suites; the cloud one needs Java 21)
 cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml   # when you touch src-tauri
 ```
 
