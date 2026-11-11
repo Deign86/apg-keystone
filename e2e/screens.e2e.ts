@@ -1,5 +1,5 @@
-import { test } from '@e2e-dev/web';
-import { expect } from 'e2e';
+import { test, type WebApp } from '@e2e-dev/web';
+import { expect, type Screen } from 'e2e';
 
 // The shell (packages/kit): the rail, keyboard shortcuts, the saved state, and a screen per installed part. Each
 // screen's own behaviour is tested in e2e/modules/ and e2e/connectors/.
@@ -41,6 +41,102 @@ test('whatever the rail lists opens without hitting the error panel', async ({ a
     await expect(screen.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
     await expect(screen.getByText('This screen hit a problem')).toBeHidden();
   }
+});
+
+test('the rail marks the screen that is open, and its brand goes home', async ({ app, screen }) => {
+  await app.open('/#payroll');
+  const rail = screen.getByRole('navigation', 'Keystone');
+
+  await expect(rail.getByRole('button', /Payroll$/)).toHaveAttribute('aria-current', 'page');
+  await expect(rail.getByRole('button', /Home$/)).not.toHaveAttribute('aria-current');
+
+  await rail.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig').tap();
+  await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
+  await expect(rail.getByRole('button', /Home$/)).toHaveAttribute('aria-current', 'page');
+  await expect(rail.getByRole('button', /Payroll$/)).not.toHaveAttribute('aria-current');
+});
+
+// The keys read Ctrl+ on Windows and Linux, where the suite runs; a Mac shows ⌘ instead.
+test('the foot of the rail says where the data is kept and which keys open the screens', async ({ app, screen }) => {
+  await app.open('/');
+  const rail = screen.getByRole('navigation', 'Keystone');
+
+  await expect(rail.getByText('Administrator access')).toBeVisible();
+  await expect(rail.getByText('Browser preview · saved in this browser')).toBeVisible();
+  await expect(rail.getByText('Ctrl+0 home · Ctrl+1–Ctrl+9 screens')).toBeVisible();
+});
+
+// The screen lives in the address (#payroll), so a link or a bookmark opens it (packages/kit/src/context.tsx).
+test('opens the screen the address names, falls back to Home for one it does not know, and follows the address while open', async ({ app, screen, browser }) => {
+  await app.open('/#nope');
+  await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
+
+  await browser.evaluate('location.hash = "#payroll"');
+  await expect(screen.getByRole('heading', { name: 'Payroll', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('navigation', 'Keystone').getByRole('button', /Payroll$/)).toHaveAttribute('aria-current', 'page');
+
+  await browser.evaluate('location.hash = "#directory"');
+  await expect(screen.getByRole('heading', { name: 'Directory', level: 1 })).toBeVisible();
+});
+
+// A refusal stays 6 seconds; Dismiss, which shows once the pointer is over the message, takes it away at once.
+test('a message can be dismissed before it goes', async ({ app, screen }) => {
+  await app.open('/#payroll');
+  await screen.getByRole('button', 'Close cut-off').tap();
+  const message = screen.getByRole('dialog', 'Set up pay for at least one employee first.');
+
+  await message.hover();
+  await message.getByRole('button', 'Dismiss').tap();
+  await expect(message).toBeHidden({ timeout: 2_000 });
+});
+
+// e2e/support/fixtures/shell-damaged-records.json is the sample data edited by hand: a released voucher has lost its
+// particulars, and an old log entry's text is a number. Both still load (a backup is checked for its four lists only).
+async function restoreDamagedRecords(app: WebApp, screen: Screen) {
+  await app.open('/#data');
+  await screen.getByRole('region', 'Data').getByRole('button', 'Restore from backup…').setInputFiles('e2e/support/fixtures/shell-damaged-records.json');
+  await screen.getByRole('alertdialog', 'Restore shell-damaged-records.json?').getByRole('button', 'Replace with backup').tap();
+  await expect(screen.getByRole('dialog', 'Restored shell-damaged-records.json.')).toBeVisible();
+}
+
+test('a screen that cannot show its records hits its own error panel, and the rail and every other screen keep working', async ({ app, screen }) => {
+  await restoreDamagedRecords(app, screen);
+  const rail = screen.getByRole('navigation', 'Keystone');
+
+  await rail.getByRole('button', /Check Vouchers$/).tap();
+  const panel = screen.getByRole('alert').filter({ hasText: 'This screen hit a problem' });
+
+  // It names the screen (in capitals) and says what went wrong.
+  await expect(panel.getByRole('heading', { name: 'This screen hit a problem', level: 1 })).toBeVisible();
+  await expect(panel).toContainText('Check Vouchers', { ignoreCase: true });
+  await expect(panel).toContainText('The rest of Keystone is unaffected and your data is safe.');
+
+  // Every other screen opens as before, from the rail and from Home.
+  await rail.getByRole('button', /Directory$/).tap();
+  await expect(screen.getByRole('heading', { name: 'Directory', level: 1 })).toBeVisible();
+  await expect(screen.getByText('This screen hit a problem')).toBeHidden();
+
+  await rail.getByRole('button', /Home$/).tap();
+  await expect(screen.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
+  await screen.getByRole('button', /^Billing Statements /).tap();
+  await expect(screen.getByRole('heading', { name: 'Billing Statements', level: 1 })).toBeVisible();
+  await expect(screen.getByText('This screen hit a problem')).toBeHidden();
+});
+
+test('Try again brings a screen back once what broke it is gone', async ({ app, screen }) => {
+  await restoreDamagedRecords(app, screen);
+  await screen.getByRole('navigation', 'Keystone').getByRole('button', /Activity Log$/).tap();
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem')).toHaveCount(7);
+
+  // Searching reads every entry's text as words, and the damaged one is a number.
+  await screen.getByRole('textbox', 'Search the log').fill('Meralco');
+  await expect(screen.getByRole('heading', { name: 'This screen hit a problem', level: 1 })).toBeVisible();
+
+  // Trying again starts the screen afresh, without the search.
+  await screen.getByRole('button', 'Try again').tap();
+  await expect(screen.getByRole('heading', { name: 'Activity Log', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('textbox', 'Search the log')).toHaveValue('');
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem')).toHaveCount(7);
 });
 
 test('Ctrl+1 to Ctrl+9 open the screens in rail order, and Ctrl+0 goes home', async ({ app, screen, browser }) => {
