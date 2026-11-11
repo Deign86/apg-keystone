@@ -1,6 +1,17 @@
 ---
 name: e2e
 description: Writes, runs, and debugs end-to-end tests for web and mobile apps with e2e, the agentic test runner, which mixes agent.act goals with exact locator assertions on a Playwright browser or an iOS or Android device. Also drives a project's running app live over the e2e MCP server to look at a screen, check a UI change, take a screenshot or record a video, and try a locator; and runs bug bashes, parallel e2e explore runs with each bug proven by a repro test. Use when a project depends on e2e or has an e2e.config.ts, when asked for end-to-end, browser, mobile, or agentic UI tests, to check a change in the running app, to QA or bug bash an app or branch, or when an e2e run fails.
+metadata:
+  openclaw:
+    homepage: https://e2e.com
+    requires:
+      bins:
+        - node
+        - npx
+    envVars:
+      - name: AI_GATEWAY_API_KEY
+        required: false
+        description: Model key for agent steps when the project's e2e config uses the Vercel AI Gateway; other providers read their own key.
 ---
 
 # e2e: agentic end-to-end tests
@@ -108,8 +119,10 @@ test('a member upgrades to Pro', async ({ app, agent, screen, browser }) => {
    Exact values go through `screen`: a sign-in form in a setup test, a field
    that must receive one specific string, a count that must be one number.
 4. Run only the test you are working on:
-   `npx e2e run tests/<feature>.e2e.ts:<line>`, the line its `test(` opens
-   on, with the flags in "Rerunning a test while you fix it" below. Agent
+   `npx e2e run tests/<feature>.e2e.ts:<line>` (over MCP,
+   `run_tests {files: ["tests/<feature>.e2e.ts:<line>"]}`, the flags as
+   camelCase fields such as `retries: 0`), the line its `test(` opens on,
+   with the flags in "Rerunning a test while you fix it" below. Agent
    steps need a model in the config and that provider's authentication (a
    saved subscription login, an API key); a local endpoint may need none.
    Tests without agent steps need no model.
@@ -195,7 +208,8 @@ lines you changed:
 - In a project without e2e, set it up when the user requests it. Otherwise
   ask before adding a test framework, and name any existing framework.
 - Live MCP tools need the project's own `e2e mcp` server registered in the
-  client (topic `mcp`); writing and running tests use the CLI directly.
+  client (topic `mcp`). Tests run with the CLI, or with the server's
+  `run_tests`, the same run without a shell.
   Keep a session open across runs while you write or fix a web test; topic
   `mcp` says when a run can go beside it, and what to do on
   `APP_ALREADY_RUNNING`.
