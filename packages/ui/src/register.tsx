@@ -36,7 +36,8 @@ export function Register<T>({
   caption?: string;
 }) {
   return (
-    <div className="overflow-x-auto">
+    // Relative, so the screen-reader-only caption and header scroll with the table instead of widening a phone's page.
+    <div className="relative overflow-x-auto">
       <table className="w-full border-collapse text-[13px]" aria-label={label}>
         {caption && <caption className="sr-only">{caption}</caption>}
         <colgroup>
