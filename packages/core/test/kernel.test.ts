@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays, addYears, amountInWords, bundledSeed, datesBetween, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
-  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
+  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   openDesktopApp, toCentavos, topFinding, validateConnector, withDeadline, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
 } from '../src';
 
@@ -137,6 +137,27 @@ describe('state and numbering', () => {
     expect(parseState(JSON.stringify(withExt)).ext).toEqual({ payroll: { cutoffs: 2 } });
     expect(() => parseState('{"hello":1}')).toThrow('That file is not a Keystone backup.');
     expect(() => parseState('null')).toThrow('That file is not a Keystone backup.');
+    expect(() => parseState('{"dir": [],\n}')).toThrow('That file is not a Keystone backup.');
+  });
+
+  it('restores a backup only when every record can be shown, and names the one that cannot', () => {
+    const fromPrototype = state();
+    fromPrototype.cv[0] = { ...fromPrototype.cv[0], bank: 'BDO – Current 0012-3456-78', lines: [{ desc: '', acct: '5210 Utilities', amt: 0 }] };
+    expect(parseBackup(JSON.stringify(state()))).toEqual(state());
+    expect(parseBackup(JSON.stringify(fromPrototype)).cv[0].bank).toBe('BDO – Current 0012-3456-78');
+
+    const withoutLines = JSON.stringify({ ...state(), cv: [...state().cv, { ...state().cv[0], no: 'CV-2026-0138', lines: undefined }] });
+    expect(() => parseBackup(withoutLines)).toThrow('That backup has a voucher Keystone cannot read (CV-2026-0138), so nothing was restored.');
+
+    const numberAsText = JSON.stringify({ ...state(), log: [{ when: '2026-10-30 09:00', mod: 'CV', text: 138 }, ...state().log] });
+    expect(() => parseBackup(numberAsText)).toThrow('That backup has a log entry Keystone cannot read (2026-10-30 09:00), so nothing was restored.');
+
+    const unnamed = JSON.stringify({ ...state(), bs: [...state().bs, { ...state().bs[0], no: 7, vat: 'yes' }] });
+    expect(() => parseBackup(unnamed)).toThrow('That backup has a statement Keystone cannot read (number 4 in the file), so nothing was restored.');
+    expect(() => parseBackup('{"dir": [],\n}')).toThrow('That file is not a Keystone backup.');
+
+    // The saved state still opens with such a record: only a restore is refused.
+    expect(parseState(withoutLines).cv).toHaveLength(4);
   });
 
   it('the finding is the highest priority any installed module reports', () => {

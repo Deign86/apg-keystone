@@ -1,5 +1,5 @@
 import { Button, Panel, ScreenHeader, SectionLabel, useConfirm } from '@keystone/ui';
-import { bundledSeed, count, localDate, parseState } from '@keystone/core';
+import { bundledSeed, count, localDate, parseBackup } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 
 function DataPanel() {
@@ -18,7 +18,7 @@ function DataPanel() {
     if (!file) return;
 
     try {
-      const next = parseState(new TextDecoder().decode(file.bytes));
+      const next = parseBackup(new TextDecoder().decode(file.bytes));
       confirm({
         title: `Restore ${file.name}?`,
         body: `It holds ${count(next.cv.length, 'voucher')}, ${count(next.bs.length, 'statement')}, ${count(next.ids.length, 'ID')} and ${count(next.dir.length, 'directory record')}. Everything Keystone holds now is replaced.`,

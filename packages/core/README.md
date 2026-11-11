@@ -10,7 +10,8 @@ numbering, blank lines dropped).
 |---|---|
 | `src/kernel/schema.ts` | The saved-state shape (`dir`, `cv`, `bs`, `ids`, `log`, `ext`), kept compatible with the prototype |
 | `src/kernel/money.ts`, `dates.ts`, `format.ts` | Centavos, Manila dates, weekdays and semi-monthly cut-offs, peso, date and period formats, amount in words |
-| `src/kernel/state.ts` | `KeystoneError`, `Ctx`, `Change`, `logged`, `nextNumber`, `parseState`; a module's own data under `ext` (`moduleData`, `withModuleData`) and the decoders that read it back (`isJsonObject`, `jsonText`, `jsonNumber`, `jsonObjects`) |
+| `src/kernel/state.ts` | `KeystoneError`, `Ctx`, `Change`, `logged`, `nextNumber`, `parseState` (the saved state, checked for its lists only, so one odd record never stops the rest from opening); a module's own data under `ext` (`moduleData`, `withModuleData`) and the decoders that read it back (`isJsonObject`, `jsonText`, `jsonNumber`, `jsonObjects`) |
+| `src/kernel/backup.ts` | `parseBackup`: a backup to restore, with every record checked for the fields the screens show; one that fails is refused by name and nothing is restored |
 | `src/kernel/lines.ts` | Line-item drafts for documents: an amount per line (vouchers), or a quantity at a unit price (statements) |
 | `src/kernel/insight.ts` | `Figure`, `Finding`, `WaitingItem`, `topFinding` |
 | `src/kernel/directory.ts` | The shared directory: records, payees, codes, saving and removing |

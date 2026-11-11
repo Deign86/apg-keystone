@@ -117,6 +117,31 @@ test('refuses a file that is not a Keystone backup, and changes nothing', async 
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 /)).toBeVisible();
 });
 
+test('refuses a backup that was cut off, in the same words', async ({ app, screen }) => {
+  await app.open('/#data');
+  await screen.getByRole('region', 'Data').getByRole('button', 'Restore from backup…').setInputFiles('e2e/support/fixtures/cut-off-backup.json');
+
+  await expect(screen.getByRole('dialog', 'That file is not a Keystone backup.')).toBeVisible();
+  await expect(screen.getByRole('alertdialog')).toBeHidden();
+});
+
+// The sample data edited by hand: a released voucher has lost its particulars, and a log entry's text is a number. Its
+// screens could not show it (screens.e2e.ts opens it as a damaged saved state), so it is never restored.
+test('refuses a backup with a record a screen cannot show, naming the record, and changes nothing', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await saveVoucher(screen);
+
+  await app.open('/#data');
+  await screen.getByRole('region', 'Data').getByRole('button', 'Restore from backup…').setInputFiles('e2e/support/fixtures/shell-damaged-records.json');
+
+  await expect(screen.getByRole('dialog', 'That backup has a voucher Keystone cannot read (CV-2026-0138), so nothing was restored.')).toBeVisible();
+  await expect(screen.getByRole('alertdialog')).toBeHidden();
+
+  await app.open('/#vouchers');
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0138 /)).toBeHidden();
+});
+
 test('resets to the sample data only after asking', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
