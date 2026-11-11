@@ -1,5 +1,6 @@
-import { test, type WebApp } from '@e2e-dev/web';
-import { expect, type Screen } from 'e2e';
+import { readFileSync } from 'node:fs';
+import { test, type Browser, type WebApp } from '@e2e-dev/web';
+import { expect } from 'e2e';
 
 // The shell (packages/kit): the rail, keyboard shortcuts, the saved state, and a screen per installed part. Each
 // screen's own behaviour is tested in e2e/modules/ and e2e/connectors/.
@@ -91,16 +92,18 @@ test('a message can be dismissed before it goes', async ({ app, screen }) => {
 });
 
 // e2e/support/fixtures/shell-damaged-records.json is the sample data edited by hand: a released voucher has lost its
-// particulars, and an old log entry's text is a number. Both still load (a backup is checked for its four lists only).
-async function restoreDamagedRecords(app: WebApp, screen: Screen) {
-  await app.open('/#data');
-  await screen.getByRole('region', 'Data').getByRole('button', 'Restore from backup…').setInputFiles('e2e/support/fixtures/shell-damaged-records.json');
-  await screen.getByRole('alertdialog', 'Restore shell-damaged-records.json?').getByRole('button', 'Replace with backup').tap();
-  await expect(screen.getByRole('dialog', 'Restored shell-damaged-records.json.')).toBeVisible();
+// particulars, and an old log entry's text is a number. Restoring such a file is refused (data.e2e.ts), but a damaged
+// saved state still opens, so it goes where the browser preview keeps the saved state, as a damaged state.json would.
+async function keepDamagedRecords(app: WebApp, browser: Browser) {
+  const damaged = readFileSync(new URL('support/fixtures/shell-damaged-records.json', import.meta.url), 'utf8');
+
+  await app.open('/');
+  await browser.evaluate((json: string) => localStorage.setItem('keystone-state', json), damaged);
+  await browser.reload();
 }
 
-test('a screen that cannot show its records hits its own error panel, and the rail and every other screen keep working', async ({ app, screen }) => {
-  await restoreDamagedRecords(app, screen);
+test('a screen that cannot show its records hits its own error panel, and the rail and every other screen keep working', async ({ app, screen, browser }) => {
+  await keepDamagedRecords(app, browser);
   const rail = screen.getByRole('navigation', 'Keystone');
 
   await rail.getByRole('button', /Check Vouchers$/).tap();
@@ -123,8 +126,8 @@ test('a screen that cannot show its records hits its own error panel, and the ra
   await expect(screen.getByText('This screen hit a problem')).toBeHidden();
 });
 
-test('Try again brings a screen back once what broke it is gone', async ({ app, screen }) => {
-  await restoreDamagedRecords(app, screen);
+test('Try again brings a screen back once what broke it is gone', async ({ app, screen, browser }) => {
+  await keepDamagedRecords(app, browser);
   await screen.getByRole('navigation', 'Keystone').getByRole('button', /Activity Log$/).tap();
   await expect(screen.getByRole('region', 'Entries').getByRole('listitem')).toHaveCount(7);
 
@@ -168,7 +171,7 @@ test('keeps a save made just before the page reloads', async ({ app, screen, bro
     setTimeout(() => location.reload(), 0);
   });
 
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 .* For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 .* For Approval/)).toBeVisible();
 });
 
 test('keeps saved work after a reload', async ({ app, screen, browser }) => {
@@ -178,9 +181,9 @@ test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
 
   await browser.reload();
 
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0142 .* For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 .* For Approval/)).toBeVisible();
 });

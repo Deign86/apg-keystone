@@ -9,13 +9,17 @@ import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 /** The paper's width in CSS px: an A4 page less the print stylesheet's 12 mm margins (186 mm). */
 export const PAPER_WIDTH = Math.round((186 / 25.4) * 96);
 
+/** A half sheet's height in CSS px: from the top margin to the middle of the A4 page (148.5 mm less 12 mm), where it is cut. */
+export const HALF_PAGE_HEIGHT = Math.round((136.5 / 25.4) * 96);
+
 /**
  * A document, always laid out at the paper's width. Where the column is narrower, the
  * preview is scaled down to fit (a transform on a wrapper, so the paper itself, which
- * Print and Export PDF take, stays at full size). `onePage` prints the sheet scaled to
- * a single page, however long it is.
+ * Print and Export PDF take, stays at full size). `fit="page"` prints the sheet scaled to
+ * a single page, however long it is; `fit="half"` to the top half of the page, above a
+ * dashed line to cut along, so one cut leaves the document on half an A4.
  */
-export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; onePage?: boolean }>(function Sheet({ children, label, onePage }, ref) {
+export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page' | 'half' }>(function Sheet({ children, label, fit: printFit }, ref) {
   const frame = useRef<HTMLDivElement>(null);
   // Holds only the paper, so its height is the paper's; a transform leaves that height unscaled.
   const scaler = useRef<HTMLDivElement>(null);
@@ -47,7 +51,14 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
   return (
     <div ref={frame} data-sheet-frame="" className="overflow-hidden" style={fit ? { height: fit.height } : undefined}>
       <div ref={scaler} data-sheet-scale="" className="mx-auto w-fit origin-top-left" style={fit ? { transform: `scale(${fit.scale})`, marginInline: 0 } : undefined}>
-        <article ref={ref} data-ui="document" data-print-fit={onePage || undefined} aria-label={label} style={{ width: PAPER_WIDTH }} className="min-h-[420px] border border-line bg-paper px-[30px] py-7 font-body text-[12.5px] leading-snug text-paper-ink">
+        <article
+          ref={ref}
+          data-ui="document"
+          data-print-fit={printFit}
+          aria-label={label}
+          style={{ width: PAPER_WIDTH, minHeight: printFit === 'half' ? HALF_PAGE_HEIGHT : 420 }}
+          className={`border border-line bg-paper px-[30px] py-7 font-body text-[12.5px] leading-snug text-paper-ink ${printFit === 'half' ? 'border-b-paper-muted [border-bottom-style:dashed]' : ''}`}
+        >
           {children}
         </article>
       </div>
@@ -61,7 +72,7 @@ export function Letterhead({ company, title, no, date }: { company: Company; tit
       <div className="flex items-center gap-2.5">
         <img src={logo} alt="" className="size-11 object-contain" />
         <div>
-          <p className="m-0 font-display text-[12.5px] font-bold tracking-[0.04em]">{company.name}</p>
+          <p className="m-0 font-display text-[12.5px] font-bold tracking-[0.04em] whitespace-nowrap">{company.name}</p>
           <p className="m-0 text-[11px] text-paper-muted">{company.address}</p>
           <p className="m-0 text-[11px] text-paper-muted">{company.contact}</p>
         </div>

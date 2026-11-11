@@ -43,7 +43,7 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
   const label = periodLabel(cutoff.period);
 
   return (
-    <Sheet ref={ref} label={`Payroll sheet, ${label}`} onePage>
+    <Sheet ref={ref} label={`Payroll sheet, ${label}`} fit="page">
       <Letterhead company={company} title="Payroll" no={label} date={cutoff.closed ? `Closed ${cutoff.closed.slice(0, 10)}` : 'Open'} />
       <table className="w-full border-collapse text-[11px] leading-tight">
         <thead>

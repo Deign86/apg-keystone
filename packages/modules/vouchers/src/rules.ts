@@ -1,34 +1,46 @@
 import {
   count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber, payees,
-  peso, recordOf, sumCentavos, thisYear, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
+  peso, recordOf, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher,
   type VoucherStatus, type WaitingItem
 } from '@keystone/core';
 
 // Check vouchers: disbursements routed for signatures, printed as the company's
-// Disbursement Voucher. Reads the directory for payees.
+// Check Voucher. Reads the directory for payees.
 
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
-export const nextVoucherNo = (s: TerminalState, ctx: Ctx) => nextNumber(s.cv.map((v) => v.no), `CV-${thisYear(ctx)}-`);
+
+/** Voucher numbers run 8888-001, 8888-002 and on, with no year. */
+const SERIES = '8888-';
+
+/** The next voucher number in the 8888- series. Older vouchers (CV-2026-0141) keep theirs and do not count. */
+export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
 export interface VoucherDraft extends Editing {
   no: string; date: string; payee: string; check: string; checkDate: string;
+  /** The account the check is drawn on, as printed: "BPI · 4011 0258 68". */
+  bank: string;
   lines: LineDraft[]; prepared: string; checked: string; approved: string;
 }
 
-export function newVoucher(s: TerminalState, ctx: Ctx): VoucherDraft {
+/**
+ * A blank voucher. Whoever prepares vouchers types their own full name, so the signatories start as the last voucher's
+ * (the reference defaults only before the first), and so does the bank, or `bank` (the first account kept) before any.
+ */
+export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft {
   const d = ctx.seed.reference.defaults;
+  const last = s.cv.at(-1);
 
   return {
-    no: nextVoucherNo(s, ctx), date: today(ctx), payee: payees(s)[0]?.code ?? '', check: '', checkDate: '',
-    lines: [lineDraft()], prepared: d.preparedBy, checked: d.checkedBy, approved: d.approvedBy,
+    no: nextVoucherNo(s), date: today(ctx), payee: payees(s)[0]?.code ?? '', check: '', checkDate: '', bank: last?.bank || bank,
+    lines: [lineDraft()], prepared: last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
   };
 }
 
 export const voucherDraftOf = (v: Voucher): VoucherDraft => ({
-  editing: v.no, no: v.no, date: v.date, payee: v.payee, check: v.check, checkDate: v.checkDate ?? '',
+  editing: v.no, no: v.no, date: v.date, payee: v.payee, check: v.check, checkDate: v.checkDate ?? '', bank: v.bank ?? '',
   lines: v.lines.map(lineDraftOf), prepared: v.prepared, checked: v.checked, approved: v.approved,
 });
 
@@ -45,7 +57,7 @@ export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraf
   const d = voucherDraftOf(v);
 
   return {
-    no: nextVoucherNo(s, ctx), date: today(ctx), payee: d.payee, check: '', checkDate: '',
+    no: nextVoucherNo(s), date: today(ctx), payee: d.payee, check: '', checkDate: '', bank: d.bank,
     lines: d.lines, prepared: d.prepared, checked: d.checked, approved: d.approved,
   };
 }
@@ -57,6 +69,8 @@ export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval
   };
 
   if (d.checkDate) v.checkDate = d.checkDate;
+
+  if (d.bank.trim()) v.bank = d.bank.trim();
 
   return v;
 }
@@ -89,7 +103,7 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     };
   }
 
-  const saved = { ...v, no: nextVoucherNo(s, ctx) };
+  const saved = { ...v, no: nextVoucherNo(s) };
 
   return {
     state: logged({ ...s, cv: [...s.cv, saved] }, 'CV', `${saved.no} for ${nameOf(s, v.payee)} saved and routed for approval (${peso(total)}).`, ctx),

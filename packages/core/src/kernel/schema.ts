@@ -180,9 +180,28 @@ export interface Defaults {
   idValidYears: number;
 }
 
+/**
+ * A bank account the company pays checks from or asks clients to pay into. The Bank Accounts module keeps the list
+ * (`state.ext.banks`) and publishes it as `SERVICES.bankAccounts`. A type, not an interface, so it fits in saved data.
+ */
+export type BankAccount = {
+  /** "B-001". */
+  id: string;
+  /** The bank: "BPI". */
+  bank: string;
+  /** The branch, or "" when none is given. */
+  branch: string;
+  /** The account name, as the bank holds it. */
+  name: string;
+  /** The account number as it is printed: "4011 0258 68". */
+  number: string;
+};
+
 export interface ReferenceData {
   bloodTypes: string[];
   defaults: Defaults;
+  /** The company's bank accounts, until any are saved in Bank Accounts. */
+  bankAccounts: BankAccount[];
 }
 
 /** shared/data/seed.json */

@@ -119,6 +119,70 @@ test('prints the company billing statement with the payment instructions', async
   await expect(statement.getByText('5% penalty charge will be applied to delayed monthly payments.')).toBeVisible();
 });
 
+// Pay into lists the company's bank accounts (packages/modules/banks, through the bank-accounts service). The sample
+// data has one, BPI · 4011 0258 68, which the default payment instructions name.
+test('pays into the account picked under Pay into, and the saved statement keeps it', async ({ app, screen }) => {
+  await app.open('/#banks');
+  await screen.getByRole('button', 'Add account').tap();
+  const dialog = screen.getByRole('dialog', 'Add account');
+
+  await dialog.getByRole('textbox', 'Bank').fill('Security Bank');
+  await dialog.getByRole('textbox', 'Account name').fill('Alpha Premier Group of Companies OPC');
+  await dialog.getByRole('textbox', 'Account number').fill('0000 0712 3456');
+  await dialog.getByRole('button', 'Add account').tap();
+  await expect(screen.getByRole('dialog', 'B-002 added.')).toBeVisible();
+
+  await app.open('/#billing');
+  const form = screen.getByRole('form', 'New statement');
+  const payInto = form.getByRole('combobox', 'Pay into');
+
+  await expect(payInto).toHaveText('BPI · 4011 0258 68');
+  await payInto.tap();
+  await expect(screen.getByRole('option')).toHaveCount(2);
+  await screen.getByRole('option', 'Security Bank · 0000 0712 3456').tap();
+
+  // Only the account lines change; the rest of the instructions stay as they were.
+  await expect(form.getByRole('textbox', 'Payment instructions')).toHaveValue([
+    'Please make payment to:',
+    'Bank: Security Bank',
+    'Account Name: Alpha Premier Group of Companies OPC',
+    'Account Number: 0000 0712 3456',
+    '',
+    'Kindly send proof of payment to accounting@alphapremiergroup.com',
+  ].join('\n'));
+  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Account Number: 0000 0712 3456', { exact: false })).toBeVisible();
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
+
+  // The next statement starts from the default instructions again; the saved one keeps the account picked.
+  await expect(screen.getByRole('form', 'New statement').getByRole('combobox', 'Pay into')).toHaveText('BPI · 4011 0258 68');
+  await screen.getByRole('table', 'Statements issued').getByRole('cell', '010100-2026').tap();
+  const saved = screen.getByRole('form', 'Editing 010100-2026');
+
+  await expect(saved.getByRole('combobox', 'Pay into')).toHaveText('Security Bank · 0000 0712 3456');
+  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Bank: Security Bank', { exact: false })).toBeVisible();
+});
+
+test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
+  await app.open('/#billing');
+  const form = screen.getByRole('form', 'New statement');
+  const payInto = form.getByRole('combobox', 'Pay into');
+  const instructions = form.getByRole('textbox', 'Payment instructions');
+
+  // Instructions that name no account on the list leave Pay into empty.
+  await instructions.fill('Pay in cash at the front desk.');
+  await expect(payInto).toHaveText('—');
+
+  await payInto.tap();
+  await screen.getByRole('option', 'BPI · 4011 0258 68').tap();
+
+  await expect(instructions).toHaveValue('Bank: BPI\nAccount Name: Alpha Premier Group of Companies OPC\nAccount Number: 4011 0258 68\n\nPay in cash at the front desk.');
+  await expect(payInto).toHaveText('BPI · 4011 0258 68');
+});
+
 test('opens a sent statement from the register and saves changes to it', async ({ app, screen }) => {
   await app.open('/#billing');
   const register = screen.getByRole('table', 'Statements issued');

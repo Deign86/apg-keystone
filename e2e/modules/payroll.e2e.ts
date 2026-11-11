@@ -103,20 +103,19 @@ test('edits pay from the row menu, refuses a rate it cannot read and an employee
   await expect(slip).toContainText('Bank BDO');
   await expect(slip).toContainText('Account no. 0012-3456-7890');
 
-  // Two employees cannot share a number. By now the messages at the foot of the window stack over the Save button,
-  // so this form is saved with Enter.
+  // Two employees cannot share a number.
   await setups.getByRole('row', /Angelica S\. Bautista/).tap();
   form = screen.getByRole('form', 'Pay setup for Angelica S. Bautista');
   const employeeNo = form.getByRole('textbox', 'Employee no.');
 
   await employeeNo.fill('APGCO-0013');
   await form.getByRole('textbox', 'Daily rate').fill('900');
-  await employeeNo.press('Enter');
+  await form.getByRole('button', 'Save pay setup').tap();
   await expect(form.getByRole('alert')).toHaveText('APGCO-0013 is already the employee number of Juan Miguel P. Reyes.');
 
   // Anyone without a bank is paid in cash.
   await employeeNo.fill('APGCO-0021');
-  await employeeNo.press('Enter');
+  await form.getByRole('button', 'Save pay setup').tap();
   await expect(form).toBeHidden();
   await expect(setups.getByRole('row', /Angelica S\. Bautista/).getByRole('cell', 'Cash')).toBeVisible();
 });
@@ -195,10 +194,14 @@ test('shows the payroll sheet or one payslip, and saves the sheet as a PDF', asy
   await show.getByRole('button', 'Payroll sheet').tap();
   await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeVisible();
 
-  const file = await browser.waitForDownload(() => screen.getByRole('button', 'Export PDF').tap());
+  // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
+  // the sheet into a PDF takes several seconds on a busy machine.
+  const file = await browser.waitForDownload(async () => {
+    await screen.getByRole('button', 'Export PDF').tap();
+    await expect(screen.getByRole('dialog', 'Saved Payroll Oct 16–31, 2026.pdf.')).toBeVisible({ timeout: 20_000 });
+  });
 
   expect(file.suggestedFilename).toBe('Payroll Oct 16–31, 2026.pdf');
-  await expect(screen.getByRole('dialog', 'Saved Payroll Oct 16–31, 2026.pdf.')).toBeVisible();
 });
 
 test('closes and reopens a cut-off, and Overview and the Activity Log follow', async ({ app, screen }) => {

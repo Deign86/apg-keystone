@@ -1,6 +1,6 @@
 import type { ISODate } from './dates';
 import type { Centavos } from './money';
-import type { Statement, TerminalState } from './schema';
+import type { BankAccount, Statement, TerminalState } from './schema';
 import type { Change, Ctx } from './state';
 
 // Published service contracts. When one part needs something another part does, the
@@ -14,6 +14,8 @@ export const SERVICES = {
   statementPayments: 'billing.statement-payments',
   /** Offered by the timekeeping module: an employee's days over a period, for pricing a payroll cut-off. */
   employeeAttendance: 'timekeeping.employee-attendance',
+  /** Offered by the banks module: the company's bank accounts, for a document that says where to pay. */
+  bankAccounts: 'banks.bank-accounts',
 } as const;
 
 /**
@@ -23,6 +25,7 @@ export const SERVICES = {
 export interface ServiceContracts {
   [SERVICES.statementPayments]: StatementPayments;
   [SERVICES.employeeAttendance]: EmployeeAttendance;
+  [SERVICES.bankAccounts]: BankAccounts;
 }
 
 export type ServiceName = keyof ServiceContracts;
@@ -86,4 +89,14 @@ export type AttendanceTally = {
 export interface EmployeeAttendance {
   /** The tally for one employee (a directory code) from one date to another, both included. */
   tally(state: TerminalState, emp: string, from: ISODate, to: ISODate, ctx: Ctx): AttendanceTally;
+}
+
+export interface BankAccounts {
+  /**
+   * The company's bank accounts, in the order they were added. Until any is saved, the reference data's
+   * (`ctx.seed.reference.bankAccounts`), which is why it takes the context.
+   */
+  accounts(state: TerminalState, ctx: Ctx): BankAccount[];
+  /** How an account is named in a list: "BPI · 4011 0258 68". */
+  label(account: BankAccount): string;
 }

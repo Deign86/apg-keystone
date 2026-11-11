@@ -55,14 +55,18 @@ export interface Editing {
 /** What a backup must hold to load: the four record lists. The log and module data may be missing. */
 type Backup = Pick<TerminalState, 'dir' | 'cv' | 'bs' | 'ids'> & { log?: TerminalState['log']; ext?: Record<string, JsonValue> };
 
-function isBackup(json: unknown): json is Backup {
-  if (json === null || json === undefined) return false;
+/** Only the four lists are checked; their records are taken as saved (parseBackup checks each one before a restore). */
+function isBackup(json: JsonValue): json is JsonObject & Backup {
+  return isJsonObject(json) && Array.isArray(json.dir) && Array.isArray(json.cv) && Array.isArray(json.bs) && Array.isArray(json.ids);
+}
 
-  // SAFETY: only reads the four lists, and each one is checked with Array.isArray before
-  // the value is trusted. null and undefined, the only values that cannot be read, are refused above.
-  const x = json as Partial<Backup>;
-
-  return Array.isArray(x.dir) && Array.isArray(x.cv) && Array.isArray(x.bs) && Array.isArray(x.ids);
+/** The file's JSON, or null when it is not JSON at all (a file cut off, or something else). */
+function readJson(text: string): JsonValue {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -70,7 +74,7 @@ function isBackup(json: unknown): json is Backup {
  * safely. Unknown keys under `ext` (data kept by modules this build does not have) are kept.
  */
 export function parseState(text: string): TerminalState {
-  const json: unknown = JSON.parse(text);
+  const json = readJson(text);
 
   if (!isBackup(json)) throw new KeystoneError('That file is not a Keystone backup.');
   const state: TerminalState = { dir: json.dir, cv: json.cv, bs: json.bs, ids: json.ids, log: Array.isArray(json.log) ? json.log : [] };

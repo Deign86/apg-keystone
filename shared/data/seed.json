@@ -29,7 +29,16 @@
       "billingTerms": "5% penalty charge will be applied to delayed monthly payments.",
       "dueInDays": 15,
       "idValidYears": 1
-    }
+    },
+    "bankAccounts": [
+      {
+        "id": "B-001",
+        "bank": "BPI",
+        "branch": "",
+        "name": "Alpha Premier Group of Companies OPC",
+        "number": "4011 0258 68"
+      }
+    ]
   },
   "state": {
     "dir": [

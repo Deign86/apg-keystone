@@ -108,26 +108,27 @@ test('corrects a day with a note, refuses times it cannot read, and leaves the d
   const timeIn = form.getByRole('textbox', 'Time in');
   const timeOut = form.getByRole('textbox', 'Time out');
   const overtime = form.getByRole('textbox', 'Approved overtime (hours)');
-  // Each refusal is also a message at the foot of the window, and three of them stack over the Save button, so
-  // these are saved with Enter.
+  const save = form.getByRole('button', 'Save day');
+
+  // Each refusal is also a message at the foot of the window; however many stack up, the dialog's Save stays in front.
   await timeIn.fill('8');
   await timeOut.fill('17:00');
-  await timeOut.press('Enter');
+  await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the time in as hours and minutes, like 08:00.');
 
   await timeIn.fill('08:10');
   await timeOut.fill('5 PM');
-  await timeOut.press('Enter');
+  await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the time out as hours and minutes, like 17:00.');
 
   await timeIn.fill('');
   await timeOut.fill('17:00');
-  await timeOut.press('Enter');
+  await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the time in as well as the time out.');
 
   await timeIn.fill('08:10');
   await overtime.fill('20');
-  await overtime.press('Enter');
+  await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter overtime as hours, from 0 to 16.');
 
   // The note is shown in the day's remarks.
@@ -135,7 +136,7 @@ test('corrects a day with a note, refuses times it cannot read, and leaves the d
   const note = form.getByRole('textbox', 'Note');
 
   await note.fill('Badge reader was down');
-  await note.press('Enter');
+  await save.tap();
   await expect(screen.getByRole('dialog', 'Oct 30, 2026 saved for Juan Miguel P. Reyes.')).toBeVisible();
 
   const friday = record.getByRole('row', /^Fri · Oct 30 /);

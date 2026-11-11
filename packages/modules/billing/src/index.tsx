@@ -1,11 +1,47 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { count, peso, recordOf, recordsOf, shortDate, STATEMENT_STATUSES, toneOf, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, saveStatement, setStatementStatus, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments } from './rules';
-import { useDraft, useKeystone, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft } from './rules';
+import { useDraft, useKeystone, useModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
 const DRAFT = 'billing.draft';
+
+/**
+ * "Pay into", when Bank Accounts is installed: picking an account writes it into the payment instructions. Without
+ * that service there is nothing to pick from, and the instructions are only typed.
+ */
+function PayInto({ draft, setDraft }: { draft: StatementDraft; setDraft: (d: StatementDraft) => void }) {
+  const { state, ctx } = useKeystone();
+  const app = useModuleApp();
+  const banks = app.service(SERVICES.bankAccounts);
+
+  if (!banks) return null;
+  const accounts = banks.accounts(state, ctx);
+
+  if (!accounts.length) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="m-0 text-xs text-pretty text-ink-2">No bank accounts are kept yet, so the payment instructions are typed below.</p>
+        {app.has('banks') && <Button size="sm" onClick={() => app.go('banks')}>Add a bank account</Button>}
+      </div>
+    );
+  }
+
+  return (
+    <Field label="Pay into" hint="Writes the account into the payment instructions.">
+      <SelectInput
+        value={paidInto(draft.notes, accounts)?.id ?? ''}
+        onChange={(id) => {
+          const account = accounts.find((a) => a.id === id);
+
+          if (account) setDraft({ ...draft, notes: payInto(draft.notes, account) });
+        }}
+        options={accounts.map((a) => ({ value: a.id, label: banks.label(a) }))}
+      />
+    </Field>
+  );
+}
 
 function Billing() {
   const { state, ctx, run, platform, notify, store } = useKeystone();
@@ -104,6 +140,7 @@ function Billing() {
               </p>
               <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(t.due)}</p>
             </div>
+            <PayInto draft={draft} setDraft={setDraft} />
             <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
             <Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
           </FormCard>

@@ -17,6 +17,7 @@
     "@keystone/core": "*",
     "@keystone/kit": "*",
     "@keystone/module-activity": "*",
+    "@keystone/module-banks": "*",
     "@keystone/module-billing": "*",
     "@keystone/module-data": "*",
     "@keystone/module-directory": "*",
