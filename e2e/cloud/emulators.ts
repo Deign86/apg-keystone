@@ -47,9 +47,9 @@ export interface Account {
 
 /**
  * A throwaway account in the Auth emulator, with a made-up address and password. With a role, the owner has also made
- * it a member (keystone/apg/members/<uid>, as docs/FIREBASE.md › Members describes); without one, it is not.
+ * it a member (keystone/apg/members/<uid>, as docs/FIREBASE.md › Members describes) under `name`; without one, it is not.
  */
-export async function makeAccount(role?: 'owner' | 'staff'): Promise<Account> {
+export async function makeAccount(role?: 'owner' | 'staff', name = role === 'owner' ? 'Owner' : 'Staff'): Promise<Account> {
   const email = `${role ?? 'outsider'}-${randomUUID().slice(0, 8)}@keystone.test`;
   const password = randomUUID();
 
@@ -66,7 +66,7 @@ export async function makeAccount(role?: 'owner' | 'staff'): Promise<Account> {
     await call(`${DATABASE}/documents/keystone/apg/members/${uid}`, {
       method: 'PATCH',
       headers: { ...ADMIN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: { role: { stringValue: role }, name: { stringValue: role === 'owner' ? 'Owner' : 'Staff' } } }),
+      body: JSON.stringify({ fields: { role: { stringValue: role }, name: { stringValue: name } } }),
     });
   }
 
@@ -110,6 +110,40 @@ export async function record(collection: string, id: string): Promise<JsonObject
 
   // SAFETY: Keystone writes each record's body as the JSON text of the record, an object (core › toDocuments).
   return body === undefined ? null : (JSON.parse(body) as JsonObject);
+}
+
+/** A string field beside a document's body (a request's `status` or `uid`, which firestore.rules check), or null. */
+export async function field(collection: string, id: string, name: string): Promise<string | null> {
+  return (await readDocument(`/${collection}/${id}`))?.fields?.[name]?.stringValue ?? null;
+}
+
+/** Signs in through the Auth emulator's REST API, as Keystone's Firebase SDK does, and gives the account's ID token. */
+export async function idToken(account: Account): Promise<string> {
+  const res = await call(`http://${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: account.email, password: account.password, returnSecureToken: true }),
+  });
+
+  // SAFETY: a successful Identity Toolkit signInWithPassword (call() throws on any other) answers with the ID token.
+  return ((await res.json()) as { idToken: string }).idToken;
+}
+
+/**
+ * What firestore.rules answer a member who goes past Keystone: the HTTP status of reading a document under
+ * keystone/apg, or of writing it whole as the first record of its list with these string fields beside `pos`, signed
+ * in with `token` (200 allowed, 403 refused).
+ */
+export async function asMember(token: string, path: string, write?: Record<string, string>): Promise<number> {
+  const fields = write && { pos: { integerValue: '0' }, ...Object.fromEntries(Object.entries(write).map(([k, v]) => [k, { stringValue: v }])) };
+
+  const res = await fetch(`${DATABASE}/documents/keystone/apg${path}`, {
+    method: fields ? 'PATCH' : 'GET',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: fields ? JSON.stringify({ fields }) : undefined,
+  });
+
+  return res.status;
 }
 
 // SAFETY: seed.json holds the sample data, whose `state` is a saved state.json (core › bundledSeed).

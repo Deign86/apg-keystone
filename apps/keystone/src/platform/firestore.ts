@@ -1,11 +1,11 @@
-import { COLLECTIONS, jsonText, type DocumentChanges, type JsonValue, type StateDocument } from '@keystone/core';
+import { COLLECTIONS, jsonText, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type StateDocument } from '@keystone/core';
 import { FirebaseError, initializeApp, type FirebaseOptions } from 'firebase/app';
 import {
   browserLocalPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth, signInWithEmailAndPassword, signOut,
 } from 'firebase/auth';
 import {
   collection, connectFirestoreEmulator, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  runTransaction, serverTimestamp, setDoc, writeBatch, type WriteBatch,
+  query, runTransaction, serverTimestamp, setDoc, where, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
 import type { FirebaseEmulators } from './config';
@@ -16,11 +16,14 @@ import type { FirebaseEmulators } from './config';
 //   keystone/apg                  { status: 'moving' | 'ready', by, at }: whether the records have been moved in
 //   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name }: who may open them (firestore.rules)
 //   keystone/apg/{dir|cv|bs|ids|log|ext}/{id}   { pos, body }: one record each (StateDocument)
+//   keystone/apg/{a module's own}/{id}          { pos, body, ...its checked fields }: one record each (docs/adr/0011)
 
 const COMPANY = 'apg';
 
 /** Firestore takes at most 500 writes in one batch. */
 const BATCH = 500;
+
+const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).';
 
 export interface CloudSession {
   remote: RemoteDocs;
@@ -29,6 +32,8 @@ export interface CloudSession {
   /** Signs in, or throws the sentence to show. */
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
+  /** Who is signed in, from their member document. Throws when the account is not a member. */
+  member(): Promise<Member>;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;
 }
@@ -43,7 +48,7 @@ export function explainCloudError(cause: unknown): string {
 
   switch (code) {
     case 'permission-denied':
-      return 'This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).';
+      return NOT_A_MEMBER;
     case 'unavailable':
       return 'Keystone could not reach the cloud, and this computer has no copy of the records yet. Check the internet connection, then try again.';
     case 'auth/invalid-credential':
@@ -62,8 +67,11 @@ export function explainCloudError(cause: unknown): string {
   }
 }
 
-/** The emulators, when given (config.ts › firebaseEmulators), stand in for Google's servers: the end-to-end tests'. */
-export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulators | null = null): CloudSession {
+/**
+ * The emulators, when given (config.ts › firebaseEmulators), stand in for Google's servers: the end-to-end tests'.
+ * `layout` names the lists modules keep as documents of their own, so they are read and written too.
+ */
+export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulators | null = null, layout: DocumentLayout = {}): CloudSession {
   const app = initializeApp(options);
   // Signed in until signing out, on this computer only. No popup or redirect sign-in, so no Google frames.
   const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
@@ -79,6 +87,8 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
   const company = doc(db, 'keystone', COMPANY);
   const me = () => auth.currentUser?.uid ?? null;
+  // Whether the member signed in is an owner, once member() has read it. Until then, reads are a member's.
+  let owner = false;
 
   /** Hands every write to Firestore now, in batches, and resolves when the cloud has them all. */
   function commit(ops: ((b: WriteBatch) => void)[]): Promise<void> {
@@ -94,7 +104,39 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
     return Promise.all(batches).then(() => {});
   }
 
-  const put = (d: StateDocument) => (b: WriteBatch) => { b.set(doc(company, d.collection, d.id), { pos: d.pos, body: d.body }); };
+  const put = (d: StateDocument) => (b: WriteBatch) => { b.set(doc(company, d.collection, d.id), { ...d.fields, pos: d.pos, body: d.body }); };
+
+  /**
+   * The documents of one collection. A module's own list that only some may read (RecordDocuments.readBy) is asked for
+   * as firestore.rules allows: all of it by an owner, only their own by anyone else.
+   */
+  async function read(c: string): Promise<StateDocument[]> {
+    const own = Object.values(layout).find((l) => l.collection === c);
+    const uid = me();
+    const list = collection(company, c);
+    const found = await getDocs(own?.readBy && !owner && uid ? query(list, where(own.readBy, '==', uid)) : list);
+
+    return found.docs.map((d): StateDocument => {
+      const pos: JsonValue = d.get('pos') ?? null;
+      const body: JsonValue = d.get('body') ?? null;
+      // A field edited by hand into something else reads as nothing; fromDocuments then leaves that record out.
+      const record: StateDocument = { collection: c, id: d.id, pos: Number.isInteger(pos) ? Number(pos) : 0, body: jsonText(body) };
+
+      if (own) {
+        const fields: JsonObject = {};
+
+        for (const f of own.fields) {
+          const v: JsonValue | undefined = d.get(f);
+
+          if (v !== undefined) fields[f] = v;
+        }
+
+        record.fields = fields;
+      }
+
+      return record;
+    });
+  }
 
   const remote: RemoteDocs = {
     async readAll() {
@@ -102,13 +144,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
       if (marker.get('status') !== 'ready') return null;
 
-      const lists = await Promise.all(COLLECTIONS.map(async (c) => (await getDocs(collection(company, c))).docs.map((d): StateDocument => {
-        const pos: JsonValue = d.get('pos') ?? null;
-        const body: JsonValue = d.get('body') ?? null;
-
-        // A field edited by hand into something else reads as nothing; fromDocuments then leaves that record out.
-        return { collection: c, id: d.id, pos: Number.isInteger(pos) ? Number(pos) : 0, body: jsonText(body) };
-      })));
+      const lists = await Promise.all([...COLLECTIONS, ...Object.values(layout).map((l) => l.collection)].map(read));
 
       return lists.flat();
     },
@@ -156,6 +192,15 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
       }
     },
     signOut: () => signOut(auth),
+    member: async () => {
+      const uid = me();
+      const found = uid ? await getDoc(doc(company, 'members', uid)) : null;
+
+      if (!uid || !found?.exists()) throw new Error(NOT_A_MEMBER);
+      owner = found.get('role') === 'owner';
+
+      return { uid, name: jsonText(found.get('name')) || auth.currentUser?.email || 'A member', role: owner ? 'owner' : 'staff' };
+    },
     explain: explainCloudError,
   };
 }

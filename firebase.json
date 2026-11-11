@@ -6,5 +6,15 @@
     "providers": {
       "emailPassword": true
     }
+  },
+  "hosting": {
+    "public": "apps/keystone/dist",
+    "ignore": ["**/.*"],
+    "headers": [
+      {
+        "source": "/index.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
   }
 }

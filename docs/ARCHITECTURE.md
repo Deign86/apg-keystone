@@ -51,7 +51,9 @@ billing is not installed. No part that ships asks for it today. Likewise timekee
 `timekeeping.employee-attendance`, and payroll asks for it to price a cut-off; without it, payroll pays every weekday
 in full and says so (docs/adr/0008). Bank Accounts provides `banks.bank-accounts`, the company's bank accounts, and
 billing asks for it to show "Pay into" on a statement; without it, the payment instructions are typed as before
-(docs/adr/0010). The registry allows one provider per service.
+(docs/adr/0010). Check Vouchers provides `vouchers.drafts`, and Requests for Funds asks for it to draft the check
+voucher when the owner approves a request; without it, the approval stands and no voucher is drafted (docs/adr/0011).
+The registry allows one provider per service.
 
 ## How connected systems plug in
 
@@ -76,6 +78,12 @@ Keystone reads nothing from these systems and keeps no password for any of them.
   one document per record (`toDocuments` in core), behind an email and password sign-in. `platform/cloud.ts` wraps the
   local platform: it moves a computer's records in once, writes only the documents a save changed, and keeps a copy
   in `state.json`. Firebase itself is only in `platform/firestore.ts`; setup is in `docs/FIREBASE.md`.
+- **Who is signed in (docs/adr/0011):** the member's document (`role` owner or staff, and `name`) is read before the
+  records and reaches the rules as `ctx.who`. A module may keep one list as cloud documents of its own
+  (`ModuleDef.documents`): Requests for Funds keeps each request in `keystone/apg/rf/{no}`, where `firestore.rules`
+  lets only the owner decide and lets staff read only their own. Without a sign-in there is no `ctx.who`.
+- **On a phone:** the same web build, hosted on Firebase Hosting (`firebase.json › hosting`, `npm run build:web`),
+  with a top bar and a menu instead of the rail below 768px.
 - **Photos:** in `photos/`.
 - **Folder:**
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`

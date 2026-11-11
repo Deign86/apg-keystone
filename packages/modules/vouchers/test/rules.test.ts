@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { bundledSeed, lineDraft, type Ctx } from '@keystone/core';
 import {
-  copyVoucher, newVoucher, nextVoucherNo, saveVoucher, setVoucherStatus, voucherDraftOf, voucherFigure, voucherFinding, voucherLine,
-  voucherLock, voucherWaiting,
+  copyVoucher, newVoucher, nextVoucherNo, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
+  voucherLine, voucherLock, voucherWaiting,
 } from '../src/rules';
 
 /** 30 Oct 2026, 09:05 in Manila. */
@@ -105,5 +105,16 @@ describe('check vouchers', () => {
     expect(voucherWaiting(s).map((w) => w.no)).toEqual(['CV-2026-0141']);
     expect(voucherLine(s)).toBe('1 voucher worth ₱35,000.00 waits for approval.');
     expect(voucherLine({ ...s, cv: s.cv.filter((v) => v.status !== 'For Approval') })).toBe('Every voucher is signed. Record a disbursement and route it for signatures.');
+  });
+
+  it('drafts a voucher for spending approved elsewhere, For Approval with one particular and no check (vouchers.drafts)', () => {
+    const s = state();
+    const r = voucherDrafts.draft(s, { payee: 'V-002', amount: 48230.55, particulars: 'Christmas party venue (RF-2026-0001)' }, ctx);
+    expect(r.record).toMatchObject({ no: '8888-001', payee: 'V-002', status: 'For Approval', check: '', lines: [{ desc: 'Christmas party venue (RF-2026-0001)', amt: 48230.55 }] });
+    expect(r.record).not.toHaveProperty('checkDate');
+    expect(r.state.cv).toHaveLength(s.cv.length + 1);
+    expect(r.state.log[0].text).toBe('8888-001 for Manila Water Company saved and routed for approval (₱48,230.55).');
+    expect(() => voucherDrafts.draft(s, { payee: 'V-999', amount: 100, particulars: 'Nothing' }, ctx)).toThrow('Choose a payee from the directory.');
+    expect(() => voucherDrafts.draft(s, { payee: 'V-002', amount: 0, particulars: 'Nothing' }, ctx)).toThrow('Add at least one particular with an amount.');
   });
 });

@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { amountInWords, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
-import { awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, voucherDraftOf, voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting } from './rules';
+import { awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
@@ -176,5 +176,6 @@ export const vouchersModule: ModuleDef = {
   },
   create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go('vouchers'); } },
   logTags: { CV: 'Vouchers' },
+  provides: { [SERVICES.voucherDrafts]: voucherDrafts },
   Screen: Vouchers,
 };

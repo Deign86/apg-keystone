@@ -7,7 +7,7 @@ import { expect } from 'e2e';
 
 // Every screen on the rail opens in a real browser, shows its title and does not hit the
 // error panel. The rail button's name also carries its shortcut badge, hence the pattern.
-const SCREENS = ['Overview', 'Check Vouchers', 'Billing Statements', 'ID Maker', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
+const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'ID Maker', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
 
 test('opens on Home with the rail', async ({ app, screen }) => {
   await app.open('/');
@@ -142,16 +142,41 @@ test('Try again brings a screen back once what broke it is gone', async ({ app, 
   await expect(screen.getByRole('region', 'Entries').getByRole('listitem')).toHaveCount(7);
 });
 
+// Only the first nine screens after Home have a key; the ones after them (Data, Bank Accounts) open from the rail.
 test('Ctrl+1 to Ctrl+9 open the screens in rail order, and Ctrl+0 goes home', async ({ app, screen, browser }) => {
   await app.open('/');
 
-  for (const [index, title] of SCREENS.entries()) {
+  for (const [index, title] of SCREENS.slice(0, 9).entries()) {
     await browser.keyboard.press(`Control+${index + 1}`);
 
     await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
   }
 
   await browser.keyboard.press('Control+0');
+  await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
+});
+
+// On a phone (narrower than 768px) the rail gives way to a bar with a menu (docs/adr/0011): Sir Mark decides requests
+// for funds from his phone's browser.
+test('on a phone, a menu takes the rail\'s place and opens the screens', async ({ app, screen, browser }) => {
+  await browser.setViewport({ width: 390, height: 844 });
+  await app.open('/');
+
+  await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
+  await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
+
+  await screen.getByRole('button', 'Menu').tap();
+  const menu = screen.getByRole('dialog', 'Keystone');
+
+  await expect(menu.getByText('Browser preview · saved in this browser')).toBeVisible();
+  await menu.getByRole('navigation', 'Keystone').getByRole('button', /Requests for Funds$/).tap();
+
+  await expect(menu).toBeHidden();
+  await expect(screen.getByRole('heading', { name: 'Requests for Funds', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('form', 'New request')).toBeVisible();
+
+  // The brand in the bar goes home.
+  await screen.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig').tap();
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
 });
 

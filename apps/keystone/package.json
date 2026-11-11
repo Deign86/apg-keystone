@@ -21,6 +21,7 @@
     "@keystone/module-billing": "*",
     "@keystone/module-data": "*",
     "@keystone/module-directory": "*",
+    "@keystone/module-funds": "*",
     "@keystone/module-home": "*",
     "@keystone/module-id-maker": "*",
     "@keystone/module-overview": "*",

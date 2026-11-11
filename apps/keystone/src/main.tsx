@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { App, buildRegistry, KeystoneStore, type Platform } from '@keystone/kit';
+import { App, buildRegistry, documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { plugins } from './connectors';
 import { SignIn, StartFailed } from './Gate';
 import { builtInModules } from './modules';
@@ -17,6 +17,7 @@ async function start() {
   let platform: Platform = await detectPlatform();
   let explain = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
   let signOut: (() => void) | undefined;
+  let signedInAs: (() => Promise<Platform>) | undefined;
 
   // A build with a Firebase project keeps the records in the cloud, behind a sign-in (docs/adr/0009). The SDK is
   // loaded only then.
@@ -24,13 +25,16 @@ async function start() {
 
   if (options) {
     const { openFirebase } = await import('./platform/firestore');
-    const cloud = openFirebase(options, firebaseEmulators(import.meta.env));
+    const layout = documentLayout(registry.modules);
+    const cloud = openFirebase(options, firebaseEmulators(import.meta.env), layout);
+    const local = platform;
 
     if (!(await cloud.signedIn())) {
       await new Promise<void>((signedIn) => root.render(<SignIn signIn={async (email, password) => { await cloud.signIn(email, password); signedIn(); }} />));
     }
 
-    platform = cloudPlatform(platform, cloud.remote);
+    // Who is signed in decides what they read and may do (docs/adr/0011), so it is read before the records.
+    signedInAs = async () => cloudPlatform(local, cloud.remote, layout, await cloud.member());
     explain = cloud.explain;
     signOut = () => void cloud.signOut().then(() => location.reload());
   }
@@ -38,6 +42,7 @@ async function start() {
   let store: KeystoneStore;
 
   try {
+    if (signedInAs) platform = await signedInAs();
     store = await KeystoneStore.open(platform, registry.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : [])));
   } catch (e) {
     console.error(e);

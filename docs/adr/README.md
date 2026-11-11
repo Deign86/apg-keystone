@@ -20,6 +20,7 @@ Consequences**.
 | [0008](0008-employee-timekeeping-and-payroll.md) | Employee timekeeping and payroll live in Keystone | Accepted |
 | [0009](0009-keystone-records-in-firebase.md) | Keystone's records live in Firebase | Accepted |
 | [0010](0010-bank-accounts.md) | Bank accounts are their own part, and statements pick one through a service | Accepted |
+| [0011](0011-requests-for-funds.md) | Requests for funds, decided by the owner | Accepted |
 
 Template:
 

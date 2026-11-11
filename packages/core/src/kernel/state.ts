@@ -13,10 +13,20 @@ export class KeystoneError extends Error {
   }
 }
 
-/** What every rule needs from outside: the reference data and the time. */
+/** Who is signed in to the company's records in the cloud: their member document (docs/adr/0009, 0010). */
+export interface Member {
+  uid: string;
+  name: string;
+  /** An owner adds members and decides requests for funds; staff do neither. */
+  role: 'owner' | 'staff';
+}
+
+/** What every rule needs from outside: the reference data, the time, and who is signed in. */
 export interface Ctx {
   seed: Seed;
   now: () => Date;
+  /** The member signed in to the cloud records. Absent when the records are on this computer, where nobody signs in. */
+  who?: Member;
 }
 
 /** A rule's result: the new state, the record it touched, the sentence to show. */

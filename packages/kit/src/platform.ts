@@ -1,4 +1,4 @@
-import type { FileFilter, SystemBridge } from '@keystone/core';
+import type { FileFilter, Member, SystemBridge } from '@keystone/core';
 
 /**
  * Everything Keystone needs from the machine. Modules and connectors talk only to this,
@@ -7,6 +7,9 @@ import type { FileFilter, SystemBridge } from '@keystone/core';
  */
 export interface Platform extends SystemBridge {
   readonly kind: 'desktop' | 'browser';
+
+  /** The member signed in to the records in the cloud (docs/adr/0009). Absent when the records are on this computer. */
+  readonly who?: Member;
 
   /** The saved state as JSON text, or null when there is none yet. Throws when it exists but cannot be read now. */
   loadState(): Promise<string | null>;

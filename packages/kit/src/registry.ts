@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import {
-  validateConnector, type Connector, type Ctx, type Figure, type Finding, type ServiceContracts, type ServiceName,
-  type ServiceProviders, type TerminalState, type WaitingItem,
+  COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
+  type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
 /**
@@ -59,6 +59,11 @@ export interface ModuleDef {
   onOpen?: (state: TerminalState, ctx: Ctx) => TerminalState;
   /** Services this module offers other parts, by published name: { [SERVICES.statementPayments]: impl }. */
   provides?: ServiceProviders;
+  /**
+   * One list in its data kept in the cloud as a document per record, in a collection of its own that firestore.rules
+   * names (docs/adr/0011). Locally nothing changes: the list stays in `state.ext[id]`.
+   */
+  documents?: RecordDocuments;
 }
 
 /** A connected system plus any screens it brings with it. */
@@ -151,7 +156,38 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
     return true;
   });
 
+  // A collection of its own must be one firestore.rules can name, and nobody else's.
+  const collections = new Map<string, string>(COLLECTIONS.map((c) => [c, 'Keystone']));
+  modules = modules.filter((m) => {
+    const c = m.documents?.collection;
+
+    if (c === undefined) return true;
+
+    if (!COLLECTION.test(c)) {
+      refused.push({ id: m.id, reason: `${m.title} keeps its records in "${c}", which must be lowercase letters.` });
+
+      return false;
+    }
+
+    if (collections.has(c)) {
+      refused.push({ id: m.id, reason: `${m.title} keeps its records in "${c}", which ${collections.get(c)} already uses.` });
+
+      return false;
+    }
+
+    collections.set(c, m.title);
+
+    return true;
+  });
+
   return { modules, connectors, refused };
+}
+
+const COLLECTION = /^[a-z]+$/;
+
+/** The lists the installed modules keep as documents of their own, for the cloud platform (docs/adr/0011). */
+export function documentLayout(modules: ModuleDef[]): DocumentLayout {
+  return Object.fromEntries(modules.flatMap((m) => (m.documents ? [[m.id, m.documents]] : [])));
 }
 
 /** The provider of a named service among the installed modules, if any. */

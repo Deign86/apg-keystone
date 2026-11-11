@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { bundledSeed, parseState, toDocuments, type DocumentChanges, type StateDocument, type TerminalState } from '@keystone/core';
-import { KeystoneStore, type Platform } from '@keystone/kit';
+import { bundledSeed, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState } from '@keystone/core';
+import { documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SignIn, StartFailed } from '../Gate';
+import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 import { cloudPlatform, MOVING_ELSEWHERE, NOT_MOVED_IN, NOT_READ, type RemoteDocs } from '../platform/cloud';
 import { firebaseConfig, firebaseEmulators } from '../platform/config';
@@ -152,6 +153,28 @@ describe('the records in the cloud', () => {
     const text = (await platform.loadState())!;
     await platform.saveState(text);
     expect(cloud.writes).toEqual([]);
+  });
+
+  it('keeps a module\'s own records one document each, and tells the rules who is signed in (docs/adr/0011)', async () => {
+    vi.useFakeTimers();
+    const layout = documentLayout(builtInModules);
+    const request = (no: string) => ({ no, purpose: 'Christmas party', amount: 48000, payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval' });
+    const filed = { ...sample(), ext: { funds: { requests: [request('RF-2026-0001')], last: 'RF-2026-0001' } } };
+    const { remote, cloud } = memoryCloud(toDocuments(filed, layout));
+    const who: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, layout, who));
+
+    expect(layout).toEqual({ funds: expect.objectContaining({ collection: 'rf', readBy: 'uid' }) });
+    expect(store.ctx.who).toEqual(who);
+    expect(store.state).toEqual(filed);
+
+    // A second request is written alone, with what the rules check beside it; the first is not written again.
+    store.commit({ ...store.state, ext: { funds: { requests: [request('RF-2026-0001'), request('RF-2026-0002')], last: 'RF-2026-0002' } } });
+    await vi.advanceTimersByTimeAsync(300);
+    expect(cloud.writes[0].set.map((d) => [`${d.collection}/${d.id}`, d.fields])).toEqual([
+      ['ext/funds', undefined],
+      ['rf/RF-2026-0002', { status: 'For Approval', uid: 'hr-1' }],
+    ]);
   });
 });
 

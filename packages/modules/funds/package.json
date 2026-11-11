@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/module-funds",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Requests for Funds: staff ask, the owner approves or declines, and an approval drafts the check voucher.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

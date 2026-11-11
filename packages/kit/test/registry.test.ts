@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRegistry, findService, type ModuleDef } from '../src/registry';
+import { buildRegistry, documentLayout, findService, type ModuleDef } from '../src/registry';
 import { okConnector } from './fakes';
 
 // Made-up services for these tests, published the way a real one is.
@@ -48,6 +48,26 @@ describe('registry', () => {
     const r = buildRegistry([mod('Check Vouchers')], []);
     expect(r.modules).toEqual([]);
     expect(r.refused[0].reason).toMatch(/lowercase letters, digits and dashes/);
+  });
+
+  it('keeps each module\'s own records in a collection nobody else uses, and lays them out for the cloud', () => {
+    const own = (collection: string) => ({ collection, list: 'requests', key: 'no', fields: ['status'] });
+
+    const r = buildRegistry([
+      mod('funds', { order: 1, documents: own('rf') }),
+      mod('copycat', { order: 2, documents: own('rf') }),
+      mod('vouchers', { order: 3, documents: own('cv') }),
+      mod('shouty', { order: 4, documents: own('Big-List') }),
+    ], []);
+
+    expect(r.modules.map((m) => m.id)).toEqual(['funds']);
+    expect(r.refused).toEqual([
+      { id: 'copycat', reason: 'Copycat keeps its records in "rf", which Funds already uses.' },
+      { id: 'vouchers', reason: 'Vouchers keeps its records in "cv", which Keystone already uses.' },
+      { id: 'shouty', reason: 'Shouty keeps its records in "Big-List", which must be lowercase letters.' },
+    ]);
+    expect(documentLayout(r.modules)).toEqual({ funds: own('rf') });
+    expect(documentLayout([mod('home')])).toEqual({});
   });
 
   it('leaves out a module whose requirement is missing, and anything that needed it', () => {

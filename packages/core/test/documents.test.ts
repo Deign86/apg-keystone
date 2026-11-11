@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, diffDocuments, documentId, fromDocuments, toDocuments, type TerminalState } from '../src';
+import { bundledSeed, diffDocuments, documentId, fromDocuments, toDocuments, type DocumentLayout, type JsonObject, type TerminalState } from '../src';
 
 // The saved state as one document per record (docs/adr/0009): it must read back exactly as it was saved, and a change
 // must write only the documents it touched.
@@ -84,5 +84,55 @@ describe('documents', () => {
     const docs = toDocuments(state());
     const broken = docs.map((d, i) => (i === 0 ? { ...d, body: '{ not json' } : d));
     expect(fromDocuments(broken).dir).toEqual(state().dir.slice(1));
+  });
+});
+
+// A list a module keeps as documents of its own (docs/adr/0011): one document per record in its own collection, with
+// the fields the rules check beside the body, and those fields winning when it is read back.
+describe('a module\'s own records', () => {
+  const layout: DocumentLayout = { funds: { collection: 'rf', list: 'requests', key: 'no', fields: ['status', 'uid', 'decision'], readBy: 'uid' } };
+  const request = (no: string, extra: JsonObject = {}): JsonObject => ({ no, purpose: 'Christmas party', amount: 48000, status: 'For Approval', uid: 'hr-1', ...extra });
+  const withRequests = (requests: JsonObject[]): TerminalState => ({ ...state(), ext: { payroll: { runs: [] }, funds: { requests, last: 'RF-2026-0002' } } });
+
+  it('keeps each record in its own document, with its checked fields beside it, and the rest in the module\'s document', () => {
+    const s = withRequests([request('RF-2026-0001'), request('RF-2026-0002', { status: 'Approved', decision: { by: 'Mark Reyes', uid: 'owner-1', at: '2026-11-02 10:00' } })]);
+    const docs = toDocuments(s, layout);
+    const rf = docs.filter((d) => d.collection === 'rf');
+
+    expect(rf.map((d) => [d.id, d.pos, d.fields])).toEqual([
+      ['RF-2026-0001', 0, { status: 'For Approval', uid: 'hr-1' }],
+      ['RF-2026-0002', 1, { status: 'Approved', uid: 'hr-1', decision: { by: 'Mark Reyes', uid: 'owner-1', at: '2026-11-02 10:00' } }],
+    ]);
+    expect(JSON.parse(docs.find((d) => d.collection === 'ext' && d.id === 'funds')!.body)).toEqual({ module: 'funds', data: { last: 'RF-2026-0002' } });
+    expect(fromDocuments(docs, layout)).toEqual(s);
+    // Without the layout, the module's data is one document, as before.
+    expect(toDocuments(s).some((d) => d.collection === 'rf')).toBe(false);
+  });
+
+  it('writes only the new record\'s document when a record is added', () => {
+    const before = withRequests([request('RF-2026-0001')]);
+    const after = withRequests([request('RF-2026-0001'), request('RF-2026-0002')]);
+    const change = diffDocuments(toDocuments(before, layout), toDocuments(after, layout));
+
+    expect(change.set.map((d) => `${d.collection}/${d.id}`)).toEqual(['rf/RF-2026-0002']);
+    expect(change.remove).toEqual([]);
+  });
+
+  it('reads the checked fields over the body, so a body edited past the rules changes none of them', () => {
+    const docs = toDocuments(withRequests([request('RF-2026-0001')]), layout).map((d) => (d.collection === 'rf'
+      ? { ...d, body: JSON.stringify(request('RF-2026-0001', { status: 'Approved', uid: 'someone-else', decision: { by: 'Me' } })) }
+      : d));
+
+    expect(fromDocuments(docs, layout).ext?.funds).toEqual({ last: 'RF-2026-0002', requests: [request('RF-2026-0001')] });
+  });
+
+  it('reads the records back into the module\'s data even when its own document is missing, in their order', () => {
+    const docs = toDocuments(withRequests([request('RF-2026-0001'), request('RF-2026-0002')]), layout).filter((d) => !(d.collection === 'ext' && d.id === 'funds'));
+    expect(fromDocuments([...docs].reverse(), layout).ext!.funds).toEqual({ requests: [request('RF-2026-0001'), request('RF-2026-0002')] });
+  });
+
+  it('leaves module data that is not an object as it is', () => {
+    const s = { ...state(), ext: { funds: ['not', 'an', 'object'] } };
+    expect(fromDocuments(toDocuments(s, layout), layout)).toEqual(s);
   });
 });

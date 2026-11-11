@@ -1,7 +1,8 @@
 # Keystone
 
-Alpha Premier Group's admin app. It covers Check Vouchers, Billing Statements, the ID Maker, a shared Directory, an
-Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
+Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (staff ask, the owner approves or
+declines from a PC or a phone, and an approval drafts the check voucher), Billing Statements, the ID Maker, a shared
+Directory, an Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
 - **The attendance tracker:** starts the app, or opens its download page when it is not installed.
 - **Alpha Branding Studio:** the same.
@@ -108,10 +109,12 @@ Adding or removing one is one package plus one line in `apps/keystone/src/module
 - Saved on each computer:
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`
   - Windows: `%APPDATA%\com.alphapremier.keystone\`
-- **Data** (⌘7 / Ctrl+7) has back up, restore and reset to the sample set. A backup is one JSON file in the
+- **Data**, on the rail after Payroll, has back up, restore and reset to the sample set. A backup is one JSON file in the
   prototype's own format.
 - **Bank Accounts**, under Settings after Data, keeps the company's bank accounts. A billing statement's **Pay into**
   picks the one its client pays into.
+- **In the cloud** (docs/FIREBASE.md), every signed-in computer opens the same records, and the web build can be
+  hosted for phones, where a menu takes the rail's place.
 - Sample records are made up; company details are APG's real ones.
 
 ## Agent skills
