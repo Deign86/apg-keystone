@@ -53,5 +53,7 @@ Firebase project, as well as to its updater.
     idle timeout).
   - Payroll is readable by every member. Payroll-only access (AID-70) needs payroll in its own documents and rules.
   - Photos stay on each computer.
+  - A change made just before a reload or closing the window reaches the cloud only when Keystone next opens on that
+    computer, as the same member (0013).
   - Firebase is a Google bill. A save writes only the records it changed, so the free daily quota should cover
     APG's use, but the project needs an owner at APG, not one person's account.

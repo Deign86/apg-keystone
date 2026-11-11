@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { bundledSeed, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState } from '@keystone/core';
+import { bundledSeed, fromDocuments, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState } from '@keystone/core';
 import { documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SignIn, StartFailed } from '../Gate';
@@ -7,16 +7,26 @@ import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 import { cloudPlatform, MOVING_ELSEWHERE, NOT_MOVED_IN, NOT_READ, type RemoteDocs } from '../platform/cloud';
 import { firebaseConfig, firebaseEmulators } from '../platform/config';
+import type { StoredText } from '../platform/web-storage';
 
 // The records in the cloud (docs/adr/0009), against a cloud held in memory: moving in once, reading back, writing only
-// what changed, and never saving over records it could not read.
+// what changed, never saving over records it could not read, and writing a save the page closed on before the cloud
+// had it (docs/adr/0013).
 
 const sample = (): TerminalState => structuredClone(bundledSeed.state);
+
+/** A write the cloud has not answered yet: `land` puts it in the cloud, `confirm` answers that it is there. */
+interface Held {
+  land(): void;
+  confirm(): void;
+}
 
 function memoryCloud(start: StateDocument[] | null = null) {
   const docs = new Map((start ?? []).map((d) => [`${d.collection}/${d.id}`, d]));
   const writes: DocumentChanges[] = [];
-  const cloud = { moved: start !== null, writes, moveIns: 0, failRead: false, failWrite: false };
+  const held: Held[] = [];
+  // `hold`: writes wait in `held` instead of landing at once, as when the page closes before Firestore sends them.
+  const cloud = { moved: start !== null, writes, moveIns: 0, failRead: false, failWrite: false, hold: false, held };
 
   const remote: RemoteDocs = {
     readAll: async () => {
@@ -35,15 +45,40 @@ function memoryCloud(start: StateDocument[] | null = null) {
     },
     write: async (change) => {
       if (cloud.failWrite) throw Object.assign(new Error('refused'), { code: 'permission-denied' });
-      cloud.writes.push(change);
 
-      for (const d of change.set) docs.set(`${d.collection}/${d.id}`, d);
+      const land = () => {
+        cloud.writes.push(change);
 
-      for (const r of change.remove) docs.delete(`${r.collection}/${r.id}`);
+        for (const d of change.set) docs.set(`${d.collection}/${d.id}`, d);
+
+        for (const r of change.remove) docs.delete(`${r.collection}/${r.id}`);
+      };
+
+      if (!cloud.hold) return land();
+
+      await new Promise<void>((confirm) => held.push({ land, confirm }));
     },
   };
 
   return { remote, cloud, docs };
+}
+
+/** A record in the memory cloud, read back. */
+const recordIn = (docs: Map<string, StateDocument>, collection: string, id: string) => {
+  const d = docs.get(`${collection}/${id}`);
+
+  return d ? JSON.parse(d.body) : null;
+};
+
+/** Where this computer notes saves the cloud has not confirmed, in memory, so a test can reopen Keystone with it. */
+function memoryText(value: string | null = null): StoredText & { value: string | null } {
+  const kept = {
+    value,
+    get: () => kept.value,
+    set: (v: string | null) => { kept.value = v; },
+  };
+
+  return kept;
 }
 
 function localPlatform(saved: string | null) {
@@ -60,6 +95,7 @@ function localPlatform(saved: string | null) {
 
 afterEach(() => {
   vi.useRealTimers();
+  localStorage.clear();
 });
 
 describe('the records in the cloud', () => {
@@ -175,6 +211,169 @@ describe('the records in the cloud', () => {
       ['ext/funds', undefined],
       ['rf/RF-2026-0002', { status: 'For Approval', uid: 'hr-1' }],
     ]);
+  });
+});
+
+describe('a save the cloud has not confirmed (docs/adr/0013)', () => {
+  /** Keystone opened on this computer, noting the saves the cloud has not confirmed in `kept`. */
+  async function opened(remote: RemoteDocs, kept: StoredText) {
+    const platform = cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept);
+
+    return { platform, state: parseState((await platform.loadState())!) };
+  }
+
+  /** The state with the vouchers' check numbers changed, from the first, and a log entry saying so. */
+  const edited = (s: TerminalState, checks: string[], text = 'Checks renumbered.'): TerminalState => ({
+    ...s,
+    cv: s.cv.map((v, i) => (checks[i] ? { ...v, check: checks[i] } : v)),
+    log: [{ when: '2026-11-11 09:30', mod: 'CV', text }, ...s.log],
+  });
+
+  it('writes a save the page closed on before the cloud had it, when Keystone opens again', async () => {
+    const { remote, cloud, docs } = memoryCloud(toDocuments(sample()));
+    const kept = memoryText();
+    const before = await opened(remote, kept);
+    const changed = { ...edited(before.state, ['000777']), dir: before.state.dir.slice(0, -1) };
+
+    // The page reloads before Firestore has the write, so it never reaches the cloud.
+    cloud.hold = true;
+    void before.platform.saveState(JSON.stringify(changed));
+    expect(kept.value).not.toBeNull();
+    cloud.hold = false;
+
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept));
+
+    expect(store.state).toEqual(changed);
+    await vi.waitFor(() => expect(kept.value).toBeNull());
+    expect(cloud.writes).toHaveLength(1);
+    expect(recordIn(docs, 'cv', 'CV-2026-0139').check).toBe('000777');
+    expect(recordIn(docs, 'dir', 'E-004')).toBeNull();
+    expect(fromDocuments([...docs.values()])).toEqual(changed);
+  });
+
+  it('never writes it over a record another computer changed since, and writes the rest of it', async () => {
+    const { remote, cloud, docs } = memoryCloud(toDocuments(sample()));
+    const kept = memoryText();
+    const mine = await opened(remote, kept);
+
+    cloud.hold = true;
+    void mine.platform.saveState(JSON.stringify(edited(mine.state, ['000777', '000778'], 'Mine.')));
+    cloud.hold = false;
+
+    // Before Keystone opens here again, another computer changes the first voucher.
+    const other = await opened(remote, memoryText());
+
+    await other.platform.saveState(JSON.stringify(edited(other.state, ['000999'], 'Theirs.')));
+
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept));
+
+    expect(store.state.cv.map((v) => v.check)).toEqual(['000999', '000778', '0001188']);
+    expect(store.state.log.map((e) => e.text).slice(0, 2).sort()).toEqual(['Mine.', 'Theirs.']);
+    await vi.waitFor(() => expect(kept.value).toBeNull());
+    expect(recordIn(docs, 'cv', 'CV-2026-0139').check).toBe('000999');
+    expect(recordIn(docs, 'cv', 'CV-2026-0140').check).toBe('000778');
+    expect(fromDocuments([...docs.values()])).toEqual(store.state);
+  });
+
+  it('does not write it again when it reached the cloud before the page closed', async () => {
+    const { remote, cloud } = memoryCloud(toDocuments(sample()));
+    const kept = memoryText();
+    const before = await opened(remote, kept);
+    const changed = edited(before.state, ['000777']);
+
+    cloud.hold = true;
+    void before.platform.saveState(JSON.stringify(changed));
+    // The cloud has it, but the page closed before the cloud said so.
+    cloud.held[0].land();
+    cloud.hold = false;
+
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept));
+
+    expect(store.state).toEqual(changed);
+    expect(cloud.writes).toHaveLength(1);
+    expect(kept.value).toBeNull();
+  });
+
+  it('writes a later save that was still waiting when the cloud confirmed an earlier one', async () => {
+    const { remote, cloud, docs } = memoryCloud(toDocuments(sample()));
+    const kept = memoryText();
+    const before = await opened(remote, kept);
+    const first = edited(before.state, ['000777'], 'First.');
+    const second = edited(first, ['000778'], 'Second.');
+
+    cloud.hold = true;
+    const firstSaved = before.platform.saveState(JSON.stringify(first));
+
+    void before.platform.saveState(JSON.stringify(second));
+    // The first save reaches the cloud and is confirmed; the page closes before the second one is sent.
+    cloud.held[0].land();
+    cloud.held[0].confirm();
+    await firstSaved;
+    cloud.hold = false;
+
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept));
+
+    expect(store.state).toEqual(second);
+    await vi.waitFor(() => expect(kept.value).toBeNull());
+    expect(fromDocuments([...docs.values()])).toEqual(second);
+  });
+
+  it('forgets each save the cloud confirms, and does not write one it refused when Keystone opens again', async () => {
+    const { remote, cloud } = memoryCloud(toDocuments(sample()));
+    const kept = memoryText();
+    const before = await opened(remote, kept);
+
+    await before.platform.saveState(JSON.stringify(edited(before.state, ['000777'])));
+    expect(kept.value).toBeNull();
+
+    cloud.failWrite = true;
+    await expect(before.platform.saveState(JSON.stringify(edited(before.state, ['000778'], 'Refused.')))).rejects.toThrow('refused');
+    expect(kept.value).toBeNull();
+    cloud.failWrite = false;
+
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept));
+
+    expect(store.state).toEqual(edited(sample(), ['000777']));
+    expect(cloud.writes).toHaveLength(1);
+  });
+
+  it('opens as usual when the note on this computer cannot be read', async () => {
+    const { remote, cloud } = memoryCloud(toDocuments(sample()));
+
+    for (const damaged of ['{ not json', '[{"collection":"cv"}]', '{"cv":1}']) {
+      const kept = memoryText(damaged);
+      const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, undefined, kept));
+
+      expect(store.state).toEqual(sample());
+      expect(cloud.writes).toEqual([]);
+      expect(kept.value).toBeNull();
+    }
+  });
+
+  it('keeps each member\'s saves apart, and writes them when that member opens Keystone again', async () => {
+    const { remote, cloud, docs } = memoryCloud(toDocuments(sample()));
+    const ana: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
+    const mark: Member = { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' };
+    const hers = cloudPlatform(localPlatform(null).platform, remote, {}, ana);
+    const changed = edited(parseState((await hers.loadState())!), ['000777']);
+
+    cloud.hold = true;
+    void hers.saveState(JSON.stringify(changed));
+    cloud.hold = false;
+    expect(localStorage.getItem('keystone-pending-saves:hr-1')).not.toBeNull();
+
+    // Someone else signs in on this computer: Ana's save is not written as theirs.
+    const his = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, mark));
+
+    expect(his.state).toEqual(sample());
+    expect(cloud.writes).toEqual([]);
+
+    // Ana signs in again, and it is written.
+    const again = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, ana));
+
+    expect(again.state).toEqual(changed);
+    await vi.waitFor(() => expect(localStorage.getItem('keystone-pending-saves:hr-1')).toBeNull());
+    expect(recordIn(docs, 'cv', 'CV-2026-0139').check).toBe('000777');
   });
 });
 
