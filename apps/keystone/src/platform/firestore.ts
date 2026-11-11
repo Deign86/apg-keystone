@@ -37,7 +37,7 @@ export interface CloudSession {
   signOut(): Promise<void>;
   /** Who is signed in, from their member document. Throws when the account is not a member. */
   member(): Promise<Member>;
-  /** Who may open the records, and the owner making an account (docs/adr/0013). */
+  /** Who may open the records, and the owner making an account (docs/adr/0014). */
   accounts: AppAccounts;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;

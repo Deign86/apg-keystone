@@ -39,7 +39,7 @@ up Auth and Firestore, and deploy `firestore.rules`.
    Authentication › Users, and the fields `role` (`owner`), `name` and `email`. `name` is how Keystone shows the
    person (who asked for funds, who decided). After that, the owner makes each staff member's account in Keystone:
    **Settings › User Accounts › Make account**, with their name, email and the password they first sign in with,
-   which the owner hands over (docs/adr/0013). It makes the sign-in and the member document together. A second owner,
+   which the owner hands over (docs/adr/0014). It makes the sign-in and the member document together. A second owner,
    or a change of role, is still made here in the console. Only an owner approves or declines requests for funds and
    reads everyone's; staff read only their own (docs/adr/0011).
 7. **Move the records in:** run Keystone with the variables set (`npm run dev` or `npm run desktop`) **on the

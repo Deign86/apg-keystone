@@ -2,7 +2,7 @@ import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
 import { asMember, documentIds, emptyCloud, expectHome, field, idToken, keepRecordsHere, makeAccount, setMember, signIn } from './emulators';
 
-// The owner making accounts (docs/adr/0013, packages/modules/accounts): from User Accounts, the owner makes a staff
+// The owner making accounts (docs/adr/0014, packages/modules/accounts): from User Accounts, the owner makes a staff
 // account, and that person signs in with it on another computer and opens the records. Staff see who has an account
 // and make none, and firestore.rules hold the same line for a member who goes past Keystone.
 // app.clearState() is another computer, signed out and empty.

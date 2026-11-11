@@ -1,7 +1,7 @@
 import { count, KeystoneError, logged, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { MemberAccount, NewAccount } from '@keystone/kit';
 
-// Who may open APG's records in the cloud, and the owner making an account for each staff member (docs/adr/0013). The
+// Who may open APG's records in the cloud, and the owner making an account for each staff member (docs/adr/0014). The
 // accounts themselves live with the sign-in (Platform.accounts); these rules check what the owner typed, word what the
 // screen says, and log each account made.
 

@@ -12,7 +12,7 @@ export interface Platform extends SystemBridge {
   readonly who?: Member;
   /** Signing out of the records in the cloud, by hand or when Keystone sits unused (docs/adr/0012). Absent with no sign-in. */
   readonly session?: AppSession;
-  /** Who may open the records in the cloud, and making accounts for them (docs/adr/0013). Absent with no sign-in. */
+  /** Who may open the records in the cloud, and making accounts for them (docs/adr/0014). Absent with no sign-in. */
   readonly accounts?: AppAccounts;
 
   /** The saved state as JSON text, or null when there is none yet. Throws when it exists but cannot be read now. */
