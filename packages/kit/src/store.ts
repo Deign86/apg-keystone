@@ -20,10 +20,14 @@ export class KeystoneStore {
     this.state = initial;
   }
 
-  /** Loads the saved state, then runs each installed module's housekeeping (overdue, expired). */
+  /**
+   * Loads the saved state, then runs each installed module's housekeeping (overdue, expired). When the platform cannot
+   * read it (the cloud is unreachable and nothing is cached), this throws: starting from the sample data instead would
+   * show it as if it were the company's, and the first save would write it over the real records.
+   */
   static async open(platform: Platform, housekeeping: ((s: TerminalState, ctx: Ctx) => TerminalState)[] = []): Promise<KeystoneStore> {
     let state = structuredClone(bundledSeed.state);
-    const saved = await platform.loadState().catch(() => null);
+    const saved = await platform.loadState();
 
     if (saved) {
       try {

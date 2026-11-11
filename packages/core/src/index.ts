@@ -12,6 +12,9 @@ export * from './kernel/schema';
 
 export * from './kernel/state';
 
+// The saved state as one document per record, for the cloud database (docs/adr/0009).
+export * from './kernel/documents';
+
 export * from './kernel/lines';
 
 export * from './kernel/insight';
