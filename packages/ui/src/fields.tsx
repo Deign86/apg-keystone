@@ -82,7 +82,7 @@ export function SelectInput({ value, onChange, options, label }: { value: string
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-30 outline-none">
+        <Select.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-70 outline-none">
           {/* taste-skill-ignore: a dropdown is a real overlay */}
           <Select.Popup className="max-h-[min(360px,var(--available-height))] min-w-[var(--anchor-width)] overflow-y-auto rounded-control border border-line-bright bg-surface-2 p-1 shadow-[0_16px_48px_rgb(0_0_0/0.55)] outline-none transition-[opacity,transform] duration-150 ease-out data-[ending-style]:opacity-0 data-[starting-style]:-translate-y-1 data-[starting-style]:opacity-0">
             <Select.List>

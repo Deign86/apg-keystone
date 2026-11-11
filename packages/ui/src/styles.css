@@ -11,7 +11,9 @@
   The tracked gold capitals (eyebrows, table headers, status capsules) are the one deliberate exception to the baseline type rules,
   because every APG admin system uses them (docs/DESIGN.md).
 
-  z-index scale, fixed: 10 sticky · 30 popovers and menus · 40 dialogs · 50 toasts.
+  z-index scale, fixed: 10 sticky · 40 dialog backdrops · 50 toasts · 60 dialogs · 70 popovers and menus. A toast stays
+  readable over the dimmed screen but never covers a dialog's buttons, and a menu or dropdown opens in front of the
+  dialog it is in.
 */
 
 @layer base {

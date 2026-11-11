@@ -103,20 +103,19 @@ test('edits pay from the row menu, refuses a rate it cannot read and an employee
   await expect(slip).toContainText('Bank BDO');
   await expect(slip).toContainText('Account no. 0012-3456-7890');
 
-  // Two employees cannot share a number. By now the messages at the foot of the window stack over the Save button,
-  // so this form is saved with Enter.
+  // Two employees cannot share a number.
   await setups.getByRole('row', /Angelica S\. Bautista/).tap();
   form = screen.getByRole('form', 'Pay setup for Angelica S. Bautista');
   const employeeNo = form.getByRole('textbox', 'Employee no.');
 
   await employeeNo.fill('APGCO-0013');
   await form.getByRole('textbox', 'Daily rate').fill('900');
-  await employeeNo.press('Enter');
+  await form.getByRole('button', 'Save pay setup').tap();
   await expect(form.getByRole('alert')).toHaveText('APGCO-0013 is already the employee number of Juan Miguel P. Reyes.');
 
   // Anyone without a bank is paid in cash.
   await employeeNo.fill('APGCO-0021');
-  await employeeNo.press('Enter');
+  await form.getByRole('button', 'Save pay setup').tap();
   await expect(form).toBeHidden();
   await expect(setups.getByRole('row', /Angelica S\. Bautista/).getByRole('cell', 'Cash')).toBeVisible();
 });

@@ -43,12 +43,13 @@ test('adds a vendor, who can then be paid by voucher', async ({ app, screen }) =
 
 test('adds a client with the VAT setup Billing Statements then follows', async ({ app, screen }) => {
   await app.open('/#directory');
-
-  // While the list shows clients, a new record is a client.
-  await screen.getByRole('group', 'Show').getByRole('button', 'Clients 3').tap();
   await screen.getByRole('button', 'Add record').tap();
   const dialog = screen.getByRole('dialog', 'Add record');
 
+  // The Type list opens in front of the dialog.
+  await expect(dialog.getByRole('combobox', 'Type')).toHaveText('Vendor');
+  await dialog.getByRole('combobox', 'Type').tap();
+  await screen.getByRole('option', 'Client').tap();
   await expect(dialog.getByRole('combobox', 'Type')).toHaveText('Client');
 
   // A client is billed, so it gets an Attention line and its own VAT and withholding; VAT is on to start with.
@@ -78,6 +79,8 @@ test('adds a client with the VAT setup Billing Statements then follows', async (
 
 test('adds an employee, who can then be given an ID and is counted on Home and Overview', async ({ app, screen }) => {
   await app.open('/#directory');
+
+  // While the list shows employees, a new record is an employee.
   await screen.getByRole('group', 'Show').getByRole('button', 'Employees 4').tap();
   await screen.getByRole('button', 'Add record').tap();
   const dialog = screen.getByRole('dialog', 'Add record');
@@ -148,7 +151,7 @@ test('edits a record', async ({ app, screen }) => {
   await expect(row).toContainText('Katipunan Road, Quezon City');
 });
 
-test('opens a record from its row, saves it under the same code, and logs the change', async ({ app, screen }) => {
+test('opens a record from its row, saves it under the same code and type, and logs the change', async ({ app, screen }) => {
   await app.open('/#directory');
   const row = screen.getByRole('table', 'Directory').getByRole('row', /^V-002 /);
 
@@ -162,6 +165,17 @@ test('opens a record from its row, saves it under the same code, and logs the ch
 
   await expect(screen.getByRole('dialog', 'V-002 updated.')).toBeVisible();
   await expect(row).toContainText('Katipunan Road, Quezon City');
+
+  // A record keeps its type: a vendor cannot become a client.
+  await row.tap();
+  const again = screen.getByRole('dialog', 'Edit V-002');
+
+  await again.getByRole('combobox', 'Type').tap();
+  await screen.getByRole('option', 'Client').tap();
+  await again.getByRole('button', 'Save changes').tap();
+  await expect(again.getByText('V-002 is a vendor; add a new record to change its type.')).toBeVisible();
+  await again.getByRole('button', 'Cancel').tap();
+  await expect(row).toContainText('Vendor');
 
   await app.open('/#activity');
   const entries = await directoryLog(screen);
