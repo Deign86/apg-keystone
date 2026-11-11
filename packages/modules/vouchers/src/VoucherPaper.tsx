@@ -28,7 +28,8 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
   return (
     <Sheet ref={ref} fit="half" label={`Check voucher ${v.no}`}>
-      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} />
+      {/* The company's name alone, on one line: no address or contact running down the top left. */}
+      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} nameOnly />
 
       <dl className="m-0 grid grid-cols-[1fr_15rem] border border-paper-ink">
         <Box label="Payee" strong className="border-r border-b border-paper-ink">

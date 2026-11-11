@@ -66,15 +66,20 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
   );
 });
 
-export function Letterhead({ company, title, no, date }: { company: Company; title: string; no: string; date?: string }) {
+/** The company and the document's title and number. `nameOnly` leaves the address and contact out: one line. */
+export function Letterhead({ company, title, no, date, nameOnly }: { company: Company; title: string; no: string; date?: string; nameOnly?: boolean }) {
   return (
     <header className="mb-3.5 flex justify-between gap-4 border-b-2 border-paper-gold pb-2.5">
       <div className="flex items-center gap-2.5">
         <img src={logo} alt="" className="size-11 object-contain" />
         <div>
           <p className="m-0 font-display text-[12.5px] font-bold tracking-[0.04em] whitespace-nowrap">{company.name}</p>
-          <p className="m-0 text-[11px] text-paper-muted">{company.address}</p>
-          <p className="m-0 text-[11px] text-paper-muted">{company.contact}</p>
+          {!nameOnly && (
+            <>
+              <p className="m-0 text-[11px] text-paper-muted">{company.address}</p>
+              <p className="m-0 text-[11px] text-paper-muted">{company.contact}</p>
+            </>
+          )}
         </div>
       </div>
       <div className="shrink-0 text-right">
