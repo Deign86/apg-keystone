@@ -9,7 +9,8 @@ export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false;
  */
 export class KeystoneStore {
   state: TerminalState;
-  readonly ctx: Ctx = { seed: bundledSeed, now: () => new Date() };
+  /** The rules' context: the reference data, the clock, and who is signed in, if anyone. */
+  readonly ctx: Ctx;
   private listeners = new Set<() => void>();
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
   /** Form drafts by key, so a half-filled form survives switching screens. */
@@ -18,6 +19,7 @@ export class KeystoneStore {
 
   constructor(readonly platform: Platform, initial: TerminalState) {
     this.state = initial;
+    this.ctx = { seed: bundledSeed, now: () => new Date(), ...(platform.who && { who: platform.who }) };
   }
 
   /**

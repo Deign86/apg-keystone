@@ -35,20 +35,33 @@ up Auth and Firestore, and deploy `firestore.rules`.
 
 6. **Members:** in Firestore, create `keystone/apg/members/<uid>` for each person, with the uid from
    Authentication › Users, and the fields `role` (`owner` or `staff`) and `name`. The first owner has to be added in
-   the console; after that, owners can add members.
+   the console; after that, owners can add members. `name` is how Keystone shows the person (who asked for funds, who
+   decided). Only an owner approves or declines requests for funds and reads everyone's; staff read only their own
+   (docs/adr/0011).
 7. **Move the records in:** run Keystone with the variables set (`npm run dev` or `npm run desktop`) **on the
    computer that holds the real records**, and sign in as an owner. Keystone moves that computer's records in once.
    Any other computer then opens the same records. A computer with no records of its own refuses to move anything in.
 8. **Release builds:** add the same four values as repository variables (Settings › Secrets and variables › Actions
    › Variables): `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` and
    `VITE_FIREBASE_AUTH_DOMAIN`. The next release then ships with the cloud records.
+9. **On a phone (Firebase Hosting):** Sir Mark decides requests for funds from his phone's browser too. With the four
+   values in `apps/keystone/.env.local`, build the web app and deploy it from the repository root:
+
+   ```bash
+   npm run build:web
+   npx -y firebase-tools@latest deploy --only hosting --project <project id>
+   ```
+
+   It is served at `https://<project id>.web.app`, behind the same sign-in. Never deploy a build without the
+   variables: it would keep its records in each visitor's browser. CI does not deploy it.
 
 ## Good to know
 
 - **The config is not a secret.** It names the project; access is decided by signing in and by `firestore.rules`.
   It still stays out of the code, in `.env.local` (ignored by git) or the Actions variables.
-- **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`
-  and `http://127.0.0.1:5174` (development), or leave it unrestricted and rely on the rules.
+- **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,
+  `http://127.0.0.1:5174` (development) and `https://<project id>.web.app` (the phone), or leave it unrestricted and
+  rely on the rules.
 - **Turning it off:** build without the variables. Each computer then opens the copy its last save left in
   `state.json`.
 - **Starting over:** delete the `keystone/apg` document and its collections. The next computer to open a Firebase

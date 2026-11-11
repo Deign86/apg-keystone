@@ -1,6 +1,6 @@
 import type { ISODate } from './dates';
 import type { Centavos } from './money';
-import type { BankAccount, Statement, TerminalState } from './schema';
+import type { BankAccount, Statement, TerminalState, Voucher } from './schema';
 import type { Change, Ctx } from './state';
 
 // Published service contracts. When one part needs something another part does, the
@@ -16,6 +16,8 @@ export const SERVICES = {
   employeeAttendance: 'timekeeping.employee-attendance',
   /** Offered by the banks module: the company's bank accounts, for a document that says where to pay. */
   bankAccounts: 'banks.bank-accounts',
+  /** Offered by the vouchers module: a check voucher drafted for spending approved elsewhere (a request for funds). */
+  voucherDrafts: 'vouchers.drafts',
 } as const;
 
 /**
@@ -26,6 +28,7 @@ export interface ServiceContracts {
   [SERVICES.statementPayments]: StatementPayments;
   [SERVICES.employeeAttendance]: EmployeeAttendance;
   [SERVICES.bankAccounts]: BankAccounts;
+  [SERVICES.voucherDrafts]: VoucherDrafts;
 }
 
 export type ServiceName = keyof ServiceContracts;
@@ -99,4 +102,22 @@ export interface BankAccounts {
   accounts(state: TerminalState, ctx: Ctx): BankAccount[];
   /** How an account is named in a list: "BPI · 4011 0258 68". */
   label(account: BankAccount): string;
+}
+
+/** Spending approved elsewhere, to be paid by check: one amount to one payee. */
+export interface VoucherRequest {
+  /** Directory code of the payee. */
+  payee: string;
+  /** Pesos. */
+  amount: number;
+  /** The voucher's one particular: what the money is for, and the record it was approved on. */
+  particulars: string;
+}
+
+export interface VoucherDrafts {
+  /**
+   * Saves a voucher For Approval under the next number, with the signatories and bank a new voucher starts with and no
+   * check yet, for accounting to complete. Refuses a payee missing from the directory, or no amount.
+   */
+  draft(state: TerminalState, request: VoucherRequest, ctx: Ctx): Change<Voucher>;
 }

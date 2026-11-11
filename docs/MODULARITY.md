@@ -68,12 +68,13 @@ changes.
 | `requires` | | Module ids it cannot work without. If one is missing, the module is left out with its reason. |
 | `onHome`, `stat` | | A tile on Home with one live figure |
 | `figure` | | A cell in Overview's figure strip. Mark the one that answers the screen's question `lead: true`. |
-| `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: billing 30, vouchers 20, IDs 10. |
+| `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20, IDs 10. |
 | `waiting`, `openWaiting` | | Records waiting on someone, listed on Overview, and how to open one |
 | `create` | | A "New …" button on Overview |
 | `logTags` | | The activity-log tags it writes, with their filter label |
 | `onOpen` | | Housekeeping when Keystone opens (marking overdue or expired records) |
 | `provides` | | Services it offers other parts, by published name (see below) |
+| `documents` | | One list in its data kept in the cloud as a document per record, in a collection of its own that `firestore.rules` names, with the fields the rules check beside each body (docs/adr/0011). The registry refuses a collection that is taken. |
 
 A module reaches the rest of the app only through `useModuleApp()`: `go`, `has`, `setDraft`, `service`, `state`, `ctx`.
 Everything else it needs comes from `@keystone/core`, `@keystone/ui` and `@keystone/kit`.
@@ -105,6 +106,13 @@ And Bank Accounts, billing and vouchers (docs/adr/0010):
 core: SERVICES.bankAccounts = 'banks.bank-accounts', interface BankAccounts
 module-banks: provides it                  module-billing: app.service(SERVICES.bankAccounts) for "Pay into", or none
                                            module-vouchers: the same for "Bank" (drawn on), or none
+```
+
+And Check Vouchers and Requests for Funds (docs/adr/0011):
+
+```
+core: SERVICES.voucherDrafts = 'vouchers.drafts', interface VoucherDrafts
+module-vouchers: provides it               module-funds: app.service(SERVICES.voucherDrafts) when the owner approves, or no voucher
 ```
 
 This is the OSGi service-registry pattern, and the "published interface" of Fowler and of Spring Modulith's named

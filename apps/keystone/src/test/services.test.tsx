@@ -66,3 +66,25 @@ describe('the bank-accounts service, as shipped', () => {
     expect(r.modules.map((m) => m.id)).toContain('billing');
   });
 });
+
+// Check Vouchers publishes voucher-drafts for Requests for Funds to draft the check voucher of an approved request
+// (docs/adr/0011). Funds still installs without it, and an approval then drafts nothing (src/test/funds.test.tsx).
+
+describe('the voucher-drafts service, as shipped', () => {
+  it('is provided by vouchers under its published name, and drafts a voucher For Approval', async () => {
+    const drafts = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.voucherDrafts);
+    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
+
+    expect(drafts).toBeDefined();
+    expect(drafts!.draft(store.state, { payee: 'V-002', amount: 48000, particulars: 'Christmas party (RF-2026-0001)' }, store.ctx).record)
+      .toMatchObject({ no: '8888-001', payee: 'V-002', status: 'For Approval', check: '' });
+  });
+
+  it('is absent, not broken, without vouchers, and funds stays installed', () => {
+    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'vouchers'), plugins);
+
+    expect(r.refused).toEqual([]);
+    expect(findService(r.modules, SERVICES.voucherDrafts)).toBeUndefined();
+    expect(r.modules.map((m) => m.id)).toContain('funds');
+  });
+});

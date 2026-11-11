@@ -1,4 +1,7 @@
-import { diffDocuments, fromDocuments, parseState, toDocuments, type DocumentChanges, type StateDocument, type TerminalState } from '@keystone/core';
+import {
+  diffDocuments, fromDocuments, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member, type StateDocument,
+  type TerminalState,
+} from '@keystone/core';
 import type { Platform } from '@keystone/kit';
 
 /** The company's records in the cloud, one document per record (docs/adr/0009): Firestore in the app, a fake in tests. */
@@ -20,15 +23,16 @@ export const NOT_READ = 'Keystone has not read the records from the cloud, so it
 
 /**
  * The platform with the saved state in the cloud. Photos, files and the system stay with the local platform, and each
- * save also keeps a copy on this computer, as before.
+ * save also keeps a copy on this computer, as before. `layout` names the lists modules keep as documents of their own
+ * (docs/adr/0011); `who` is the member signed in, which the rules see as `ctx.who`.
  */
-export function cloudPlatform(local: Platform, remote: RemoteDocs): Platform {
+export function cloudPlatform(local: Platform, remote: RemoteDocs, layout: DocumentLayout = {}, who?: Member): Platform {
   // What the cloud holds, as far as this computer knows: the documents read or last written. Null until a read
   // succeeds, and every save is refused until then, so a failed read can never be followed by a save over the records.
   let synced: StateDocument[] | null = null;
 
   const opened = (state: TerminalState) => {
-    synced = toDocuments(state);
+    synced = toDocuments(state, layout);
 
     return JSON.stringify(state);
   };
@@ -36,7 +40,7 @@ export function cloudPlatform(local: Platform, remote: RemoteDocs): Platform {
   async function loadState(): Promise<string | null> {
     const docs = await remote.readAll();
 
-    if (docs) return opened(fromDocuments(docs));
+    if (docs) return opened(fromDocuments(docs, layout));
 
     // Nothing in the cloud yet: this computer's records move in, once. A computer with none, or with a damaged file,
     // moves nothing in, so the sample data never takes the records' place.
@@ -51,19 +55,19 @@ export function cloudPlatform(local: Platform, remote: RemoteDocs): Platform {
 
     if (!state) throw new Error(NOT_MOVED_IN);
 
-    if (await remote.moveIn(toDocuments(state))) return opened(state);
+    if (await remote.moveIn(toDocuments(state, layout))) return opened(state);
     // Another computer was first: its records are the company's.
     const theirs = await remote.readAll();
 
     if (!theirs) throw new Error(MOVING_ELSEWHERE);
 
-    return opened(fromDocuments(theirs));
+    return opened(fromDocuments(theirs, layout));
   }
 
   function saveState(json: string): Promise<void> {
     if (!synced) return Promise.reject(new Error(NOT_READ));
     const before = synced;
-    const next = toDocuments(parseState(json));
+    const next = toDocuments(parseState(json), layout);
     const change = diffDocuments(before, next);
 
     // Worked out and handed over at once, in the order the saves were made; the next save builds on this one.
@@ -79,5 +83,5 @@ export function cloudPlatform(local: Platform, remote: RemoteDocs): Platform {
     });
   }
 
-  return { ...local, loadState, saveState };
+  return { ...local, loadState, saveState, ...(who && { who }) };
 }

@@ -16,6 +16,7 @@
     "dev": "npm run sync && npm run dev -w apps/keystone",
     "desktop": "npm run sync && cd apps/keystone && tauri dev",
     "build": "npm run sync -- --check && cd apps/keystone && tauri build",
+    "build:web": "npm run sync -- --check && npm run build -w apps/keystone",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "test:e2e": "e2e run && npm run test:e2e:cloud",

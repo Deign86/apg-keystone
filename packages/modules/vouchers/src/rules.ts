@@ -1,7 +1,7 @@
 import {
   count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber, payees,
   peso, recordOf, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
-  type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher,
+  type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher, type VoucherDrafts,
   type VoucherStatus, type WaitingItem
 } from '@keystone/core';
 
@@ -142,6 +142,14 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }
+
+/**
+ * The vouchers.drafts service (SERVICES.voucherDrafts): a voucher for spending approved elsewhere, saved For Approval
+ * like any other, with one particular and no check yet. Accounting adds the check and it is approved as usual.
+ */
+export const voucherDrafts: VoucherDrafts = {
+  draft: (s, r, ctx) => saveVoucher(s, { ...newVoucher(s, ctx), payee: r.payee, lines: [lineDraft({ desc: r.particulars, amount: String(r.amount) })] }, ctx),
+};
 
 // ---------- what the vouchers domain tells Overview and Home ----------
 

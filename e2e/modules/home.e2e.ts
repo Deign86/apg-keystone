@@ -16,8 +16,9 @@ test('has a tile for each screen, with its figure, that opens it', async ({ app,
   await app.open('/');
   const tiles = screen.getByRole('main').getByRole('list').first();
 
-  await expect(tiles.getByRole('listitem')).toHaveCount(8);
+  await expect(tiles.getByRole('listitem')).toHaveCount(9);
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
+  await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding ₱677,627\.50$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^ID Maker .* Queued for printing 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Directory .* Records 11$/)).toBeVisible();

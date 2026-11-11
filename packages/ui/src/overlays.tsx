@@ -97,7 +97,8 @@ function Toasts() {
 
   return (
     <Toast.Portal>
-      <Toast.Viewport className="fixed right-0 bottom-[max(20px,env(safe-area-inset-bottom))] left-[var(--size-rail)] z-50 mx-auto flex w-[min(520px,calc(100vw-var(--size-rail)-32px))] flex-col items-center gap-2 outline-none">
+      {/* Centred under the screen: beside the rail from 768px, across the whole width on a phone, where it is a menu. */}
+      <Toast.Viewport className="fixed right-0 bottom-[max(20px,env(safe-area-inset-bottom))] left-0 z-50 mx-auto flex w-[min(520px,calc(100vw-32px))] flex-col items-center gap-2 outline-none md:left-[var(--size-rail)] md:w-[min(520px,calc(100vw-var(--size-rail)-32px))]">
         {toasts.map((t) => (
           <Toast.Root
             key={t.id}
