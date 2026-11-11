@@ -37,7 +37,7 @@ test('a tile follows the data: a voucher saved shows in its figure', async ({ ap
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('dialog', '8888-001 saved and routed for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
 
   await app.open('/');
 

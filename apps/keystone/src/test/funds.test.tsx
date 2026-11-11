@@ -57,8 +57,8 @@ describe('a request for funds, as shipped', () => {
 
     await approve();
     const voucher = store.state.cv.at(-1);
-    expect(voucher).toMatchObject({ no: '8888-001', payee: 'V-002', status: 'For Approval', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }] });
-    expect(store.state.ext?.funds).toMatchObject({ requests: [{ no: 'RF-2026-0001', status: 'Approved', voucher: '8888-001', decision: { by: 'Mark Reyes', uid: 'owner-1' } }] });
+    expect(voucher).toMatchObject({ no: '888-001', payee: 'V-002', status: 'For Approval', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }] });
+    expect(store.state.ext?.funds).toMatchObject({ requests: [{ no: 'RF-2026-0001', status: 'Approved', voucher: '888-001', decision: { by: 'Mark Reyes', uid: 'owner-1' } }] });
     expect(screen.getByRole('table', { name: 'Requests for funds' })).toHaveTextContent('Approved');
   });
 

@@ -56,7 +56,7 @@ Status: Accepted · Date: 2026-11-11
     reads.
 - **Approving drafts the voucher through a service.** Check Vouchers publishes `vouchers.drafts`
   (`SERVICES.voucherDrafts`): `draft(state, { payee, amount, particulars }, ctx)` saves a voucher For Approval under
-  the next number (8888-…), with one particular, the signatories and bank a new voucher starts with (the last
+  the next number (888-…), with one particular, the signatories and bank a new voucher starts with (the last
   voucher's, 0010) and no check yet. The request keeps the voucher's
   number, and the voucher's particular names the request.
   - Accounting adds the check number and date, prints it, and it is approved as every voucher is.
@@ -65,7 +65,7 @@ Status: Accepted · Date: 2026-11-11
   - The owner: requests waiting for a decision on Home and Overview (a figure, the finding, waiting items, ASAP ones
     first).
   - A requester: their own requests while they wait, and for seven days after a decision, the answer as the finding
-    ("RF-2026-0003 was approved; 8888-001 is drafted.").
+    ("RF-2026-0003 was approved; 888-001 is drafted.").
 - **On a phone:** Keystone's web build, hosted on Firebase Hosting in the same project (`firebase.json › hosting`),
   opens in a phone browser with the same sign-in. Below 768px the shell swaps the rail for a top bar with a menu, and
   the Requests for Funds screen fits a phone. IT deploys it (docs/FIREBASE.md); CI does not.

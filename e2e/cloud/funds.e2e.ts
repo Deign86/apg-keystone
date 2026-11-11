@@ -78,7 +78,7 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
   await expect(party).toContainText('Ana Cruz on Nov 2, 2026');
   await party.getByRole('button', 'Approve').tap();
   await screen.getByRole('alertdialog', 'Approve RF-2026-0001?').getByRole('button', 'Approve').tap();
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 approved. 8888-001 is drafted for accounting.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 approved. 888-001 is drafted for accounting.')).toBeVisible();
 
   const charger = screen.getByRole('article', 'RF-2026-0002');
 
@@ -90,14 +90,14 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
 
   // The decisions and the voucher reach the cloud: accounting finds the voucher For Approval, naming the request.
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
-  await expect.poll(() => record('cv', '8888-001'), { timeout: 10_000 }).toMatchObject({
+  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({
     payee: 'V-002', status: 'For Approval', check: '', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }],
   });
   await expect.poll(() => field('rf', 'RF-2026-0002', 'status'), { timeout: 10_000 }).toBe('Declined');
 
   // Each requester sees their own answer the next time Keystone opens.
   await signInElsewhere(app, screen, hr);
-  await expect(screen.getByText('RF-2026-0001 was approved; 8888-001 is drafted.')).toBeVisible();
+  await expect(screen.getByText('RF-2026-0001 was approved; 888-001 is drafted.')).toBeVisible();
 
   await signInElsewhere(app, screen, it);
   await expect(screen.getByText('RF-2026-0002 was declined: Use the spare in the IT cabinet.')).toBeVisible();

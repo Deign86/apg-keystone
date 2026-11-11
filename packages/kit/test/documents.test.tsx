@@ -19,8 +19,8 @@ describe('document sheet', () => {
   });
 
   it('keeps a half sheet to the top half of an A4 page, cut at the middle', () => {
-    render(<Sheet label="Check voucher 8888-001" fit="half">Paper</Sheet>);
-    const paper = screen.getByRole('article', { name: 'Check voucher 8888-001' });
+    render(<Sheet label="Check voucher 888-001" fit="half">Paper</Sheet>);
+    const paper = screen.getByRole('article', { name: 'Check voucher 888-001' });
 
     // 136.5 mm: from the top margin (12 mm) to the middle of the page (148.5 mm).
     expect(HALF_PAGE_HEIGHT).toBe(516);

@@ -43,17 +43,17 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('dialog', '8888-001 saved and routed for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
 
   // The new voucher and its log entry reach the cloud; the other vouchers are not written again.
-  await expect.poll(() => record('cv', '8888-001'), { timeout: 10_000 }).toMatchObject({ no: '8888-001', status: 'For Approval' });
+  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ no: '888-001', status: 'For Approval' });
   await expect.poll(async () => (await documentIds('log')).length, { timeout: 10_000 }).toBe(8);
-  expect(await documentIds('cv')).toEqual(['8888-001', 'CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
+  expect(await documentIds('cv')).toEqual(['888-001', 'CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
 
   // Reopened on the same computer: still signed in, and the voucher is there.
   await app.restart();
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 .* For Approval/)).toBeVisible({ timeout: 15_000 });
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .* For Approval/)).toBeVisible({ timeout: 15_000 });
 
   // Another computer: signed out, with no records of its own. A staff member signs in and sees the owner's voucher.
   await app.clearState();
@@ -65,13 +65,13 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await app.open('/#vouchers');
   const register = screen.getByRole('table', 'Voucher register');
 
-  await expect(register.getByRole('row', /^8888-001 .* ₱1,250\.50 For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^888-001 .* ₱1,250\.50 For Approval/)).toBeVisible();
 
   // The staff member's change reaches the cloud too (firestore.rules lets members write records).
-  await register.getByRole('button', 'Actions for 8888-001').tap();
+  await register.getByRole('button', 'Actions for 888-001').tap();
   await screen.getByRole('menuitem', 'Mark approved').tap();
-  await expect(register.getByRole('row', /^8888-001 /).getByRole('cell', 'Approved')).toBeVisible();
-  await expect.poll(() => record('cv', '8888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });
+  await expect(register.getByRole('row', /^888-001 /).getByRole('cell', 'Approved')).toBeVisible();
+  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });
 });
 
 test('a second computer opens the cloud\'s records, never moving its own over them', async ({ app, screen, browser }) => {

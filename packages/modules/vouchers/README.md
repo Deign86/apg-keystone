@@ -12,7 +12,7 @@
   of an A4 sheet, cut once along the dashed line; Print and Export PDF scale it to that half.
 - `src/rules.ts`: its rules (numbering, saving, status changes, the release check number, the lock on an approved
   voucher, copying one) and what it contributes. Tested in `test/rules.test.ts`.
-- Numbering: 8888-001, 8888-002 and on, with no year (older vouchers keep their CV-2026-… numbers). A new
+- Numbering: 888-001, 888-002 and on, with no year (older vouchers keep their CV-2026-… or 8888-… numbers). A new
   voucher's signatories start as the last voucher's, so each preparer types their full name once.
 
 Older vouchers keep the account code they were saved with; it is no longer entered or printed.

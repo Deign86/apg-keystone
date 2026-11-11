@@ -77,7 +77,7 @@ describe('the voucher-drafts service, as shipped', () => {
 
     expect(drafts).toBeDefined();
     expect(drafts!.draft(store.state, { payee: 'V-002', amount: 48000, particulars: 'Christmas party (RF-2026-0001)' }, store.ctx).record)
-      .toMatchObject({ no: '8888-001', payee: 'V-002', status: 'For Approval', check: '' });
+      .toMatchObject({ no: '888-001', payee: 'V-002', status: 'For Approval', check: '' });
   });
 
   it('is absent, not broken, without vouchers, and funds stays installed', () => {

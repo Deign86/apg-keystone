@@ -7,14 +7,14 @@ import { expect, type Screen } from 'e2e';
 // back up and restore that same file. The runner keeps a download under a numbered name
 // (001-keystone-backup-2026-11-02.json), and that is the name the chooser hands Keystone.
 
-/** Saves 8888-001 for Meralco, the payee a new voucher starts with. */
+/** Saves 888-001 for Meralco, the payee a new voucher starts with. */
 async function saveVoucher(screen: Screen) {
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('dialog', '8888-001 saved and routed for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
 }
 
 test('is under Settings on the rail', async ({ app, screen }) => {
@@ -51,7 +51,7 @@ test('restores a backup only after asking, and drops what was saved since', asyn
   await expect(confirm.getByText('It holds 3 vouchers, 3 statements, 3 IDs and 11 directory records. Everything Keystone holds now is replaced.')).toBeVisible();
   await confirm.getByRole('button', 'Cancel').tap();
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 
   await app.open('/#data');
   await screen.getByRole('region', 'Data').getByRole('button', 'Restore from backup…').setInputFiles(backup.absolutePath);
@@ -59,7 +59,7 @@ test('restores a backup only after asking, and drops what was saved since', asyn
   await expect(screen.getByRole('dialog', `Restored ${file}.`)).toBeVisible();
 
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeHidden();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeHidden();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row')).toHaveCount(4);
 
   // Home and the Activity Log are back to the sample data too.
@@ -91,7 +91,7 @@ test('brings back work from a backup after a reset', async ({ app, screen, brows
 
   // The voucher is back in the register, on Home and in the Activity Log.
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 Nov 2, 2026 Manila Electric Company \(Meralco\).*₱1,250\.50 For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 Nov 2, 2026 Manila Electric Company \(Meralco\).*₱1,250\.50 For Approval/)).toBeVisible();
 
   await app.open('/');
   await expect(screen.getByRole('button', /^Check Vouchers .* Awaiting approval 2$/)).toBeVisible();
@@ -100,7 +100,7 @@ test('brings back work from a backup after a reset', async ({ app, screen, brows
   const entries = screen.getByRole('region', 'Entries');
 
   await expect(entries.getByRole('listitem')).toHaveCount(7);
-  await expect(entries.getByText('8888-001 for Manila Electric Company (Meralco) saved and routed for approval (₱1,250.50).')).toBeVisible();
+  await expect(entries.getByText('888-001 for Manila Electric Company (Meralco) saved and routed for approval (₱1,250.50).')).toBeVisible();
 });
 
 test('refuses a file that is not a Keystone backup, and changes nothing', async ({ app, screen }) => {
@@ -114,7 +114,7 @@ test('refuses a file that is not a Keystone backup, and changes nothing', async 
   await expect(screen.getByRole('alertdialog')).toBeHidden();
 
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 });
 
 test('refuses a backup that was cut off, in the same words', async ({ app, screen }) => {
@@ -138,7 +138,7 @@ test('refuses a backup with a record a screen cannot show, naming the record, an
   await expect(screen.getByRole('alertdialog')).toBeHidden();
 
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0138 /)).toBeHidden();
 });
 
@@ -149,7 +149,7 @@ test('resets to the sample data only after asking', async ({ app, screen }) => {
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 
   await app.open('/#data');
   await screen.getByRole('region', 'Data').getByRole('button', 'Reset to sample data…').tap();
@@ -158,7 +158,7 @@ test('resets to the sample data only after asking', async ({ app, screen }) => {
   await expect(confirm.getByText('Every voucher, statement, ID and directory record is replaced with the sample set. Back up first if you may need them.')).toBeVisible();
   await confirm.getByRole('button', 'Cancel').tap();
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 
   await app.open('/#data');
   await screen.getByRole('region', 'Data').getByRole('button', 'Reset to sample data…').tap();
@@ -166,6 +166,6 @@ test('resets to the sample data only after asking', async ({ app, screen }) => {
   await expect(screen.getByRole('dialog', 'Data reset to the sample set.')).toBeVisible();
   await app.open('/#vouchers');
 
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeHidden();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeHidden();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row')).toHaveCount(4);
 });

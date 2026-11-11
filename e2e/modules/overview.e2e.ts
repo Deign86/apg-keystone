@@ -67,7 +67,7 @@ test('starts a check voucher or an ID from its button, putting away what was ope
   await screen.getByRole('button', 'New check voucher').tap();
 
   await expect(screen.getByRole('heading', { name: 'Check Vouchers', level: 1 })).toBeVisible();
-  await expect(screen.getByRole('form', 'New voucher').getByRole('textbox', 'CV No.')).toHaveValue('8888-001');
+  await expect(screen.getByRole('form', 'New voucher').getByRole('textbox', 'CV No.')).toHaveValue('888-001');
 
   await app.open('/#overview');
   await screen.getByRole('button', 'New ID').tap();
