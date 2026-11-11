@@ -47,7 +47,8 @@ The ID card's foil stripe is flat gold. There are no gradients anywhere.
 - **Buttons:** primary is flat gold with dark ink; secondary is outlined; quiet has no outline. They are 36px tall (28px
   small) with radius 6, and scale to 0.97 when pressed.
 - **Documents** (the voucher, the statement, the ID card) are drawn once. The same element is the live preview, the
-  print and the PDF.
+  print and the PDF. The voucher and the statement are laid out at the paper's width (186 mm, A4 less the print
+  margins) and scaled down on screen to fit the preview column, so a narrow window never rewraps or crops them.
 
 ## Checks, and their latest results
 
@@ -62,3 +63,6 @@ On 2026-10-30:
   width isn't inspected.
 - **Accessibility:** every control has a name, form errors are tied to their fields, dialogs trap focus, and toasts
   are announced. Registers can be used from the keyboard.
+
+On 2026-11-11, Check Vouchers at 1440 and 1100px: 0 fails. The three-copy voucher had grown taller than the inspector
+allows for a `data-ui` fragment at 1100px; drawing it at the paper's width and scaling it to the column fixed that.

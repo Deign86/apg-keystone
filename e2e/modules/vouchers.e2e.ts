@@ -60,7 +60,7 @@ test('approves and releases a voucher from its row menu', async ({ app, screen }
   await expect(row.getByRole('cell', 'Released')).toBeVisible();
 });
 
-test('will not release a voucher without its check number', async ({ app, screen }) => {
+test('releases a voucher only once it is approved and has its check number', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
@@ -71,9 +71,28 @@ test('will not release a voucher without its check number', async ({ app, screen
 
   await row.getByRole('button', 'Actions for CV-2026-0142').tap();
   await screen.getByRole('menuitem', 'Mark released').tap();
+  await expect(screen.getByRole('dialog', 'Approve CV-2026-0142 before releasing it.')).toBeVisible();
+  await expect(row.getByRole('cell', 'For Approval')).toBeVisible();
+
+  await row.getByRole('button', 'Actions for CV-2026-0142').tap();
+  await screen.getByRole('menuitem', 'Mark approved').tap();
+  await expect(row.getByRole('cell', 'Approved')).toBeVisible();
+  await row.getByRole('button', 'Actions for CV-2026-0142').tap();
+  await screen.getByRole('menuitem', 'Mark released').tap();
 
   await expect(screen.getByRole('dialog', 'Enter the check number on CV-2026-0142 before releasing it.')).toBeVisible();
-  await expect(row.getByRole('cell', 'For Approval')).toBeVisible();
+  await expect(row.getByRole('cell', 'Approved')).toBeVisible();
+});
+
+test('a released voucher stays released', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const row = screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0139 /);
+
+  await row.getByRole('button', 'Actions for CV-2026-0139').tap();
+  await screen.getByRole('menuitem', 'Mark for approval').tap();
+
+  await expect(screen.getByRole('dialog', 'CV-2026-0139 is released and stays released. Void it if the check is cancelled.')).toBeVisible();
+  await expect(row.getByRole('cell', 'Released')).toBeVisible();
 });
 
 test('asks before voiding, and a void voucher stays void', async ({ app, screen }) => {
@@ -111,6 +130,34 @@ test('edits a voucher while it waits for approval, and saves changes in place', 
 
   await expect(register.getByRole('row', /^CV-2026-0141 .* 0001190 /)).toBeVisible();
   await expect(register.getByRole('row')).toHaveCount(4);
+});
+
+test('an approved voucher opens read-only and copies to a new voucher', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const register = screen.getByRole('table', 'Voucher register');
+
+  await register.getByRole('cell', 'CV-2026-0140').tap();
+  const form = screen.getByRole('form', 'Viewing CV-2026-0140');
+
+  // What was approved is what prints: nothing on it can be typed over.
+  await expect(form.getByText('CV-2026-0140 is approved and can no longer be changed. Copy it to a new voucher to change it.')).toBeVisible();
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toBeDisabled();
+  await expect(form.getByRole('button', 'Save changes')).toBeHidden();
+  const paper = screen.getByRole('article', 'Disbursement voucher CV-2026-0140, 3 copies');
+
+  await expect(paper.getByRole('row', 'Printing of lease folders (500 pcs) ₱12,500.00').first()).toBeVisible();
+
+  await form.getByRole('button', 'Copy to new voucher').tap();
+  const copy = screen.getByRole('form', 'New voucher');
+
+  await expect(copy.getByRole('textbox', 'CV No.')).toHaveValue('CV-2026-0142');
+  await expect(copy.getByRole('textbox', 'Check No.')).toHaveValue('');
+  await expect(copy.getByRole('textbox', 'Line 1 description')).toHaveValue('Printing of lease folders (500 pcs)');
+  await copy.getByRole('textbox', 'Check No.').fill('0004521');
+  await copy.getByRole('button', 'Save and route for approval').tap();
+
+  await expect(register.getByRole('row', /^CV-2026-0142 Nov 2, 2026 JL Santos Printing Services 0004521 .*₱13,150\.00 For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^CV-2026-0140 .*Approved/)).toBeVisible();
 });
 
 test('prints three copies to a sheet', async ({ app, screen }) => {
