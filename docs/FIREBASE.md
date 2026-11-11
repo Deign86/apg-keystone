@@ -20,7 +20,9 @@ up Auth and Firestore, and deploy `firestore.rules`.
 1. **Project:** create one under APG's Google account (for example `apg-keystone`), not a personal one.
 2. **Web app:** add a Web app to the project. Its config gives the four values for `apps/keystone/.env.local` (copy
    `apps/keystone/.env.example`): `apiKey`, `projectId`, `appId`, and optionally `authDomain`.
-3. **Auth:** turn on the Email/Password sign-in method. Add an account for each person under Authentication › Users.
+3. **Auth:** turn on the Email/Password sign-in method (`firebase.json` declares it, so
+   `npx -y firebase-tools@latest deploy --only auth` does this). Add an account for each person under
+   Authentication › Users.
 4. **Firestore:** create the database in production mode, in `asia-southeast1` (Singapore), the region nearest
    Manila. The region cannot be changed later.
 5. **Rules:** deploy them from the repository root:
@@ -28,6 +30,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
    ```bash
    npx -y firebase-tools@latest deploy --only firestore:rules --project <project id>
    ```
+
+   `.firebaserc` names `apg-keystone` as the default project, so `--project` is only needed for another one.
 
 6. **Members:** in Firestore, create `keystone/apg/members/<uid>` for each person, with the uid from
    Authentication › Users, and the fields `role` (`owner` or `staff`) and `name`. The first owner has to be added in
