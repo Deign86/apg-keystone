@@ -1,17 +1,54 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { amountInWords, count, payees, peso, recordOf, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
+import { amountInWords, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
 import { awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, voucherDraftOf, voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting } from './rules';
-import { useDraft, useKeystone, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
 const DRAFT = 'vouchers.draft';
 
+/** The first account Bank Accounts keeps, as printed: a new voucher's bank before any voucher names one. "" without it. */
+function firstBank(app: ModuleApp): string {
+  const banks = app.service(SERVICES.bankAccounts);
+  const first = banks?.accounts(app.state, app.ctx)[0];
+
+  return banks && first ? banks.label(first) : '';
+}
+
+/** The account the check is drawn on, picked from Bank Accounts when it is installed. The voucher keeps it as printed. */
+function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) => void }) {
+  const app = useModuleApp();
+  const banks = app.service(SERVICES.bankAccounts);
+
+  if (!banks) return null;
+  const labels = banks.accounts(app.state, app.ctx).map((a) => banks.label(a));
+
+  if (!labels.length) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="m-0 text-xs text-pretty text-ink-2">No bank accounts are kept yet, so the voucher names no bank.</p>
+        {app.has('banks') && <Button size="sm" onClick={() => app.go('banks')}>Add a bank account</Button>}
+      </div>
+    );
+  }
+
+  // An older voucher may name an account no longer kept, or one typed by hand; it stays as it was saved.
+  const options = value && !labels.includes(value) ? [value, ...labels] : labels;
+
+  return (
+    <Field label="Bank" hint="The account the check is drawn on.">
+      <SelectInput value={value} onChange={onChange} options={options.map((l) => ({ value: l, label: l }))} />
+    </Field>
+  );
+}
+
 function Vouchers() {
   const { state, ctx, run, platform, notify, store } = useKeystone();
+  const app = useModuleApp();
+  const bank = firstBank(app);
   const confirm = useConfirm();
-  const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx));
+  const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx, bank));
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
@@ -26,8 +63,8 @@ function Vouchers() {
     setError(r.ok ? null : r.error);
 
     // Number the next blank voucher from the state after the save.
-    if (r.ok) setDraft(newVoucher(store.getState(), ctx));
-  }, [run, draft, ctx, setDraft, store]);
+    if (r.ok) setDraft(newVoucher(store.getState(), ctx, bank));
+  }, [run, draft, ctx, setDraft, store, bank]);
 
   const columns: Column<Voucher>[] = [
     { key: 'no', header: 'CV No.', width: 120, cell: (v) => <span className="font-semibold text-gold-bright tabular-nums">{v.no}</span> },
@@ -45,7 +82,7 @@ function Vouchers() {
         eyebrow="Disbursements"
         title="Check Vouchers"
         line={voucherLine(state)}
-        actions={<Button onClick={() => { setDraft(newVoucher(state, ctx)); setError(null); }}>New voucher</Button>}
+        actions={<Button onClick={() => { setDraft(newVoucher(state, ctx, bank)); setError(null); }}>New voucher</Button>}
       />
       <Panel className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
@@ -96,6 +133,7 @@ function Vouchers() {
               <Field label="Payee">
                 <SelectInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
               </Field>
+              <DrawnOn value={shown.bank} onChange={(b) => setDraft({ ...draft, bank: b })} />
               <FieldRow>
                 <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
                 <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
@@ -123,7 +161,7 @@ export const vouchersModule: ModuleDef = {
   id: 'vouchers',
   title: 'Check Vouchers',
   section: 'Disbursements',
-  blurb: 'Prepare disbursement vouchers, print them three to a sheet, and route them for signatures.',
+  blurb: 'Prepare check vouchers, print each on half an A4 sheet, and route them for signatures.',
   order: 2,
   onHome: true,
   stat: (s) => ['Awaiting approval', String(awaitingApproval(s).length)],
@@ -136,7 +174,7 @@ export const vouchersModule: ModuleDef = {
     if (v) app.setDraft(DRAFT, voucherDraftOf(v));
     app.go('vouchers');
   },
-  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx)); app.go('vouchers'); } },
+  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go('vouchers'); } },
   logTags: { CV: 'Vouchers' },
   Screen: Vouchers,
 };
