@@ -1,7 +1,7 @@
 import {
   addDays, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
   percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
-  toneOf, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
+  toneOf, type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type LineItem, type Payment, type Statement, type StatementPayments, type StatementStatus,
   type TerminalState, type WaitingItem
 } from '@keystone/core';
@@ -77,6 +77,45 @@ export const statementOf = (d: StatementDraft, status: StatementStatus = 'Sent')
   no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client, attention: d.attention.trim(),
   lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, notes: d.notes, note: d.note, status,
 });
+
+// ---------- the account a client pays into (when Bank Accounts is installed) ----------
+
+/** The account lines of the payment instructions, in the order they are written. */
+const ACCOUNT_LINES: [label: string, value: (a: BankAccount) => string][] = [
+  ['Bank', (a) => (a.branch ? `${a.bank}, ${a.branch}` : a.bank)],
+  ['Account Name', (a) => a.name],
+  ['Account Number', (a) => a.number],
+];
+
+/** "Account Number: 4011 0258 68" → "Account Number"; any other line → undefined. */
+const accountLineOf = (line: string) => ACCOUNT_LINES.find(([label]) => new RegExp(`^\\s*${label}\\s*:`, 'i').test(line))?.[0];
+
+/** An account number by its letters and digits, so "4011-0258-68" and "4011 0258 68" are the same account. */
+const numberKey = (n: string) => n.replace(/[^0-9a-z]/gi, '').toLowerCase();
+
+/**
+ * The payment instructions with their account lines (Bank, Account Name, Account Number) naming this account, where
+ * the first of them was; the rest of the text is kept. Text with no account lines gets them at the top.
+ */
+export function payInto(notes: string, a: BankAccount): string {
+  const lines = notes.split('\n');
+  const block = ACCOUNT_LINES.map(([label, value]) => `${label}: ${value(a)}`);
+  const at = lines.findIndex((l) => accountLineOf(l));
+
+  if (at < 0) return notes.trim() ? [...block, '', ...lines].join('\n') : block.join('\n');
+  const rest = lines.filter((l) => !accountLineOf(l));
+  rest.splice(at, 0, ...block);
+
+  return rest.join('\n');
+}
+
+/** The account the payment instructions name on their Account Number line, if it is one of these. */
+export function paidInto(notes: string, accounts: BankAccount[]): BankAccount | undefined {
+  const line = notes.split('\n').find((l) => accountLineOf(l) === 'Account Number');
+  const key = line ? numberKey(line.slice(line.indexOf(':') + 1)) : '';
+
+  return key ? accounts.find((a) => numberKey(a.number) === key) : undefined;
+}
 
 /** Picking a client sets VAT, EWT and who to address from its directory record. */
 export function withClient(s: TerminalState, d: StatementDraft, client: string): StatementDraft {

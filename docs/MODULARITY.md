@@ -45,6 +45,7 @@ module-id-maker   ──contributes──▶  figure · finding · waiting · op
 module-directory  ──contributes──▶  figure · stat · logTags
 module-timekeeping ─contributes──▶  figure · finding · stat · logTags
 module-payroll    ──contributes──▶  figure · finding · stat · logTags
+module-banks      ──contributes──▶  logTags
                                          │
                               @keystone/kit registry (buildRegistry)
                                          │
@@ -96,6 +97,14 @@ docs/adr/0007). The same pattern links timekeeping and payroll:
 ```
 core: SERVICES.employeeAttendance = 'timekeeping.employee-attendance', interface EmployeeAttendance
 module-timekeeping: provides it            module-payroll: app.service(SERVICES.employeeAttendance), or pays in full
+```
+
+And Bank Accounts, billing and vouchers (docs/adr/0010):
+
+```
+core: SERVICES.bankAccounts = 'banks.bank-accounts', interface BankAccounts
+module-banks: provides it                  module-billing: app.service(SERVICES.bankAccounts) for "Pay into", or none
+                                           module-vouchers: the same for "Bank" (drawn on), or none
 ```
 
 This is the OSGi service-registry pattern, and the "published interface" of Fowler and of Spring Modulith's named
@@ -159,7 +168,7 @@ every version. The rules for it:
 | Removal | `npm test` → `apps/keystone/src/test/removal.test.tsx` | Removing any one module or connector, or installing any one alone, makes a screen throw, log an error, or lose its title; a crashing screen takes down the rail |
 | Contract | `apps/keystone/src/test/contract.test.ts` | A module's contributions are malformed or mutate the state; it names a part or service that doesn't exist; two modules claim a log tag; a published service has no provider; the most urgent finding stops winning |
 | End to end | `npm run check:e2e` (`scripts/check-e2e.mjs`), then `npm run test:e2e` | An installed module or connector has no `e2e/modules/<id>.e2e.ts` or `e2e/connectors/<id>.e2e.ts`, or one is left for a part that is gone; a screen or flow stops working in Chromium |
-| Services | `apps/keystone/src/test/services.test.tsx` | Billing stops providing its service under the published name, or leaving billing out refuses a part |
+| Services | `apps/keystone/src/test/services.test.tsx` | Billing, timekeeping or banks stops providing its service under the published name, or leaving one of them out refuses a part |
 | Isolation | `packages/kit/test/` | A hanging connector freezes its shortcut; a failure goes unreported; a broken plugin stops the app loading; a second provider of a service is accepted |
 
 All of these run in CI on every push, and each was verified by breaking what it guards:

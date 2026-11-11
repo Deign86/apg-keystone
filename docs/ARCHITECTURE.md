@@ -13,7 +13,7 @@ packages/kit               @keystone/kit    registries, services, store, connect
                                             screen and document building blocks, Platform interface    (kernel)
 packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · billing · id-maker ·
                                                       directory · activity · timekeeping · payroll ·
-                                                      data                                             (parts)
+                                                      data · banks                                     (parts)
 packages/connectors/<id>   @keystone/connector-<id>   attendance · branding-studio · website           (parts)
 apps/keystone              @keystone/app    the composition root
   src/modules.ts, src/connectors.ts           the only files that list the parts
@@ -49,7 +49,9 @@ billing module provides `billing.statement-payments` on its `ModuleDef`; a part 
 billing asks for it with `useModuleApp().service(SERVICES.statementPayments)` and gets `undefined`, and says so, when
 billing is not installed. No part that ships asks for it today. Likewise timekeeping provides
 `timekeeping.employee-attendance`, and payroll asks for it to price a cut-off; without it, payroll pays every weekday
-in full and says so (docs/adr/0008). The registry allows one provider per service.
+in full and says so (docs/adr/0008). Bank Accounts provides `banks.bank-accounts`, the company's bank accounts, and
+billing asks for it to show "Pay into" on a statement; without it, the payment instructions are typed as before
+(docs/adr/0010). The registry allows one provider per service.
 
 ## How connected systems plug in
 

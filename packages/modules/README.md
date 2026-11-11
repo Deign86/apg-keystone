@@ -14,10 +14,12 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `activity/` | 6 | The audit trail | Nothing; its filters come from every module's `logTags` | |
 | `timekeeping/` | 7 | Employees' time-ins and time-outs, the weekly grace, holidays | figure, finding, stat, log tag `DTR` | `timekeeping.employee-attendance` |
 | `payroll/` | 8 | Each employee's pay setup, the cut-off, the payroll sheet and payslips | figure, finding, stat, log tag `PAY` | |
-| `data/` | last | Backup, restore and reset, and the parts left out | Nothing | |
+| `data/` | 9 | Backup, restore and reset, and the parts left out | Nothing | |
+| `banks/` | last | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
 
 The website connector adds a `website` screen (rail 7). It settles statements through `billing.statement-payments`
-and keeps working, without matching, when billing is not installed.
+and keeps working, without matching, when billing is not installed. Billing asks for `banks.bank-accounts` to offer
+"Pay into" on a statement, and without it the payment instructions are typed as before.
 
 ## Rules
 

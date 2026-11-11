@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, lineDraft, SERVICES, toCentavos, type Ctx } from '@keystone/core';
+import { bundledSeed, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
-  billingFigure, billingFinding, billingWaiting, lineWithTax, markOverdue, newStatement, nextStatementNo, recordPayment,
-  saveStatement, statementDraftOf, statementPayments, statementTotals, withClient,
+  billingFigure, billingFinding, billingWaiting, lineWithTax, markOverdue, newStatement, nextStatementNo, paidInto, payInto,
+  recordPayment, saveStatement, statementDraftOf, statementPayments, statementTotals, withClient,
 } from '../src/rules';
 import { billingModule } from '../src';
 
@@ -92,5 +92,50 @@ describe('billing statements', () => {
       { no: '010098-2026', client: 'Dela Cruz, Maria Teresa', due: '2026-10-10', amount: toCentavos(91000) },
       { no: '010099-2026', client: 'Harbor Point Logistics Corp.', due: '2026-11-05', amount: toCentavos(586627.5) },
     ]);
+  });
+});
+
+// "Pay into" is shown only when Bank Accounts provides SERVICES.bankAccounts; these are the rules it calls.
+describe('the account a client pays into', () => {
+  const bpi: BankAccount = { id: 'B-001', bank: 'BPI', branch: '', name: 'Alpha Premier Group of Companies OPC', number: '4011 0258 68' };
+  const bdo: BankAccount = { id: 'B-002', bank: 'BDO', branch: 'Ortigas Center', name: 'APG Holdings OPC', number: '0012 3456 7890' };
+  const instructions = bundledSeed.reference.defaults.paymentInstructions;
+
+  it('rewrites the Bank, Account Name and Account Number lines and keeps the rest of the text', () => {
+    expect(payInto(instructions, bdo)).toBe([
+      'Please make payment to:',
+      'Bank: BDO, Ortigas Center',
+      'Account Name: APG Holdings OPC',
+      'Account Number: 0012 3456 7890',
+      '',
+      'Kindly send proof of payment to accounting@alphapremiergroup.com',
+    ].join('\n'));
+    // The company account from the reference data writes the default text back exactly.
+    expect(payInto(payInto(instructions, bdo), bpi)).toBe(instructions);
+  });
+
+  it('puts the account lines where the first of them was, and at the top of text that has none', () => {
+    const lines = (...xs: string[]) => xs.join('\n');
+    const block = ['Bank: BPI', 'Account Name: Alpha Premier Group of Companies OPC', 'Account Number: 4011 0258 68'];
+
+    expect(payInto(lines('Pay to:', 'account number: 1', 'Thank you.'), bpi)).toBe(lines('Pay to:', ...block, 'Thank you.'));
+    expect(payInto('Send proof to billing.', bpi)).toBe(lines(...block, '', 'Send proof to billing.'));
+    expect(payInto('', bpi)).toBe(lines(...block));
+  });
+
+  it('knows which account the instructions name, by its number however it is spaced', () => {
+    expect(paidInto(instructions, [bdo, bpi])).toBe(bpi);
+    expect(paidInto('Account Number: 0012-3456-7890', [bpi, bdo])).toBe(bdo);
+    expect(paidInto(instructions, [bdo])).toBeUndefined();
+    expect(paidInto('Account Number:', [{ ...bdo, number: '' }])).toBeUndefined();
+    expect(paidInto('Pay in cash.', [bpi])).toBeUndefined();
+  });
+
+  it('saves the account picked with the statement, as its payment instructions', () => {
+    const s = state();
+    const d = { ...newStatement(s, ctx), lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
+    const b = saveStatement(s, { ...d, notes: payInto(d.notes, bdo) }, ctx).record;
+    expect(b.notes).toContain('Account Number: 0012 3456 7890');
+    expect(paidInto(statementDraftOf(b, ctx).notes, [bpi, bdo])).toBe(bdo);
   });
 });

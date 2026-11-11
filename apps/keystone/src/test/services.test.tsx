@@ -45,3 +45,24 @@ describe('the employee-attendance service, as shipped', () => {
     expect(r.modules.map((m) => m.id)).toContain('payroll');
   });
 });
+
+// Bank Accounts publishes bank-accounts for a statement's "Pay into". Billing still installs without it, and its
+// payment instructions are then only typed.
+
+describe('the bank-accounts service, as shipped', () => {
+  it('is provided by banks under its published name, and lists the company account until one is saved', async () => {
+    const banks = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.bankAccounts);
+    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
+
+    expect(banks).toBeDefined();
+    expect(banks!.accounts(store.state, store.ctx).map(banks!.label)).toEqual(['BPI · 4011 0258 68']);
+  });
+
+  it('is absent, not broken, without banks, and billing stays installed', () => {
+    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'banks'), plugins);
+
+    expect(r.refused).toEqual([]);
+    expect(findService(r.modules, SERVICES.bankAccounts)).toBeUndefined();
+    expect(r.modules.map((m) => m.id)).toContain('billing');
+  });
+});

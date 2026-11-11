@@ -19,6 +19,7 @@ Consequences**.
 | [0007](0007-connected-systems-are-shortcuts.md) | Connected systems are shortcuts to their apps | Accepted |
 | [0008](0008-employee-timekeeping-and-payroll.md) | Employee timekeeping and payroll live in Keystone | Accepted |
 | [0009](0009-keystone-records-in-firebase.md) | Keystone's records live in Firebase | Accepted |
+| [0010](0010-bank-accounts.md) | Bank accounts are their own part, and statements pick one through a service | Accepted |
 
 Template:
 

@@ -110,6 +110,8 @@ Adding or removing one is one package plus one line in `apps/keystone/src/module
   - Windows: `%APPDATA%\com.alphapremier.keystone\`
 - **Data** (⌘7 / Ctrl+7) has back up, restore and reset to the sample set. A backup is one JSON file in the
   prototype's own format.
+- **Bank Accounts**, under Settings after Data, keeps the company's bank accounts. A billing statement's **Pay into**
+  picks the one its client pays into.
 - Sample records are made up; company details are APG's real ones.
 
 ## Agent skills

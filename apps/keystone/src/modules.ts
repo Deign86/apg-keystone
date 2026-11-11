@@ -1,5 +1,6 @@
 import type { ModuleDef } from '@keystone/kit';
 import { activityModule } from '@keystone/module-activity';
+import { banksModule } from '@keystone/module-banks';
 import { billingModule } from '@keystone/module-billing';
 import { dataModule } from '@keystone/module-data';
 import { directoryModule } from '@keystone/module-directory';
@@ -17,5 +18,5 @@ import { vouchersModule } from '@keystone/module-vouchers';
  */
 export const builtInModules: ModuleDef[] = [
   homeModule, overviewModule, vouchersModule, billingModule, idMakerModule, directoryModule, activityModule, timekeepingModule,
-  payrollModule, dataModule,
+  payrollModule, dataModule, banksModule,
 ];
