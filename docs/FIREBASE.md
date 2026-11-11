@@ -21,8 +21,10 @@ up Auth and Firestore, and deploy `firestore.rules`.
 2. **Web app:** add a Web app to the project. Its config gives the four values for `apps/keystone/.env.local` (copy
    `apps/keystone/.env.example`): `apiKey`, `projectId`, `appId`, and optionally `authDomain`.
 3. **Auth:** turn on the Email/Password sign-in method (`firebase.json` declares it, so
-   `npx -y firebase-tools@latest deploy --only auth` does this). Add an account for each person under
-   Authentication › Users.
+   `npx -y firebase-tools@latest deploy --only auth` does this). Add the first owner's account under
+   Authentication › Users; the owner makes everyone else's in Keystone (step 6). Keystone makes an account as a
+   sign-up, so leave sign-up allowed (on a project upgraded to Identity Platform: Authentication › Settings › User
+   actions › Enable create). An account the owner did not make opens nothing: only members open the records.
 4. **Firestore:** create the database in production mode, in `asia-southeast1` (Singapore), the region nearest
    Manila. The region cannot be changed later.
 5. **Rules:** deploy them from the repository root:
@@ -33,11 +35,13 @@ up Auth and Firestore, and deploy `firestore.rules`.
 
    `.firebaserc` names `apg-keystone` as the default project, so `--project` is only needed for another one.
 
-6. **Members:** in Firestore, create `keystone/apg/members/<uid>` for each person, with the uid from
-   Authentication › Users, and the fields `role` (`owner` or `staff`) and `name`. The first owner has to be added in
-   the console; after that, owners can add members. `name` is how Keystone shows the person (who asked for funds, who
-   decided). Only an owner approves or declines requests for funds and reads everyone's; staff read only their own
-   (docs/adr/0011).
+6. **Members:** in Firestore, create `keystone/apg/members/<uid>` for the first owner, with the uid from
+   Authentication › Users, and the fields `role` (`owner`), `name` and `email`. `name` is how Keystone shows the
+   person (who asked for funds, who decided). After that, the owner makes each staff member's account in Keystone:
+   **Settings › User Accounts › Make account**, with their name, email and the password they first sign in with,
+   which the owner hands over (docs/adr/0013). It makes the sign-in and the member document together. A second owner,
+   or a change of role, is still made here in the console. Only an owner approves or declines requests for funds and
+   reads everyone's; staff read only their own (docs/adr/0011).
 7. **Move the records in:** run Keystone with the variables set (`npm run dev` or `npm run desktop`) **on the
    computer that holds the real records**, and sign in as an owner. Keystone moves that computer's records in once.
    Any other computer then opens the same records. A computer with no records of its own refuses to move anything in.
@@ -59,6 +63,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
 
 - **The config is not a secret.** It names the project; access is decided by signing in and by `firestore.rules`.
   It still stays out of the code, in `.env.local` (ignored by git) or the Actions variables.
+- **Someone leaving:** delete their document under `keystone/apg/members`, and they open nothing from then on. Turn
+  their sign-in off under Authentication › Users too. Keystone does not remove accounts yet.
 - **Signing out:** "Sign out" is in the rail. Keystone also signs out by itself after 10 minutes unused, with a
   minute's warning, and asks for the account again when it is opened after sitting unused that long (docs/adr/0012).
 - **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,

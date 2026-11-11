@@ -1,7 +1,9 @@
 import { COLLECTIONS, jsonText, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type StateDocument } from '@keystone/core';
-import { FirebaseError, initializeApp, type FirebaseOptions } from 'firebase/app';
+import type { AppAccounts, MemberAccount } from '@keystone/kit';
+import { deleteApp, FirebaseError, initializeApp, type FirebaseOptions } from 'firebase/app';
 import {
-  browserLocalPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth, signInWithEmailAndPassword, signOut,
+  browserLocalPersistence, connectAuthEmulator, createUserWithEmailAndPassword, deleteUser, indexedDBLocalPersistence, initializeAuth,
+  inMemoryPersistence, signInWithEmailAndPassword, signOut, type Auth,
 } from 'firebase/auth';
 import {
   collection, connectFirestoreEmulator, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
@@ -14,7 +16,7 @@ import type { FirebaseEmulators } from './config';
 // has a Firebase project (VITE_FIREBASE_*), so the SDK never reaches a build without one.
 //
 //   keystone/apg                  { status: 'moving' | 'ready', by, at }: whether the records have been moved in
-//   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name }: who may open them (firestore.rules)
+//   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name, email }: who may open them (firestore.rules)
 //   keystone/apg/{dir|cv|bs|ids|log|ext}/{id}   { pos, body }: one record each (StateDocument)
 //   keystone/apg/{a module's own}/{id}          { pos, body, ...its checked fields }: one record each (docs/adr/0011)
 
@@ -24,6 +26,7 @@ const COMPANY = 'apg';
 const BATCH = 500;
 
 const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).';
+const ONLY_OWNER = 'Only the owner makes accounts.';
 
 export interface CloudSession {
   remote: RemoteDocs;
@@ -34,6 +37,8 @@ export interface CloudSession {
   signOut(): Promise<void>;
   /** Who is signed in, from their member document. Throws when the account is not a member. */
   member(): Promise<Member>;
+  /** Who may open the records, and the owner making an account (docs/adr/0013). */
+  accounts: AppAccounts;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;
 }
@@ -62,6 +67,13 @@ export function explainCloudError(cause: unknown): string {
       return 'Too many tries. Wait a few minutes, then try again.';
     case 'auth/network-request-failed':
       return 'Keystone could not reach the sign-in service. Check the internet connection, then try again.';
+    case 'auth/email-already-in-use':
+      return 'That email already has a sign-in. If it cannot open the records yet, add it under keystone/apg/members in the Firebase console (docs/FIREBASE.md).';
+    case 'auth/weak-password':
+    case 'auth/password-does-not-meet-requirements':
+      return 'The sign-in service refused that password as too weak. Choose a longer one.';
+    case 'auth/admin-restricted-operation':
+      return 'The Firebase project does not let Keystone make accounts. Ask IT to allow email sign-up (docs/FIREBASE.md).';
     default:
       return cause instanceof Error ? cause.message : String(cause);
   }
@@ -86,6 +98,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
   }
 
   const company = doc(db, 'keystone', COMPANY);
+  const members = collection(company, 'members');
   const me = () => auth.currentUser?.uid ?? null;
   // Whether the member signed in is an owner, once member() has read it. Until then, reads are a member's.
   let owner = false;
@@ -177,8 +190,68 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
     },
   };
 
+  /**
+   * A sign-in of its own, kept in memory, for making someone else's account: creating one signs it in, and doing that
+   * here leaves the owner signed in on this computer. Each gets its own name, so two at once never share one.
+   */
+  let helpers = 0;
+
+  async function withHelper<T>(work: (helper: Auth) => Promise<T>): Promise<T> {
+    const helperApp = initializeApp(options, `keystone-new-account-${++helpers}`);
+    const helper = initializeAuth(helperApp, { persistence: inMemoryPersistence });
+
+    if (emulators) connectAuthEmulator(helper, `http://${emulators.auth}`, { disableWarnings: true });
+
+    try {
+      return await work(helper);
+    } finally {
+      await deleteApp(helperApp);
+    }
+  }
+
+  const accounts: AppAccounts = {
+    async list() {
+      try {
+        const found = await getDocs(members);
+
+        return found.docs.map((d): MemberAccount => {
+          const email = jsonText(d.get('email'));
+
+          return { uid: d.id, name: jsonText(d.get('name')) || email || 'A member', role: d.get('role') === 'owner' ? 'owner' : 'staff', email };
+        });
+      } catch (e) {
+        throw new Error(explainCloudError(e));
+      }
+    },
+
+    async create({ name, email, password }) {
+      // firestore.rules hold the same line: only an owner writes a member.
+      if (!owner) throw new Error(ONLY_OWNER);
+
+      try {
+        return await withHelper(async (helper) => {
+          const { user } = await createUserWithEmailAndPassword(helper, email, password);
+          const made: MemberAccount = { uid: user.uid, name, role: 'staff', email };
+
+          try {
+            await setDoc(doc(members, user.uid), { role: made.role, name, email });
+          } catch (e) {
+            // A sign-in that is not a member opens nothing; take it back, so the email can be used again.
+            await deleteUser(user).catch(() => {});
+            throw e instanceof FirebaseError && e.code === 'permission-denied' ? new Error(ONLY_OWNER) : e;
+          }
+
+          return made;
+        });
+      } catch (e) {
+        throw new Error(explainCloudError(e));
+      }
+    },
+  };
+
   return {
     remote,
+    accounts,
     signedIn: async () => {
       await auth.authStateReady();
 
@@ -194,7 +267,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
     signOut: () => signOut(auth),
     member: async () => {
       const uid = me();
-      const found = uid ? await getDoc(doc(company, 'members', uid)) : null;
+      const found = uid ? await getDoc(doc(members, uid)) : null;
 
       if (!uid || !found?.exists()) throw new Error(NOT_A_MEMBER);
       owner = found.get('role') === 'owner';

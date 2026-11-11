@@ -12,6 +12,8 @@ export interface Platform extends SystemBridge {
   readonly who?: Member;
   /** Signing out of the records in the cloud, by hand or when Keystone sits unused (docs/adr/0012). Absent with no sign-in. */
   readonly session?: AppSession;
+  /** Who may open the records in the cloud, and making accounts for them (docs/adr/0013). Absent with no sign-in. */
+  readonly accounts?: AppAccounts;
 
   /** The saved state as JSON text, or null when there is none yet. Throws when it exists but cannot be read now. */
   loadState(): Promise<string | null>;
@@ -37,6 +39,28 @@ export interface AppSession {
   used(at: number): void;
   /** Ends the sign-in on this computer and reopens Keystone on the sign-in screen. Write the last save first. */
   signOut(): Promise<void>;
+}
+
+/** A member of the records in the cloud, with the email they sign in with ('' for one added by hand without it). */
+export interface MemberAccount extends Member {
+  email: string;
+}
+
+/** What the owner gives for a new account: the person's name, their email, and the password they first sign in with. */
+export interface NewAccount {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface AppAccounts {
+  /** Everyone who may open the records. Throws the sentence to show when they cannot be read. */
+  list(): Promise<MemberAccount[]>;
+  /**
+   * Makes a sign-in with this email and password and makes it a staff member, leaving the owner signed in. Only an
+   * owner may; throws the sentence to show when refused, with no sign-in left behind.
+   */
+  create(account: NewAccount): Promise<MemberAccount>;
 }
 
 export interface AppUpdater {

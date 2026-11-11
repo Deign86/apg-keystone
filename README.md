@@ -109,12 +109,13 @@ Adding or removing one is one package plus one line in `apps/keystone/src/module
 - Saved on each computer:
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`
   - Windows: `%APPDATA%\com.alphapremier.keystone\`
-- **Data**, on the rail after Payroll, has back up, restore and reset to the sample set. A backup is one JSON file in the
+- **Data**, under Settings, has back up, restore and reset to the sample set. A backup is one JSON file in the
   prototype's own format.
 - **Bank Accounts**, under Settings after Data, keeps the company's bank accounts. A billing statement's **Pay into**
   picks the one its client pays into.
 - **In the cloud** (docs/FIREBASE.md), every signed-in computer opens the same records, and the web build can be
-  hosted for phones, where a menu takes the rail's place.
+  hosted for phones, where a menu takes the rail's place. **User Accounts**, first under Settings, lists who can open
+  them, and there the owner makes an account for each staff member.
 - Sample records are made up; company details are APG's real ones.
 
 ## Agent skills

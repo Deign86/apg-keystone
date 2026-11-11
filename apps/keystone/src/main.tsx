@@ -43,8 +43,9 @@ async function start() {
       }} />));
     }
 
-    // Who is signed in decides what they read and may do (docs/adr/0011), so it is read before the records.
-    signedInAs = async () => ({ ...cloudPlatform(local, cloud.remote, layout, await cloud.member()), session });
+    // Who is signed in decides what they read and may do (docs/adr/0011), so it is read before the records. The owner
+    // makes everyone else's account from Keystone (docs/adr/0013).
+    signedInAs = async () => ({ ...cloudPlatform(local, cloud.remote, layout, await cloud.member()), session, accounts: cloud.accounts });
     explain = cloud.explain;
     signOut = () => void session.signOut();
   }
