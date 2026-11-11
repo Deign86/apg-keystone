@@ -59,6 +59,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
 
 - **The config is not a secret.** It names the project; access is decided by signing in and by `firestore.rules`.
   It still stays out of the code, in `.env.local` (ignored by git) or the Actions variables.
+- **Signing out:** "Sign out" is in the rail. Keystone also signs out by itself after 10 minutes unused, with a
+  minute's warning, and asks for the account again when it is opened after sitting unused that long (docs/adr/0012).
 - **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,
   `http://127.0.0.1:5174` (development) and `https://<project id>.web.app` (the phone), or leave it unrestricted and
   rely on the rules.

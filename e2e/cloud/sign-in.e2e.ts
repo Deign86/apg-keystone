@@ -3,7 +3,8 @@ import { expect } from 'e2e';
 import { emptyCloud, expectHome, keepRecordsHere, makeAccount, marker, signIn } from './emulators';
 
 // Signing in to a cloud build (apps/keystone/src/Gate.tsx, platform/firestore.ts), and why Keystone may refuse to
-// open the records after it: an account that is not a member (firestore.rules), or no records in the cloud yet.
+// open the records after it: an account that is not a member (firestore.rules), or no records in the cloud yet. Then
+// signing out (docs/adr/0012): from the rail, and on opening Keystone after it sat unused for 10 minutes.
 
 test.beforeEach(async () => {
   await emptyCloud();
@@ -54,6 +55,49 @@ test('refuses an account the owner has not added, and signs out to switch to one
   expect(await marker('status')).toBeNull();
 
   await screen.getByRole('button', 'Sign in as someone else').tap();
+  await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
+
+  await signIn(screen, owner);
+  await expectHome(screen);
+});
+
+test('signs out from the rail, and asks for the account again, also after a reload', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner');
+
+  await keepRecordsHere(app, browser, 'the office computer');
+  await signIn(screen, owner);
+  await expectHome(screen);
+
+  const rail = screen.getByRole('navigation', 'Keystone');
+
+  await expect(rail.getByText('Owner · Owner')).toBeVisible();
+  await rail.getByRole('button', 'Sign out').tap();
+
+  await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
+
+  await browser.reload();
+  await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
+
+  await signIn(screen, owner);
+  await expectHome(screen);
+});
+
+test('asks for the account again when Keystone was last used 10 minutes ago, and not when it was used just now', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner');
+
+  await keepRecordsHere(app, browser, 'the office computer');
+  await signIn(screen, owner);
+  await expectHome(screen);
+
+  // Used a minute ago: still signed in.
+  await browser.evaluate(() => localStorage.setItem('keystone-last-used', String(Date.now() - 60_000)));
+  await browser.reload();
+  await expectHome(screen);
+
+  // Closed, or the computer asleep, for 11 minutes since.
+  await browser.evaluate(() => localStorage.setItem('keystone-last-used', String(Date.now() - 11 * 60_000)));
+  await browser.reload();
   await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
 
   await signIn(screen, owner);

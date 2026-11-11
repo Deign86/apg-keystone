@@ -49,7 +49,8 @@ Firebase project, as well as to its updater.
   - Two computers do not yet see each other's changes live; the other one sees them on its next start. Two people
     numbering a new record at the same moment can take the same number, and the later save wins. Until live updates
     and numbering in a transaction land, one person at a time prepares each kind of record.
-  - Signing out is offered only when Keystone cannot open. A sign-out in the app comes next.
+  - Signing out is offered only when Keystone cannot open. A sign-out in the app comes next (0012 adds it, with an
+    idle timeout).
   - Payroll is readable by every member. Payroll-only access (AID-70) needs payroll in its own documents and rules.
   - Photos stay on each computer.
   - Firebase is a Google bill. A save writes only the records it changed, so the free daily quota should cover

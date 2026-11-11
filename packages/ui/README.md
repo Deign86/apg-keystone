@@ -12,7 +12,7 @@ The APG design system: the look shared with the attendance tracker and the websi
   on Base UI's `Field` so every control is labelled.
 - `src/register.tsx`: `Register` (a real table with keyboard-openable rows) and `RowMenu`.
 - `src/overlays.tsx`: `FeedbackProvider`, `useNotify` (toasts), `useConfirm` (an alert dialog for anything
-  destructive), `Sheet` (dialog).
+  destructive), `AlertSheet` (an alert dialog its owner opens and closes, with its own buttons), `Sheet` (dialog).
 
 ## Rules
 

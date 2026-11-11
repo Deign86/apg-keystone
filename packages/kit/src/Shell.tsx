@@ -4,6 +4,7 @@ import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { useKeystone } from './context';
 import type { ModuleDef } from './registry';
+import { IdleSignOut, SignOutButton } from './Session';
 import { UpdateNotice } from './UpdateNotice';
 
 /** One module failing to render shows its own error; the rail and every other module keep working. */
@@ -55,7 +56,7 @@ function Brand({ onGo }: { onGo?: () => void }) {
   );
 }
 
-/** Who is using Keystone and where the records are kept, the save error if any, and the keys. */
+/** Who is using Keystone and where the records are kept, signing out, the save error if any, and the keys. */
 function RailFoot() {
   const { registry, store, platform } = useKeystone();
   const mod = shortcutKey();
@@ -69,6 +70,7 @@ function RailFoot() {
         {who ? `${who.name} · ${who.role === 'owner' ? 'Owner' : 'Staff'}` : 'Administrator access'}
       </p>
       <p className="m-0">{who ? 'Saved in APG\'s records in the cloud' : platform.kind === 'desktop' ? 'Saved on this computer' : 'Browser preview · saved in this browser'}</p>
+      <SignOutButton />
       {store.saveError && <p role="alert" className="m-0 text-bad">{store.saveError}</p>}
       {/* A phone has no keyboard to press them on. */}
       <p className="m-0 hidden text-[11px] text-ink-3 md:block">{mod}0 home · {mod}1–{mod}{Math.min(9, registry.modules.length - 1)} screens</p>
@@ -183,6 +185,7 @@ export function Shell() {
           <p className="m-8 text-ink-2">No screens are installed. Add a module to apps/keystone/src/modules.ts.</p>
         )}
       </main>
+      <IdleSignOut />
     </div>
   );
 }
