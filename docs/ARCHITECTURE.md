@@ -18,7 +18,7 @@ packages/connectors/<id>   @keystone/connector-<id>   attendance · branding-stu
 apps/keystone              @keystone/app    the composition root
   src/modules.ts, src/connectors.ts           the only files that list the parts
   src/main.tsx                                builds the registry and starts the app
-  src/platform/                               desktop (Tauri) and browser behind one interface
+  src/platform/                               desktop (Tauri), browser and the cloud records behind one interface
   src-tauri/                                  native side: files, OS keychain, finding and launching other apps
 shared/                    tokens, fonts, logo, sample data (generated into ui and core by `npm run sync`)
 ```
@@ -32,7 +32,7 @@ from Keystone; `npm run check:boundaries` fails on anything else.
    `src/rules.ts`.
 2. The rule returns the new state, the record and the sentence to show, or throws a `KeystoneError` with the reason.
    It never mutates anything.
-3. The store saves `state.json` about 250ms later and shows the sentence. A refusal is written next to the save
+3. The store saves `state.json` (or the changed records, in the cloud) about 250ms later and shows the sentence. A refusal is written next to the save
    button and also shown as a toast.
 4. No rule lives in a screen.
 
@@ -70,6 +70,10 @@ Keystone reads nothing from these systems and keeps no password for any of them.
 
 - **`state.json`:** the prototype's schema; new fields are optional. Modules keep their own data under
   `ext.<module id>`, which survives builds without that module.
+- **In the cloud (docs/adr/0009):** a build with the `VITE_FIREBASE_*` variables keeps the same state in Firestore,
+  one document per record (`toDocuments` in core), behind an email and password sign-in. `platform/cloud.ts` wraps the
+  local platform: it moves a computer's records in once, writes only the documents a save changed, and keeps a copy
+  in `state.json`. Firebase itself is only in `platform/firestore.ts`; setup is in `docs/FIREBASE.md`.
 - **Photos:** in `photos/`.
 - **Folder:**
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`

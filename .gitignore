@@ -13,3 +13,9 @@ apps/keystone/src-tauri/gen/
 /unlazy-status.log
 .unlazy-hook-state.json
 .claude/settings.local.json
+
+# Per-machine build settings: the Firebase project (apps/keystone/.env.example)
+.env.local
+.firebase/
+firebase-debug.log
+firestore-debug.log

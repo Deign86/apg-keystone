@@ -85,6 +85,8 @@ COMPOSITION (the only place that knows the full list)
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.
    - A new module keeps its own data under `state.ext[<module id>]`. Never rename or remove a key.
+   - In the cloud (docs/adr/0009) the same state is one Firestore document per record (`toDocuments` in core). Never
+     import `firebase/*` outside `apps/keystone/src/platform/`; parts see only the `Platform`.
 10. **Shared UI goes in the kernel.** If two parts need the same component, move it to `@keystone/kit`
     (Keystone-specific) or `@keystone/ui` (generic), never import it across parts.
 
@@ -188,7 +190,10 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
   merging a `feat` publishes the next minor version, a `fix` or `perf` the next patch, and `docs`, `test`, `ci`,
   `chore`, `refactor`, `style` and `build` publish nothing (README › Making a release). Pick the type for what a
   person using Keystone gets.
-- **No secrets in Keystone:** it keeps no passwords or tokens. The apps it opens sign people in themselves.
+- **No secrets in Keystone:** it keeps no passwords or tokens of its own, and the apps it opens sign people in
+  themselves. The one sign-in is to the company's records in the cloud (docs/adr/0009): the password goes to Firebase
+  and is never stored, and the Firebase SDK keeps the session on that computer. The project's web config is not a
+  secret, but it still comes from build variables (`apps/keystone/.env.example`), never from the code.
 - **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/` and
   `packages/core/src/seed.json` are regenerated from `shared/` by `npm run sync`.
 - **The other APG repos:**

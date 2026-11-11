@@ -24,6 +24,14 @@ describe('store', () => {
     expect(files.writes).toBe(0);
   });
 
+  it('stops when the saved state cannot be read, rather than showing the sample data as the real records', async () => {
+    const { platform, files } = memoryPlatform();
+    platform.loadState = async () => { throw new Error('offline'); };
+
+    await expect(KeystoneStore.open(platform)).rejects.toThrow('offline');
+    expect(files.writes).toBe(0);
+  });
+
   it('keeps what modules store under ext through a save and a reload', async () => {
     vi.useFakeTimers();
     const { platform, files } = memoryPlatform(JSON.stringify({ ...bundledSeed.state, ext: { payroll: { runs: 3 } } }));

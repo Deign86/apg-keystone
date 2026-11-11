@@ -10,6 +10,16 @@
         "e2e",
         "mcp"
       ]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "mcp",
+        "--dir",
+        "."
+      ]
     }
   }
 }

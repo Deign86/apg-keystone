@@ -1,0 +1,54 @@
+rules_version = '2';
+
+// Who may read and change Keystone's records in Firestore (docs/adr/0009). Deploy with `firebase deploy --only firestore:rules`.
+//
+//   keystone/{company}                   the move-in marker: { status: 'moving' | 'ready', by, at }
+//   keystone/{company}/members/{uid}     who may open the records: { role: 'owner' | 'staff', name }
+//   keystone/{company}/{list}/{id}       one record each: { pos, body } (list is dir, cv, bs, ids, log or ext)
+//
+// Only members can read or write anything. Only an owner adds, changes or removes members; the first owner is added by
+// hand in the Firebase console (docs/FIREBASE.md).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function member(company) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/keystone/$(company)/members/$(request.auth.uid));
+    }
+
+    function owner(company) {
+      return member(company)
+        && get(/databases/$(database)/documents/keystone/$(company)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    function record() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['pos', 'body']) && d.pos is int && d.pos >= 0 && d.body is string && d.body.size() < 900000;
+    }
+
+    function marker() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['status', 'by', 'at']) && d.status in ['moving', 'ready'] && d.by == request.auth.uid;
+    }
+
+    match /keystone/{company} {
+      allow read: if member(company);
+      allow create, update: if member(company) && marker();
+
+      match /members/{uid} {
+        allow read: if member(company);
+        allow write: if owner(company);
+      }
+
+      match /{list}/{id} {
+        allow read: if member(company) && list in ['dir', 'cv', 'bs', 'ids', 'log', 'ext'];
+        allow create, update: if member(company) && list in ['dir', 'cv', 'bs', 'ids', 'log', 'ext'] && record();
+        allow delete: if member(company) && list in ['dir', 'cv', 'bs', 'ids', 'log', 'ext'];
+      }
+    }
+
+    // Anything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
