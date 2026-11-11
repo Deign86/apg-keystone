@@ -17,11 +17,11 @@ function memoryLog(value: string | null = null): UseLog & { value: string | null
 const NOW = Date.parse('2026-11-02T10:00:00+08:00');
 
 describe('signing out when Keystone sat unused', () => {
-  it('signs out after 15 minutes', () => {
-    expect(IDLE_MS).toBe(15 * 60 * 1000);
+  it('signs out after 10 minutes', () => {
+    expect(IDLE_MS).toBe(10 * 60 * 1000);
   });
 
-  it('asks again only when Keystone was last used here 15 minutes ago or more', () => {
+  it('asks again only when Keystone was last used here 10 minutes ago or more', () => {
     expect(unusedTooLong(memoryLog(String(NOW - IDLE_MS)), NOW)).toBe(true);
     expect(unusedTooLong(memoryLog(String(NOW - 3 * 24 * 60 * 60 * 1000)), NOW)).toBe(true);
     expect(unusedTooLong(memoryLog(String(NOW - IDLE_MS + 1)), NOW)).toBe(false);

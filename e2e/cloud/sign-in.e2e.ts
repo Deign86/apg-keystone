@@ -4,7 +4,7 @@ import { emptyCloud, expectHome, keepRecordsHere, makeAccount, marker, signIn } 
 
 // Signing in to a cloud build (apps/keystone/src/Gate.tsx, platform/firestore.ts), and why Keystone may refuse to
 // open the records after it: an account that is not a member (firestore.rules), or no records in the cloud yet. Then
-// signing out (docs/adr/0012): from the rail, and on opening Keystone after it sat unused for 15 minutes.
+// signing out (docs/adr/0012): from the rail, and on opening Keystone after it sat unused for 10 minutes.
 
 test.beforeEach(async () => {
   await emptyCloud();
@@ -83,7 +83,7 @@ test('signs out from the rail, and asks for the account again, also after a relo
   await expectHome(screen);
 });
 
-test('asks for the account again when Keystone was last used 15 minutes ago, and not when it was used just now', async ({ app, screen, browser }) => {
+test('asks for the account again when Keystone was last used 10 minutes ago, and not when it was used just now', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner');
 
   await keepRecordsHere(app, browser, 'the office computer');
@@ -95,8 +95,8 @@ test('asks for the account again when Keystone was last used 15 minutes ago, and
   await browser.reload();
   await expectHome(screen);
 
-  // Closed, or the computer asleep, for 16 minutes since.
-  await browser.evaluate(() => localStorage.setItem('keystone-last-used', String(Date.now() - 16 * 60_000)));
+  // Closed, or the computer asleep, for 11 minutes since.
+  await browser.evaluate(() => localStorage.setItem('keystone-last-used', String(Date.now() - 11 * 60_000)));
   await browser.reload();
   await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
 

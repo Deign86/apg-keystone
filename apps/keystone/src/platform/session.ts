@@ -4,8 +4,8 @@ import type { AppSession } from '@keystone/kit';
 // IDLE_MS while open (packages/kit › IdleSignOut), and on opening when it was last used longer ago than that: closed,
 // or the computer asleep.
 
-/** Fifteen minutes without a key press, click or scroll. */
-export const IDLE_MS = 15 * 60 * 1000;
+/** Ten minutes without a key press, click or scroll (Jira AID-73). */
+export const IDLE_MS = 10 * 60 * 1000;
 
 const KEY = 'keystone-last-used';
 

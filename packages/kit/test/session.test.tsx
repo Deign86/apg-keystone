@@ -18,13 +18,13 @@ interface Told {
   order: string[];
 }
 
-/** The shell of a cloud build that signs out after 15 minutes unused, with what its session was told. */
+/** The shell of a cloud build that signs out after 10 minutes unused, with what its session was told. */
 async function mount(withSession = true) {
   const { platform, files } = memoryPlatform();
   const told: Told = { used: [], signOuts: 0, order: [] };
 
   const session: AppSession = {
-    idleMs: 15 * MINUTE,
+    idleMs: 10 * MINUTE,
     used: (at) => { told.used.push(at); },
     signOut: async () => {
       told.signOuts += 1;
@@ -73,11 +73,11 @@ describe('signing out', () => {
     expect(told.order).toEqual(['signed out with 1 write(s) done']);
   });
 
-  it('asks "Still there?" a minute before, counting down, then signs out after 15 minutes unused', async () => {
+  it('asks "Still there?" a minute before, counting down, then signs out after 10 minutes unused', async () => {
     vi.useFakeTimers();
     const { told } = await mount();
 
-    await wait(13 * MINUTE);
+    await wait(8 * MINUTE);
     expect(warning()).toBeNull();
 
     await wait(MINUTE);
@@ -97,17 +97,17 @@ describe('signing out', () => {
     expect(told.signOuts).toBe(1);
   });
 
-  it('starts the 15 minutes again with each key press, click or scroll', async () => {
+  it('starts the 10 minutes again with each key press, click or scroll', async () => {
     vi.useFakeTimers();
     const { told } = await mount();
 
-    await wait(10 * MINUTE);
+    await wait(8 * MINUTE);
     fireEvent.keyDown(window, { key: 'a' });
-    await wait(10 * MINUTE);
+    await wait(8 * MINUTE);
     fireEvent.wheel(window);
-    await wait(10 * MINUTE);
+    await wait(8 * MINUTE);
     fireEvent.pointerDown(window);
-    await wait(13 * MINUTE);
+    await wait(8 * MINUTE);
 
     expect(warning()).toBeNull();
     expect(told.signOuts).toBe(0);
@@ -117,7 +117,7 @@ describe('signing out', () => {
     vi.useFakeTimers();
     const { told } = await mount();
 
-    await wait(14 * MINUTE);
+    await wait(9 * MINUTE);
     fireEvent.pointerMove(window);
     await wait(1_000);
     expect(warning()).toHaveTextContent('It signs out in 59 seconds');
@@ -126,7 +126,7 @@ describe('signing out', () => {
     await wait(1_000);
     expect(warning()).toBeNull();
 
-    await wait(13 * MINUTE);
+    await wait(8 * MINUTE);
     expect(warning()).toBeNull();
     expect(told.signOuts).toBe(0);
   });
@@ -135,19 +135,19 @@ describe('signing out', () => {
     vi.useFakeTimers();
     const { told } = await mount();
 
-    await wait(14 * MINUTE);
+    await wait(9 * MINUTE);
     fireEvent.click(screen.getByRole('button', { name: 'Sign out now' }));
     await wait(0);
 
     expect(told.signOuts).toBe(1);
   });
 
-  it('reads the clock, so a computer that slept past the 15 minutes signs out as it wakes', async () => {
+  it('reads the clock, so a computer that slept past the 10 minutes signs out as it wakes', async () => {
     vi.useFakeTimers();
     const { told } = await mount();
 
     // Asleep: the clock moves on, but no timer runs.
-    vi.setSystemTime(Date.now() + 20 * MINUTE);
+    vi.setSystemTime(Date.now() + 15 * MINUTE);
     await wait(1_000);
 
     expect(told.signOuts).toBe(1);
