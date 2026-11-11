@@ -23,8 +23,10 @@ function emit(rel, content) {
   const path = join(root, rel);
   const next = Buffer.isBuffer(content) ? content : Buffer.from(content);
   const prev = existsSync(path) ? readFileSync(path) : null;
+  // A Windows clone checks text out with CRLF line endings (core.autocrlf), which git stores as LF: not a change.
+  const text = (bytes) => bytes.toString('utf8').replace(/\r\n/g, '\n');
 
-  if (prev && prev.equals(next)) return;
+  if (prev && (Buffer.isBuffer(content) ? prev.equals(next) : text(prev) === content)) return;
 
   if (check) {
     stale.push(rel);
