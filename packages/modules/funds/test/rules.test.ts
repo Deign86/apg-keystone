@@ -17,11 +17,11 @@ const ask = (extra: Partial<RequestDraft> = {}): RequestDraft => ({
   ...newRequest(state(), local), purpose: 'Christmas party: venue deposit', amount: '48,000', payee: 'V-002', requester: 'Ana Cruz', ...extra,
 });
 
-/** A Check Vouchers stand-in: numbers from 8888-001 and keeps what it was asked. */
+/** A Check Vouchers stand-in: numbers from 888-001 and keeps what it was asked. */
 const vouchers: VoucherDrafts = {
   draft: (s, r, ctx) => {
     const v: Voucher = {
-      no: `8888-${String(s.cv.filter((x) => x.no.startsWith('8888-')).length + 1).padStart(3, '0')}`, date: '2026-11-02', payee: r.payee, check: '',
+      no: `888-${String(s.cv.filter((x) => x.no.startsWith('888-')).length + 1).padStart(3, '0')}`, date: '2026-11-02', payee: r.payee, check: '',
       lines: [{ desc: r.particulars, amt: r.amount }], status: 'For Approval', prepared: '', checked: '', approved: '',
     };
 
@@ -106,11 +106,11 @@ describe('deciding a request', () => {
 
   it('approving drafts the check voucher for the amount, and the request keeps its number', () => {
     const r = decideRequest(filed(), 'RF-2026-0001', 'Approved', '', at(owner), vouchers);
-    expect(r.record).toMatchObject({ status: 'Approved', voucher: '8888-001', decision: { by: 'Mark Reyes', uid: 'owner-1', at: '2026-11-02 10:00' } });
+    expect(r.record).toMatchObject({ status: 'Approved', voucher: '888-001', decision: { by: 'Mark Reyes', uid: 'owner-1', at: '2026-11-02 10:00' } });
     expect(r.record.decision).not.toHaveProperty('note');
-    expect(r.state.cv.at(-1)).toMatchObject({ no: '8888-001', payee: 'V-002', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }] });
-    expect(r.message).toBe('RF-2026-0001 approved. 8888-001 is drafted for accounting.');
-    expect(r.state.log.slice(0, 2).map((e) => e.text)).toEqual(['RF-2026-0001 approved by Mark Reyes; 8888-001 drafted.', '8888-001 saved and routed for approval.']);
+    expect(r.state.cv.at(-1)).toMatchObject({ no: '888-001', payee: 'V-002', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }] });
+    expect(r.message).toBe('RF-2026-0001 approved. 888-001 is drafted for accounting.');
+    expect(r.state.log.slice(0, 2).map((e) => e.text)).toEqual(['RF-2026-0001 approved by Mark Reyes; 888-001 drafted.', '888-001 saved and routed for approval.']);
     expect(() => decideRequest(r.state, 'RF-2026-0001', 'Declined', '', at(owner), vouchers)).toThrow('RF-2026-0001 is already approved.');
   });
 
@@ -156,8 +156,8 @@ describe('what it tells Home and Overview', () => {
 
   it('tells a requester the answer for a week, then only what still waits', () => {
     const approved = decideRequest(filed(), 'RF-2026-0001', 'Approved', '', at(owner), vouchers).state;
-    expect(fundsFinding(approved, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 8888-001 is drafted.' });
-    expect(fundsFinding(approved, at(hr, 9))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 8888-001 is drafted.' });
+    expect(fundsFinding(approved, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted.' });
+    expect(fundsFinding(approved, at(hr, 9))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted.' });
     expect(fundsFinding(approved, at(hr, 10))).toBeNull();
     // IT's own request still waits; HR's answer is not theirs.
     expect(fundsFinding(approved, at(it2))).toEqual({ priority: 5, text: '1 request for funds waits for the owner\'s decision.' });

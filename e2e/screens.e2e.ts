@@ -196,7 +196,7 @@ test('keeps a save made just before the page reloads', async ({ app, screen, bro
     setTimeout(() => location.reload(), 0);
   });
 
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 .* For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .* For Approval/)).toBeVisible();
 });
 
 test('keeps saved work after a reload', async ({ app, screen, browser }) => {
@@ -206,9 +206,9 @@ test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 /)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 
   await browser.reload();
 
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^8888-001 .* For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .* For Approval/)).toBeVisible();
 });

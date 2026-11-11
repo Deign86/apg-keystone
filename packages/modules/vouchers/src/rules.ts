@@ -11,10 +11,10 @@ import {
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
 
-/** Voucher numbers run 8888-001, 8888-002 and on, with no year. */
-const SERIES = '8888-';
+/** Voucher numbers run 888-001, 888-002 and on, with no year. */
+const SERIES = '888-';
 
-/** The next voucher number in the 8888- series. Older vouchers (CV-2026-0141) keep theirs and do not count. */
+/** The next voucher number in the 888- series. Older vouchers (CV-2026-0141, 8888-001) keep theirs and do not count. */
 export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
