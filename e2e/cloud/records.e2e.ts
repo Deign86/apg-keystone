@@ -3,7 +3,8 @@ import { expect } from 'e2e';
 import { documentIds, emptyCloud, expectHome, keepRecordsHere, makeAccount, marker, record, signIn } from './emulators';
 
 // The records in the cloud (apps/keystone/src/platform/cloud.ts, firestore.ts; docs/adr/0009): the first computer
-// moves its records in, every change is written as the documents it touched, and any computer opens the same records.
+// moves its records in, every change is written as the documents it touched, even one the page reloads on before the
+// cloud has it (pending.ts, docs/adr/0013), and any computer opens the same records.
 // app.restart() reopens Keystone on the same computer; app.clearState() is another computer, signed out and empty.
 
 test.beforeEach(async () => {
@@ -93,4 +94,36 @@ test('a second computer opens the cloud\'s records, never moving its own over th
   await expect(entries.first()).toContainText('Records kept on the office computer.');
   await expect(screen.getByText('Records kept on the laptop.', { exact: false })).toBeHidden();
   expect(await documentIds('log')).toHaveLength(7);
+});
+
+test('a change made just before a reload reaches the cloud, and is there when Keystone reopens', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner');
+
+  await keepRecordsHere(app, browser, 'the office computer');
+  await signIn(screen, owner);
+  await expectHome(screen);
+
+  await app.open('/#banks');
+  await screen.getByRole('button', 'Add account').tap();
+  const dialog = screen.getByRole('dialog', 'Add account');
+
+  await dialog.getByRole('textbox', 'Bank').fill('BDO');
+  await dialog.getByRole('textbox', 'Account name').fill('Alpha Premier Group of Companies OPC');
+  await dialog.getByRole('textbox', 'Account number').fill('0012 3456 7890');
+  await dialog.getByRole('button', 'Add account').tap();
+  await expect(screen.getByRole('dialog', 'B-002 added.')).toBeVisible();
+
+  // Reloaded at once, before the change has had time to reach the cloud.
+  await browser.reload();
+
+  await expect(screen.getByRole('table', 'Bank accounts').getByRole('row', /^B-002 BDO /)).toBeVisible({ timeout: 15_000 });
+  // In the cloud: the accounts, B-002 with them, and the Activity Log entry for it.
+  await expect.poll(() => record('ext', 'banks'), { timeout: 10_000 }).toMatchObject({
+    module: 'banks',
+    data: { accounts: [{ id: 'B-001' }, { id: 'B-002', bank: 'BDO', number: '0012 3456 7890' }] },
+  });
+  await expect.poll(async () => (await documentIds('log')).length, { timeout: 10_000 }).toBe(8);
+
+  await app.open('/#activity');
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('B-002 BDO');
 });

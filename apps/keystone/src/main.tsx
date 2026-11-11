@@ -62,7 +62,8 @@ async function start() {
   }
 
   // A change is written 250 ms after it is made. Hiding or leaving the page (a reload, closing the window) writes it
-  // at once, so a save made just before is not lost.
+  // at once, so a save made just before is not lost. In the cloud, a save the page closed on before the cloud confirmed
+  // it is noted on this computer and written on the next start (platform/pending.ts, docs/adr/0013).
   addEventListener('pagehide', () => void store.flush());
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') void store.flush();

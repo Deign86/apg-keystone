@@ -1,4 +1,5 @@
 import type { AppSession } from '@keystone/kit';
+import { webStorage, type StoredText } from './web-storage';
 
 // Signing out of the records in the cloud on this computer (docs/adr/0012). Keystone signs out after it sits unused for
 // IDLE_MS while open (packages/kit › IdleSignOut), and on opening when it was last used longer ago than that: closed,
@@ -9,20 +10,11 @@ export const IDLE_MS = 10 * 60 * 1000;
 
 const KEY = 'keystone-last-used';
 
-/** Where the time it was last used is kept: this computer's web storage, which survives a restart. */
-export interface UseLog {
-  get(): string | null;
-  set(value: string | null): void;
-}
+/** Where the time it was last used is kept. */
+export type UseLog = StoredText;
 
-export const webStorageLog: UseLog = {
-  get() {
-    try { return localStorage.getItem(KEY); } catch { return null; }
-  },
-  set(value) {
-    try { if (value === null) localStorage.removeItem(KEY); else localStorage.setItem(KEY, value); } catch { /* private mode */ }
-  },
-};
+/** This computer's web storage, which survives a restart. */
+export const webStorageLog: UseLog = webStorage(KEY);
 
 /** True when Keystone was last used here longer ago than it may sit unused. Never used here yet: false. */
 export function unusedTooLong(log: UseLog, now: number, idleMs = IDLE_MS): boolean {
