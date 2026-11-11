@@ -275,11 +275,15 @@ test('puts the emergency contact and blood type on the back, and exports the pri
   await expect(card).toContainText('Teresa Villanueva · 0917 555 0142');
   await expect(card).toContainText('Blood type: AB+');
 
-  const pdf = await browser.waitForDownload(() => form.getByRole('button', 'Export print file').tap());
+  // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
+  // both sides of the card into a PDF takes several seconds on a busy machine.
+  const pdf = await browser.waitForDownload(async () => {
+    await form.getByRole('button', 'Export print file').tap();
+    await expect(screen.getByRole('dialog', 'Saved APG-2026-0031.pdf.')).toBeVisible({ timeout: 20_000 });
+  });
 
   expect(pdf.suggestedFilename).toBe('APG-2026-0031.pdf');
   expect(readFileSync(pdf.absolutePath, 'latin1').slice(0, 5)).toBe('%PDF-');
-  await expect(screen.getByRole('dialog', 'Saved APG-2026-0031.pdf.')).toBeVisible();
 });
 
 test('opens a waiting card from Overview, and starts a new one from its button', async ({ app, screen }) => {

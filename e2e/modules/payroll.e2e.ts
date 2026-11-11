@@ -194,10 +194,14 @@ test('shows the payroll sheet or one payslip, and saves the sheet as a PDF', asy
   await show.getByRole('button', 'Payroll sheet').tap();
   await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeVisible();
 
-  const file = await browser.waitForDownload(() => screen.getByRole('button', 'Export PDF').tap());
+  // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
+  // the sheet into a PDF takes several seconds on a busy machine.
+  const file = await browser.waitForDownload(async () => {
+    await screen.getByRole('button', 'Export PDF').tap();
+    await expect(screen.getByRole('dialog', 'Saved Payroll Oct 16–31, 2026.pdf.')).toBeVisible({ timeout: 20_000 });
+  });
 
   expect(file.suggestedFilename).toBe('Payroll Oct 16–31, 2026.pdf');
-  await expect(screen.getByRole('dialog', 'Saved Payroll Oct 16–31, 2026.pdf.')).toBeVisible();
 });
 
 test('closes and reopens a cut-off, and Overview and the Activity Log follow', async ({ app, screen }) => {
