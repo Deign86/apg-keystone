@@ -6,6 +6,7 @@ import { builtInModules } from './modules';
 import { detectPlatform } from './platform';
 import { cloudPlatform } from './platform/cloud';
 import { firebaseConfig, firebaseEmulators } from './platform/config';
+import { cloudSession, unusedTooLong, webStorageLog } from './platform/session';
 import './styles.css';
 
 // The composition root: with modules.ts and connectors.ts, the only place that names every part.
@@ -28,15 +29,24 @@ async function start() {
     const layout = documentLayout(registry.modules);
     const cloud = openFirebase(options, firebaseEmulators(import.meta.env), layout);
     const local = platform;
+    const session = cloudSession(() => cloud.signOut().then(() => location.reload()));
+
+    // Last used here longer ago than Keystone may sit unused (closed, or the computer asleep): ask for the account again
+    // (docs/adr/0012).
+    if ((await cloud.signedIn()) && unusedTooLong(webStorageLog, Date.now())) await cloud.signOut();
 
     if (!(await cloud.signedIn())) {
-      await new Promise<void>((signedIn) => root.render(<SignIn signIn={async (email, password) => { await cloud.signIn(email, password); signedIn(); }} />));
+      await new Promise<void>((signedIn) => root.render(<SignIn signIn={async (email, password) => {
+        await cloud.signIn(email, password);
+        session.used(Date.now());
+        signedIn();
+      }} />));
     }
 
     // Who is signed in decides what they read and may do (docs/adr/0011), so it is read before the records.
-    signedInAs = async () => cloudPlatform(local, cloud.remote, layout, await cloud.member());
+    signedInAs = async () => ({ ...cloudPlatform(local, cloud.remote, layout, await cloud.member()), session });
     explain = cloud.explain;
-    signOut = () => void cloud.signOut().then(() => location.reload());
+    signOut = () => void session.signOut();
   }
 
   let store: KeystoneStore;

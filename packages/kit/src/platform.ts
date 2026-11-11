@@ -10,6 +10,8 @@ export interface Platform extends SystemBridge {
 
   /** The member signed in to the records in the cloud (docs/adr/0009). Absent when the records are on this computer. */
   readonly who?: Member;
+  /** Signing out of the records in the cloud, by hand or when Keystone sits unused (docs/adr/0012). Absent with no sign-in. */
+  readonly session?: AppSession;
 
   /** The saved state as JSON text, or null when there is none yet. Throws when it exists but cannot be read now. */
   loadState(): Promise<string | null>;
@@ -26,6 +28,15 @@ export interface Platform extends SystemBridge {
 
   /** Keystone's own updates, from its signed GitHub releases. The desktop app only; absent in the browser. */
   readonly updater?: AppUpdater;
+}
+
+export interface AppSession {
+  /** How long Keystone may sit unused, with no key press, click or scroll, before it signs out by itself (ms). */
+  readonly idleMs: number;
+  /** Notes that Keystone was used at this time (ms since 1970), so a restart knows how long it sat unused. */
+  used(at: number): void;
+  /** Ends the sign-in on this computer and reopens Keystone on the sign-in screen. Write the last save first. */
+  signOut(): Promise<void>;
 }
 
 export interface AppUpdater {

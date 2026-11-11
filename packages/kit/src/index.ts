@@ -19,4 +19,4 @@ export { amountColumn, Letterhead, Lines, Meta, orDash, Sheet, Signatures, type 
 
 export { printElement, savePdf } from './output';
 
-export type { AppUpdate, AppUpdater, Platform } from './platform';
+export type { AppSession, AppUpdate, AppUpdater, Platform } from './platform';

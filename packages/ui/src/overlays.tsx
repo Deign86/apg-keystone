@@ -2,7 +2,7 @@ import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { Dialog } from '@base-ui/react/dialog';
 import { Toast } from '@base-ui/react/toast';
 import { X } from 'lucide-react';
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState, type ReactNode, type RefObject } from 'react';
 import { Button, cn } from './primitives';
 
 // taste-skill-ignore: dialogs and toasts are real overlays and may float.
@@ -56,6 +56,31 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         </AlertDialog.Portal>
       </AlertDialog.Root>
     </ConfirmContext.Provider>
+  );
+}
+
+/**
+ * A dialog that needs an answer, opened and closed by its owner: clicking past it or pressing Escape does not close it.
+ * `children` are its buttons; `initialFocus` is the one focused when it opens (the safe answer), else the first.
+ */
+export function AlertSheet({ open, title, description, initialFocus, children }: {
+  open: boolean;
+  title: string;
+  description: string;
+  initialFocus?: RefObject<HTMLElement | null>;
+  children: ReactNode;
+}) {
+  return (
+    <AlertDialog.Root open={open}>
+      <AlertDialog.Portal>
+        <AlertDialog.Backdrop className={BACKDROP} />
+        <AlertDialog.Popup className={POPUP} initialFocus={initialFocus}>
+          <AlertDialog.Title className="m-0 font-display text-[15px] font-semibold text-ink">{title}</AlertDialog.Title>
+          <AlertDialog.Description className="mt-2 mb-0 text-[13px] text-ink-2">{description}</AlertDialog.Description>
+          <div className="mt-6 flex justify-end gap-2">{children}</div>
+        </AlertDialog.Popup>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 }
 
