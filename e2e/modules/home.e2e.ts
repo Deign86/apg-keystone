@@ -41,4 +41,33 @@ test('a tile follows the data: a voucher saved shows in its figure', async ({ ap
   await app.open('/');
 
   await expect(screen.getByRole('button', /^Check Vouchers .* Awaiting approval 2$/)).toBeVisible();
+  await expect(screen.getByRole('button', /^Activity Log .* Last entry Nov 2, 2026$/)).toBeVisible();
+});
+
+test('the Overview and Activity Log tiles open their screens, and the log tile shows its last entry', async ({ app, screen }) => {
+  await app.open('/');
+  const tiles = screen.getByRole('main').getByRole('list').first();
+
+  await expect(tiles.getByRole('button', /^Activity Log .* Last entry Oct 26, 2026$/)).toBeVisible();
+  await tiles.getByRole('button', /^Overview /).tap();
+
+  await expect(screen.getByRole('heading', { name: 'Overview', level: 1 })).toBeVisible();
+
+  await app.open('/');
+  await tiles.getByRole('button', /^Activity Log /).tap();
+
+  await expect(screen.getByRole('heading', { name: 'Activity Log', level: 1 })).toBeVisible();
+  await expect(screen.getByText('6 entries. The last was on Oct 26, 2026.')).toBeVisible();
+});
+
+test('has a shortcut to each connected system', async ({ app, screen }) => {
+  await app.open('/');
+  const shortcuts = screen.getByRole('main').getByRole('list').last();
+
+  await expect(screen.getByRole('heading', { name: 'Connected systems', level: 2 })).toBeVisible();
+  await expect(screen.getByText('Shortcuts to the other APG apps.')).toBeVisible();
+  await expect(shortcuts.getByRole('listitem')).toHaveCount(3);
+  await expect(shortcuts.getByRole('button', 'Open Attendance Tracker')).toBeVisible();
+  await expect(shortcuts.getByRole('button', 'Open Alpha Branding Studio')).toBeVisible();
+  await expect(shortcuts.getByRole('button', 'Open APG Website')).toBeVisible();
 });
