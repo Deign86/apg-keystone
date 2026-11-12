@@ -1,10 +1,13 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { asMember, documentIds, emptyCloud, expectHome, field, idToken, keepRecordsHere, makeAccount, setMember, signIn } from './emulators';
+import {
+  asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, keepRecordsHere, makeAccount, setMember, signIn,
+} from './emulators';
 
-// The owner making accounts (docs/adr/0014, packages/modules/accounts): from User Accounts, the owner makes a staff
-// account, and that person signs in with it on another computer and opens the records. Staff see who has an account
-// and make none, and firestore.rules hold the same line for a member who goes past Keystone.
+// The owner making and removing accounts (docs/adr/0014, 0015, packages/modules/accounts): from User Accounts, the
+// owner makes a staff account, and that person signs in with it on another computer and opens the records; once the
+// owner removes it, they open nothing. Staff see who has an account and make or remove none, and firestore.rules hold
+// the same line for a member who goes past Keystone.
 // app.clearState() is another computer, signed out and empty.
 
 test.beforeEach(async () => {
@@ -39,7 +42,7 @@ test('the owner makes a staff account, and that person signs in with it on anoth
   const table = screen.getByRole('table', 'User accounts');
 
   await expect(table.getByRole('row', /^Mark Reyes \(you\) — Owner$/)).toBeVisible();
-  await expect(table.getByRole('row', /^Ana Cruz — Staff$/)).toBeVisible();
+  await expect(table.getByRole('row', /^Ana Cruz — Staff Actions for Ana Cruz$/)).toBeVisible();
 
   // A slip is caught on the form, and nothing is made.
   const dialog = await makeAccountFor(screen, { ...liza, password: 'short' });
@@ -52,7 +55,7 @@ test('the owner makes a staff account, and that person signs in with it on anoth
 
   await makeAccountFor(screen, liza);
   await expect(screen.getByRole('dialog', 'Liza Bautista can now sign in as liza.bautista@keystone.test.')).toBeVisible();
-  await expect(table.getByRole('row', /^Liza Bautista liza\.bautista@keystone\.test Staff$/)).toBeVisible();
+  await expect(table.getByRole('row', /^Liza Bautista liza\.bautista@keystone\.test Staff Actions for Liza Bautista$/)).toBeVisible();
   await expect(screen.getByText('3 people can open APG\'s records. Make an account for each new staff member.')).toBeVisible();
 
   // Its log line reaches the cloud. Making it signed nobody else in here: reopened, Keystone is still the owner's.
@@ -128,6 +131,62 @@ test('an owner no longer one by the time they make an account is refused, and le
   await dialog.getByRole('button', 'Make account').tap();
   await expect(screen.getByRole('dialog', 'Liza Bautista can now sign in as liza.bautista@keystone.test.')).toBeVisible();
   expect(await documentIds('members')).toHaveLength(2);
+});
+
+test('the owner removes a staff account after asking, and that person can no longer open the records', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+
+  await keepRecordsHere(app, browser, 'the office computer');
+  await signIn(screen, owner);
+  await expectHome(screen);
+  await app.open('/#accounts');
+  const table = screen.getByRole('table', 'User accounts');
+
+  // The owner's own row has no menu; a staff row's has Remove…, which asks first.
+  await expect(table.getByRole('row', /^Ana Cruz — Staff Actions for Ana Cruz$/)).toBeVisible();
+  await expect(table.getByRole('button', 'Actions for Mark Reyes')).toBeHidden();
+  await table.getByRole('button', 'Actions for Ana Cruz').tap();
+  await screen.getByRole('menuitem', 'Remove…').tap();
+  const question = screen.getByRole('alertdialog', 'Remove Ana Cruz?');
+
+  await expect(question.getByText(/^Ana Cruz can no longer open APG's records, on any computer or phone\./)).toBeVisible();
+  await question.getByRole('button', 'Remove account').tap();
+
+  await expect(screen.getByRole('dialog', 'Ana Cruz can no longer open APG\'s records.')).toBeVisible();
+  await expect(table.getByRole('row', /^Ana Cruz/)).toBeHidden();
+  await expect(screen.getByText('1 person can open APG\'s records. Make an account for each new staff member.')).toBeVisible();
+  expect(await documentIds('members')).toEqual([owner.uid]);
+
+  await app.open('/#activity');
+  await screen.getByRole('group', 'Module').getByRole('button', 'User Accounts').tap();
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first())
+    .toContainText('Account removed for Ana Cruz; they can no longer open APG\'s records.');
+
+  // Ana, on her own computer, still has a sign-in, and it opens nothing.
+  await app.clearState();
+  await app.open('/');
+  await signIn(screen, hr);
+  await expect(screen.getByRole('alert')).toHaveText('This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).');
+  await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
+});
+
+test('firestore.rules let only the owner remove a member', async () => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+  const it = await makeAccount('staff', 'Paolo Santos');
+  const [ownerToken, hrToken] = await Promise.all([owner, hr].map(idToken));
+
+  // Staff remove nobody, not even themselves, and never the owner.
+  expect(await deleteAsMember(hrToken, `/members/${it.uid}`)).toBe(403);
+  expect(await deleteAsMember(hrToken, `/members/${owner.uid}`)).toBe(403);
+  expect(await deleteAsMember(hrToken, `/members/${hr.uid}`)).toBe(403);
+  expect(await documentIds('members')).toHaveLength(3);
+
+  // The owner can, and then the removed member reads nothing.
+  expect(await deleteAsMember(ownerToken, `/members/${it.uid}`)).toBe(200);
+  expect(await documentIds('members')).toEqual([owner.uid, hr.uid].sort());
+  expect(await asMember(await idToken(it), `/members/${owner.uid}`)).toBe(403);
 });
 
 test('firestore.rules let only the owner make someone a member', async () => {

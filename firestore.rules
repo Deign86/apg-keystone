@@ -8,10 +8,12 @@ rules_version = '2';
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
 //
 // Only members can read or write anything. Only an owner adds, changes or removes members: Keystone's User Accounts
-// screen makes staff members (docs/adr/0014), and the first owner is added by hand in the Firebase console
-// (docs/FIREBASE.md). A sign-in nobody made a member opens nothing. Only an owner reads every request for funds and decides them; any
-// other member reads, files, edits and withdraws only their own, and only while it waits. Keystone reads a request's
-// status, requester and decision from the fields beside its body, so a body edited past these rules changes none.
+// screen makes and removes staff members (docs/adr/0014, 0015), and the first owner is added by hand in the Firebase
+// console (docs/FIREBASE.md). A sign-in nobody made a member, or whose member was removed, opens nothing.
+//
+// Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
+// only their own, and only while it waits. Keystone reads a request's status, requester and decision from the fields
+// beside its body, so a body edited past these rules changes none.
 service cloud.firestore {
   match /databases/{database}/documents {
     function member(company) {

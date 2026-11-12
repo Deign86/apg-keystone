@@ -5,7 +5,8 @@ import { App, buildRegistry, KeystoneStore, type AppAccounts, type MemberAccount
 import { accountsModule } from '../src';
 
 // The User Accounts screen against a stand-in for the sign-in (Platform.accounts), as the cloud build provides it:
-// the owner makes an account, staff only see who has one, and a computer with nobody signed in has none to make.
+// the owner makes and removes staff accounts, staff only see who has one, and a computer with nobody signed in has
+// none to make.
 
 const owner: Member = { uid: 'owner-1', name: 'Mark Reyes', role: 'owner' };
 const hr: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
@@ -19,7 +20,7 @@ const base: Platform = {
 /** The sign-in's members, with `create` recording what it was asked and answering as `made` says. */
 function signIn(made: (a: NewAccount) => Promise<MemberAccount> = async (a) => ({ uid: 'new-1', name: a.name, email: a.email, role: 'staff' })) {
   const members: MemberAccount[] = [{ ...owner, email: 'mark@alphapremiergroup.com' }, { ...hr, email: 'ana.cruz@alphapremiergroup.com' }];
-  const accounts: AppAccounts = { list: vi.fn(async () => members), create: vi.fn(made) };
+  const accounts: AppAccounts = { list: vi.fn(async () => members), create: vi.fn(made), remove: vi.fn(async () => {}) };
 
   return accounts;
 }
@@ -39,6 +40,14 @@ async function fill(dialog: HTMLElement, name: string, email: string, password: 
   fireEvent.change(within(dialog).getByRole('textbox', { name: 'Email' }), { target: { value: email } });
   fireEvent.change(within(dialog).getByLabelText('Password'), { target: { value: password } });
   fireEvent.click(within(dialog).getByRole('button', { name: 'Make account' }));
+  await act(async () => {});
+}
+
+/** Opens a row's ⋯ menu and picks Remove…, then answers the question with Remove account. */
+async function removeFromRow(name: string) {
+  fireEvent.click(screen.getByRole('button', { name: `Actions for ${name}` }));
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove…' }));
+  fireEvent.click(within(await screen.findByRole('alertdialog', { name: `Remove ${name}?` })).getByRole('button', { name: 'Remove account' }));
   await act(async () => {});
 }
 
@@ -66,6 +75,7 @@ describe('User Accounts', () => {
     ]);
     expect(screen.getByText('2 people can open APG\'s records. Only the owner makes accounts.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Make account' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Actions for / })).toBeNull();
   });
 
   it('lets the owner make a staff account, lists it and logs it', async () => {
@@ -116,5 +126,35 @@ describe('User Accounts', () => {
     await act(async () => {});
     expect(screen.queryByRole('alert')).toBeNull();
     expect(within(screen.getByRole('table', { name: 'User accounts' })).getAllByRole('row')).toHaveLength(3);
+  });
+
+  it('lets the owner remove a staff account after asking, and logs it', async () => {
+    const accounts = signIn();
+    const store = await open(owner, accounts);
+
+    // Only staff rows have a menu: never the owner's own.
+    expect(screen.queryByRole('button', { name: 'Actions for Mark Reyes' })).toBeNull();
+    await removeFromRow('Ana Cruz');
+
+    expect(accounts.remove).toHaveBeenCalledWith('hr-1');
+    expect(within(screen.getByRole('table', { name: 'User accounts' })).queryByText('Ana Cruz')).toBeNull();
+    expect(screen.getByText('1 person can open APG\'s records. Make an account for each new staff member.')).toBeInTheDocument();
+    expect(store.state.log[0]).toMatchObject({
+      mod: 'ACCT', text: 'Account removed for Ana Cruz (ana.cruz@alphapremiergroup.com); they can no longer open APG\'s records.',
+    });
+  });
+
+  it('keeps the account listed, and says why, when the sign-in refuses to remove it', async () => {
+    const accounts = signIn();
+
+    vi.mocked(accounts.remove).mockRejectedValue(new Error('Only the owner removes accounts.'));
+    const store = await open(owner, accounts);
+    const log = store.state.log.length;
+
+    await removeFromRow('Ana Cruz');
+
+    expect(await screen.findByText('Only the owner removes accounts.')).toBeInTheDocument();
+    expect(within(screen.getByRole('table', { name: 'User accounts' })).getByText('Ana Cruz')).toBeInTheDocument();
+    expect(store.state.log).toHaveLength(log);
   });
 });

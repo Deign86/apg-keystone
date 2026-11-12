@@ -24,13 +24,16 @@ export interface RowAction {
 }
 
 export function Register<T>({
-  label, columns, rows, rowKey, onOpen, actions, empty, caption,
+  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, empty, caption,
 }: {
   label: string;
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
+  /** How a row is named to a screen reader ("Actions for …"), when its key means nothing to a person. Its key by default. */
+  rowLabel?: (row: T) => string;
   onOpen?: (row: T) => void;
+  /** The row's ⋯ menu. A row with none gets no menu. */
   actions?: (row: T) => RowAction[];
   empty: ReactNode;
   caption?: string;
@@ -74,7 +77,7 @@ export function Register<T>({
               ))}
               {actions && (
                 <td className="px-1 text-right" onClick={(e) => e.stopPropagation()}>
-                  <RowMenu label={`Actions for ${rowKey(row)}`} actions={actions(row)} />
+                  {actions(row).length > 0 && <RowMenu label={`Actions for ${rowLabel(row)}`} actions={actions(row)} />}
                 </td>
               )}
             </tr>

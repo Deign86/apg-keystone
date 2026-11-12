@@ -1,9 +1,9 @@
-import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, type Column } from '@keystone/ui';
+import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
 import {
-  accountMade, accountsLine, checkAccount, CLOUD_ONLY, makesAccounts, membersInOrder, MIN_PASSWORD, newAccountDraft, NO_SIGN_IN, roleLabel,
-  TAG,
+  accountMade, accountRemoved, accountsLine, checkAccount, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder, MIN_PASSWORD,
+  newAccountDraft, NO_SIGN_IN, removalQuestion, removeRefusal, roleLabel, TAG,
 } from './rules';
 
 /** The owner's form for a new staff account: name, email and the password they first sign in with. */
@@ -53,9 +53,10 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
   );
 }
 
-/** Who can open the records in the cloud, and, for the owner, making an account for a new staff member. */
+/** Who can open the records in the cloud, and, for the owner, making and removing staff accounts. */
 function Members({ accounts }: { accounts: AppAccounts }) {
-  const { ctx } = useKeystone();
+  const { ctx, run, notify } = useKeystone();
+  const confirm = useConfirm();
   const [members, setMembers] = useState<MemberAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [making, setMaking] = useState(false);
@@ -71,6 +72,17 @@ function Members({ accounts }: { accounts: AppAccounts }) {
   }, [accounts]);
 
   useEffect(() => { void read(); }, [read]);
+
+  const remove = async (m: MemberAccount) => {
+    try {
+      checkRemoval(m, ctx);
+      await accounts.remove(m.uid);
+      run((s, c) => accountRemoved(s, m, c));
+      setMembers((ms) => ms && ms.filter((x) => x.uid !== m.uid));
+    } catch (e) {
+      notify(e instanceof Error ? e.message : String(e), 'error');
+    }
+  };
 
   const columns: Column<MemberAccount>[] = [
     {
@@ -101,6 +113,14 @@ function Members({ accounts }: { accounts: AppAccounts }) {
           columns={columns}
           rows={membersInOrder(members ?? [])}
           rowKey={(m) => m.uid}
+          rowLabel={(m) => m.name}
+          // The owner removes staff accounts from a row's menu; owners and their own account have none.
+          actions={owner ? (m) => (removeRefusal(m, ctx) ? [] : [{
+            label: 'Remove…', danger: true,
+            onSelect: () => confirm({
+              title: `Remove ${m.name}?`, body: removalQuestion(m), confirm: 'Remove account', danger: true, onConfirm: () => void remove(m),
+            }),
+          }]) : undefined}
           empty={<EmptyState text={members ? 'No accounts yet.' : 'Reading the accounts…'} />}
         />
       </Panel>
