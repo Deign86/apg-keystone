@@ -6,12 +6,19 @@ import type { Browser, WebApp } from '@e2e-dev/web';
 // Keystone itself starts with none (docs/adr/0018).
 //
 // Only when nothing is saved yet, so a test that saves and reloads finds what it saved, and one that puts other text
-// there (a damaged file) keeps it. A test that wants the empty start sets `keystone-e2e-empty` in sessionStorage first.
+// there (a damaged file) keeps it. A test that wants the empty start uses `startEmpty`, which marks the tab
+// (`keystone-e2e-empty` in sessionStorage): `clear` empties the saved records as the next page loads, then `yes` keeps
+// the sample records out.
 const sample = readFileSync(new URL('../../packages/core/sample/sample.json', import.meta.url), 'utf8');
 
 export const sampleRecords = `(() => {
   try {
-    if (sessionStorage.getItem('keystone-e2e-empty') === null && localStorage.getItem('keystone-state') === null) {
+    const empty = sessionStorage.getItem('keystone-e2e-empty');
+
+    if (empty === 'clear') {
+      localStorage.removeItem('keystone-state');
+      sessionStorage.setItem('keystone-e2e-empty', 'yes');
+    } else if (empty === null && localStorage.getItem('keystone-state') === null) {
       localStorage.setItem('keystone-state', ${JSON.stringify(sample)});
     }
   } catch { /* storage refused: the test sees an empty Keystone */ }
@@ -19,12 +26,11 @@ export const sampleRecords = `(() => {
 
 /**
  * Reopens Keystone as a new computer or browser would: nothing saved, so no records at all. `path` is where, like
- * '/#banks'; a query goes before it, since changing only the # would not load the page again.
+ * '/#banks'; a query goes before it, since changing only the # would not load the page again. The saved records are
+ * emptied as the next page loads, not before leaving this one: leaving writes a change still waiting its 250 ms, which
+ * would put them back.
  */
 export async function startEmpty(app: WebApp, browser: Browser, path = '/') {
-  await browser.evaluate(() => {
-    sessionStorage.setItem('keystone-e2e-empty', 'yes');
-    localStorage.removeItem('keystone-state');
-  });
+  await browser.evaluate(() => sessionStorage.setItem('keystone-e2e-empty', 'clear'));
   await app.open(`/?empty${path.replace(/^\//, '')}`);
 }
