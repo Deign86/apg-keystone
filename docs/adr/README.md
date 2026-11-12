@@ -23,6 +23,7 @@ Consequences**.
 | [0011](0011-requests-for-funds.md) | Requests for funds, decided by the owner | Accepted |
 | [0012](0012-signing-out-and-the-idle-timeout.md) | Signing out, and signing out when Keystone sits unused | Accepted |
 | [0013](0013-a-save-the-cloud-never-confirmed.md) | A save the cloud never confirmed is written on the next start | Accepted |
+| [0014](0014-the-owner-makes-accounts.md) | The owner makes accounts in Keystone | Accepted |
 
 Template:
 

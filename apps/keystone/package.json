@@ -16,6 +16,7 @@
     "@keystone/connector-website": "*",
     "@keystone/core": "*",
     "@keystone/kit": "*",
+    "@keystone/module-accounts": "*",
     "@keystone/module-activity": "*",
     "@keystone/module-banks": "*",
     "@keystone/module-billing": "*",

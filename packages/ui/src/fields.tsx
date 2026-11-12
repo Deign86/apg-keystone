@@ -30,6 +30,8 @@ type InputProps = {
   className?: string;
   'aria-label'?: string;
   autoFocus?: boolean;
+  /** What the browser may fill in: `new-password` keeps a saved password out of a field for someone else's. */
+  autoComplete?: string;
 };
 
 export function TextInput({ value, onChange, placeholder, readOnly, figures, align = 'left', type = 'text', className, ...rest }: InputProps) {

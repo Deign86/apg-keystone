@@ -15,7 +15,8 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `activity/` | 7 | The audit trail | Nothing; its filters come from every module's `logTags` | |
 | `timekeeping/` | 8 | Employees' time-ins and time-outs, the weekly grace, holidays | figure, finding, stat, log tag `DTR` | `timekeeping.employee-attendance` |
 | `payroll/` | 9 | Each employee's pay setup, the cut-off, the payroll sheet and payslips | figure, finding, stat, log tag `PAY` | |
-| `data/` | 10 | Backup, restore and reset, and the parts left out | Nothing | |
+| `accounts/` | Settings, first | Who can open the records in the cloud, and the owner making an account for each staff member | log tag `ACCT` | |
+| `data/` | Settings, after User Accounts | Backup, restore and reset, and the parts left out | Nothing | |
 | `banks/` | last | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
 
 The website connector adds a `website` screen (rail 7). It settles statements through `billing.statement-payments`

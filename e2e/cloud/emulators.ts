@@ -62,15 +62,18 @@ export async function makeAccount(role?: 'owner' | 'staff', name = role === 'own
   // SAFETY: a successful Identity Toolkit signUp (call() throws on any other) answers with the new account's id, localId.
   const { localId: uid } = (await res.json()) as { localId: string };
 
-  if (role) {
-    await call(`${DATABASE}/documents/keystone/apg/members/${uid}`, {
-      method: 'PATCH',
-      headers: { ...ADMIN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: { role: { stringValue: role }, name: { stringValue: name } } }),
-    });
-  }
+  if (role) await setMember(uid, role, name);
 
   return { email, password, uid };
+}
+
+/** Makes an account a member with this role and name, or changes them, as the owner would in the Firebase console. */
+export async function setMember(uid: string, role: 'owner' | 'staff', name: string) {
+  await call(`${DATABASE}/documents/keystone/apg/members/${uid}`, {
+    method: 'PATCH',
+    headers: { ...ADMIN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: { role: { stringValue: role }, name: { stringValue: name } } }),
+  });
 }
 
 /** A document as the Firestore REST API gives it: its full path, and its string fields. */
