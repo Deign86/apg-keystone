@@ -1,6 +1,6 @@
 import { localDate, type ISODate } from './dates';
 import { shortDate, stamp } from './format';
-import type { JsonValue, ModuleTag, Seed, TerminalState } from './schema';
+import type { CompanyDetails, JsonValue, ModuleTag, TerminalState } from './schema';
 
 // What every domain builds on: the refusal type, the context a rule runs in, the shape
 // of a change, the activity log, numbering, and loading a saved state. Nothing here
@@ -21,9 +21,8 @@ export interface Member {
   role: 'owner' | 'staff';
 }
 
-/** What every rule needs from outside: the reference data, the time, and who is signed in. */
+/** What every rule needs from outside: the time, and who is signed in. Everything else is in the records. */
 export interface Ctx {
-  seed: Seed;
   now: () => Date;
   /** The member signed in to the cloud records. Absent when the records are on this computer, where nobody signs in. */
   who?: Member;
@@ -91,8 +90,32 @@ export function parseState(text: string): TerminalState {
 
   if (json.ext) state.ext = json.ext;
 
+  if (isJsonObject(json.company)) state.company = companyDetails(json.company);
+
   return state;
 }
+
+/**
+ * No records at all: what a new computer, a new browser and an empty cloud start from (docs/adr/0018). Keystone never
+ * makes records up to fill it; everything shown comes from what was saved.
+ */
+export const emptyState = (): TerminalState => ({ dir: [], cv: [], bs: [], ids: [], log: [] });
+
+/** Company details read back from a file or the cloud: each field as text, or a whole number of days or years. */
+function companyDetails(raw: JsonObject): CompanyDetails {
+  const text = (field: string) => jsonText(raw[field]);
+  const whole = (field: string) => Math.max(0, Math.trunc(jsonNumber(raw[field])));
+
+  return {
+    name: text('name'), address: text('address'), contact: text('contact'), shortAddress: text('shortAddress'), phone: text('phone'),
+    billingEmail: text('billingEmail'), preparedBy: text('preparedBy'), checkedBy: text('checkedBy'), approvedBy: text('approvedBy'),
+    paymentInstructions: text('paymentInstructions'), billingNote: text('billingNote'), signatory: text('signatory'),
+    billingTerms: text('billingTerms'), dueInDays: whole('dueInDays'), idValidYears: whole('idValidYears'),
+  };
+}
+
+/** The company's details as saved (Company Details), with "" or 0 for anything not filled in yet. Never made up. */
+export const companyOf = (s: TerminalState): CompanyDetails => ({ ...companyDetails({}), ...s.company });
 
 /** What a module keeps under `state.ext[id]`, or undefined when it has kept nothing yet (rule 9 in AGENTS.md). */
 export const moduleData = (s: TerminalState, id: string): JsonValue | undefined => s.ext?.[id];

@@ -1,6 +1,6 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { amountInWords, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
+import { amountInWords, companyOf, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
 import { awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -11,7 +11,7 @@ const DRAFT = 'vouchers.draft';
 /** The first account Bank Accounts keeps, as printed: a new voucher's bank before any voucher names one. "" without it. */
 function firstBank(app: ModuleApp): string {
   const banks = app.service(SERVICES.bankAccounts);
-  const first = banks?.accounts(app.state, app.ctx)[0];
+  const first = banks?.accounts(app.state)[0];
 
   return banks && first ? banks.label(first) : '';
 }
@@ -22,7 +22,7 @@ function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) 
   const banks = app.service(SERVICES.bankAccounts);
 
   if (!banks) return null;
-  const labels = banks.accounts(app.state, app.ctx).map((a) => banks.label(a));
+  const labels = banks.accounts(app.state).map((a) => banks.label(a));
 
   if (!labels.length) {
     return (
@@ -151,7 +151,7 @@ function Vouchers() {
             </fieldset>
           </FormCard>
         }
-        preview={<VoucherPaper ref={paper} voucher={{ ...live, no: draft.editing ?? draft.no }} payee={recordOf(state, live.payee)} company={ctx.seed.company} />}
+        preview={<VoucherPaper ref={paper} voucher={{ ...live, no: draft.editing ?? draft.no }} payee={recordOf(state, live.payee)} company={companyOf(state)} />}
       />
     </>
   );

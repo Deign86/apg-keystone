@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bundledSeed, withModuleData, type TerminalState } from '@keystone/core';
+import { withModuleData, type TerminalState } from '@keystone/core';
 import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
+import { sampleState } from '@keystone/core/sample';
 
 // The payroll regression, across the parts as shipped: days saved by Timekeeping, counted by it, handed to Payroll
 // through the employee-attendance service, priced by Payroll's engine and shown on its screen, sheet and payslip.
@@ -14,7 +15,7 @@ import { browserPlatform } from '../platform/browser';
 /** Exactly what Timekeeping and Payroll save, written by hand. */
 function savedState(): TerminalState {
   const day = (date: string, tin: string, tout: string, ot = 0) => ({ emp: 'E-001', date, in: tin, out: tout, ot, note: '' });
-  let s = structuredClone(bundledSeed.state);
+  let s = sampleState();
 
   s = withModuleData(s, 'timekeeping', {
     days: [

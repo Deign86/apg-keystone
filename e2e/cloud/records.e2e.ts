@@ -1,40 +1,51 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
-import { documentIds, emptyCloud, expectHome, keepRecordsHere, makeAccount, marker, record, signIn } from './emulators';
+import { asMember, documentIds, emptyCloud, expectHome, idToken, keepRecordsHere, makeAccount, marker, record, recordsInCloud, signIn } from './emulators';
 
-// The records in the cloud (apps/keystone/src/platform/cloud.ts, firestore.ts; docs/adr/0009): the first computer
-// moves its records in, every change is written as the documents it touched, even one the page reloads on before the
-// cloud has it (pending.ts, docs/adr/0013), and any computer opens the same records.
-// app.restart() reopens Keystone on the same computer; app.clearState() is another computer, signed out and empty.
+// The records in the cloud (apps/keystone/src/platform/cloud.ts, firestore.ts; docs/adr/0009), their only source
+// (docs/adr/0018): the owner's first sign-in starts them empty and nothing a computer holds is ever copied in, every
+// change is written as the documents it touched, even one the page reloads on before the cloud has it (pending.ts,
+// docs/adr/0013), and any computer opens the same records. Most tests start with the sample records already saved in
+// the cloud (recordsInCloud). app.restart() reopens Keystone on the same computer; app.clearState() is another
+// computer, signed out and empty.
 
 test.beforeEach(async () => {
   await emptyCloud();
 });
 
-test('moves this computer\'s records in on the first sign-in, one document per record', async ({ app, screen, browser }) => {
+test('the owner\'s first sign-in starts the records empty, copying in nothing this computer holds', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner');
 
   await keepRecordsHere(app, browser, 'the office computer');
   await signIn(screen, owner);
   await expectHome(screen);
 
-  // The records are this computer's: the sample's 6 log entries and the one naming it.
+  // Nothing of this computer's: no records, no log, and no company details, which Home asks for.
+  await expect(screen.getByText('Fill in Company Details: documents print without the company\'s name and address until then.')).toBeVisible();
   await app.open('/#activity');
-  await expect(screen.getByText('7 entries. The last was on Oct 30, 2026.')).toBeVisible();
-  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('Records kept on the office computer.');
+  await expect(screen.getByRole('region', 'Entries').getByText('No activity yet.')).toBeVisible();
 
   expect(await marker('status')).toBe('ready');
   expect(await marker('by')).toBe(owner.uid);
-  expect(await documentIds('cv')).toEqual(['CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
-  expect(await documentIds('bs')).toEqual(['010097-2026', '010098-2026', '010099-2026']);
-  expect(await documentIds('log')).toHaveLength(7);
+
+  for (const list of ['dir', 'cv', 'bs', 'ids', 'log', 'ext', 'company']) expect(await documentIds(list)).toEqual([]);
+
+  // What the owner then saves is what the cloud holds: the company's details, a document of their own.
+  await app.open('/#company');
+  const form = screen.getByRole('form', 'Company details');
+
+  await form.getByRole('textbox', 'Name').fill('Alpha Premier Group');
+  await form.getByRole('button', 'Save company details').tap();
+  await expect(screen.getByRole('dialog', 'Company details saved.')).toBeVisible();
+  await expect.poll(() => record('company', 'details'), { timeout: 10_000 }).toMatchObject({ name: 'Alpha Premier Group', dueInDays: 0 });
 });
 
-test('writes each change to the cloud, stays signed in when reopened, and another computer opens the same records', async ({ app, screen, browser }) => {
+test('writes each change to the cloud, stays signed in when reopened, and another computer opens the same records', async ({ app, screen }) => {
   const owner = await makeAccount('owner');
   const staff = await makeAccount('staff');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
 
@@ -75,15 +86,11 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });
 });
 
-test('a second computer opens the cloud\'s records, never moving its own over them', async ({ app, screen, browser }) => {
+test('a computer with records of its own opens the cloud\'s, never copying its own over them', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner');
 
-  await keepRecordsHere(app, browser, 'the office computer');
-  await signIn(screen, owner);
-  await expectHome(screen);
-
-  // A laptop that kept records of its own signs in after the office computer moved its records in.
-  await app.clearState();
+  await recordsInCloud();
+  // A laptop that kept records of its own signs in.
   await keepRecordsHere(app, browser, 'the laptop');
   await signIn(screen, owner);
   await expectHome(screen);
@@ -91,15 +98,31 @@ test('a second computer opens the cloud\'s records, never moving its own over th
   await app.open('/#activity');
   const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
 
-  await expect(entries.first()).toContainText('Records kept on the office computer.');
+  await expect(entries.first()).toContainText('Records kept in the cloud.');
   await expect(screen.getByText('Records kept on the laptop.', { exact: false })).toBeHidden();
   expect(await documentIds('log')).toHaveLength(7);
+});
+
+test('firestore.rules let only the owner change the company\'s details, and every member read them', async () => {
+  await recordsInCloud();
+  const owner = await idToken(await makeAccount('owner'));
+  const staff = await idToken(await makeAccount('staff'));
+  const outsider = await idToken(await makeAccount());
+  const body = JSON.stringify({ name: 'Somebody Else', paymentInstructions: 'Account Number: 0000 0000 00' });
+
+  expect(await asMember(staff, '/company/details')).toBe(200);
+  expect(await asMember(outsider, '/company/details')).toBe(403);
+  expect(await asMember(staff, '/company/details', { body })).toBe(403);
+  expect(await record('company', 'details')).toMatchObject({ name: 'ALPHA PREMIER GROUP OF COMPANIES OPC' });
+  expect(await asMember(owner, '/company/details', { body })).toBe(200);
+  expect(await record('company', 'details')).toMatchObject({ name: 'Somebody Else' });
 });
 
 test('a change made just before a reload reaches the cloud, and is there when Keystone reopens', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
 

@@ -1,6 +1,7 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { devServer } from './e2e/support/dev-server';
+import { sampleRecords } from './e2e/support/sample-records';
 
 // A build that is not a beta (docs/adr/0017): only the released screens open, the others say "Coming soon". The main
 // suite (e2e.config.ts) runs the dev server, which is a beta and opens every screen; this one runs it with
@@ -17,7 +18,7 @@ export default {
       name: 'stable',
       engine: web({
         timezoneId: 'Asia/Manila',
-        initScripts: [{ path: 'e2e/support/fixed-clock.js' }],
+        initScripts: [{ path: 'e2e/support/fixed-clock.js' }, sampleRecords],
         connect,
       }),
       app: {

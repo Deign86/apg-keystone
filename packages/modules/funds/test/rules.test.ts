@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
+import { logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
   dataOf, decideRefusal, decideRequest, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest, nextRequestNo,
   requestDraftOf, requestLock, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
+import { sampleState } from '@keystone/core/sample';
 
 /** Nov 2, 2026, 10:00 in Manila, as the end-to-end tests. */
-const at = (who?: Member, day = 2): Ctx => ({ seed: bundledSeed, now: () => new Date(2026, 10, day, 10, 0), ...(who && { who }) });
+const at = (who?: Member, day = 2): Ctx => ({ now: () => new Date(2026, 10, day, 10, 0), ...(who && { who }) });
 const owner: Member = { uid: 'owner-1', name: 'Mark Reyes', role: 'owner' };
 const hr: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
 const it2: Member = { uid: 'it-1', name: 'Paolo Santos', role: 'staff' };
 const local = at();
-const state = () => structuredClone(bundledSeed.state);
+const state = () => sampleState();
 
 const ask = (extra: Partial<RequestDraft> = {}): RequestDraft => ({
   ...newRequest(state(), local), purpose: 'Christmas party: venue deposit', amount: '48,000', payee: 'V-002', requester: 'Ana Cruz', ...extra,

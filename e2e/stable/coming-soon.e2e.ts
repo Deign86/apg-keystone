@@ -1,8 +1,9 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
-// A release that is not a beta (e2e.stable.config.ts, docs/adr/0017): Home, with the connected systems, Check Vouchers
-// and User Accounts open; every other screen keeps its place in the rail, marked "Soon", and opens on "Coming soon".
+// A release that is not a beta (e2e.stable.config.ts, docs/adr/0017): Home, with the connected systems, Check Vouchers,
+// User Accounts, and Bank Accounts and Company Details, which vouchers print from (docs/adr/0018), open; every other
+// screen keeps its place in the rail, marked "Soon", and opens on "Coming soon".
 
 test('opens Home with Check Vouchers and the connected systems, and no other tile', async ({ app, screen }) => {
   await app.open('/');
@@ -30,13 +31,16 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 
-test('opens User Accounts, unmarked', async ({ app, screen }) => {
+test('opens User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
   await app.open('/');
+  const rail = screen.getByRole('navigation', 'Keystone');
 
-  await screen.getByRole('navigation', 'Keystone').getByRole('button', /User Accounts$/).tap();
+  for (const title of ['User Accounts', 'Bank Accounts', 'Company Details']) {
+    await rail.getByRole('button', new RegExp(`${title}$`)).tap();
 
-  await expect(screen.getByRole('heading', { name: 'User Accounts', level: 1 })).toBeVisible();
-  await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeHidden();
+    await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
+    await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeHidden();
+  }
 });
 
 test('saves a check voucher as before', async ({ app, screen }) => {

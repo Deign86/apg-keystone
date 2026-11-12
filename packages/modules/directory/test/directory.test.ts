@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, type Ctx } from '@keystone/core';
+import { type Ctx } from '@keystone/core';
 import { directoryModule } from '../src';
+import { sampleState } from '@keystone/core/sample';
 
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 
 describe('directory', () => {
   it('contributes its figure and its home stat', () => {

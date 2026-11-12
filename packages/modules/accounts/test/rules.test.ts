@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, type Ctx, type Member } from '@keystone/core';
+import { type Ctx, type Member } from '@keystone/core';
 import type { MemberAccount } from '@keystone/kit';
 import {
   accountMade, accountRemoved, accountsLine, checkAccount, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
   newAccountDraft, newPasswordDraft, NO_SIGN_IN, ONLY_OWNER, ONLY_OWNER_REMOVES, passwordChanged, removalQuestion, removeRefusal,
 } from '../src/rules';
+import { sampleState } from '@keystone/core/sample';
 
 /** 30 Oct 2026, 09:05 in Manila. */
 const at = () => new Date(2026, 9, 30, 9, 5);
 const owner: Member = { uid: 'owner-1', name: 'Mark Reyes', role: 'owner' };
 const hr: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
-const asOwner: Ctx = { seed: bundledSeed, now: at, who: owner };
-const asStaff: Ctx = { seed: bundledSeed, now: at, who: hr };
-const local: Ctx = { seed: bundledSeed, now: at };
+const asOwner: Ctx = { now: at, who: owner };
+const asStaff: Ctx = { now: at, who: hr };
+const local: Ctx = { now: at };
 
 const members: MemberAccount[] = [
   { ...hr, email: 'ana.cruz@alphapremiergroup.com' },
@@ -73,7 +74,7 @@ describe('making an account', () => {
 
   it('logs who it is for and their email, never the password', () => {
     const made: MemberAccount = { uid: 'new-1', name: 'Liza Bautista', email: 'liza.bautista@alphapremiergroup.com', role: 'staff' };
-    const s = structuredClone(bundledSeed.state);
+    const s = sampleState();
     const r = accountMade(s, made, asOwner);
 
     expect(r.record).toBe(made);
@@ -110,7 +111,7 @@ describe('removing an account', () => {
   });
 
   it('logs whose account was removed', () => {
-    const s = structuredClone(bundledSeed.state);
+    const s = sampleState();
     const r = accountRemoved(s, ana, asOwner);
 
     expect(r.record).toBe(ana);
@@ -141,7 +142,7 @@ describe('changing your own password', () => {
   });
 
   it('logs who changed their password, never the password', () => {
-    const s = structuredClone(bundledSeed.state);
+    const s = sampleState();
     const r = passwordChanged(s, asStaff);
 
     expect(r.record).toBe(hr);

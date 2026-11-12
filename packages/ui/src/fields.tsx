@@ -57,13 +57,14 @@ export function CellInput({ label, ...props }: InputProps & { label: string }) {
   );
 }
 
-export function TextArea({ value, onChange, rows = 3 }: { value: string; onChange: (v: string) => void; rows?: number }) {
+export function TextArea({ value, onChange, rows = 3, readOnly }: { value: string; onChange: (v: string) => void; rows?: number; readOnly?: boolean }) {
   return (
     <BaseField.Control
       render={<textarea rows={rows} />}
       value={value}
+      readOnly={readOnly}
       onValueChange={(v) => onChange(String(v))}
-      className="input-chrome min-h-16 resize-y py-2 leading-relaxed"
+      className={cn('input-chrome min-h-16 resize-y py-2 leading-relaxed', readOnly && 'font-medium text-gold-bright')}
     />
   );
 }

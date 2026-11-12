@@ -1,7 +1,8 @@
 # Data
 
 ## Owns
-- Back up, restore, and reset to the sample data (restore and reset ask first).
+- Back up and restore (restore asks first). There is nothing to reset to: Keystone has no sample data, only what was
+  saved (docs/adr/0018). Restoring is how records kept elsewhere come in on purpose.
 - The list of parts the registry left out, with their reasons.
 
 ## Contributes
@@ -11,5 +12,5 @@ Nothing.
 Nothing.
 
 ## Removing it
-Nobody can back up, restore or reset from inside Keystone; the saved data itself is untouched. A part the registry
-leaves out is no longer listed anywhere.
+Nobody can back up or restore from inside Keystone; the saved data itself is untouched. A part the registry leaves
+out is no longer listed anywhere.

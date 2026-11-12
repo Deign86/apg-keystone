@@ -10,7 +10,7 @@ test('is first under Settings on the rail, and has no accounts to make on this c
   const names = await rail.allTextContents();
   const accounts = names.findIndex((n) => n.endsWith('User Accounts'));
 
-  expect(names.slice(accounts + 1).map((n) => n.replace(/^[\d\s]*/, ''))).toEqual(['Data', 'Bank Accounts']);
+  expect(names.slice(accounts + 1).map((n) => n.replace(/^[\d\s]*/, ''))).toEqual(['Data', 'Bank Accounts', 'Company Details']);
   await rail.nth(accounts).tap();
 
   await expect(screen.getByRole('heading', { name: 'User Accounts', level: 1 })).toBeVisible();

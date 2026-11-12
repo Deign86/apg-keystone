@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  query, runTransaction, serverTimestamp, setDoc, where, writeBatch, type WriteBatch,
+  query, serverTimestamp, setDoc, where, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
 import type { FirebaseEmulators } from './config';
@@ -16,9 +16,10 @@ import type { FirebaseEmulators } from './config';
 // The company's records in Firestore, behind the RemoteDocs interface (docs/adr/0009). Loaded only when the build
 // has a Firebase project (VITE_FIREBASE_*), so the SDK never reaches a build without one.
 //
-//   keystone/apg                  { status: 'moving' | 'ready', by, at }: whether the records have been moved in
+//   keystone/apg                  { status: 'ready', by, at }: the records have been started, by an owner (docs/adr/0018)
 //   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name, email }: who may open them (firestore.rules)
 //   keystone/apg/{dir|cv|bs|ids|log|ext}/{id}   { pos, body }: one record each (StateDocument)
+//   keystone/apg/company/details  { pos, body }: the company's details, which only an owner writes (docs/adr/0018)
 //   keystone/apg/{a module's own}/{id}          { pos, body, ...its checked fields }: one record each (docs/adr/0011)
 
 const COMPANY = 'apg';
@@ -171,24 +172,9 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
       return lists.flat();
     },
 
-    async moveIn(docs) {
-      const by = me();
-
-      // Only one computer moves its records in. One that stopped halfway may finish its own move.
-      const claimed = await runTransaction(db, async (t) => {
-        const marker = await t.get(company);
-
-        if (marker.exists() && !(marker.get('status') === 'moving' && marker.get('by') === by)) return false;
-        t.set(company, { status: 'moving', by, at: serverTimestamp() });
-
-        return true;
-      });
-
-      if (!claimed) return false;
-      await commit(docs.map(put));
-      await setDoc(company, { status: 'ready', by, at: serverTimestamp() });
-
-      return true;
+    // Started with nothing in it; firestore.rules let only an owner do this (docs/adr/0018).
+    async start() {
+      await setDoc(company, { status: 'ready', by: me(), at: serverTimestamp() });
     },
 
     write(change: DocumentChanges) {

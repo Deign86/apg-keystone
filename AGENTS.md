@@ -145,8 +145,9 @@ regression suites that guard the architecture live in the composition root:
 A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's
 `e2e/` file. A bug fix gets the test that would have caught it.
 
-End-to-end tests use exact locators (roles and names from the screen, never CSS) and start from the sample data at
-10:00 on Nov 2, 2026 in Manila (`e2e/support/fixed-clock.js`), so dates and overdue statuses never drift. Each test
+End-to-end tests use exact locators (roles and names from the screen, never CSS) and start from the tests' sample
+records (`e2e/support/sample-records.ts` puts them in the browser; Keystone itself starts with none) at 10:00 on Nov
+2, 2026 in Manila (`e2e/support/fixed-clock.js`), so dates and overdue statuses never drift. Each test
 gets a fresh browser, so nothing one saves reaches another. Each run starts its own dev server on a free port with the
 `VITE_FIREBASE_*` variables blanked, so a cloud `.env.local` or a dev server already running never changes what it
 tests. A failed run leaves a trace page per test in `.e2e/results/` (`.e2e/cloud/results/` for the cloud suite); CI
@@ -206,7 +207,11 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
   and is never stored, and the Firebase SDK keeps the session on that computer. The project's web config is not a
   secret, but it still comes from build variables (`apps/keystone/.env.example`), never from the code.
 - **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/` and
-  `packages/core/src/seed.json` are regenerated from `shared/` by `npm run sync`.
+  `packages/core/sample/sample.json` are regenerated from `shared/` by `npm run sync`.
+- **Nothing hardcoded (docs/adr/0018):** Keystone shows only what was saved, in the cloud for a signed-in build. No
+  records, company details, signatories or bank accounts in the code: a new one starts empty, a document leaves a
+  field blank until Company Details fills it, and nothing a computer holds is copied into the cloud. Made-up records
+  are the tests' alone (`@keystone/core/sample`, which `npm run check:boundaries` lets only a test import).
 - **The other APG repos:**
   - Treat them as external systems. Keystone only opens them; it reads nothing from them (docs/adr/0007).
   - A change to them is the owner's decision, made in that repo.

@@ -1,5 +1,5 @@
 import {
-  count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber, payees,
+  companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber, payees,
   peso, recordOf, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher, type VoucherDrafts,
   type VoucherStatus, type WaitingItem
@@ -26,16 +26,18 @@ export interface VoucherDraft extends Editing {
 }
 
 /**
- * A blank voucher. Whoever prepares vouchers types their own full name, so the signatories start as the last voucher's
- * (the reference defaults only before the first), and so does the bank, or `bank` (the first account kept) before any.
+ * A blank voucher. It is prepared by whoever is signed in. The other signatories start as the last voucher's (Company
+ * Details' before the first), and so does the bank, or `bank` (the first account kept) before any. Nobody signed in, the
+ * preparer is the last voucher's too, typed in full by whoever prepares vouchers.
  */
 export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft {
-  const d = ctx.seed.reference.defaults;
+  const d = companyOf(s);
   const last = s.cv.at(-1);
 
   return {
     no: nextVoucherNo(s), date: today(ctx), payee: payees(s)[0]?.code ?? '', check: '', checkDate: '', bank: last?.bank || bank,
-    lines: [lineDraft()], prepared: last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
+    lines: [lineDraft()], prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy,
+    approved: last?.approved ?? d.approvedBy,
   };
 }
 

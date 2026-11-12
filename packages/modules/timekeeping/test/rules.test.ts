@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, withModuleData, type Ctx, type TerminalState } from '@keystone/core';
+import { withModuleData, type Ctx, type TerminalState } from '@keystone/core';
 import {
   clock12, dataOf, daysOf, duration, employeeAttendance, missingTimeOuts, removeHoliday, saveDay, saveHoliday, tally, timeIn,
   timekeepingFigure, timekeepingFinding, timekeepingStat, timeOut, todayBoard, type TimeDay,
 } from '../src/rules';
+import { sampleState } from '@keystone/core/sample';
 
 /** A moment in Manila (vitest pins TZ): month is 1-based here. */
-const at = (y: number, m: number, d: number, h = 9, min = 0): Ctx => ({ seed: bundledSeed, now: () => new Date(y, m - 1, d, h, min) });
-const state = () => structuredClone(bundledSeed.state);
+const at = (y: number, m: number, d: number, h = 9, min = 0): Ctx => ({ now: () => new Date(y, m - 1, d, h, min) });
+const state = () => sampleState();
 
 /** The sample data with these days recorded. */
 function withDays(days: Partial<TimeDay>[], s: TerminalState = state()) {

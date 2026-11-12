@@ -1,5 +1,5 @@
 import {
-  addDays, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
+  addDays, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
   percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
   toneOf, type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type LineItem, type Payment, type Statement, type StatementPayments, type StatementStatus,
@@ -55,22 +55,24 @@ export interface StatementDraft extends Editing {
   lines: LineDraft[]; vat: boolean; ewt: boolean; notes: string; note: string;
 }
 
+/** A blank statement, from Company Details: its payment instructions, note and days to pay (no due date until set). */
 export function newStatement(s: TerminalState, ctx: Ctx): StatementDraft {
-  const d = ctx.seed.reference.defaults;
+  const d = companyOf(s);
   const client = recordsOf(s, 'Client')[0];
   const t = today(ctx);
 
   return {
-    no: nextStatementNo(s, ctx), date: t, invoiceDate: t, due: addDays(t, d.dueInDays), client: client?.code ?? '',
+    no: nextStatementNo(s, ctx), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: client?.code ?? '',
     attention: client?.attention ?? '', lines: [lineDraft()], vat: client?.vat ?? false, ewt: client?.ewt ?? false,
     notes: d.paymentInstructions, note: d.billingNote,
   };
 }
 
-export const statementDraftOf = (b: Statement, ctx: Ctx): StatementDraft => ({
+/** A saved statement back in the form. One saved before it kept its own notes takes Company Details'. */
+export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
   editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: b.client,
   attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt,
-  notes: b.notes ?? ctx.seed.reference.defaults.paymentInstructions, note: b.note ?? ctx.seed.reference.defaults.billingNote,
+  notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote,
 });
 
 export const statementOf = (d: StatementDraft, status: StatementStatus = 'Sent'): Statement => ({
@@ -133,6 +135,9 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
   if (!b.lines.length || t.subtotal <= 0) throw new KeystoneError('Add at least one charge with an amount.');
 
   if (!recordOf(s, b.client)) throw new KeystoneError('Choose a client from the directory.');
+
+  // A new statement has no due date until Company Details says how many days clients have to pay.
+  if (!b.due) throw new KeystoneError('Enter the due date.');
 
   if (b.due < (b.invoiceDate ?? b.date)) throw new KeystoneError('The due date is before the invoice date.');
 

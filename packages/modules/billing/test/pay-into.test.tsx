@@ -3,12 +3,13 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { SERVICES, type BankAccount, type BankAccounts } from '@keystone/core';
 import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
 import { billingModule } from '../src';
+import { sampleText } from '@keystone/core/sample';
 
 // The statement form with and without the bank-accounts service (SERVICES.bankAccounts). Billing never imports Bank
 // Accounts: a stand-in module provides the service here, as the real one does in the app.
 
 const platform: Platform = {
-  kind: 'browser', platform: 'web', loadState: async () => null, saveState: async () => {}, putPhoto: async () => {},
+  kind: 'browser', platform: 'web', loadState: async () => sampleText, saveState: async () => {}, putPhoto: async () => {},
   photoUrl: async () => null, saveFile: async (name) => name, openFile: async () => null, locateApp: async () => null,
   launchApp: async () => { throw new Error('Not in tests.'); }, openUrl: async () => {},
 };

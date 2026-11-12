@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, SERVICES, topFinding, type Ctx } from '@keystone/core';
+import { SERVICES, topFinding, type Ctx } from '@keystone/core';
 import { buildRegistry } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
+import { sampleState } from '@keystone/core/sample';
 
 // What every shipped part promises the kernel, checked over the real parts on the
 // sample data. A new module or connector is covered here the moment it is installed.
 
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 const registry = buildRegistry(builtInModules, plugins);
 const published = new Set<string>(Object.values(SERVICES));
 

@@ -1,6 +1,6 @@
 # 0010. Bank accounts are their own part, and statements and vouchers pick one through a service
 
-Status: Accepted · Date: 2026-11-11
+Status: Accepted · Date: 2026-11-11 · The reference account until one is saved: superseded by 0018
 
 ## Context
 

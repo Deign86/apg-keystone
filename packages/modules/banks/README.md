@@ -14,16 +14,15 @@ after Data.
   - **Removing** asks first. Statements already issued keep the payment instructions written on them.
 - `src/index.tsx`: the screen. A register of the accounts; **Add account** opens a dialog (Bank, Branch, Account name,
   Account number), a row opens it for editing, and the row menu has Edit… and Remove….
-- Its data: `state.ext.banks` = `{ accounts: [{ id, bank, branch, name, number }] }`. **Until any account is saved**,
-  the list is the company's account from the reference data (`reference.bankAccounts` in `shared/data/seed.json`,
-  BPI · 4011 0258 68), the one the default payment instructions name. Once saved, the saved list is the list, even
-  when it is empty.
+- Its data: `state.ext.banks` = `{ accounts: [{ id, bank, branch, name, number }] }`. **Until any account is saved
+  there are none:** no account is built in (docs/adr/0018). Vouchers then name no bank, and Billing's Pay into offers
+  to add one.
 
 ## Contributes
 - **Activity:** log tag `BANK` (filter "Bank Accounts"): each account added, edited and removed.
 
 ## Provides
-`banks.bank-accounts` (`SERVICES.bankAccounts`, typed `BankAccounts` in core): `accounts(state, ctx)`, the accounts
+`banks.bank-accounts` (`SERVICES.bankAccounts`, typed `BankAccounts` in core): `accounts(state)`, the accounts
 in the order they were added, and `label(account)`, how one is named in a list ("BPI · 4011 0258 68"). Billing's
 **Pay into** lists them and writes the one picked into a statement's payment instructions; Check Vouchers' **Bank**
 lists them for the account a check is drawn on.

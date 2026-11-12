@@ -1,5 +1,5 @@
 import { Button, Panel, ScreenHeader, SectionLabel, useConfirm } from '@keystone/ui';
-import { bundledSeed, count, localDate, parseBackup } from '@keystone/core';
+import { count, localDate, parseBackup } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 
 function DataPanel() {
@@ -31,14 +31,6 @@ function DataPanel() {
     }
   };
 
-  const reset = () => confirm({
-    title: 'Reset to the sample data?',
-    body: 'Every voucher, statement, ID and directory record is replaced with the sample set. Back up first if you may need them.',
-    confirm: 'Reset data',
-    danger: true,
-    onConfirm: () => { store.replaceAll(structuredClone(bundledSeed.state)); notify('Data reset to the sample set.'); },
-  });
-
   return (
     <Panel aria-labelledby="data" className="flex flex-col gap-3">
       <SectionLabel id="data">Data</SectionLabel>
@@ -49,13 +41,12 @@ function DataPanel() {
       <div className="flex flex-wrap gap-2">
         <Button onClick={backup}>Back up data…</Button>
         <Button onClick={restore}>Restore from backup…</Button>
-        <Button kind="danger" className="ml-auto" onClick={reset}>Reset to sample data…</Button>
       </div>
     </Panel>
   );
 }
 
-/** Backing up, restoring and resetting the data, and the parts the registry left out. */
+/** Backing up and restoring the data, and the parts the registry left out. Keystone has no sample data to reset to (docs/adr/0018). */
 function Data() {
   const { registry } = useKeystone();
 
@@ -64,7 +55,7 @@ function Data() {
       <ScreenHeader
         eyebrow="Settings"
         title="Data"
-        line="Back up what Keystone holds, restore it, or start again from the sample data."
+        line="Back up what Keystone holds, or restore it from a backup."
       />
       <div className="grid items-start gap-4 min-[1000px]:grid-cols-2">
         <DataPanel />
@@ -85,7 +76,7 @@ export const dataModule: ModuleDef = {
   id: 'data',
   title: 'Data',
   section: 'Settings',
-  blurb: 'Back up, restore or reset the data, and see any part that was left out.',
+  blurb: 'Back up or restore the data, and see any part that was left out.',
   order: 90,
   Screen: Data,
 };

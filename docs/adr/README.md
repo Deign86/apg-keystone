@@ -18,8 +18,8 @@ Consequences**.
 | [0006](0006-keystone-updates-itself.md) | Keystone updates itself from its signed GitHub releases | Accepted |
 | [0007](0007-connected-systems-are-shortcuts.md) | Connected systems are shortcuts to their apps | Accepted |
 | [0008](0008-employee-timekeeping-and-payroll.md) | Employee timekeeping and payroll live in Keystone | Accepted |
-| [0009](0009-keystone-records-in-firebase.md) | Keystone's records live in Firebase | Accepted |
-| [0010](0010-bank-accounts.md) | Bank accounts are their own part, and statements pick one through a service | Accepted |
+| [0009](0009-keystone-records-in-firebase.md) | Keystone's records live in Firebase | Accepted; moving records in superseded by 0018 |
+| [0010](0010-bank-accounts.md) | Bank accounts are their own part, and statements pick one through a service | Accepted; the reference account superseded by 0018 |
 | [0011](0011-requests-for-funds.md) | Requests for funds, decided by the owner | Accepted |
 | [0012](0012-signing-out-and-the-idle-timeout.md) | Signing out, and signing out when Keystone sits unused | Accepted |
 | [0013](0013-a-save-the-cloud-never-confirmed.md) | A save the cloud never confirmed is written on the next start | Accepted |
@@ -27,6 +27,7 @@ Consequences**.
 | [0015](0015-the-owner-removes-staff-accounts.md) | The owner removes staff accounts in Keystone | Accepted |
 | [0016](0016-changing-and-resetting-a-password.md) | Changing your password, and resetting a forgotten one | Accepted |
 | [0017](0017-releases-sign-in-and-screens-coming-soon.md) | Releases always sign in, and screens not released yet say "Coming soon" | Accepted |
+| [0018](0018-the-records-are-the-only-source.md) | What was saved is the only source: no records, company details or accounts built in | Accepted |
 
 Template:
 

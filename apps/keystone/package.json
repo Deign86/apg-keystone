@@ -20,6 +20,7 @@
     "@keystone/module-activity": "*",
     "@keystone/module-banks": "*",
     "@keystone/module-billing": "*",
+    "@keystone/module-company": "*",
     "@keystone/module-data": "*",
     "@keystone/module-directory": "*",
     "@keystone/module-funds": "*",

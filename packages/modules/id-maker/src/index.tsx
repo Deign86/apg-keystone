@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { count, ID_STATUSES, recordsOf, shortDate, toneOf, type IDRecord } from '@keystone/core';
-import { idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee } from './rules';
+import { companyOf, count, ID_STATUSES, recordsOf, shortDate, toneOf, type IDRecord } from '@keystone/core';
+import { BLOOD_TYPES, idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
@@ -30,7 +30,6 @@ function IDMaker() {
   const photo = usePhoto(draft.photo);
   const editing = draft.editing ? state.ids.find((i) => i.no === draft.editing) : undefined;
   const queued = queuedForPrinting(state);
-  const ref = ctx.seed.reference;
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => issueID(s, draft, c, asNew));
@@ -120,7 +119,7 @@ function IDMaker() {
             <FieldRow min={130}>
               <Field label="Date issued"><TextInput type="date" value={draft.issued} onChange={(issued) => setDraft({ ...draft, issued })} /></Field>
               <Field label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field>
-              <Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={ref.bloodTypes.map((b) => ({ value: b, label: b }))} /></Field>
+              <Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={BLOOD_TYPES.map((b) => ({ value: b, label: b }))} /></Field>
             </FieldRow>
             <div className="flex flex-col gap-1.5">
               <span className="text-[12.5px] font-medium">Photo</span>
@@ -137,7 +136,7 @@ function IDMaker() {
             <Field label="Authorized signatory"><TextInput value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} /></Field>
           </FormCard>
         }
-        preview={<div className="overflow-hidden rounded-card border border-line"><IDCardSheet ref={sheet} card={{ ...idOf(draft), no: draft.editing ?? draft.no }} photo={photo} company={ctx.seed.company} /></div>}
+        preview={<div className="overflow-hidden rounded-card border border-line"><IDCardSheet ref={sheet} card={{ ...idOf(draft), no: draft.editing ?? draft.no }} photo={photo} company={companyOf(state)} /></div>}
       />
     </>
   );

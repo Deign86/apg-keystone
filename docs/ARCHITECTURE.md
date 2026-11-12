@@ -20,7 +20,7 @@ apps/keystone              @keystone/app    the composition root
   src/main.tsx                                builds the registry and starts the app
   src/platform/                               desktop (Tauri), browser and the cloud records behind one interface
   src-tauri/                                  native side: files, OS keychain, finding and launching other apps
-shared/                    tokens, fonts, logo, sample data (generated into ui and core by `npm run sync`)
+shared/                    tokens, fonts, logo, the tests' sample records (generated into ui and core by `npm run sync`)
 ```
 
 Dependencies point one way: parts → kit → core and ui. A part's `package.json` may list only `core`, `ui` and `kit`

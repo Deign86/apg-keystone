@@ -3,6 +3,7 @@ import { accountsModule } from '@keystone/module-accounts';
 import { activityModule } from '@keystone/module-activity';
 import { banksModule } from '@keystone/module-banks';
 import { billingModule } from '@keystone/module-billing';
+import { companyModule } from '@keystone/module-company';
 import { dataModule } from '@keystone/module-data';
 import { directoryModule } from '@keystone/module-directory';
 import { fundsModule } from '@keystone/module-funds';
@@ -20,15 +21,16 @@ import { vouchersModule } from '@keystone/module-vouchers';
  */
 export const builtInModules: ModuleDef[] = [
   homeModule, overviewModule, vouchersModule, fundsModule, billingModule, idMakerModule, directoryModule, activityModule, timekeepingModule,
-  payrollModule, accountsModule, dataModule, banksModule,
+  payrollModule, accountsModule, dataModule, banksModule, companyModule,
 ];
 
 /**
- * The screens open in every build: Home, which holds the shortcuts to the connected systems, Check Vouchers, and User
- * Accounts, where the owner makes the staff's sign-ins. The others say "Coming soon" except in a beta build
+ * The screens open in every build: Home, which holds the shortcuts to the connected systems, Check Vouchers, User
+ * Accounts, where the owner makes the staff's sign-ins, and Bank Accounts and Company Details, which vouchers print
+ * from now that nothing is built in (docs/adr/0018). The others say "Coming soon" except in a beta build
  * (docs/adr/0017). To release one, add its id here.
  */
-export const RELEASED = ['home', 'vouchers', 'accounts'];
+export const RELEASED = ['home', 'vouchers', 'accounts', 'banks', 'company'];
 
 /** The installed screens as this build shows them: every one in a beta build, otherwise the unreleased coming soon. */
 export function shippedModules(beta: boolean): ModuleDef[] {

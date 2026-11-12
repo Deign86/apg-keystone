@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, type Screen } from 'e2e';
 import type { Browser, WebApp } from '@e2e-dev/web';
-import type { JsonObject, TerminalState } from '@keystone/core';
+import { parseState, toDocuments, type JsonObject, type TerminalState } from '@keystone/core';
 
 // The Firebase emulators the cloud suite runs against, as `firebase emulators:exec` names them (npm run
 // test:e2e:cloud), and what the tests do to them directly: start empty, make accounts, and read what Keystone wrote.
@@ -92,7 +92,7 @@ async function readDocument(path: string): Promise<FirestoreDocument | null> {
   return (await res.json()) as FirestoreDocument;
 }
 
-/** A field of `keystone/apg` (the move-in marker), or null while the document does not exist. */
+/** A field of `keystone/apg` (whether, and by whom, the records were started), or null while the document does not exist. */
 export async function marker(field: 'status' | 'by'): Promise<string | null> {
   return (await readDocument(''))?.fields?.[field]?.stringValue ?? null;
 }
@@ -156,19 +156,40 @@ export async function deleteAsMember(token: string, path: string): Promise<numbe
   return res.status;
 }
 
-// SAFETY: seed.json holds the sample data, whose `state` is a saved state.json (core › bundledSeed).
-const seed = JSON.parse(readFileSync(new URL('../../packages/core/src/seed.json', import.meta.url), 'utf8')) as { state: TerminalState };
+/** The tests' sample records (packages/core/sample/sample.json), with one more log entry saying where these are kept. */
+function sampleRecords(where: string): TerminalState {
+  const state = parseState(readFileSync(new URL('../../packages/core/sample/sample.json', import.meta.url), 'utf8'));
+
+  state.log.unshift({ when: '2026-10-30 09:00', mod: 'DIR', text: `Records kept ${where}.` });
+
+  return state;
+}
+
+/**
+ * The records an owner saved in Keystone before the test: the sample records, logged as "Records kept in the cloud.",
+ * written as the documents Keystone writes (core › toDocuments), with the records marked as started. Written as the
+ * emulator's admin, past firestore.rules.
+ */
+export async function recordsInCloud() {
+  const root = `projects/${PROJECT}/databases/(default)/documents/keystone/apg`;
+  const text = (v: string) => ({ stringValue: v });
+
+  const writes = toDocuments(sampleRecords('in the cloud')).map((d) => ({
+    update: { name: `${root}/${d.collection}/${d.id}`, fields: { pos: { integerValue: String(d.pos) }, body: text(d.body) } },
+  }));
+
+  writes.push({ update: { name: root, fields: { status: text('ready'), by: text('setup') } } });
+  await call(`${DATABASE}/documents:commit`, { method: 'POST', headers: { ...ADMIN, 'Content-Type': 'application/json' }, body: JSON.stringify({ writes }) });
+}
 
 /**
  * Puts records on this computer, where the browser preview keeps them (apps/keystone/src/platform/browser.ts): the
- * sample records, with one more log entry naming the computer, so a screen can tell whose records it shows.
+ * sample records, logged as "Records kept on <computer>.", so a test can show they never reach the cloud
+ * (docs/adr/0018). Leaves Keystone open on its sign-in screen.
  */
 export async function keepRecordsHere(app: WebApp, browser: Browser, computer: string) {
-  const state = structuredClone(seed.state);
-
-  state.log.unshift({ when: '2026-10-30 09:00', mod: 'DIR', text: `Records kept on ${computer}.` });
   await app.open('/');
-  await browser.evaluate((json: string) => localStorage.setItem('keystone-state', json), JSON.stringify(state));
+  await browser.evaluate((json: string) => localStorage.setItem('keystone-state', json), JSON.stringify(sampleRecords(`on ${computer}`)));
   await browser.reload();
 }
 

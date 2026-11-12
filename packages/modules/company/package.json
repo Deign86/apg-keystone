@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/module-company",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Company Details: the company's name, address and contacts as documents print them, and what each new document starts from, kept with the records.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

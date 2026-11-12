@@ -16,8 +16,9 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `timekeeping/` | 8 | Employees' time-ins and time-outs, the weekly grace, holidays | figure, finding, stat, log tag `DTR` | `timekeeping.employee-attendance` |
 | `payroll/` | 9 | Each employee's pay setup, the cut-off, the payroll sheet and payslips | figure, finding, stat, log tag `PAY` | |
 | `accounts/` | Settings, first | Who can open the records in the cloud, and the owner making and removing staff accounts | log tag `ACCT` | |
-| `data/` | Settings, after User Accounts | Backup, restore and reset, and the parts left out | Nothing | |
-| `banks/` | last | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
+| `data/` | Settings, after User Accounts | Backup and restore, and the parts left out | Nothing | |
+| `banks/` | Settings, after Data | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
+| `company/` | last | Changing the company's details (the details themselves are kernel, in core: `state.company`) | finding, log tag `CO` | |
 
 The website connector adds a `website` screen (rail 7). It settles statements through `billing.statement-payments`
 and keeps working, without matching, when billing is not installed. Billing asks for `banks.bank-accounts` to offer

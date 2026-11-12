@@ -1,6 +1,6 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { count, peso, recordOf, recordsOf, shortDate, STATEMENT_STATUSES, toneOf, type Statement, SERVICES } from '@keystone/core';
+import { companyOf, count, peso, recordOf, recordsOf, shortDate, STATEMENT_STATUSES, toneOf, type Statement, SERVICES } from '@keystone/core';
 import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
@@ -12,12 +12,12 @@ const DRAFT = 'billing.draft';
  * that service there is nothing to pick from, and the instructions are only typed.
  */
 function PayInto({ draft, setDraft }: { draft: StatementDraft; setDraft: (d: StatementDraft) => void }) {
-  const { state, ctx } = useKeystone();
+  const { state } = useKeystone();
   const app = useModuleApp();
   const banks = app.service(SERVICES.bankAccounts);
 
   if (!banks) return null;
-  const accounts = banks.accounts(state, ctx);
+  const accounts = banks.accounts(state);
 
   if (!accounts.length) {
     return (
@@ -90,7 +90,7 @@ function Billing() {
           columns={columns}
           rows={statementsNewestFirst(state)}
           rowKey={(b) => b.no}
-          onOpen={(b) => { setDraft(statementDraftOf(b, ctx)); setError(null); notify(`${b.no} loaded into the form.`); }}
+          onOpen={(b) => { setDraft(statementDraftOf(b, state)); setError(null); notify(`${b.no} loaded into the form.`); }}
           actions={(b) => [
             ...STATEMENT_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()}`, disabled: b.status === s || b.status === 'Void', onSelect: () => run((st, c) => setStatementStatus(st, b.no, s, c)) })),
             { label: 'Void statement…', danger: true, disabled: b.status === 'Void', onSelect: () => confirm({ title: `Void ${b.no}?`, body: `${peso(statementTotals(b).due)} billed to ${recordOf(state, b.client)?.name ?? b.client}. A void statement stays in the register and cannot be reopened.`, confirm: 'Void statement', danger: true, onConfirm: () => run((st, c) => setStatementStatus(st, b.no, 'Void', c)) }) },
@@ -145,7 +145,7 @@ function Billing() {
             <Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
           </FormCard>
         }
-        preview={<StatementPaper ref={paper} statement={{ ...live, no: draft.editing ?? draft.no }} client={recordOf(state, draft.client)} company={ctx.seed.company} terms={ctx.seed.reference.defaults.billingTerms} />}
+        preview={<StatementPaper ref={paper} statement={{ ...live, no: draft.editing ?? draft.no }} client={recordOf(state, draft.client)} company={companyOf(state)} terms={companyOf(state).billingTerms} />}
       />
     </>
   );
@@ -165,7 +165,7 @@ export const billingModule: ModuleDef = {
   openWaiting: (no, app) => {
     const b = app.state.bs.find((x) => x.no === no);
 
-    if (b) app.setDraft(DRAFT, statementDraftOf(b, app.ctx));
+    if (b) app.setDraft(DRAFT, statementDraftOf(b, app.state));
     app.go('billing');
   },
   create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go('billing'); } },

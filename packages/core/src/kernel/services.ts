@@ -95,11 +95,8 @@ export interface EmployeeAttendance {
 }
 
 export interface BankAccounts {
-  /**
-   * The company's bank accounts, in the order they were added. Until any is saved, the reference data's
-   * (`ctx.seed.reference.bankAccounts`), which is why it takes the context.
-   */
-  accounts(state: TerminalState, ctx: Ctx): BankAccount[];
+  /** The company's bank accounts as saved, in the order they were added. None until someone adds one. */
+  accounts(state: TerminalState): BankAccount[];
   /** How an account is named in a list: "BPI · 4011 0258 68". */
   label(account: BankAccount): string;
 }

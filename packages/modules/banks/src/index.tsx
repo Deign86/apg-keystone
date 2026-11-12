@@ -8,7 +8,7 @@ import {
 } from './rules';
 
 function AccountForm({ draft, onDone }: { draft: AccountDraft; onDone: () => void }) {
-  const { state, ctx, run } = useKeystone();
+  const { state, run } = useKeystone();
   const [d, setD] = useState(draft);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ function AccountForm({ draft, onDone }: { draft: AccountDraft; onDone: () => voi
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {error
           ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>
-          : <span className="mr-auto text-xs text-ink-2">{d.editing ? `Keeps ${d.editing}.` : `Gets ${nextAccountId(state, ctx)}.`}</span>}
+          : <span className="mr-auto text-xs text-ink-2">{d.editing ? `Keeps ${d.editing}.` : `Gets ${nextAccountId(state)}.`}</span>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">{d.editing ? 'Save changes' : 'Add account'}</Button>
       </div>
@@ -39,10 +39,10 @@ function AccountForm({ draft, onDone }: { draft: AccountDraft; onDone: () => voi
 
 /** The company's bank accounts: a register, and a dialog to add or edit one. */
 function Banks() {
-  const { state, ctx, run } = useKeystone();
+  const { state, run } = useKeystone();
   const confirm = useConfirm();
   const [editing, setEditing] = useState<AccountDraft | null>(null);
-  const accounts = accountsOf(state, ctx);
+  const accounts = accountsOf(state);
   const add = () => setEditing(newAccountDraft());
 
   const columns: Column<BankAccount>[] = [

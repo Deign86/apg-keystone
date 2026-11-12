@@ -1,4 +1,4 @@
-import { bundledSeed, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
+import { emptyState, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 
 export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false; error: string };
@@ -9,7 +9,7 @@ export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false;
  */
 export class KeystoneStore {
   state: TerminalState;
-  /** The rules' context: the reference data, the clock, and who is signed in, if anyone. */
+  /** The rules' context: the clock, and who is signed in, if anyone. */
   readonly ctx: Ctx;
   private listeners = new Set<() => void>();
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -19,24 +19,24 @@ export class KeystoneStore {
 
   constructor(readonly platform: Platform, initial: TerminalState) {
     this.state = initial;
-    this.ctx = { seed: bundledSeed, now: () => new Date(), ...(platform.who && { who: platform.who }) };
+    this.ctx = { now: () => new Date(), ...(platform.who && { who: platform.who }) };
   }
 
   /**
-   * Loads the saved state, then runs each installed module's housekeeping (overdue, expired). When the platform cannot
-   * read it (the cloud is unreachable and nothing is cached), this throws: starting from the sample data instead would
-   * show it as if it were the company's, and the first save would write it over the real records.
+   * Loads the saved state, then runs each installed module's housekeeping (overdue, expired). Nothing saved yet: no
+   * records, never made-up ones (docs/adr/0018). When the platform cannot read it (the cloud is unreachable and nothing
+   * is cached), this throws: starting empty instead would show no records as if the company had none, and the first save
+   * would be written beside the real records without them.
    */
   static async open(platform: Platform, housekeeping: ((s: TerminalState, ctx: Ctx) => TerminalState)[] = []): Promise<KeystoneStore> {
-    let state = structuredClone(bundledSeed.state);
+    let state = emptyState();
     const saved = await platform.loadState();
 
     if (saved) {
       try {
         state = parseState(saved);
       } catch {
-        // A damaged file: start from the sample data but never overwrite the old file
-        // until the person changes something.
+        // A damaged file: start with no records, but never overwrite the old file until the person changes something.
       }
     }
 
