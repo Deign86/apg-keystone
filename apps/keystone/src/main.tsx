@@ -36,11 +36,14 @@ async function start() {
     if ((await cloud.signedIn()) && unusedTooLong(webStorageLog, Date.now())) await cloud.signOut();
 
     if (!(await cloud.signedIn())) {
-      await new Promise<void>((signedIn) => root.render(<SignIn signIn={async (email, password) => {
-        await cloud.signIn(email, password);
-        session.used(Date.now());
-        signedIn();
-      }} />));
+      await new Promise<void>((signedIn) => root.render(<SignIn
+        signIn={async (email, password) => {
+          await cloud.signIn(email, password);
+          session.used(Date.now());
+          signedIn();
+        }}
+        sendReset={(email) => cloud.sendPasswordReset(email)}
+      />));
     }
 
     // Who is signed in decides what they read and may do (docs/adr/0011), so it is read before the records. The owner

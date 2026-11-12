@@ -115,7 +115,8 @@ Adding or removing one is one package plus one line in `apps/keystone/src/module
   picks the one its client pays into.
 - **In the cloud** (docs/FIREBASE.md), every signed-in computer opens the same records, and the web build can be
   hosted for phones, where a menu takes the rail's place. **User Accounts**, first under Settings, lists who can open
-  them, and there the owner makes and removes staff accounts.
+  them; there the owner makes and removes staff accounts, and anyone changes their password. A forgotten one is
+  reset from the sign-in screen.
 - Sample records are made up; company details are APG's real ones.
 
 ## Agent skills

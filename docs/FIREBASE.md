@@ -25,6 +25,9 @@ up Auth and Firestore, and deploy `firestore.rules`.
    Authentication › Users; the owner makes everyone else's in Keystone (step 6). Keystone makes an account as a
    sign-up, so leave sign-up allowed (on a project upgraded to Identity Platform: Authentication › Settings › User
    actions › Enable create). An account the owner did not make opens nothing: only members open the records.
+   **Forgot password?** emails a link from Firebase (docs/adr/0016): set the project's public-facing name to
+   `Keystone` (Project settings › General), and, if you like, the sender name and wording under Authentication ›
+   Templates › Password reset.
 4. **Firestore:** create the database in production mode, in `asia-southeast1` (Singapore), the region nearest
    Manila. The region cannot be changed later.
 5. **Rules:** deploy them from the repository root:
@@ -69,6 +72,9 @@ up Auth and Firestore, and deploy `firestore.rules`.
   Authentication › Users if you like. To let them back in, add their document again here with their uid, `role` and
   `name`: making an account with the same email in Keystone is refused while the sign-in exists. An owner is removed
   here, by deleting their document.
+- **Passwords:** anyone signed in changes their own on **Settings › User Accounts › Change password**, after typing
+  the current one. A forgotten one is reset from the sign-in screen with **Forgot password?**: Firebase emails a link
+  to choose a new one, from `noreply@<project id>.firebaseapp.com`, so tell people to look in spam (docs/adr/0016).
 - **Signing out:** "Sign out" is in the rail. Keystone also signs out by itself after 10 minutes unused, with a
   minute's warning, and asks for the account again when it is opened after sitting unused that long (docs/adr/0012).
 - **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,

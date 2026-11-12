@@ -4,10 +4,10 @@ import {
   asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, keepRecordsHere, makeAccount, setMember, signIn,
 } from './emulators';
 
-// The owner making and removing accounts (docs/adr/0014, 0015, packages/modules/accounts): from User Accounts, the
-// owner makes a staff account, and that person signs in with it on another computer and opens the records; once the
-// owner removes it, they open nothing. Staff see who has an account and make or remove none, and firestore.rules hold
-// the same line for a member who goes past Keystone.
+// The owner making and removing accounts, and anyone changing their own password (docs/adr/0014–0016,
+// packages/modules/accounts): from User Accounts, the owner makes a staff account, and that person signs in with it on
+// another computer and opens the records; once the owner removes it, they open nothing. Staff see who has an account and
+// make or remove none, and firestore.rules hold the same line for a member who goes past Keystone.
 // app.clearState() is another computer, signed out and empty.
 
 test.beforeEach(async () => {
@@ -169,6 +169,49 @@ test('the owner removes a staff account after asking, and that person can no lon
   await signIn(screen, hr);
   await expect(screen.getByRole('alert')).toHaveText('This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).');
   await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
+});
+
+test('staff change their own password, checked against the current one, and sign in with the new one after', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+
+  await keepRecordsHere(app, browser, 'the office computer');
+  await signIn(screen, owner);
+  await expectHome(screen);
+
+  // Ana, on her own computer.
+  await app.clearState();
+  await app.open('/');
+  await signIn(screen, hr);
+  await expectHome(screen);
+  await app.open('/#accounts');
+  await expect(screen.getByRole('button', 'Make account')).toBeHidden();
+  await screen.getByRole('button', 'Change password').tap();
+  const dialog = screen.getByRole('dialog', 'Change password');
+
+  const change = async (current: string) => {
+    await dialog.getByLabel('Current password').fill(current);
+    await dialog.getByLabel('New password', { exact: true }).fill('anas-new-password');
+    await dialog.getByLabel('New password again').fill('anas-new-password');
+    await dialog.getByRole('button', 'Change password').tap();
+  };
+
+  // The current password is checked by the sign-in itself.
+  await change(`${hr.password}-not-it`);
+  await expect(dialog.getByRole('alert')).toHaveText('That is not your current password.');
+
+  await change(hr.password);
+  await expect(screen.getByRole('dialog', 'Your password is changed. Sign in with the new one from now on.')).toBeVisible();
+  await expect(screen.getByRole('navigation', 'Keystone').getByText('Ana Cruz · Staff')).toBeVisible();
+
+  // Signed out, the old password no longer opens Keystone and the new one does.
+  await screen.getByRole('navigation', 'Keystone').getByRole('button', 'Sign out').tap();
+  await signIn(screen, hr);
+  await expect(screen.getByRole('form', 'Sign in').getByText('That email and password do not match an account.')).toBeVisible();
+  await signIn(screen, { ...hr, password: 'anas-new-password' });
+  // Signing out kept the address, so Keystone reopens on User Accounts.
+  await expect(screen.getByRole('navigation', 'Keystone').getByText('Ana Cruz · Staff')).toBeVisible({ timeout: 15_000 });
+  await expect(screen.getByRole('heading', { name: 'User Accounts', level: 1 })).toBeVisible();
 });
 
 test('firestore.rules let only the owner remove a member', async () => {

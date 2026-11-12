@@ -25,6 +25,7 @@ Consequences**.
 | [0013](0013-a-save-the-cloud-never-confirmed.md) | A save the cloud never confirmed is written on the next start | Accepted |
 | [0014](0014-the-owner-makes-accounts.md) | The owner makes accounts in Keystone | Accepted |
 | [0015](0015-the-owner-removes-staff-accounts.md) | The owner removes staff accounts in Keystone | Accepted |
+| [0016](0016-changing-and-resetting-a-password.md) | Changing your password, and resetting a forgotten one | Accepted |
 
 Template:
 

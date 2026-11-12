@@ -172,6 +172,28 @@ export async function keepRecordsHere(app: WebApp, browser: Browser, computer: s
   await browser.reload();
 }
 
+/**
+ * The one-time code in the last password-reset link the Auth emulator would have emailed to `email`, or null when it
+ * sent none. Nothing is emailed in the emulator; it keeps the links instead.
+ */
+export async function resetCode(email: string): Promise<string | null> {
+  const res = await call(`http://${AUTH_EMULATOR}/emulator/v1/projects/${PROJECT}/oobCodes`);
+
+  // SAFETY: the Auth emulator lists the links it would have emailed as { oobCodes: [{ email, oobCode, requestType }] }.
+  const { oobCodes = [] } = (await res.json()) as { oobCodes?: { email: string; oobCode: string; requestType: string }[] };
+
+  return oobCodes.filter((c) => c.email === email && c.requestType === 'PASSWORD_RESET').at(-1)?.oobCode ?? null;
+}
+
+/** Chooses a new password with a reset link's code, as the page the emailed link opens does. */
+export async function chooseNewPassword(code: string, newPassword: string) {
+  await call(`http://${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=demo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ oobCode: code, newPassword }),
+  });
+}
+
 /** Signs in on the sign-in screen Keystone opens on. */
 export async function signIn(screen: Screen, account: Account) {
   const form = screen.getByRole('form', 'Sign in');
