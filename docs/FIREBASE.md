@@ -50,7 +50,9 @@ up Auth and Firestore, and deploy `firestore.rules`.
    Any other computer then opens the same records. A computer with no records of its own refuses to move anything in.
 8. **Release builds:** add the same four values as repository variables (Settings › Secrets and variables › Actions
    › Variables): `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` and
-   `VITE_FIREBASE_AUTH_DOMAIN`. The next release then ships with the cloud records.
+   `VITE_FIREBASE_AUTH_DOMAIN`. The next release then ships with the cloud records. Set them as **Variables**, not
+   Secrets: the workflow refuses to make a release without the first three (docs/adr/0017), since such a copy would
+   open on "Administrator access" with no sign-in.
 9. **On a phone (Firebase Hosting):** Sir Mark decides requests for funds from his phone's browser too. With the four
    values in `apps/keystone/.env.local`, build the web app and deploy it from the repository root:
 
@@ -80,8 +82,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
 - **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,
   `http://127.0.0.1:5174` (development) and `https://<project id>.web.app` (the phone), or leave it unrestricted and
   rely on the rules.
-- **Turning it off:** build without the variables. Each computer then opens the copy its last save left in
-  `state.json`.
+- **Turning it off:** build without the variables, by hand (`npm run build`); a release cannot be made without
+  them. Each computer then opens the copy its last save left in `state.json`.
 - **Starting over:** delete the `keystone/apg` document and its collections. The next computer to open a Firebase
   build with records of its own moves them in again.
 - **Tests never touch the project.** The end-to-end cloud suite (`npm run test:e2e:cloud`, `e2e/cloud/`) runs the

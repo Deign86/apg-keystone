@@ -9,6 +9,8 @@ export { KeystoneStore, type Outcome } from './store';
 
 export { buildRegistry, documentLayout, findService, type ConnectorPlugin, type ModuleApp, type ModuleDef, type Registry } from './registry';
 
+export { comingSoon } from './ComingSoon';
+
 export {
   KeystoneProvider, useDraft, useKeystone, useModuleApp, useOpenConnector, usePhoto,
 } from './context';

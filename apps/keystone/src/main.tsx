@@ -2,17 +2,18 @@ import { createRoot } from 'react-dom/client';
 import { App, buildRegistry, documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { plugins } from './connectors';
 import { SignIn, StartFailed } from './Gate';
-import { builtInModules } from './modules';
+import { shippedModules } from './modules';
 import { detectPlatform } from './platform';
 import { cloudPlatform } from './platform/cloud';
-import { firebaseConfig, firebaseEmulators } from './platform/config';
+import { firebaseConfig, firebaseEmulators, isBeta } from './platform/config';
 import { cloudSession, unusedTooLong, webStorageLog } from './platform/session';
 import './styles.css';
 
 // The composition root: with modules.ts and connectors.ts, the only place that names every part.
 async function start() {
   const root = createRoot(document.getElementById('root')!);
-  const registry = buildRegistry(builtInModules, plugins);
+  // A screen not released yet says "Coming soon" outside a beta build (docs/adr/0017).
+  const registry = buildRegistry(shippedModules(isBeta(import.meta.env)), plugins);
 
   for (const r of registry.refused) console.warn(`Keystone left out ${r.id}: ${r.reason}`);
   let platform: Platform = await detectPlatform();

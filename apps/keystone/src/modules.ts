@@ -1,4 +1,4 @@
-import type { ModuleDef } from '@keystone/kit';
+import { comingSoon, type ModuleDef } from '@keystone/kit';
 import { accountsModule } from '@keystone/module-accounts';
 import { activityModule } from '@keystone/module-activity';
 import { banksModule } from '@keystone/module-banks';
@@ -22,3 +22,14 @@ export const builtInModules: ModuleDef[] = [
   homeModule, overviewModule, vouchersModule, fundsModule, billingModule, idMakerModule, directoryModule, activityModule, timekeepingModule,
   payrollModule, accountsModule, dataModule, banksModule,
 ];
+
+/**
+ * The screens open in every build: Home, which holds the shortcuts to the connected systems, and Check Vouchers. The
+ * others say "Coming soon" except in a beta build (docs/adr/0017). To release one, add its id here.
+ */
+export const RELEASED = ['home', 'vouchers'];
+
+/** The installed screens as this build shows them: every one in a beta build, otherwise the unreleased coming soon. */
+export function shippedModules(beta: boolean): ModuleDef[] {
+  return beta ? builtInModules : builtInModules.map((m) => (RELEASED.includes(m.id) ? m : comingSoon(m)));
+}

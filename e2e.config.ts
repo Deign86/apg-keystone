@@ -14,7 +14,8 @@ import { devServer } from './e2e/support/dev-server';
 // The run starts its own dev server on a free port, never one already running: that one may be a
 // cloud build (apps/keystone/.env.local naming a Firebase project), which opens on the sign-in
 // screen. The VITE_FIREBASE_* variables are blanked for the same reason, so .env.local is ignored.
-// The cloud build has its own suite: e2e.cloud.config.ts.
+// The cloud build has its own suite: e2e.cloud.config.ts. So does a release that is not a beta, where only the
+// released screens open: e2e.stable.config.ts. The dev server here is a beta and opens every screen.
 //
 // E2E_CDP_ENDPOINT (for example http://127.0.0.1:9222) attaches to a Chromium that is
 // already running instead of launching one: useful where the browser download is blocked.
@@ -22,7 +23,7 @@ const cdpEndpoint = process.env.E2E_CDP_ENDPOINT;
 const connect = cdpEndpoint ? { cdpEndpoint: () => cdpEndpoint } : undefined;
 
 export default {
-  tests: ['e2e/**/*.e2e.ts', '!e2e/cloud/**'],
+  tests: ['e2e/**/*.e2e.ts', '!e2e/cloud/**', '!e2e/stable/**'],
   targets: [
     {
       engine: web({

@@ -26,6 +26,7 @@ Consequences**.
 | [0014](0014-the-owner-makes-accounts.md) | The owner makes accounts in Keystone | Accepted |
 | [0015](0015-the-owner-removes-staff-accounts.md) | The owner removes staff accounts in Keystone | Accepted |
 | [0016](0016-changing-and-resetting-a-password.md) | Changing your password, and resetting a forgotten one | Accepted |
+| [0017](0017-releases-sign-in-and-screens-coming-soon.md) | Releases always sign in, and screens not released yet say "Coming soon" | Accepted |
 
 Template:
 

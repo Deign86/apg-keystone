@@ -1,4 +1,5 @@
 import { AlertSheet, Button } from '@keystone/ui';
+import { LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useKeystone } from './context';
 
@@ -39,7 +40,12 @@ export function SignOutButton() {
 
   if (!platform.session) return null;
 
-  return <Button size="sm" kind="quiet" className="mt-1.5 -ml-2.5" onClick={() => void signOut()}>Sign out</Button>;
+  return (
+    <Button size="sm" kind="quiet" className="mt-1.5 -ml-2.5" onClick={() => void signOut()}>
+      <LogOut size={13} aria-hidden="true" />
+      Sign out
+    </Button>
+  );
 }
 
 /** Signs out after the session's idleMs without use, and asks "Still there?" for the last minute. */
