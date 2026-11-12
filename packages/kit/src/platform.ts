@@ -67,6 +67,11 @@ export interface AppAccounts {
    * the sentence to show when refused.
    */
   remove(uid: string): Promise<void>;
+  /**
+   * Changes the password of the member signed in, after checking their current one (docs/adr/0016). They stay signed
+   * in here. Throws the sentence to show when refused.
+   */
+  changePassword(current: string, next: string): Promise<void>;
 }
 
 export interface AppUpdater {

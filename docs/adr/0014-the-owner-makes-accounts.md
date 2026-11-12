@@ -45,7 +45,7 @@ Status: Accepted · Date: 2026-11-11
     Identity Platform) stops Make account too. A stranger's sign-up opens nothing, but it is an account in the
     project until someone deletes it.
   - The owner knows each starting password. Nobody can change their own password in Keystone yet, nor reset a
-    forgotten one; both are follow-ups.
+    forgotten one; both are follow-ups. (0016 adds both.)
   - Keystone does not remove accounts, or turn them off, yet. Someone leaving is removed in the console
     (docs/FIREBASE.md › Someone leaving). (0015 adds removing a staff account.)
   - Members added by hand before this have no `email`; the list shows a dash for them until it is added in the

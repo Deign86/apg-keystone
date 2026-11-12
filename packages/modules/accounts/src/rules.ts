@@ -1,9 +1,10 @@
-import { count, KeystoneError, logged, type Change, type Ctx, type TerminalState } from '@keystone/core';
+import { count, KeystoneError, logged, type Change, type Ctx, type Member, type TerminalState } from '@keystone/core';
 import type { MemberAccount, NewAccount } from '@keystone/kit';
 
-// Who may open APG's records in the cloud, and the owner making an account for each staff member (docs/adr/0014) and
-// removing one (docs/adr/0015). The accounts themselves live with the sign-in (Platform.accounts); these rules check
-// what the owner asks for, word what the screen says, and log each account made or removed.
+// Who may open APG's records in the cloud, the owner making an account for each staff member (docs/adr/0014) and
+// removing one (docs/adr/0015), and anyone signed in changing their own password (docs/adr/0016). The accounts
+// themselves live with the sign-in (Platform.accounts); these rules check what is asked for, word what the screen says,
+// and log each account made or removed and each password changed.
 
 export const TAG = 'ACCT';
 
@@ -109,5 +110,47 @@ export function accountRemoved(s: TerminalState, m: MemberAccount, ctx: Ctx): Ch
     state: logged(s, TAG, `Account removed for ${named(m)}; they can no longer open APG's records.`, ctx),
     record: m,
     message: `${m.name} can no longer open APG's records.`,
+  };
+}
+
+// ---------- changing your own password ----------
+
+export interface PasswordDraft {
+  current: string;
+  next: string;
+  again: string;
+}
+
+export const newPasswordDraft = (): PasswordDraft => ({ current: '', next: '', again: '' });
+
+/** What the sign-in is asked to do: check `current`, then change it to `next`. */
+export interface PasswordChange {
+  current: string;
+  next: string;
+}
+
+/** The current and new passwords, exactly as typed, or the sentence saying what to fix. */
+export function checkPasswordChange(d: PasswordDraft, ctx: Ctx): PasswordChange {
+  if (!ctx.who) throw new KeystoneError(NO_SIGN_IN);
+
+  if (!d.current) throw new KeystoneError('Enter your current password.');
+
+  if (d.next.length < MIN_PASSWORD) throw new KeystoneError(`The new password needs at least ${MIN_PASSWORD} characters.`);
+
+  if (d.again !== d.next) throw new KeystoneError('The new password and its repeat do not match.');
+
+  if (d.next === d.current) throw new KeystoneError('Choose a new password, not the one you have now.');
+
+  return { current: d.current, next: d.next };
+}
+
+/** Logs that the member signed in changed their password; never the password. */
+export function passwordChanged(s: TerminalState, ctx: Ctx): Change<Member> {
+  if (!ctx.who) throw new KeystoneError(NO_SIGN_IN);
+
+  return {
+    state: logged(s, TAG, `${ctx.who.name} changed their password.`, ctx),
+    record: ctx.who,
+    message: 'Your password is changed. Sign in with the new one from now on.',
   };
 }

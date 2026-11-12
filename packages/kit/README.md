@@ -15,7 +15,7 @@ no module and no connector (`npm run check:boundaries`). Parts import it by name
 | `src/components.tsx` | Building blocks for screens: `LineEditor` (amounts, or `pricing="unit"` for quantity × unit price), `Workspace`, `FormCard`, `ConnectorShortcut` (a connected system's logo, which opens it), `Feed` |
 | `src/documents.tsx` | Building blocks for printed documents: `Sheet` (always laid out at the paper's width, `PAPER_WIDTH`, and scaled down on screen to fit its column, so the preview, the print and the PDF are one layout; `onePage` prints it scaled to one page), `Letterhead` (with an optional date; `nameOnly` keeps the company's name alone, on one line, as the check voucher does), `Meta`, `Lines` (the document chooses its columns; `amountColumn`), `Signatures` |
 | `src/output.ts` | `savePdf` and `printElement`: the element on screen is the one printed; a `Sheet onePage` is scaled to fit one A4 page |
-| `src/platform.ts` | The `Platform` interface the app implements for Tauri and for the browser, and for the records in the cloud: who is signed in (`who`), signing out (`session`) and the members, making their accounts and removing them (`accounts`) |
+| `src/platform.ts` | The `Platform` interface the app implements for Tauri and for the browser, and for the records in the cloud: who is signed in (`who`), signing out (`session`) and the members, making their accounts, removing them and changing your password (`accounts`) |
 
 Tests in `test/`: the registry and services (`registry.test.ts`), the store (`runtime.test.ts`), the connector
 shortcut (`shortcut.test.tsx`), the update notice (`update-notice.test.tsx`) and signing out (`session.test.tsx`), against an in-memory platform

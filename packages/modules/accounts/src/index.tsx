@@ -2,8 +2,8 @@ import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextIn
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
 import {
-  accountMade, accountRemoved, accountsLine, checkAccount, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder, MIN_PASSWORD,
-  newAccountDraft, NO_SIGN_IN, removalQuestion, removeRefusal, roleLabel, TAG,
+  accountMade, accountRemoved, accountsLine, checkAccount, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
+  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLabel, TAG,
 } from './rules';
 
 /** The owner's form for a new staff account: name, email and the password they first sign in with. */
@@ -53,13 +53,61 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
   );
 }
 
-/** Who can open the records in the cloud, and, for the owner, making and removing staff accounts. */
+/** Anyone signed in changing their own password: the current one, then the new one twice. */
+function PasswordForm({ accounts, onDone }: { accounts: AppAccounts; onDone: () => void }) {
+  const { ctx, run } = useKeystone();
+  const [d, setD] = useState(newPasswordDraft);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const change = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+
+    try {
+      const { current, next } = checkPasswordChange(d, ctx);
+
+      await accounts.changePassword(current, next);
+      run((s, c) => passwordChanged(s, c));
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form className="flex flex-col gap-3.5" aria-label="Change password" onSubmit={(e) => void change(e)}>
+      <Field label="Current password">
+        <TextInput type="password" autoFocus autoComplete="current-password" value={d.current} onChange={(current) => setD({ ...d, current })} />
+      </Field>
+      <Field label="New password" hint={`At least ${MIN_PASSWORD} characters.`}>
+        <TextInput type="password" autoComplete="new-password" value={d.next} onChange={(next) => setD({ ...d, next })} />
+      </Field>
+      <Field label="New password again">
+        <TextInput type="password" autoComplete="new-password" value={d.again} onChange={(again) => setD({ ...d, again })} />
+      </Field>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
+        {error
+          // Narrower than the other forms' errors, so the longer Change password button keeps to the same row.
+          ? <p role="alert" className="m-0 mr-auto max-w-[30ch] text-xs text-pretty text-bad">{error}</p>
+          : <span className="mr-auto text-xs text-ink-2">You stay signed in here.</span>}
+        <Button onClick={onDone}>Cancel</Button>
+        <Button kind="primary" type="submit" disabled={busy}>{busy ? 'Changing…' : 'Change password'}</Button>
+      </div>
+    </form>
+  );
+}
+
+/** Who can open the records in the cloud; for the owner, making and removing staff accounts; for anyone, their password. */
 function Members({ accounts }: { accounts: AppAccounts }) {
   const { ctx, run, notify } = useKeystone();
   const confirm = useConfirm();
   const [members, setMembers] = useState<MemberAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [making, setMaking] = useState(false);
+  const [changing, setChanging] = useState(false);
   const owner = makesAccounts(ctx);
 
   const read = useCallback(async () => {
@@ -99,7 +147,10 @@ function Members({ accounts }: { accounts: AppAccounts }) {
         eyebrow="Settings"
         title="User Accounts"
         line={accountsLine(members, ctx)}
-        actions={owner && <Button kind="primary" disabled={!members} onClick={() => setMaking(true)}>Make account</Button>}
+        actions={<>
+          <Button onClick={() => setChanging(true)}>Change password</Button>
+          {owner && <Button kind="primary" disabled={!members} onClick={() => setMaking(true)}>Make account</Button>}
+        </>}
       />
       <Panel>
         {error && (
@@ -138,6 +189,14 @@ function Members({ accounts }: { accounts: AppAccounts }) {
             onDone={(made) => { setMembers([...members, made]); setMaking(false); }}
           />
         )}
+      </Sheet>
+      <Sheet
+        open={changing}
+        onOpenChange={(o) => !o && setChanging(false)}
+        title="Change password"
+        description="The password you sign in to Keystone with, on every computer and phone."
+      >
+        {changing && <PasswordForm accounts={accounts} onDone={() => setChanging(false)} />}
       </Sheet>
     </>
   );

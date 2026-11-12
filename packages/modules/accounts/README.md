@@ -1,7 +1,8 @@
 # User Accounts
 
-Who can open APG's records in the cloud, and the owner making an account for each staff member (docs/adr/0014) and
-removing one (docs/adr/0015). First under Settings on the rail, before Data.
+Who can open APG's records in the cloud, the owner making an account for each staff member (docs/adr/0014) and
+removing one (docs/adr/0015), and anyone signed in changing their own password (docs/adr/0016). First under Settings
+on the rail, before Data.
 
 ## Owns
 - `src/index.tsx`: the screen.
@@ -13,6 +14,8 @@ removing one (docs/adr/0015). First under Settings on the rail, before Data.
   - **The owner** removes a staff account from the ⋯ menu on its row: **Remove…** asks first, then the person can no
     longer open the records. The owner's own row, and any owner's, has no menu.
   - **Staff** see the register only, with no menus.
+  - **Anyone signed in** gets **Change password**: Current password, New password and New password again. They stay
+    signed in. (A forgotten password is reset from the sign-in screen, which is the app's, not this module's.)
   - **Records kept on this computer:** nobody signs in, so the screen says there are no accounts to make.
 - `src/rules.ts`: its rules, tested in `test/rules.test.ts`:
   - only the owner signed in to the cloud makes accounts (`ctx.who.role === 'owner'`);
@@ -20,17 +23,19 @@ removing one (docs/adr/0015). First under Settings on the rail, before Data.
     has it, naming who) and a password of at least 8 characters (kept exactly as typed);
   - the log line names the person and their email, never the password;
   - only the owner removes an account, only a staff member's, and never their own (`removeRefusal`); the question
-    before it says what happens, and the log line names whose account was removed.
+    before it says what happens, and the log line names whose account was removed;
+  - a new password needs the current one, at least 8 characters, the same twice, and to differ from the current one
+    (`checkPasswordChange`); the log line says who changed their password, never the password.
 - The screen against a stand-in sign-in is tested in `test/screen.test.tsx`.
 
 The accounts themselves are not in the saved state. They live with the sign-in, which the kit offers as
-`Platform.accounts` (`list`, `create`, `remove`) when the build keeps its records in the cloud; the app's
+`Platform.accounts` (`list`, `create`, `remove`, `changePassword`) when the build keeps its records in the cloud; the app's
 `platform/firestore.ts` makes the sign-in and the member document (`keystone/apg/members/{uid}`: `role`, `name`,
 `email`), and removing deletes that document (the sign-in stays, opening nothing). `firestore.rules` let only an owner
 write or delete a member.
 
 ## Contributes
-- **Activity:** log tag `ACCT` (filter "User Accounts"): each account made or removed.
+- **Activity:** log tag `ACCT` (filter "User Accounts"): each account made or removed, and each password changed.
 
 ## Needs
 Nothing from another part. Accounts to list and make need a cloud build (`Platform.accounts`); without one, the screen
@@ -38,4 +43,5 @@ says there are none.
 
 ## Removing it
 The screen and its log filter disappear. Nobody's sign-in changes: everyone made an account keeps it, and the owner
-makes and removes them in the Firebase console again (docs/FIREBASE.md).
+makes and removes them in the Firebase console again (docs/FIREBASE.md). Nobody can change their password in
+Keystone; Forgot password? on the sign-in screen still works.

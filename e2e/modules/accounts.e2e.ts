@@ -18,4 +18,5 @@ test('is first under Settings on the rail, and has no accounts to make on this c
   await expect(screen.getByText('This Keystone keeps its records on this computer, where nobody signs in, so there are no accounts to make.')).toBeVisible();
   await expect(screen.getByText('Accounts come with APG\'s records in the cloud: there, the owner makes one here for each staff member, and they sign in with it on any computer or phone.')).toBeVisible();
   await expect(screen.getByRole('button', 'Make account')).toBeHidden();
+  await expect(screen.getByRole('button', 'Change password')).toBeHidden();
 });

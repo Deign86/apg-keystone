@@ -420,6 +420,39 @@ describe('before Keystone opens', () => {
     await waitFor(() => expect(signIn).toHaveBeenLastCalledWith('owner@alphapremiergroup.com', 'right'));
   });
 
+  it('sends a link for a new password to the email typed, says the same whoever it belongs to, and goes back', async () => {
+    const sendReset = vi.fn(async (email: string) => {
+      if (email === 'busy@alphapremiergroup.com') throw new Error('Too many tries. Wait a few minutes, then try again.');
+    });
+
+    render(<SignIn signIn={vi.fn()} sendReset={sendReset} />);
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'busy@alphapremiergroup.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Forgot password?' }));
+
+    // The email typed so far comes along, and a refusal is said on the form.
+    const form = screen.getByRole('form', { name: 'Forgot password' });
+    expect(screen.getByLabelText('Email')).toHaveValue('busy@alphapremiergroup.com');
+    fireEvent.click(screen.getByRole('button', { name: 'Send link' }));
+    expect(await screen.findByText('Too many tries. Wait a few minutes, then try again.')).toBeInTheDocument();
+    expect(form).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: ' ana.cruz@alphapremiergroup.com ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send link' }));
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'If ana.cruz@alphapremiergroup.com has a Keystone account, a link to choose a new password is on its way to it.',
+    );
+    expect(sendReset).toHaveBeenLastCalledWith('ana.cruz@alphapremiergroup.com');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to sign in' }));
+    expect(screen.getByRole('form', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveValue('ana.cruz@alphapremiergroup.com');
+  });
+
+  it('offers no Forgot password? without a way to send the link', () => {
+    render(<SignIn signIn={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Forgot password?' })).toBeNull();
+  });
+
   it('says why the records could not be opened, and offers to try again or switch accounts', () => {
     const retry = vi.fn();
     const signOut = vi.fn();

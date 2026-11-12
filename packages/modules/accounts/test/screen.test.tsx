@@ -5,8 +5,8 @@ import { App, buildRegistry, KeystoneStore, type AppAccounts, type MemberAccount
 import { accountsModule } from '../src';
 
 // The User Accounts screen against a stand-in for the sign-in (Platform.accounts), as the cloud build provides it:
-// the owner makes and removes staff accounts, staff only see who has one, and a computer with nobody signed in has
-// none to make.
+// the owner makes and removes staff accounts, staff only see who has one, anyone signed in changes their own
+// password, and a computer with nobody signed in has none of it.
 
 const owner: Member = { uid: 'owner-1', name: 'Mark Reyes', role: 'owner' };
 const hr: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
@@ -20,7 +20,10 @@ const base: Platform = {
 /** The sign-in's members, with `create` recording what it was asked and answering as `made` says. */
 function signIn(made: (a: NewAccount) => Promise<MemberAccount> = async (a) => ({ uid: 'new-1', name: a.name, email: a.email, role: 'staff' })) {
   const members: MemberAccount[] = [{ ...owner, email: 'mark@alphapremiergroup.com' }, { ...hr, email: 'ana.cruz@alphapremiergroup.com' }];
-  const accounts: AppAccounts = { list: vi.fn(async () => members), create: vi.fn(made), remove: vi.fn(async () => {}) };
+
+  const accounts: AppAccounts = {
+    list: vi.fn(async () => members), create: vi.fn(made), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}),
+  };
 
   return accounts;
 }
@@ -62,6 +65,7 @@ describe('User Accounts', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'User Accounts' })).toBeInTheDocument();
     expect(screen.getByText(/^This Keystone keeps its records on this computer, where nobody signs in/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Make account' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Change password' })).toBeNull();
   });
 
   it('shows staff who can open the records, and never offers to make an account', async () => {
@@ -155,6 +159,54 @@ describe('User Accounts', () => {
 
     expect(await screen.findByText('Only the owner removes accounts.')).toBeInTheDocument();
     expect(within(screen.getByRole('table', { name: 'User accounts' })).getByText('Ana Cruz')).toBeInTheDocument();
+    expect(store.state.log).toHaveLength(log);
+  });
+
+  it('lets staff change their own password after checking what they typed, and logs it', async () => {
+    const accounts = signIn();
+    const store = await open(hr, accounts);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change password' });
+
+    const type = async (current: string, next: string, again: string) => {
+      fireEvent.change(within(dialog).getByLabelText('Current password'), { target: { value: current } });
+      fireEvent.change(within(dialog).getByLabelText('New password'), { target: { value: next } });
+      fireEvent.change(within(dialog).getByLabelText('New password again'), { target: { value: again } });
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Change password' }));
+      await act(async () => {});
+    };
+
+    // A slip is caught before the sign-in is asked.
+    await type('old-password', 'new-password-1', 'new-password-2');
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('The new password and its repeat do not match.');
+    expect(accounts.changePassword).not.toHaveBeenCalled();
+
+    await type('old-password', 'new-password-1', 'new-password-1');
+    expect(accounts.changePassword).toHaveBeenCalledWith('old-password', 'new-password-1');
+    expect(screen.queryByRole('dialog', { name: 'Change password' })).toBeNull();
+    expect(store.state.log[0]).toMatchObject({ mod: 'ACCT', text: 'Ana Cruz changed their password.' });
+    expect(JSON.stringify(store.state)).not.toContain('new-password-1');
+  });
+
+  it('keeps the password form open with the sign-in\'s reason when it refuses', async () => {
+    const accounts = signIn();
+
+    vi.mocked(accounts.changePassword).mockRejectedValue(new Error('That is not your current password.'));
+    const store = await open(owner, accounts);
+    const log = store.state.log.length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change password' });
+
+    fireEvent.change(within(dialog).getByLabelText('Current password'), { target: { value: 'not-it' } });
+    fireEvent.change(within(dialog).getByLabelText('New password'), { target: { value: 'new-password-1' } });
+    fireEvent.change(within(dialog).getByLabelText('New password again'), { target: { value: 'new-password-1' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Change password' }));
+    await act(async () => {});
+
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('That is not your current password.');
+    expect(within(dialog).getByRole('button', { name: 'Change password' })).toBeEnabled();
     expect(store.state.log).toHaveLength(log);
   });
 });

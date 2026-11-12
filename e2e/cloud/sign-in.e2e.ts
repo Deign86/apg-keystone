@@ -1,10 +1,11 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
-import { emptyCloud, expectHome, keepRecordsHere, makeAccount, marker, signIn } from './emulators';
+import { chooseNewPassword, emptyCloud, expectHome, keepRecordsHere, makeAccount, marker, resetCode, signIn } from './emulators';
 
 // Signing in to a cloud build (apps/keystone/src/Gate.tsx, platform/firestore.ts), and why Keystone may refuse to
 // open the records after it: an account that is not a member (firestore.rules), or no records in the cloud yet. Then
-// signing out (docs/adr/0012): from the rail, and on opening Keystone after it sat unused for 10 minutes.
+// signing out (docs/adr/0012): from the rail, and on opening Keystone after it sat unused for 10 minutes. And a forgotten
+// password (docs/adr/0016): a link to choose a new one, emailed by Firebase (kept by the Auth emulator instead).
 
 test.beforeEach(async () => {
   await emptyCloud();
@@ -102,4 +103,44 @@ test('asks for the account again when Keystone was last used 10 minutes ago, and
 
   await signIn(screen, owner);
   await expectHome(screen);
+});
+
+test('a forgotten password: a link to choose a new one, then signing in with it', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+
+  await keepRecordsHere(app, browser, 'the office computer');
+  await screen.getByRole('form', 'Sign in').getByRole('textbox', 'Email').fill(owner.email);
+  await screen.getByRole('button', 'Forgot password?').tap();
+
+  // The email typed comes along; Send link asks Firebase to email the link.
+  const form = screen.getByRole('form', 'Forgot password');
+
+  await expect(screen.getByRole('heading', { name: 'Forgot your password?', level: 1 })).toBeVisible();
+  await expect(form.getByRole('textbox', 'Email')).toHaveValue(owner.email);
+  await form.getByRole('button', 'Send link').tap();
+  await expect(screen.getByRole('status')).toHaveText(
+    `If ${owner.email} has a Keystone account, a link to choose a new password is on its way to it. It can take a few minutes; look in spam too.`,
+  );
+
+  // The owner opens the emailed link and chooses a new password; the old one no longer signs in.
+  const code = await resetCode(owner.email);
+
+  expect(code).not.toBeNull();
+  await chooseNewPassword(code ?? '', 'a-new-password-1');
+  await screen.getByRole('button', 'Back to sign in').tap();
+  await signIn(screen, owner);
+  await expect(screen.getByRole('form', 'Sign in').getByText('That email and password do not match an account.')).toBeVisible();
+
+  await signIn(screen, { ...owner, password: 'a-new-password-1' });
+  await expectHome(screen);
+});
+
+test('asking for a link for an email with no account says the same, and sends nothing', async ({ app, screen }) => {
+  await app.open('/');
+  await screen.getByRole('button', 'Forgot password?').tap();
+  await screen.getByRole('form', 'Forgot password').getByRole('textbox', 'Email').fill('nobody@keystone.test');
+  await screen.getByRole('button', 'Send link').tap();
+
+  await expect(screen.getByRole('status')).toHaveText(/^If nobody@keystone\.test has a Keystone account, a link to choose a new password is on its way to it\./);
+  expect(await resetCode('nobody@keystone.test')).toBeNull();
 });

@@ -2,8 +2,9 @@ import { COLLECTIONS, jsonText, type DocumentChanges, type DocumentLayout, type 
 import type { AppAccounts, MemberAccount } from '@keystone/kit';
 import { deleteApp, FirebaseError, initializeApp, type FirebaseOptions } from 'firebase/app';
 import {
-  browserLocalPersistence, connectAuthEmulator, createUserWithEmailAndPassword, deleteUser, indexedDBLocalPersistence, initializeAuth,
-  inMemoryPersistence, signInWithEmailAndPassword, signOut, type Auth,
+  browserLocalPersistence, connectAuthEmulator, createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, indexedDBLocalPersistence,
+  initializeAuth, inMemoryPersistence, reauthenticateWithCredential, sendPasswordResetEmail, signInWithEmailAndPassword, signOut,
+  updatePassword, type Auth,
 } from 'firebase/auth';
 import {
   collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
@@ -28,6 +29,8 @@ const BATCH = 500;
 const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).';
 const ONLY_OWNER = 'Only the owner makes accounts.';
 const ONLY_OWNER_REMOVES = 'Only the owner removes accounts.';
+const WRONG_CURRENT = 'That is not your current password.';
+const ENTER_EMAIL = 'Enter the email you sign in with, like ana.cruz@alphapremiergroup.com.';
 
 export interface CloudSession {
   remote: RemoteDocs;
@@ -35,10 +38,15 @@ export interface CloudSession {
   signedIn(): Promise<boolean>;
   /** Signs in, or throws the sentence to show. */
   signIn(email: string, password: string): Promise<void>;
+  /**
+   * Asks Firebase to email a link for choosing a new password (docs/adr/0016). Answers the same whether or not the email
+   * has an account, so nobody can use it to learn who does. Throws the sentence to show for an email it cannot send to.
+   */
+  sendPasswordReset(email: string): Promise<void>;
   signOut(): Promise<void>;
   /** Who is signed in, from their member document. Throws when the account is not a member. */
   member(): Promise<Member>;
-  /** Who may open the records, and the owner making and removing accounts (docs/adr/0014, 0015). */
+  /** Who may open the records, the owner making and removing accounts, and changing your password (docs/adr/0014–0016). */
   accounts: AppAccounts;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;
@@ -261,6 +269,27 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
         throw new Error(e instanceof FirebaseError && e.code === 'permission-denied' ? ONLY_OWNER_REMOVES : explainCloudError(e));
       }
     },
+
+    async changePassword(current, next) {
+      const user = auth.currentUser;
+
+      if (!user?.email) throw new Error('Sign out and in again, then change your password.');
+
+      // Firebase changes a password only for a sign-in made just now, so the current password signs in again first.
+      try {
+        await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, current));
+      } catch (e) {
+        const code = e instanceof FirebaseError ? e.code : '';
+
+        throw new Error(code === 'auth/invalid-credential' || code === 'auth/wrong-password' ? WRONG_CURRENT : explainCloudError(e));
+      }
+
+      try {
+        await updatePassword(user, next);
+      } catch (e) {
+        throw new Error(explainCloudError(e));
+      }
+    },
   };
 
   return {
@@ -276,6 +305,18 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
         await signInWithEmailAndPassword(auth, email, password);
       } catch (e) {
         throw new Error(explainCloudError(e));
+      }
+    },
+    sendPasswordReset: async (email) => {
+      try {
+        await sendPasswordResetEmail(auth, email);
+      } catch (e) {
+        const code = e instanceof FirebaseError ? e.code : '';
+
+        // A project without email enumeration protection says so for an unknown email; answer as for a known one.
+        if (code === 'auth/user-not-found') return;
+
+        throw new Error(code === 'auth/invalid-email' || code === 'auth/missing-email' ? ENTER_EMAIL : explainCloudError(e));
       }
     },
     signOut: () => signOut(auth),

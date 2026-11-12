@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { bundledSeed, type Ctx, type Member } from '@keystone/core';
 import type { MemberAccount } from '@keystone/kit';
 import {
-  accountMade, accountRemoved, accountsLine, checkAccount, checkRemoval, makesAccounts, membersInOrder, newAccountDraft, NO_SIGN_IN,
-  ONLY_OWNER, ONLY_OWNER_REMOVES, removalQuestion, removeRefusal,
+  accountMade, accountRemoved, accountsLine, checkAccount, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
+  newAccountDraft, newPasswordDraft, NO_SIGN_IN, ONLY_OWNER, ONLY_OWNER_REMOVES, passwordChanged, removalQuestion, removeRefusal,
 } from '../src/rules';
 
 /** 30 Oct 2026, 09:05 in Manila. */
@@ -120,5 +120,34 @@ describe('removing an account', () => {
     });
     expect(r.state.log.slice(1)).toEqual(s.log);
     expect(accountRemoved(s, paolo, asOwner).state.log[0].text).toBe('Account removed for Paolo Santos; they can no longer open APG\'s records.');
+  });
+});
+
+describe('changing your own password', () => {
+  const good = { current: 'old password', next: ' new password ', again: ' new password ' };
+
+  it('takes both passwords exactly as typed, for anyone signed in', () => {
+    expect(checkPasswordChange(good, asStaff)).toEqual({ current: 'old password', next: ' new password ' });
+    expect(checkPasswordChange(good, asOwner)).toEqual({ current: 'old password', next: ' new password ' });
+  });
+
+  it('needs a sign-in, the current password, 8 characters, the same new password twice, and a new one', () => {
+    expect(() => checkPasswordChange(good, local)).toThrow(NO_SIGN_IN);
+    expect(() => checkPasswordChange(newPasswordDraft(), asStaff)).toThrow('Enter your current password.');
+    expect(() => checkPasswordChange({ ...good, next: '1234567', again: '1234567' }, asStaff)).toThrow('The new password needs at least 8 characters.');
+    expect(() => checkPasswordChange({ ...good, again: 'new password' }, asStaff)).toThrow('The new password and its repeat do not match.');
+    expect(() => checkPasswordChange({ current: 'same password', next: 'same password', again: 'same password' }, asStaff))
+      .toThrow('Choose a new password, not the one you have now.');
+  });
+
+  it('logs who changed their password, never the password', () => {
+    const s = structuredClone(bundledSeed.state);
+    const r = passwordChanged(s, asStaff);
+
+    expect(r.record).toBe(hr);
+    expect(r.message).toBe('Your password is changed. Sign in with the new one from now on.');
+    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz changed their password.' });
+    expect(r.state.log.slice(1)).toEqual(s.log);
+    expect(() => passwordChanged(s, local)).toThrow(NO_SIGN_IN);
   });
 });
