@@ -1,16 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, diffDocuments, documentId, fromDocuments, toDocuments, type DocumentLayout, type JsonObject, type TerminalState } from '../src';
+import { diffDocuments, documentId, fromDocuments, toDocuments, type DocumentLayout, type JsonObject, type TerminalState } from '../src';
+import { sampleState } from '../sample';
 
 // The saved state as one document per record (docs/adr/0009): it must read back exactly as it was saved, and a change
 // must write only the documents it touched.
 
-const state = (): TerminalState => structuredClone(bundledSeed.state);
+const state = (): TerminalState => sampleState();
 const withEntry = (s: TerminalState, text: string): TerminalState => ({ ...s, log: [{ when: '2026-11-11 09:30', mod: 'CV', text }, ...s.log] });
 
 describe('documents', () => {
   it('reads the sample data back exactly as it was saved', () => {
     const s = state();
     expect(fromDocuments(toDocuments(s))).toEqual(s);
+  });
+
+  it('keeps the company\'s details as one document of their own, and none until there are any (docs/adr/0018)', () => {
+    const s = state();
+    const details = toDocuments(s).filter((d) => d.collection === 'company');
+
+    expect(details).toEqual([{ collection: 'company', id: 'details', pos: 0, body: JSON.stringify(s.company) }]);
+    expect(toDocuments({ ...s, company: undefined }).filter((d) => d.collection === 'company')).toEqual([]);
+    expect(fromDocuments(toDocuments({ ...s, company: undefined }))).not.toHaveProperty('company');
   });
 
   it('keeps each list in its order, whatever order the documents come back in', () => {

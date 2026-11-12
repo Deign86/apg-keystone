@@ -1,22 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, moduleData, SERVICES, withModuleData, type BankAccount, type Ctx } from '@keystone/core';
+import { emptyState, moduleData, SERVICES, withModuleData, type BankAccount, type Ctx } from '@keystone/core';
 import {
   accountDraftOf, accountLabel, accountsOf, bankAccounts, banksLine, newAccountDraft, nextAccountId, removeAccount, saveAccount,
 } from '../src/rules';
 import { banksModule } from '../src';
+import { sampleState } from '@keystone/core/sample';
 
 /** 30 Oct 2026, 09:05 in Manila. */
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 const bpi: BankAccount = { id: 'B-001', bank: 'BPI', branch: '', name: 'Alpha Premier Group of Companies OPC', number: '4011 0258 68' };
 const bdo = { bank: 'BDO', branch: 'Ortigas Center', name: 'Alpha Premier Group of Companies OPC', number: '0012 3456 7890' };
 
 describe('bank accounts', () => {
-  it('start as the company account in the reference data, until one is saved', () => {
-    expect(accountsOf(state(), ctx)).toEqual([bpi]);
-    expect(bundledSeed.reference.defaults.paymentInstructions).toContain(`Account Number: ${bpi.number}`);
-    expect(nextAccountId(state(), ctx)).toBe('B-002');
-    expect(banksLine(accountsOf(state(), ctx))).toBe('1 account at BPI.');
+  it('are none until one is saved: no account is built in', () => {
+    expect(accountsOf(emptyState())).toEqual([]);
+    expect(nextAccountId(emptyState())).toBe('B-001');
+    expect(banksLine(accountsOf(emptyState()))).toBe('No bank accounts are kept yet.');
+  });
+
+  it('are the saved list, in the order they were added', () => {
+    expect(accountsOf(state())).toEqual([bpi]);
+    expect(nextAccountId(state())).toBe('B-002');
+    expect(banksLine(accountsOf(state()))).toBe('1 account at BPI.');
   });
 
   it('adds an account under state.ext.banks with the next number, and logs it', () => {
@@ -26,7 +32,7 @@ describe('bank accounts', () => {
     expect(r.message).toBe('B-002 added.');
     expect(moduleData(r.state, 'banks')).toEqual({ accounts: [bpi, { id: 'B-002', ...bdo }] });
     expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'BANK', text: 'B-002 BDO · 0012 3456 7890 added, in the name of Alpha Premier Group of Companies OPC.' });
-    expect(banksLine(accountsOf(r.state, ctx))).toBe('2 accounts at BPI and BDO.');
+    expect(banksLine(accountsOf(r.state))).toBe('2 accounts at BPI and BDO.');
   });
 
   it('trims what is typed and keeps one space between words', () => {
@@ -55,7 +61,7 @@ describe('bank accounts', () => {
 
     expect(r.record).toEqual({ ...bpi, branch: 'Tektite' });
     expect(r.message).toBe('B-001 updated.');
-    expect(accountsOf(r.state, ctx)).toEqual([{ ...bpi, branch: 'Tektite' }]);
+    expect(accountsOf(r.state)).toEqual([{ ...bpi, branch: 'Tektite' }]);
     expect(r.state.log[0]).toMatchObject({ mod: 'BANK', text: 'B-001 BPI · 4011 0258 68 updated.' });
   });
 
@@ -68,20 +74,20 @@ describe('bank accounts', () => {
 
     expect(r.message).toBe('B-001 removed.');
     expect(r.state.log[0]).toMatchObject({ mod: 'BANK', text: 'B-001 BPI · 4011 0258 68 removed.' });
-    expect(accountsOf(r.state, ctx)).toEqual([]);
+    expect(accountsOf(r.state)).toEqual([]);
     expect(banksLine([])).toBe('No bank accounts are kept yet.');
     // Numbering starts again from the accounts there are.
     expect(saveAccount(r.state, { ...newAccountDraft(), ...bdo }, ctx).record.id).toBe('B-001');
     expect(() => removeAccount(r.state, 'B-001', ctx)).toThrow('B-001 is not in Bank Accounts.');
   });
 
-  it('reads saved data back safely: junk is left out, and data that is not an object falls back to the reference', () => {
+  it('reads saved data back safely: junk is left out, and data that is not an object is no accounts', () => {
     const s = withModuleData(state(), 'banks', { accounts: [{ id: 'B-004', bank: 'BDO', number: 5 }, 'junk', { bank: 'No id' }] });
 
-    expect(accountsOf(s, ctx)).toEqual([{ id: 'B-004', bank: 'BDO', branch: '', name: '', number: '' }]);
-    expect(nextAccountId(s, ctx)).toBe('B-005');
-    expect(accountsOf(withModuleData(state(), 'banks', 'broken'), ctx)).toEqual([bpi]);
-    expect(accountsOf(withModuleData(state(), 'banks', {}), ctx)).toEqual([]);
+    expect(accountsOf(s)).toEqual([{ id: 'B-004', bank: 'BDO', branch: '', name: '', number: '' }]);
+    expect(nextAccountId(s)).toBe('B-005');
+    expect(accountsOf(withModuleData(state(), 'banks', 'broken'))).toEqual([]);
+    expect(accountsOf(withModuleData(state(), 'banks', {}))).toEqual([]);
   });
 
   it('never changes the state it is given', () => {
@@ -96,7 +102,7 @@ describe('bank accounts', () => {
 describe('the bank-accounts service', () => {
   it('is provided under its published name, with the accounts and their labels', () => {
     expect(banksModule.provides?.[SERVICES.bankAccounts]).toBe(bankAccounts);
-    expect(bankAccounts.accounts(state(), ctx)).toEqual([bpi]);
+    expect(bankAccounts.accounts(state())).toEqual([bpi]);
     expect(bankAccounts.label(bpi)).toBe('BPI · 4011 0258 68');
     expect(accountLabel({ ...bpi, number: '' })).toBe('BPI');
   });

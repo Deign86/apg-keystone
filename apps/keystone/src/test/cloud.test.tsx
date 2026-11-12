@@ -1,19 +1,25 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { bundledSeed, fromDocuments, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState } from '@keystone/core';
+import {
+  emptyState, fromDocuments, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState,
+} from '@keystone/core';
 import { documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SignIn, StartFailed } from '../Gate';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
-import { cloudPlatform, MOVING_ELSEWHERE, NOT_MOVED_IN, NOT_READ, type RemoteDocs } from '../platform/cloud';
+import { cloudPlatform, NOT_READ, NOT_STARTED, type RemoteDocs } from '../platform/cloud';
 import { firebaseConfig, firebaseEmulators } from '../platform/config';
 import type { StoredText } from '../platform/web-storage';
+import { sampleState } from '@keystone/core/sample';
 
-// The records in the cloud (docs/adr/0009), against a cloud held in memory: moving in once, reading back, writing only
-// what changed, never saving over records it could not read, and writing a save the page closed on before the cloud
-// had it (docs/adr/0013).
+// The records in the cloud (docs/adr/0009), against a cloud held in memory: the owner starting them empty and nothing
+// copied in from a computer (docs/adr/0018), reading back, writing only what changed, never saving over records it
+// could not read, and writing a save the page closed on before the cloud had it (docs/adr/0013).
 
-const sample = (): TerminalState => structuredClone(bundledSeed.state);
+const owner: Member = { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' };
+const staff: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
+
+const sample = (): TerminalState => sampleState();
 
 /** A write the cloud has not answered yet: `land` puts it in the cloud, `confirm` answers that it is there. */
 interface Held {
@@ -26,22 +32,17 @@ function memoryCloud(start: StateDocument[] | null = null) {
   const writes: DocumentChanges[] = [];
   const held: Held[] = [];
   // `hold`: writes wait in `held` instead of landing at once, as when the page closes before Firestore sends them.
-  const cloud = { moved: start !== null, writes, moveIns: 0, failRead: false, failWrite: false, hold: false, held };
+  const cloud = { started: start !== null, writes, starts: 0, failRead: false, failWrite: false, hold: false, held };
 
   const remote: RemoteDocs = {
     readAll: async () => {
       if (cloud.failRead) throw Object.assign(new Error('offline'), { code: 'unavailable' });
 
-      return cloud.moved ? [...docs.values()] : null;
+      return cloud.started ? [...docs.values()] : null;
     },
-    moveIn: async (all) => {
-      if (cloud.moved) return false;
-      cloud.moveIns += 1;
-
-      for (const d of all) docs.set(`${d.collection}/${d.id}`, d);
-      cloud.moved = true;
-
-      return true;
+    start: async () => {
+      cloud.starts += 1;
+      cloud.started = true;
     },
     write: async (change) => {
       if (cloud.failWrite) throw Object.assign(new Error('refused'), { code: 'permission-denied' });
@@ -81,12 +82,17 @@ function memoryText(value: string | null = null): StoredText & { value: string |
   return kept;
 }
 
+/** This computer's own saved records, counting every read and write the cloud platform makes of them. */
 function localPlatform(saved: string | null) {
-  const files = { state: saved, writes: 0 };
+  const files = { state: saved, reads: 0, writes: 0 };
 
   const platform: Platform = {
     ...browserPlatform,
-    loadState: async () => files.state,
+    loadState: async () => {
+      files.reads += 1;
+
+      return files.state;
+    },
     saveState: async (json) => { files.state = json; files.writes += 1; },
   };
 
@@ -99,20 +105,42 @@ afterEach(() => {
 });
 
 describe('the records in the cloud', () => {
-  it('moves this computer\'s records in once, then reads them from the cloud', async () => {
-    const { remote, cloud } = memoryCloud();
-    const mine = { ...sample(), ext: { payroll: { runs: [] } } };
-    const store = await KeystoneStore.open(cloudPlatform(localPlatform(JSON.stringify(mine)).platform, remote));
-    expect(store.state).toEqual(mine);
-    expect(cloud.moveIns).toBe(1);
+  it('the owner\'s first sign-in starts the records empty, copying in nothing this computer holds', async () => {
+    const { remote, cloud, docs } = memoryCloud();
+    const local = localPlatform(JSON.stringify(sample()));
+    const store = await KeystoneStore.open(cloudPlatform(local.platform, remote, {}, owner));
 
-    // Another computer with nothing saved opens the same records.
-    const other = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote));
-    expect(other.state).toEqual(mine);
-    expect(cloud.moveIns).toBe(1);
+    expect(store.state).toEqual(emptyState());
+    expect(cloud.starts).toBe(1);
+    expect(docs.size).toBe(0);
+    expect(local.files.reads).toBe(0);
+
+    // Staff on another computer then open the same records, empty too, and starting them is not done again.
+    const other = await KeystoneStore.open(cloudPlatform(localPlatform(JSON.stringify(sample())).platform, remote, {}, staff));
+    expect(other.state).toEqual(emptyState());
+    expect(cloud.starts).toBe(1);
   });
 
-  it('writes only the records a change touched, and keeps a copy on this computer', async () => {
+  it('staff, or a member not known yet, are told the owner starts the records, and nothing is written', async () => {
+    for (const who of [staff, undefined]) {
+      const { remote, cloud } = memoryCloud();
+      await expect(KeystoneStore.open(cloudPlatform(localPlatform(JSON.stringify(sample())).platform, remote, {}, who))).rejects.toThrow(NOT_STARTED);
+      expect(cloud.started).toBe(false);
+      expect(cloud.writes).toEqual([]);
+    }
+  });
+
+  it('opens what the cloud holds, never this computer\'s own records', async () => {
+    const theirs = { ...sample(), cv: sample().cv.slice(0, 1) };
+    const { remote } = memoryCloud(toDocuments(theirs));
+    const local = localPlatform(JSON.stringify(sample()));
+    const store = await KeystoneStore.open(cloudPlatform(local.platform, remote, {}, owner));
+
+    expect(store.state).toEqual(theirs);
+    expect(local.files.reads).toBe(0);
+  });
+
+  it('writes only the records a change touched, and keeps no copy on this computer', async () => {
     vi.useFakeTimers();
     const { remote, cloud } = memoryCloud(toDocuments(sample()));
     const local = localPlatform(null);
@@ -124,40 +152,22 @@ describe('the records in the cloud', () => {
     expect(cloud.writes).toHaveLength(1);
     expect(cloud.writes[0].set.map((d) => d.collection)).toEqual(['cv']);
     expect(cloud.writes[0].remove).toEqual([]);
-    expect(JSON.parse(local.files.state!).cv[0].check).toBe('000777');
+    expect(local.files.writes).toBe(0);
+    expect(local.files.state).toBeNull();
   });
 
-  it('never moves the sample data in from a computer with no records, or with a damaged file', async () => {
-    for (const saved of [null, '{ not json']) {
-      const { remote, cloud } = memoryCloud();
-      await expect(KeystoneStore.open(cloudPlatform(localPlatform(saved).platform, remote))).rejects.toThrow(NOT_MOVED_IN);
-      expect(cloud.moved).toBe(false);
-    }
-  });
+  it('keeps the company\'s details as one document of their own, written only when they change (docs/adr/0018)', async () => {
+    vi.useFakeTimers();
+    const { remote, cloud, docs } = memoryCloud(toDocuments(sample()));
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, {}, owner));
 
-  it('opens the records another computer moved in first, instead of its own', async () => {
-    const { remote, cloud, docs } = memoryCloud();
-    const theirs = { ...sample(), cv: sample().cv.slice(0, 1) };
-    const readAll = remote.readAll;
-    // The other computer moves its records in while this one is still reading its own file.
-    remote.readAll = async () => {
-      remote.readAll = readAll;
+    expect(recordIn(docs, 'company', 'details')).toEqual(sample().company);
+    expect(store.state.company).toEqual(sample().company);
 
-      for (const d of toDocuments(theirs)) docs.set(`${d.collection}/${d.id}`, d);
-      cloud.moved = true;
-
-      return null;
-    };
-
-    const store = await KeystoneStore.open(cloudPlatform(localPlatform(JSON.stringify(sample())).platform, remote));
-    expect(store.state).toEqual(theirs);
-    expect(cloud.moveIns).toBe(0);
-  });
-
-  it('says so when another computer is still moving its records in', async () => {
-    const { remote } = memoryCloud();
-    remote.moveIn = async () => false;
-    await expect(KeystoneStore.open(cloudPlatform(localPlatform(JSON.stringify(sample())).platform, remote))).rejects.toThrow(MOVING_ELSEWHERE);
+    store.commit({ ...store.state, company: { ...store.state.company!, phone: '02 8650 2541' } });
+    await vi.advanceTimersByTimeAsync(300);
+    expect(cloud.writes[0].set.map((d) => `${d.collection}/${d.id}`)).toEqual(['company/details']);
+    expect(recordIn(docs, 'company', 'details').phone).toBe('02 8650 2541');
   });
 
   it('stops when the cloud cannot be read, and refuses to save over records it never read', async () => {

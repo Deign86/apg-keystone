@@ -1,10 +1,13 @@
 import {
-  addDays, addYears, count, KeystoneError, logged, newestFirst, nextNumber, recordOf, thisYear, today,
+  addDays, addYears, companyOf, count, KeystoneError, logged, newestFirst, nextNumber, recordOf, thisYear, today,
   toneOf, type Change, type Ctx, type Editing, type Figure, type Finding, type IDRecord, type IDStatus,
   type TerminalState, type WaitingItem
 } from '@keystone/core';
 
 // Employee ID cards. Reads the directory to fill a card from an employee record.
+
+/** The blood types a card can print. */
+export const BLOOD_TYPES = ['O+', 'O−', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−'];
 
 export const idsNewestFirst = (s: TerminalState) => newestFirst(s.ids);
 export const nextIDNo = (s: TerminalState, ctx: Ctx) => nextNumber(s.ids.map((i) => i.no), `APG-${thisYear(ctx)}-`);
@@ -16,13 +19,14 @@ export interface IDDraft extends Editing {
   blood: string; iceName: string; iceNo: string; signatory: string; photo?: string;
 }
 
+/** A blank card, signed and valid as Company Details says. Until it says for how many years, the card has no end date. */
 export function newID(s: TerminalState, ctx: Ctx): IDDraft {
-  const d = ctx.seed.reference.defaults;
+  const d = companyOf(s);
   const t = today(ctx);
 
   return {
-    no: nextIDNo(s, ctx), emp: '', name: '', pos: '', dept: '', issued: t, valid: addDays(addYears(t, d.idValidYears), -1),
-    blood: ctx.seed.reference.bloodTypes[0] ?? '', iceName: '', iceNo: '', signatory: d.signatory,
+    no: nextIDNo(s, ctx), emp: '', name: '', pos: '', dept: '', issued: t, valid: d.idValidYears ? addDays(addYears(t, d.idValidYears), -1) : '',
+    blood: BLOOD_TYPES[0], iceName: '', iceNo: '', signatory: d.signatory,
   };
 }
 
@@ -59,6 +63,8 @@ export function issueID(s: TerminalState, d: IDDraft, ctx: Ctx, asNew = false): 
   const i = idOf(d);
 
   if (!i.name) throw new KeystoneError('Enter the name to print on the card.');
+
+  if (!i.valid) throw new KeystoneError('Enter the date the card is valid until.');
 
   if (i.valid <= i.issued) throw new KeystoneError('The card must be valid past the day it is issued.');
 

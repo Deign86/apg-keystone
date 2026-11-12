@@ -19,7 +19,7 @@ packages/connectors/  one package per connected system, its logo and how to open
 packages/kit/         the app runtime: registries, services, store, connector shortcuts, shell, shared components
 packages/core/        the shared kernel: money, dates, the saved state, the directory, contracts
 packages/ui/          the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
-shared/          tokens, fonts, logo, sample data
+shared/          tokens, fonts, logo, the tests' sample records
 prototype/       the original single-page web prototype (2026-10-27), kept for reference
 docs/            MODULARITY.md (the contracts), ARCHITECTURE.md (how it fits), DESIGN.md (the look),
                  ATTENDANCE-INTEGRATION.md (one open decision),
@@ -79,7 +79,7 @@ variables (`VITE_FIREBASE_*`, docs/FIREBASE.md › 8). Without them a copy would
 sign-in.
 
 **Beta and stable** (docs/adr/0017). A release opens only the screens listed in `apps/keystone/src/modules.ts` ›
-`RELEASED`: Home with the connected systems, Check Vouchers and User Accounts. The others are in the rail marked "Soon" and say
+`RELEASED`: Home with the connected systems, Check Vouchers, User Accounts, Bank Accounts and Company Details. The others are in the rail marked "Soon" and say
 "Coming soon". A **beta** opens every screen:
 - **A beta release:** a version with a pre-release part, like `0.11.0-beta.1`, by any of the three ways above. It is
   published as a GitHub pre-release, so installed stable copies never update to it.

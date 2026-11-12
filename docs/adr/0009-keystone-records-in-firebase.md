@@ -1,6 +1,6 @@
 # 0009. Keystone's records live in Firebase
 
-Status: Accepted · Date: 2026-11-11
+Status: Accepted · Date: 2026-11-11 · Moving a computer's records in: superseded by 0018
 
 ## Context
 

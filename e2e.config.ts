@@ -1,15 +1,17 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { devServer } from './e2e/support/dev-server';
+import { sampleRecords } from './e2e/support/sample-records';
 
 // End-to-end tests drive Keystone's screens in Chromium against the browser dev server
 // (`npm run dev`, the same UI the Tauri shell shows, on the browser platform). No model is
 // configured, so tests use exact locators and assertions only. To add agent.* steps, pick a
 // provider as in .agents/skills/e2e/references/setup.md › Subscriptions and API keys.
 //
-// Every test starts from the sample data (each test gets a fresh browser context, so nothing it
-// saves carries over) at 10:00 on Nov 2, 2026 in Manila (e2e/support/fixed-clock.js), so dates,
-// overdue statements and the greeting read the same on every run.
+// Every test starts from the tests' sample records, put in its browser before Keystone loads
+// (e2e/support/sample-records.ts; Keystone itself starts with none), in a fresh browser context, so
+// nothing it saves carries over, at 10:00 on Nov 2, 2026 in Manila (e2e/support/fixed-clock.js), so
+// dates, overdue statements and the greeting read the same on every run.
 //
 // The run starts its own dev server on a free port, never one already running: that one may be a
 // cloud build (apps/keystone/.env.local naming a Firebase project), which opens on the sign-in
@@ -28,7 +30,7 @@ export default {
     {
       engine: web({
         timezoneId: 'Asia/Manila',
-        initScripts: [{ path: 'e2e/support/fixed-clock.js' }],
+        initScripts: [{ path: 'e2e/support/fixed-clock.js' }, sampleRecords],
         connect,
       }),
       app: {

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, lineDraft, type Ctx } from '@keystone/core';
+import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
   copyVoucher, newVoucher, nextVoucherNo, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
   voucherLine, voucherLock, voucherWaiting,
 } from '../src/rules';
+import { sampleState } from '@keystone/core/sample';
 
 /** 30 Oct 2026, 09:05 in Manila. */
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 
 describe('check vouchers', () => {
   it('numbers 888-001 and on, with no year, after the highest in that series', () => {
@@ -29,7 +30,7 @@ describe('check vouchers', () => {
     const s = state();
     s.cv.push({ ...s.cv[0], no: '888-001', prepared: 'Kristine Joy L. Villanueva', checked: 'Angelica S. Bautista', approved: 'Chief Executive Officer' });
     expect(newVoucher(s, ctx)).toMatchObject({ prepared: 'Kristine Joy L. Villanueva', checked: 'Angelica S. Bautista', approved: 'Chief Executive Officer' });
-    const { preparedBy, checkedBy, approvedBy } = bundledSeed.reference.defaults;
+    const { preparedBy, checkedBy, approvedBy } = companyOf(sampleState());
     expect(newVoucher({ ...s, cv: [] }, ctx)).toMatchObject({ prepared: preparedBy, checked: checkedBy, approved: approvedBy });
   });
 

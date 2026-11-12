@@ -45,9 +45,12 @@ up Auth and Firestore, and deploy `firestore.rules`.
    which the owner hands over (docs/adr/0014). It makes the sign-in and the member document together. A second owner,
    or a change of role, is still made here in the console. Only an owner approves or declines requests for funds and
    reads everyone's; staff read only their own (docs/adr/0011).
-7. **Move the records in:** run Keystone with the variables set (`npm run dev` or `npm run desktop`) **on the
-   computer that holds the real records**, and sign in as an owner. Keystone moves that computer's records in once.
-   Any other computer then opens the same records. A computer with no records of its own refuses to move anything in.
+7. **Start the records:** sign in to a build with the variables set as an owner. Keystone starts APG's records in
+   the cloud, empty: the cloud is their only source, and nothing a computer holds is ever copied in (docs/adr/0018).
+   Staff who sign in before then are told the owner signs in first. Then fill in **Settings › Company Details** (the
+   letterhead, signatories, payment instructions) and **Settings › Bank Accounts**; every document prints from them.
+   Records kept on a computer by an older build come in only on purpose: back them up there (**Settings › Data ›
+   Back up data…**, in a build without the variables) and restore that file here as an owner.
 8. **Release builds:** add the same four values as repository variables (Settings › Secrets and variables › Actions
    › Variables): `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` and
    `VITE_FIREBASE_AUTH_DOMAIN`. The next release then ships with the cloud records. Set them as **Variables**, not
@@ -84,8 +87,10 @@ up Auth and Firestore, and deploy `firestore.rules`.
   rely on the rules.
 - **Turning it off:** build without the variables, by hand (`npm run build`); a release cannot be made without
   them. Each computer then opens the copy its last save left in `state.json`.
-- **Starting over:** delete the `keystone/apg` document and its collections. The next computer to open a Firebase
-  build with records of its own moves them in again.
+- **Starting over:** delete the `keystone/apg` document and its collections, but not `members`. The owner's next
+  sign-in starts the records again, empty.
+- **Rules:** deploy `firestore.rules` after changing them (step 5). Only an owner starts the records and changes
+  `keystone/apg/company/details`, which every document prints, payment instructions included.
 - **Tests never touch the project.** The end-to-end cloud suite (`npm run test:e2e:cloud`, `e2e/cloud/`) runs the
   cloud build against the Firebase Auth and Firestore emulators with `firestore.rules`, as the demo project
   `demo-keystone`, which exists only in the emulators. A build connects to emulators only for a `demo-` project

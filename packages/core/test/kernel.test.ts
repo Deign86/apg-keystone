@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, bundledSeed, datesBetween, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
+  addDays, addYears, amountInWords, companyOf, datesBetween, emptyState, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   openDesktopApp, toCentavos, topFinding, validateConnector, withDeadline, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
 } from '../src';
+import { sampleState } from '../sample';
 
 // The kernel only. Each module's rules are tested in its own package
 // (packages/modules/*/test). Expected values marked "prototype" were produced by running
 // the web prototype's own JavaScript (prototype/index.html).
 
 /** 30 Oct 2026, 09:05 in Manila (vitest.config pins TZ). */
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 
 describe('money', () => {
   it('formats pesos', () => {
@@ -105,11 +106,28 @@ describe('module data', () => {
   });
 });
 
-describe('seed', () => {
-  it('loads', () => {
-    expect(bundledSeed.state.dir).toHaveLength(11);
-    expect(bundledSeed.state.cv).toHaveLength(3);
-    expect(bundledSeed.company.name).toBe('ALPHA PREMIER GROUP OF COMPANIES OPC');
+describe('what Keystone starts from (docs/adr/0018)', () => {
+  it('is no records and no company details: nothing is built in', () => {
+    expect(emptyState()).toEqual({ dir: [], cv: [], bs: [], ids: [], log: [] });
+    expect(companyOf(emptyState())).toEqual({
+      name: '', address: '', contact: '', shortAddress: '', phone: '', billingEmail: '', preparedBy: '', checkedBy: '', approvedBy: '',
+      paymentInstructions: '', billingNote: '', signatory: '', billingTerms: '', dueInDays: 0, idValidYears: 0,
+    });
+  });
+
+  it('reads company details back from a file field by field, so a hand-edited one never breaks', () => {
+    const s = parseState(JSON.stringify({ ...emptyState(), company: { name: 'APG', phone: 2540, dueInDays: '15', idValidYears: -2, extra: 'x' } }));
+
+    expect(s.company).toMatchObject({ name: 'APG', phone: '', dueInDays: 0, idValidYears: 0, address: '' });
+    expect(s.company).not.toHaveProperty('extra');
+    expect(parseState(JSON.stringify({ ...emptyState(), company: 'APG' }))).not.toHaveProperty('company');
+  });
+
+  it('keeps the tests\' sample records apart, as a saved state', () => {
+    expect(sampleState().dir).toHaveLength(11);
+    expect(sampleState().cv).toHaveLength(3);
+    expect(companyOf(sampleState()).name).toBe('ALPHA PREMIER GROUP OF COMPANIES OPC');
+    expect(sampleState()).not.toBe(sampleState());
   });
 });
 

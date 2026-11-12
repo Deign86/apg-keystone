@@ -1,7 +1,8 @@
-import { bundledSeed, KeystoneError, type TerminalState } from '@keystone/core';
+import { companyOf, emptyState, KeystoneError, type TerminalState } from '@keystone/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { KeystoneStore } from '../src/store';
 import { memoryPlatform } from './fakes';
+import { sampleState, sampleText } from '@keystone/core/sample';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -9,22 +10,27 @@ afterEach(() => {
 });
 
 describe('store', () => {
-  it('starts from the sample data when nothing is saved', async () => {
+  it('starts with no records when nothing is saved, never made-up ones (docs/adr/0018)', async () => {
     const store = await KeystoneStore.open(memoryPlatform().platform);
-    expect(store.state).toEqual(bundledSeed.state);
-    expect(store.state).not.toBe(bundledSeed.state);
+    expect(store.state).toEqual(emptyState());
+    expect(companyOf(store.state).name).toBe('');
+  });
+
+  it('opens the records as saved', async () => {
+    const store = await KeystoneStore.open(memoryPlatform(sampleText).platform);
+    expect(store.state).toEqual(sampleState());
   });
 
   it('keeps a damaged file untouched until the person changes something', async () => {
     const { platform, files } = memoryPlatform('{ not json');
     const store = await KeystoneStore.open(platform);
-    expect(store.state).toEqual(bundledSeed.state);
+    expect(store.state).toEqual(emptyState());
     await new Promise((r) => setTimeout(r, 300));
     expect(files.state).toBe('{ not json');
     expect(files.writes).toBe(0);
   });
 
-  it('stops when the saved state cannot be read, rather than showing the sample data as the real records', async () => {
+  it('stops when the saved state cannot be read, rather than showing no records as if there were none', async () => {
     const { platform, files } = memoryPlatform();
     platform.loadState = async () => { throw new Error('offline'); };
 
@@ -34,7 +40,7 @@ describe('store', () => {
 
   it('keeps what modules store under ext through a save and a reload', async () => {
     vi.useFakeTimers();
-    const { platform, files } = memoryPlatform(JSON.stringify({ ...bundledSeed.state, ext: { payroll: { runs: 3 } } }));
+    const { platform, files } = memoryPlatform(JSON.stringify({ ...sampleState(), ext: { payroll: { runs: 3 } } }));
     const store = await KeystoneStore.open(platform);
     expect(store.state.ext).toEqual({ payroll: { runs: 3 } });
     store.commit({ ...store.state, ext: { ...store.state.ext, leases: { open: 1 } } });
@@ -104,7 +110,7 @@ describe('store', () => {
     expect(r).toEqual({ ok: true, record: 'done', message: 'Saved.' });
     expect(heard).toHaveBeenCalledOnce();
     expect(store.draft('vouchers', () => ({ payee: '' }))).toEqual({ payee: 'Meralco' });
-    store.replaceAll(structuredClone(bundledSeed.state));
+    store.replaceAll(sampleState());
     expect(store.draft('vouchers', () => ({ payee: '' }))).toEqual({ payee: '' });
   });
 });

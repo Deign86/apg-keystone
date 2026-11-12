@@ -1,6 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { asMember, emptyCloud, expectHome, field, idToken, keepRecordsHere, makeAccount, record, signIn } from './emulators';
+import { asMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
 
 // Requests for funds in the cloud (docs/adr/0011): staff ask, each on their own computer and seeing only their own
 // requests; the owner decides them from a phone, and an approval drafts the check voucher through Check Vouchers. Then
@@ -11,7 +11,7 @@ test.beforeEach(async () => {
   await emptyCloud();
 });
 
-/** Signs in on a computer with nothing of its own, after the office computer moved the records in. */
+/** Signs in on a computer with nothing of its own, to the records the owner keeps in the cloud. */
 async function signInElsewhere(app: { clearState(): Promise<void>; open(path: string): Promise<void> }, screen: Screen, account: Parameters<typeof signIn>[1]) {
   await app.clearState();
   await app.open('/');
@@ -24,7 +24,8 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
   const hr = await makeAccount('staff', 'Ana Cruz');
   const it = await makeAccount('staff', 'Paolo Santos');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
 

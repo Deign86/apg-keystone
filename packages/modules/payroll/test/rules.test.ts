@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, peso, withModuleData, type AttendanceTally, type Ctx, type EmployeeAttendance } from '@keystone/core';
+import { peso, withModuleData, type AttendanceTally, type Ctx, type EmployeeAttendance } from '@keystone/core';
 import { type PaySetup } from '../src/pay';
 import {
   closeCutoff, cutoffOf, dataOf, payrollFigure, payrollFinding, payrollStat, removeSetup, reopenCutoff, saveSetup,
   setupDraftOf, totalOf, workedOut,
 } from '../src/rules';
+import { sampleState } from '@keystone/core/sample';
 
 // The pay setup, the saved data, and assembling, closing and reopening a cut-off. The amounts themselves come from the
 // engine (src/pay.ts), which test/pay.test.ts pins down; here they check that the right inputs reach it.
 
-const at = (y: number, m: number, d: number, h = 10): Ctx => ({ seed: bundledSeed, now: () => new Date(y, m - 1, d, h) });
-const state = () => structuredClone(bundledSeed.state);
+const at = (y: number, m: number, d: number, h = 10): Ctx => ({ now: () => new Date(y, m - 1, d, h) });
+const state = () => sampleState();
 const oct1 = { from: '2026-10-01', to: '2026-10-15' };
 
 const setup = (x: Partial<PaySetup> = {}): PaySetup => ({

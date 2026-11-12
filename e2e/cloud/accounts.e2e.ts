@@ -1,8 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import {
-  asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, keepRecordsHere, makeAccount, setMember, signIn,
-} from './emulators';
+import { asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, makeAccount, recordsInCloud, setMember, signIn } from './emulators';
 
 // The owner making and removing accounts, and anyone changing their own password (docs/adr/0014–0016,
 // packages/modules/accounts): from User Accounts, the owner makes a staff account, and that person signs in with it on
@@ -33,7 +31,8 @@ test('the owner makes a staff account, and that person signs in with it on anoth
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
 
@@ -94,12 +93,13 @@ test('the owner makes a staff account, and that person signs in with it on anoth
   await expect(screen.getByRole('button', 'Make account')).toBeHidden();
 });
 
-test('an email that already has a sign-in is refused, and nothing is made', async ({ app, screen, browser }) => {
+test('an email that already has a sign-in is refused, and nothing is made', async ({ app, screen }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   // Made in the Firebase console, never made a member.
   const outsider = await makeAccount();
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
   await app.open('/#accounts');
@@ -111,10 +111,11 @@ test('an email that already has a sign-in is refused, and nothing is made', asyn
   expect(await documentIds('members')).toEqual([owner.uid]);
 });
 
-test('an owner no longer one by the time they make an account is refused, and leaves no sign-in behind', async ({ app, screen, browser }) => {
+test('an owner no longer one by the time they make an account is refused, and leaves no sign-in behind', async ({ app, screen }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
   await app.open('/#accounts');
@@ -133,11 +134,12 @@ test('an owner no longer one by the time they make an account is refused, and le
   expect(await documentIds('members')).toHaveLength(2);
 });
 
-test('the owner removes a staff account after asking, and that person can no longer open the records', async ({ app, screen, browser }) => {
+test('the owner removes a staff account after asking, and that person can no longer open the records', async ({ app, screen }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
   await app.open('/#accounts');
@@ -171,11 +173,12 @@ test('the owner removes a staff account after asking, and that person can no lon
   await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
 });
 
-test('staff change their own password, checked against the current one, and sign in with the new one after', async ({ app, screen, browser }) => {
+test('staff change their own password, checked against the current one, and sign in with the new one after', async ({ app, screen }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
 
-  await keepRecordsHere(app, browser, 'the office computer');
+  await recordsInCloud();
+  await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
 

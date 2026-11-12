@@ -1,8 +1,9 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
+import { startEmpty } from '../support/sample-records';
 
-// Bank Accounts (packages/modules/banks). Until an account is saved, the list is the company account from the sample
-// data, B-001 BPI · 4011 0258 68, the one a new statement's payment instructions name. Billing Statements lists the
+// Bank Accounts (packages/modules/banks). The tests' sample records keep one account, B-001 BPI · 4011 0258 68, the one
+// their payment instructions name; a computer that saved none has none (docs/adr/0018). Billing Statements lists the
 // accounts under "Pay into" through the bank-accounts service.
 
 const INSTRUCTIONS = [
@@ -35,12 +36,13 @@ async function banksLog(screen: Screen) {
   return screen.getByRole('region', 'Entries').getByRole('listitem');
 }
 
-test('is under Settings on the rail, after Data, and starts with the company account', async ({ app, screen }) => {
+test('is under Settings on the rail, after Data, and lists the accounts saved', async ({ app, screen }) => {
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone').getByRole('list').getByRole('button');
+  const names = (await rail.allTextContents()).map((n) => n.replace(/^[\d\s]*/, ''));
 
-  await expect(rail.last()).toHaveAccessibleName(/Bank Accounts$/);
-  await rail.last().tap();
+  expect(names.slice(names.indexOf('Data'))).toEqual(['Data', 'Bank Accounts', 'Company Details']);
+  await rail.nth(names.indexOf('Bank Accounts')).tap();
 
   await expect(screen.getByRole('heading', { name: 'Bank Accounts', level: 1 })).toBeVisible();
   await expect(screen.getByText('Settings', { exact: true })).toBeVisible();
@@ -49,6 +51,14 @@ test('is under Settings on the rail, after Data, and starts with the company acc
 
   await expect(accounts.getByRole('row')).toHaveCount(2);
   await expect(accounts.getByRole('row', /^B-001 BPI — Alpha Premier Group of Companies OPC 4011 0258 68/)).toBeVisible();
+});
+
+test('has no account on a computer that has saved none: none is built in', async ({ app, screen, browser }) => {
+  await app.open('/');
+  await startEmpty(app, browser, '/#banks');
+
+  await expect(screen.getByText('No bank accounts are kept yet.')).toBeVisible();
+  await expect(screen.getByText('No bank accounts yet.')).toBeVisible();
 });
 
 test('adds an account, and a statement picks it under Pay into and prints it', async ({ app, screen }) => {

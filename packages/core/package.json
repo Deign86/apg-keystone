@@ -6,6 +6,10 @@
   "description": "The kernel every part shares: money and dates, the saved state, the directory, the connector contract and the published service contracts. No UI and no platform code.",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sample": "./sample/index.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

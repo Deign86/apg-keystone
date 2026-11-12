@@ -4,6 +4,7 @@ import { buildRegistry, findService, KeystoneStore } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
+import { sampleState, sampleText } from '@keystone/core/sample';
 
 // Billing publishes the statement-payments service (packages/core/src/kernel/services.ts) for any part that settles
 // statements from outside billing. Checked here against the parts that ship, with and without billing installed.
@@ -11,7 +12,7 @@ import { browserPlatform } from '../platform/browser';
 describe('the statement-payments service, as shipped', () => {
   it('is provided by billing under its published name, and lists the statements still open', async () => {
     const desk = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.statementPayments);
-    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
+    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => sampleText, saveState: async () => {} });
 
     expect(desk).toBeDefined();
     expect(desk!.open(store.state).length).toBeGreaterThan(0);
@@ -31,7 +32,7 @@ describe('the statement-payments service, as shipped', () => {
 describe('the employee-attendance service, as shipped', () => {
   it('is provided by timekeeping under its published name, and counts a cut-off', async () => {
     const attendance = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.employeeAttendance);
-    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
+    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => sampleText, saveState: async () => {} });
 
     expect(attendance).toBeDefined();
     expect(attendance!.tally(store.state, 'E-001', '2026-10-01', '2026-10-15', store.ctx)).toMatchObject({ scheduled: 11, worked: 0 });
@@ -50,12 +51,13 @@ describe('the employee-attendance service, as shipped', () => {
 // payment instructions are then only typed.
 
 describe('the bank-accounts service, as shipped', () => {
-  it('is provided by banks under its published name, and lists the company account until one is saved', async () => {
+  it('is provided by banks under its published name, and lists the saved accounts, none until one is saved', async () => {
     const banks = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.bankAccounts);
     const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
 
     expect(banks).toBeDefined();
-    expect(banks!.accounts(store.state, store.ctx).map(banks!.label)).toEqual(['BPI · 4011 0258 68']);
+    expect(banks!.accounts(store.state)).toEqual([]);
+    expect(banks!.accounts(sampleState()).map(banks!.label)).toEqual(['BPI · 4011 0258 68']);
   });
 
   it('is absent, not broken, without banks, and billing stays installed', () => {
@@ -73,7 +75,7 @@ describe('the bank-accounts service, as shipped', () => {
 describe('the voucher-drafts service, as shipped', () => {
   it('is provided by vouchers under its published name, and drafts a voucher For Approval', async () => {
     const drafts = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.voucherDrafts);
-    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
+    const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => sampleText, saveState: async () => {} });
 
     expect(drafts).toBeDefined();
     expect(drafts!.draft(store.state, { payee: 'V-002', amount: 48000, particulars: 'Christmas party (RF-2026-0001)' }, store.ctx).record)

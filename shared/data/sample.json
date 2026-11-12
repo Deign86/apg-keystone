@@ -1,0 +1,333 @@
+{
+  "$comment": "Sample records for the tests only, never shipped in Keystone (docs/adr/0018). A saved state: the records are made up; the company details are APG’s real ones, so documents print as they would. The end-to-end suites put it in the browser before each test (e2e/support/sample-records.ts); unit tests read it from @keystone/core/sample.",
+  "dir": [
+    {
+      "code": "V-001",
+      "type": "Vendor",
+      "name": "Manila Electric Company (Meralco)",
+      "tin": "000-101-528-000",
+      "detail": "Ortigas Ave., Pasig City"
+    },
+    {
+      "code": "V-002",
+      "type": "Vendor",
+      "name": "Manila Water Company",
+      "tin": "000-203-115-000",
+      "detail": "MWSS Compound, Quezon City"
+    },
+    {
+      "code": "V-003",
+      "type": "Vendor",
+      "name": "JL Santos Printing Services",
+      "tin": "412-556-091-000",
+      "detail": "Makati City"
+    },
+    {
+      "code": "V-004",
+      "type": "Vendor",
+      "name": "Vergara & Associates Law Office",
+      "tin": "219-884-310-000",
+      "detail": "Bonifacio Global City"
+    },
+    {
+      "code": "C-001",
+      "type": "Client",
+      "name": "Novatek BPO Solutions Inc.",
+      "tin": "008-771-402-000",
+      "detail": "18/F One Corporate Centre, Ortigas",
+      "vat": true,
+      "ewt": true,
+      "attention": "Carlo Mendiola"
+    },
+    {
+      "code": "C-002",
+      "type": "Client",
+      "name": "Dela Cruz, Maria Teresa",
+      "tin": "",
+      "detail": "Unit 12B, The Residences at Greenbelt",
+      "vat": false,
+      "ewt": false
+    },
+    {
+      "code": "C-003",
+      "type": "Client",
+      "name": "Harbor Point Logistics Corp.",
+      "tin": "006-332-918-000",
+      "detail": "Warehouse 4, Cavite Export Zone",
+      "vat": true,
+      "ewt": true,
+      "attention": "Liza Tan"
+    },
+    {
+      "code": "E-001",
+      "type": "Employee",
+      "name": "Juan Miguel P. Reyes",
+      "tin": "",
+      "detail": "Leasing Associate",
+      "dept": "Leasing"
+    },
+    {
+      "code": "E-002",
+      "type": "Employee",
+      "name": "Angelica S. Bautista",
+      "tin": "",
+      "detail": "Accounting Supervisor",
+      "dept": "Finance"
+    },
+    {
+      "code": "E-003",
+      "type": "Employee",
+      "name": "Rafael D. Mendoza",
+      "tin": "",
+      "detail": "Property Manager",
+      "dept": "Property Management"
+    },
+    {
+      "code": "E-004",
+      "type": "Employee",
+      "name": "Kristine Joy L. Villanueva",
+      "tin": "",
+      "detail": "Admin Assistant",
+      "dept": "Administration"
+    }
+  ],
+  "cv": [
+    {
+      "no": "CV-2026-0139",
+      "date": "2026-10-20",
+      "payee": "V-001",
+      "check": "0004509",
+      "checkDate": "2026-10-20",
+      "lines": [
+        {
+          "desc": "Electricity – Head Office, Sept 2026",
+          "amt": 48230.55
+        }
+      ],
+      "status": "Released",
+      "prepared": "D. Lazaro",
+      "checked": "A. Bautista",
+      "approved": "CEO"
+    },
+    {
+      "no": "CV-2026-0140",
+      "date": "2026-10-22",
+      "payee": "V-003",
+      "check": "0004510",
+      "checkDate": "2026-10-22",
+      "lines": [
+        {
+          "desc": "Printing of lease folders (500 pcs)",
+          "amt": 12500
+        },
+        {
+          "desc": "Delivery",
+          "amt": 650
+        }
+      ],
+      "status": "Approved",
+      "prepared": "D. Lazaro",
+      "checked": "A. Bautista",
+      "approved": "CEO"
+    },
+    {
+      "no": "CV-2026-0141",
+      "date": "2026-10-26",
+      "payee": "V-004",
+      "check": "0001188",
+      "checkDate": "2026-10-26",
+      "lines": [
+        {
+          "desc": "Retainer – October 2026",
+          "amt": 35000
+        }
+      ],
+      "status": "For Approval",
+      "prepared": "D. Lazaro",
+      "checked": "A. Bautista",
+      "approved": "CEO"
+    }
+  ],
+  "bs": [
+    {
+      "no": "010097-2026",
+      "date": "2026-10-01",
+      "invoiceDate": "2026-10-01",
+      "due": "2026-10-15",
+      "client": "C-001",
+      "attention": "Carlo Mendiola",
+      "lines": [
+        {
+          "desc": "Monthly rent – 18/F, 420 sqm (October 2026)",
+          "qty": 1,
+          "price": 357000,
+          "amt": 357000
+        },
+        {
+          "desc": "Association dues (October 2026)",
+          "qty": 1,
+          "price": 42000,
+          "amt": 42000
+        }
+      ],
+      "vat": true,
+      "ewt": true,
+      "status": "Paid"
+    },
+    {
+      "no": "010098-2026",
+      "date": "2026-10-01",
+      "invoiceDate": "2026-10-01",
+      "due": "2026-10-10",
+      "client": "C-002",
+      "lines": [
+        {
+          "desc": "Monthly rent – Unit 12B (October 2026)",
+          "qty": 1,
+          "price": 85000,
+          "amt": 85000
+        },
+        {
+          "desc": "Parking slot P-214 (October 2026)",
+          "qty": 1,
+          "price": 6000,
+          "amt": 6000
+        }
+      ],
+      "vat": false,
+      "ewt": false,
+      "status": "Overdue"
+    },
+    {
+      "no": "010099-2026",
+      "date": "2026-10-25",
+      "invoiceDate": "2026-10-25",
+      "due": "2026-11-05",
+      "client": "C-003",
+      "attention": "Liza Tan",
+      "lines": [
+        {
+          "desc": "Warehouse lease – Bldg 4 (November 2026)",
+          "qty": 1,
+          "price": 510000,
+          "amt": 510000
+        },
+        {
+          "desc": "CUSA charges (November 2026)",
+          "qty": 1,
+          "price": 38250,
+          "amt": 38250
+        }
+      ],
+      "vat": true,
+      "ewt": true,
+      "status": "Sent"
+    }
+  ],
+  "ids": [
+    {
+      "no": "APG-2026-0028",
+      "emp": "E-001",
+      "name": "Juan Miguel P. Reyes",
+      "pos": "Leasing Associate",
+      "dept": "Leasing",
+      "issued": "2026-09-02",
+      "valid": "2027-09-01",
+      "blood": "O+",
+      "iceName": "Lourdes Reyes",
+      "iceNo": "0917 442 1180",
+      "signatory": "Chief Executive Officer",
+      "status": "Active"
+    },
+    {
+      "no": "APG-2026-0029",
+      "emp": "E-002",
+      "name": "Angelica S. Bautista",
+      "pos": "Accounting Supervisor",
+      "dept": "Finance",
+      "issued": "2026-09-15",
+      "valid": "2027-09-14",
+      "blood": "A+",
+      "iceName": "Ramon Bautista",
+      "iceNo": "0920 318 7765",
+      "signatory": "Chief Executive Officer",
+      "status": "Active"
+    },
+    {
+      "no": "APG-2026-0030",
+      "emp": "E-003",
+      "name": "Rafael D. Mendoza",
+      "pos": "Property Manager",
+      "dept": "Property Management",
+      "issued": "2026-10-06",
+      "valid": "2027-10-05",
+      "blood": "B+",
+      "iceName": "Celia Mendoza",
+      "iceNo": "0918 206 4431",
+      "signatory": "Chief Executive Officer",
+      "status": "For printing"
+    }
+  ],
+  "log": [
+    {
+      "when": "2026-10-26 16:42",
+      "mod": "CV",
+      "text": "CV-2026-0141 for Vergara & Associates Law Office saved and routed for approval (₱35,000.00)."
+    },
+    {
+      "when": "2026-10-25 10:15",
+      "mod": "BS",
+      "text": "010099-2026 sent to Harbor Point Logistics Corp. (₱586,627.50 due Nov 5, 2026)."
+    },
+    {
+      "when": "2026-10-22 14:03",
+      "mod": "CV",
+      "text": "CV-2026-0140 approved by CEO."
+    },
+    {
+      "when": "2026-10-20 09:30",
+      "mod": "CV",
+      "text": "CV-2026-0139 released; check 0004509 picked up by Meralco collector."
+    },
+    {
+      "when": "2026-10-16 11:20",
+      "mod": "BS",
+      "text": "010097-2026 marked paid; BDO deposit ref 7731925."
+    },
+    {
+      "when": "2026-10-06 15:48",
+      "mod": "ID",
+      "text": "APG-2026-0030 issued to Rafael D. Mendoza; queued for printing."
+    }
+  ],
+  "ext": {
+    "banks": {
+      "accounts": [
+        {
+          "id": "B-001",
+          "bank": "BPI",
+          "branch": "",
+          "name": "Alpha Premier Group of Companies OPC",
+          "number": "4011 0258 68"
+        }
+      ]
+    }
+  },
+  "company": {
+    "name": "ALPHA PREMIER GROUP OF COMPANIES OPC",
+    "address": "Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605",
+    "contact": "0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com",
+    "shortAddress": "Tektite East Tower, Ortigas Center, Pasig",
+    "phone": "02 8650 2540",
+    "billingEmail": "billing@alphapremiergroup.com",
+    "preparedBy": "D. Lazaro",
+    "checkedBy": "Accounting",
+    "approvedBy": "CEO",
+    "paymentInstructions": "Please make payment to:\nBank: BPI\nAccount Name: Alpha Premier Group of Companies OPC\nAccount Number: 4011 0258 68\n\nKindly send proof of payment to accounting@alphapremiergroup.com",
+    "billingNote": "Thank you for choosing Alpha Premier Group of Companies as your virtual office provider. Should you have any questions regarding this billing, please contact us at billing@alphapremiergroup.com / 02 8650 2540.",
+    "signatory": "Chief Executive Officer",
+    "billingTerms": "5% penalty charge will be applied to delayed monthly payments.",
+    "dueInDays": 15,
+    "idValidYears": 1
+  }
+}

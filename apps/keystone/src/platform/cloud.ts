@@ -1,6 +1,6 @@
 import {
-  diffDocuments, fromDocuments, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member, type StateDocument,
-  type TerminalState,
+  diffDocuments, emptyState, fromDocuments, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
+  type StateDocument, type TerminalState,
 } from '@keystone/core';
 import type { Platform } from '@keystone/kit';
 import { pendingSaves } from './pending';
@@ -8,10 +8,10 @@ import { webStorage, type StoredText } from './web-storage';
 
 /** The company's records in the cloud, one document per record (docs/adr/0009): Firestore in the app, a fake in tests. */
 export interface RemoteDocs {
-  /** Every document, or null while no computer has moved its records in yet. Throws when the cloud cannot be read. */
+  /** Every document, or null while nobody has started the records yet. Throws when the cloud cannot be read. */
   readAll(): Promise<StateDocument[] | null>;
-  /** Writes every document and marks the records as moved in. False, with nothing written, when another computer is first. */
-  moveIn(docs: StateDocument[]): Promise<boolean>;
+  /** Marks the records as started, with nothing in them yet: the owner's first sign-in (docs/adr/0018). */
+  start(): Promise<void>;
   /**
    * Writes new and changed documents and deletes removed ones. The writes are handed over before this returns, in the
    * order the saves were made; the promise settles when the cloud has them (later, when offline). A page that closes
@@ -20,15 +20,14 @@ export interface RemoteDocs {
   write(change: DocumentChanges): Promise<void>;
 }
 
-export const NOT_MOVED_IN = 'APG\'s records are not in the cloud yet. Open Keystone first on the computer that holds them: it moves them in.';
-export const MOVING_ELSEWHERE = 'Another computer is moving its records to the cloud. Try again in a minute.';
+export const NOT_STARTED = 'APG\'s records are not set up in the cloud yet. The owner signs in first, and Keystone starts them, empty.';
 export const NOT_READ = 'Keystone has not read the records from the cloud, so it did not save over them. Reopen Keystone.';
 
 /**
- * The platform with the saved state in the cloud. Photos, files and the system stay with the local platform, and each
- * save also keeps a copy on this computer, as before. `layout` names the lists modules keep as documents of their own
- * (docs/adr/0011); `who` is the member signed in, which the rules see as `ctx.who`. `kept` is where this computer notes
- * the member's saves the cloud has not confirmed yet (docs/adr/0013).
+ * The platform with the saved state in the cloud, its only source (docs/adr/0018): nothing saved on this computer is
+ * read, copied in or written beside it. Photos, files and the system stay with the local platform. `layout` names the
+ * lists modules keep as documents of their own (docs/adr/0011); `who` is the member signed in, which the rules see as
+ * `ctx.who`. `kept` is where this computer notes the member's saves the cloud has not confirmed yet (docs/adr/0013).
  */
 export function cloudPlatform(
   local: Platform, remote: RemoteDocs, layout: DocumentLayout = {}, who?: Member,
@@ -57,26 +56,12 @@ export function cloudPlatform(
 
     if (docs) return opened(fromDocuments(docs, layout));
 
-    // Nothing in the cloud yet: this computer's records move in, once. A computer with none, or with a damaged file,
-    // moves nothing in, so the sample data never takes the records' place.
-    const text = await local.loadState();
-    let state: TerminalState | null = null;
+    // Nothing in the cloud yet. The records are only ever what people save there: the owner starts them empty, and
+    // whatever this computer holds, records of its own or made-up ones, is never copied in.
+    if (who?.role !== 'owner') throw new Error(NOT_STARTED);
+    await remote.start();
 
-    try {
-      state = text ? parseState(text) : null;
-    } catch {
-      state = null;
-    }
-
-    if (!state) throw new Error(NOT_MOVED_IN);
-
-    if (await remote.moveIn(toDocuments(state, layout))) return opened(state);
-    // Another computer was first: its records are the company's.
-    const theirs = await remote.readAll();
-
-    if (!theirs) throw new Error(MOVING_ELSEWHERE);
-
-    return opened(fromDocuments(theirs, layout));
+    return opened(emptyState());
   }
 
   function saveState(json: string): Promise<void> {
@@ -87,7 +72,6 @@ export function cloudPlatform(
 
     // Worked out and handed over at once, in the order the saves were made; the next save builds on this one.
     synced = next;
-    void local.saveState(json).catch(() => {});
 
     if (!change.set.length && !change.remove.length) return Promise.resolve();
     // Noted on this computer before the cloud gets it, so a page that closes first leaves it for the next start.

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-// Regenerates what is derived from /shared, so the look and the sample data have one
-// source.
+// Regenerates what is derived from /shared, so the look and the tests' sample records have
+// one source.
 //
 //   node scripts/sync-shared.mjs          write the generated files
 //   node scripts/sync-shared.mjs --check  exit 1 if any generated file is stale (CI)
 //
 // Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png, shared/brand/keystone-mark-ui.png,
-//          shared/data/seed.json
-// Outputs: packages/ui/src/theme.css   Tailwind @theme + @font-face from the tokens
-//          packages/ui/src/assets/     fonts, the APG logo and Keystone's mark
-//          packages/core/src/seed.json the sample data, copied so the kernel package is self-contained
+//          shared/data/sample.json
+// Outputs: packages/ui/src/theme.css           Tailwind @theme + @font-face from the tokens
+//          packages/ui/src/assets/             fonts, the APG logo and Keystone's mark
+//          packages/core/sample/sample.json    the tests' sample records (@keystone/core/sample), never shipped
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -91,7 +91,7 @@ emit('packages/ui/src/assets/logo.png', readFileSync(join(root, 'shared/logo.png
 
 emit('packages/ui/src/assets/keystone-mark.png', readFileSync(join(root, 'shared/brand/keystone-mark-ui.png')));
 
-emit('packages/core/src/seed.json', readFileSync(join(root, 'shared/data/seed.json')));
+emit('packages/core/sample/sample.json', readFileSync(join(root, 'shared/data/sample.json')));
 
 if (check && stale.length) {
   console.error('Generated files are out of date. Run `npm run sync` and commit:\n  ' + stale.join('\n  '));

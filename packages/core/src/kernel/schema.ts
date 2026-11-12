@@ -153,8 +153,11 @@ export interface TerminalState {
   log: LogEntry[];
   /** Data that added modules keep, under their module id. Unknown keys are kept untouched. */
   ext?: Record<string, JsonValue>;
+  /** The company's details, once someone fills them in on Company Details (docs/adr/0018). Read with `companyOf`. */
+  company?: CompanyDetails;
 }
 
+/** The company as its documents print it: the letterhead and the contacts. */
 export interface Company {
   name: string;
   address: string;
@@ -164,7 +167,9 @@ export interface Company {
   billingEmail: string;
 }
 
+/** What a new voucher, statement or ID starts from. */
 export interface Defaults {
+  /** A new voucher's "Prepared by" when nobody is signed in. Signed in, it is the member's own name. */
   preparedBy: string;
   /** The voucher's "Audited by". */
   checkedBy: string;
@@ -176,9 +181,17 @@ export interface Defaults {
   signatory: string;
   /** Printed under a statement's dates: the late-payment penalty. */
   billingTerms: string;
+  /** Days from a statement's date to its due date. 0 when not set: a new statement then starts with no due date. */
   dueInDays: number;
+  /** Years an ID is valid. 0 when not set: a new ID then starts with no "valid until". */
   idValidYears: number;
 }
+
+/**
+ * The company's details and what its documents start from, kept with the records and nowhere else (docs/adr/0018): in
+ * the cloud an owner-only document, edited on Company Details. Nothing of it is built into Keystone.
+ */
+export interface CompanyDetails extends Company, Defaults {}
 
 /**
  * A bank account the company pays checks from or asks clients to pay into. The Bank Accounts module keeps the list
@@ -196,17 +209,3 @@ export type BankAccount = {
   /** The account number as it is printed: "4011 0258 68". */
   number: string;
 };
-
-export interface ReferenceData {
-  bloodTypes: string[];
-  defaults: Defaults;
-  /** The company's bank accounts, until any are saved in Bank Accounts. */
-  bankAccounts: BankAccount[];
-}
-
-/** shared/data/seed.json */
-export interface Seed {
-  company: Company;
-  reference: ReferenceData;
-  state: TerminalState;
-}

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, usedBy, type Ctx } from '@keystone/core';
+import { usedBy, type Ctx } from '@keystone/core';
 import { idFigure, idFinding, issueID, markExpired, newID, nextIDNo, withEmployee } from '../src/rules';
 import { verificationCells } from '../src/verification';
+import { sampleState } from '@keystone/core/sample';
 
 /** 30 Oct 2026, 09:05 in Manila. */
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 
 describe('ID maker', () => {
   it('issues an ID from the directory', () => {

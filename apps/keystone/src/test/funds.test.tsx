@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bundledSeed, withModuleData, type Member, type TerminalState } from '@keystone/core';
+import { withModuleData, type Member, type TerminalState } from '@keystone/core';
 import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
 import { plugins } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
+import { sampleState } from '@keystone/core/sample';
 
 // A request for funds across the parts as shipped (docs/adr/0011): the owner, signed in, approves it on the Requests
 // for Funds screen, and Check Vouchers drafts the voucher through its vouchers.drafts service; without Check Vouchers
@@ -15,7 +16,7 @@ const hr: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
 
 /** HR's request, exactly as the funds module saves it. */
 function savedState(): TerminalState {
-  return withModuleData(structuredClone(bundledSeed.state), 'funds', {
+  return withModuleData(sampleState(), 'funds', {
     requests: [{
       no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Christmas party: venue deposit', amount: 48000, payee: 'V-002', settle: 'ASAP',
       requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',

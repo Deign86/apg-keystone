@@ -16,19 +16,16 @@ export const accountLabel = (a: BankAccount) => [a.bank, a.number].filter(Boolea
 
 // ---------- reading and writing the saved data ----------
 
-/** The saved accounts, checked field by field; undefined when none has ever been saved. */
-function savedAccounts(s: TerminalState): BankAccount[] | undefined {
+/** The accounts in the order they were added, as saved and checked field by field. None saved: none (docs/adr/0018). */
+export function accountsOf(s: TerminalState): BankAccount[] {
   const raw = moduleData(s, MODULE);
 
-  if (!isJsonObject(raw)) return undefined;
+  if (!isJsonObject(raw)) return [];
 
   return jsonObjects(raw.accounts)
     .map((a) => ({ id: jsonText(a.id), bank: jsonText(a.bank), branch: jsonText(a.branch), name: jsonText(a.name), number: jsonText(a.number) }))
     .filter((a) => a.id);
 }
-
-/** The accounts in the order they were added: the saved list, or the reference data's until one is saved. */
-export const accountsOf = (s: TerminalState, ctx: Ctx): BankAccount[] => savedAccounts(s) ?? ctx.seed.reference.bankAccounts;
 
 const saved = (s: TerminalState, accounts: BankAccount[]) => withModuleData(s, MODULE, { accounts } satisfies BanksData);
 
@@ -42,7 +39,7 @@ export const newAccountDraft = (): AccountDraft => ({ bank: '', branch: '', name
 
 export const accountDraftOf = (a: BankAccount): AccountDraft => ({ editing: a.id, bank: a.bank, branch: a.branch, name: a.name, number: a.number });
 
-export const nextAccountId = (s: TerminalState, ctx: Ctx) => nextNumber(accountsOf(s, ctx).map((a) => a.id), 'B-', 3);
+export const nextAccountId = (s: TerminalState) => nextNumber(accountsOf(s).map((a) => a.id), 'B-', 3);
 
 /** One line with single spaces; otherwise kept as typed. */
 const clean = (x: string) => x.trim().replace(/\s+/g, ' ');
@@ -51,7 +48,7 @@ const clean = (x: string) => x.trim().replace(/\s+/g, ' ');
 const numberKey = (n: string) => n.replace(/[^0-9a-z]/gi, '').toLowerCase();
 
 export function saveAccount(s: TerminalState, d: AccountDraft, ctx: Ctx): Change<BankAccount> {
-  const accounts = accountsOf(s, ctx);
+  const accounts = accountsOf(s);
   const original = d.editing ? accounts.find((a) => a.id === d.editing) : undefined;
 
   if (d.editing && !original) throw new KeystoneError(`${d.editing} is no longer in Bank Accounts.`);
@@ -87,7 +84,7 @@ export function saveAccount(s: TerminalState, d: AccountDraft, ctx: Ctx): Change
 
 /** Removes an account. Statements already issued keep the payment instructions written on them. */
 export function removeAccount(s: TerminalState, id: string, ctx: Ctx): Change<BankAccount> {
-  const accounts = accountsOf(s, ctx);
+  const accounts = accountsOf(s);
   const account = accounts.find((a) => a.id === id);
 
   if (!account) throw new KeystoneError(`${id} is not in Bank Accounts.`);

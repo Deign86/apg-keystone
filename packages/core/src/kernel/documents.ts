@@ -4,9 +4,13 @@ import { isJsonObject, jsonObjects, jsonText, parseState, type JsonObject } from
 // The saved state as one document per record, for a database that keeps documents (Firestore, docs/adr/0009).
 // Each directory entry, voucher, statement and ID is its own document, keyed by its code or number. Each log entry
 // and each module's data under `ext` is one too, and so is each record of a list a module keeps as documents of its
-// own (docs/adr/0011). After a change, only the documents it touched are written.
+// own (docs/adr/0011). The company's details are one document of their own, which only an owner writes (docs/adr/0018).
+// After a change, only the documents it touched are written.
 
-export const COLLECTIONS = ['dir', 'cv', 'bs', 'ids', 'log', 'ext'] as const;
+export const COLLECTIONS = ['dir', 'cv', 'bs', 'ids', 'log', 'ext', 'company'] as const;
+
+/** The one document in `company`. */
+const DETAILS = 'details';
 
 export type Collection = (typeof COLLECTIONS)[number];
 
@@ -154,6 +158,7 @@ export function toDocuments(s: TerminalState, layout: DocumentLayout = {}): Stat
     ...listDocuments('ids', s.ids, (r) => r.no),
     ...log,
     ...ext,
+    ...(s.company ? [{ collection: 'company', id: DETAILS, pos: 0, body: JSON.stringify(s.company) }] : []),
   ];
 }
 
@@ -206,6 +211,10 @@ export function fromDocuments(docs: StateDocument[], layout: DocumentLayout = {}
   const state: JsonObject = { dir: records('dir'), cv: records('cv'), bs: records('bs'), ids: records('ids'), log: records('log').reverse() };
 
   if (Object.keys(ext).length) state.ext = ext;
+
+  const [company] = records('company');
+
+  if (company) state.company = company;
 
   // Read back through parseState, the same check a backup or state.json gets.
   return parseState(JSON.stringify(state));

@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { bundledSeed, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
+import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
   billingFigure, billingFinding, billingWaiting, lineWithTax, markOverdue, newStatement, nextStatementNo, paidInto, payInto,
   recordPayment, saveStatement, statementDraftOf, statementPayments, statementTotals, withClient,
 } from '../src/rules';
 import { billingModule } from '../src';
+import { sampleState } from '@keystone/core/sample';
 
 /** 30 Oct 2026, 09:05 in Manila. */
-const ctx: Ctx = { seed: bundledSeed, now: () => new Date(2026, 9, 30, 9, 5) };
-const state = () => structuredClone(bundledSeed.state);
+const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
+const state = () => sampleState();
 
 describe('billing statements', () => {
   it('totals match the prototype (VAT added, EWT withheld)', () => {
-    const due = Object.fromEntries(bundledSeed.state.bs.map((b) => [b.no, statementTotals(b).due]));
+    const due = Object.fromEntries(sampleState().bs.map((b) => [b.no, statementTotals(b).due]));
     expect(due['010097-2026']).toBe(toCentavos(426930));
     expect(due['010098-2026']).toBe(toCentavos(91000));
     expect(due['010099-2026']).toBe(toCentavos(586627.5));
@@ -31,7 +32,7 @@ describe('billing statements', () => {
     expect(saveStatement(s, d, ctx).record.no).toBe('010100-2026');
     expect(saveStatement(s, { ...d, no: '010150-2026' }, ctx).record.no).toBe('010150-2026');
     expect(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx)).toThrow('Invoice No. 010099-2026 is already used. The next free one is 010100-2026.');
-    expect(saveStatement(s, statementDraftOf(s.bs[2], ctx), ctx, true).record.no).toBe('010100-2026'); // a copy takes the next
+    expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('010100-2026'); // a copy takes the next
   });
 
   it('prices each charge by quantity and shows it with tax, as the company statement does', () => {
@@ -99,7 +100,7 @@ describe('billing statements', () => {
 describe('the account a client pays into', () => {
   const bpi: BankAccount = { id: 'B-001', bank: 'BPI', branch: '', name: 'Alpha Premier Group of Companies OPC', number: '4011 0258 68' };
   const bdo: BankAccount = { id: 'B-002', bank: 'BDO', branch: 'Ortigas Center', name: 'APG Holdings OPC', number: '0012 3456 7890' };
-  const instructions = bundledSeed.reference.defaults.paymentInstructions;
+  const instructions = companyOf(sampleState()).paymentInstructions;
 
   it('rewrites the Bank, Account Name and Account Number lines and keeps the rest of the text', () => {
     expect(payInto(instructions, bdo)).toBe([
@@ -110,7 +111,7 @@ describe('the account a client pays into', () => {
       '',
       'Kindly send proof of payment to accounting@alphapremiergroup.com',
     ].join('\n'));
-    // The company account from the reference data writes the default text back exactly.
+    // The account Company Details names writes its own payment instructions back exactly.
     expect(payInto(payInto(instructions, bdo), bpi)).toBe(instructions);
   });
 
@@ -136,6 +137,6 @@ describe('the account a client pays into', () => {
     const d = { ...newStatement(s, ctx), lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
     const b = saveStatement(s, { ...d, notes: payInto(d.notes, bdo) }, ctx).record;
     expect(b.notes).toContain('Account Number: 0012 3456 7890');
-    expect(paidInto(statementDraftOf(b, ctx).notes, [bpi, bdo])).toBe(bdo);
+    expect(paidInto(statementDraftOf(b, s).notes, [bpi, bdo])).toBe(bdo);
   });
 });

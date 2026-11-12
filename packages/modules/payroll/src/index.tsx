@@ -4,7 +4,7 @@ import {
 } from '@keystone/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import {
-  count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
+  companyOf, count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
   type DirectoryRecord, type Period,
 } from '@keystone/core';
 import { printElement, savePdf, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
@@ -237,8 +237,8 @@ function Payroll() {
         </div>
         <div className="overflow-hidden rounded-card border border-line">
           {slip
-            ? <Payslip ref={paper} line={slip} cutoff={cut} company={ctx.seed.company} />
-            : <PayrollSheet ref={paper} cutoff={cut} company={ctx.seed.company} />}
+            ? <Payslip ref={paper} line={slip} cutoff={cut} company={companyOf(state)} />
+            : <PayrollSheet ref={paper} cutoff={cut} company={companyOf(state)} />}
         </div>
       </section>
 

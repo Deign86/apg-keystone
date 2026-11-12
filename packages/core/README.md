@@ -10,14 +10,14 @@ numbering, blank lines dropped).
 |---|---|
 | `src/kernel/schema.ts` | The saved-state shape (`dir`, `cv`, `bs`, `ids`, `log`, `ext`), kept compatible with the prototype |
 | `src/kernel/money.ts`, `dates.ts`, `format.ts` | Centavos, Manila dates, weekdays and semi-monthly cut-offs, peso, date and period formats, amount in words |
-| `src/kernel/state.ts` | `KeystoneError`, `Ctx`, `Change`, `logged`, `nextNumber`, `parseState` (the saved state, checked for its lists only, so one odd record never stops the rest from opening); a module's own data under `ext` (`moduleData`, `withModuleData`) and the decoders that read it back (`isJsonObject`, `jsonText`, `jsonNumber`, `jsonObjects`) |
+| `src/kernel/state.ts` | `KeystoneError`, `Ctx` (the clock and who is signed in), `Change`, `logged`, `nextNumber`, `parseState` (the saved state, checked for its lists only, so one odd record never stops the rest from opening), `emptyState` (what a new computer or an empty cloud starts from: no records), `companyOf` (the company's details as saved, "" or 0 where not filled in; docs/adr/0018); a module's own data under `ext` (`moduleData`, `withModuleData`) and the decoders that read it back (`isJsonObject`, `jsonText`, `jsonNumber`, `jsonObjects`) |
 | `src/kernel/backup.ts` | `parseBackup`: a backup to restore, with every record checked for the fields the screens show; one that fails is refused by name and nothing is restored |
 | `src/kernel/lines.ts` | Line-item drafts for documents: an amount per line (vouchers), or a quantity at a unit price (statements) |
 | `src/kernel/insight.ts` | `Figure`, `Finding`, `WaitingItem`, `topFinding` |
 | `src/kernel/directory.ts` | The shared directory: records, payees, codes, saving and removing |
 | `src/kernel/connectors.ts` | The connector contract (a shortcut to another app), `openDesktopApp` and `withDeadline` |
 | `src/kernel/services.ts` | Published service contracts: `SERVICES` names and their types (`StatementPayments`, `EmployeeAttendance`) |
-| `src/seed.json` | The sample data. Generated from `shared/data/seed.json` by `npm run sync`; don't edit it here |
+| `sample/` | The tests' sample records, `@keystone/core/sample` (`sampleState`, `sampleText`): made-up records with APG's company details. `sample.json` is generated from `shared/data/sample.json` by `npm run sync`; don't edit it here. Only tests may import it (`npm run check:boundaries`): Keystone ships no records (docs/adr/0018) |
 
 The rules for each area (vouchers, billing, IDs) are not here: they live in that area's module package, next to its
 screen.
