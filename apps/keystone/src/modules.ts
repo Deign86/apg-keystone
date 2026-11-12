@@ -24,10 +24,11 @@ export const builtInModules: ModuleDef[] = [
 ];
 
 /**
- * The screens open in every build: Home, which holds the shortcuts to the connected systems, and Check Vouchers. The
- * others say "Coming soon" except in a beta build (docs/adr/0017). To release one, add its id here.
+ * The screens open in every build: Home, which holds the shortcuts to the connected systems, Check Vouchers, and User
+ * Accounts, where the owner makes the staff's sign-ins. The others say "Coming soon" except in a beta build
+ * (docs/adr/0017). To release one, add its id here.
  */
-export const RELEASED = ['home', 'vouchers'];
+export const RELEASED = ['home', 'vouchers', 'accounts'];
 
 /** The installed screens as this build shows them: every one in a beta build, otherwise the unreleased coming soon. */
 export function shippedModules(beta: boolean): ModuleDef[] {

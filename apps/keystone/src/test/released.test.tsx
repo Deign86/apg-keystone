@@ -33,9 +33,9 @@ describe('which build is a beta', () => {
 describe('a build that is not a beta', () => {
   const stable = buildRegistry(shippedModules(false), plugins);
 
-  it('opens Home, with the connected systems, and Check Vouchers, and nothing else', () => {
+  it('opens Home, with the connected systems, Check Vouchers and User Accounts, and nothing else', () => {
     expect(stable.refused).toEqual([]);
-    expect(stable.modules.filter((m) => !m.soon).map((m) => m.id)).toEqual(['home', 'vouchers']);
+    expect(stable.modules.filter((m) => !m.soon).map((m) => m.id)).toEqual(['home', 'vouchers', 'accounts']);
     expect(stable.modules.map((m) => m.id)).toEqual(buildRegistry(builtInModules, plugins).modules.map((m) => m.id));
     expect(stable.connectors.length).toBe(plugins.length);
     expect(RELEASED.every((id) => builtInModules.some((m) => m.id === id))).toBe(true);

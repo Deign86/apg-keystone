@@ -8,8 +8,9 @@ Status: Accepted · Date: 2026-11-12
   to the build, and a build without them keeps its records on each computer (docs/adr/0009). It opens straight on
   "Administrator access", with no sign-in and nothing to sign out of. The repository had no such variables, so every
   release up to v0.11.0 was built that way, and a fresh install on a new PC opened as the administrator.
-- **Only Check Vouchers and the connected systems are ready for everyone.** The other screens are still being tried
-  out. They should stay in the app, and in the hands of whoever tries them, without being open to every user.
+- **Only Check Vouchers and the connected systems are ready for everyone,** with User Accounts (0014), which a
+  release that signs in needs: it is where the owner makes the staff's sign-ins. The other screens are still being
+  tried out. They should stay in the app, and in the hands of whoever tries them, without being open to every user.
 
 ## Decision
 
@@ -26,7 +27,7 @@ Status: Accepted · Date: 2026-11-12
     copies update from the latest release, so a stable copy never updates to a beta. The automatic version counts
     from the last release that is not a beta.
 - **A stable build opens only the released screens.** `apps/keystone/src/modules.ts` › `RELEASED` lists them: `home`
-  (which holds the connected systems) and `vouchers`. The connectors are all released. Every other module goes through
+  (which holds the connected systems), `vouchers` and `accounts`. The connectors are all released. Every other module goes through
   the kit's `comingSoon`:
   - **It keeps its place in the rail**, marked "Soon", and its screen says "Coming soon".
   - **It keeps what it does for other parts:** the services it provides, `onOpen`, `requires` and `documents`.
@@ -49,8 +50,6 @@ Status: Accepted · Date: 2026-11-12
 - **Cost and limits:**
   - Bank Accounts is not released. Check Vouchers lists the accounts already kept, but adding one opens "Coming
     soon".
-  - User Accounts (0014) is not released either. Until it is, the owner makes staff accounts in a beta or in the
-    Firebase console.
   - A beta copy does not update to the next beta by itself. It updates to the next stable release once that is
     newer than it.
   - The main end-to-end suite runs a beta. Only `e2e/stable/` sees what a stable release shows.
