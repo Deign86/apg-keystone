@@ -1,9 +1,9 @@
 import { count, KeystoneError, logged, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { MemberAccount, NewAccount } from '@keystone/kit';
 
-// Who may open APG's records in the cloud, and the owner making an account for each staff member (docs/adr/0014). The
-// accounts themselves live with the sign-in (Platform.accounts); these rules check what the owner typed, word what the
-// screen says, and log each account made.
+// Who may open APG's records in the cloud, and the owner making an account for each staff member (docs/adr/0014) and
+// removing one (docs/adr/0015). The accounts themselves live with the sign-in (Platform.accounts); these rules check
+// what the owner asks for, word what the screen says, and log each account made or removed.
 
 export const TAG = 'ACCT';
 
@@ -13,6 +13,7 @@ export const MIN_PASSWORD = 8;
 export const NO_SIGN_IN = 'This Keystone keeps its records on this computer, where nobody signs in, so there are no accounts to make.';
 export const CLOUD_ONLY = 'Accounts come with APG\'s records in the cloud: there, the owner makes one here for each staff member, and they sign in with it on any computer or phone.';
 export const ONLY_OWNER = 'Only the owner makes accounts.';
+export const ONLY_OWNER_REMOVES = 'Only the owner removes accounts.';
 
 /** Whether this person makes accounts: the owner, signed in to the cloud. */
 export const makesAccounts = (ctx: Ctx) => ctx.who?.role === 'owner';
@@ -71,5 +72,42 @@ export function accountMade(s: TerminalState, account: MemberAccount, ctx: Ctx):
     state: logged(s, TAG, `Account made for ${account.name} (${account.email}), ${roleLabel(account).toLowerCase()}.`, ctx),
     record: account,
     message: `${account.name} can now sign in as ${account.email}.`,
+  };
+}
+
+// ---------- removing an account ----------
+
+/** The person and, when known, their email: "Ana Cruz (ana.cruz@alphapremiergroup.com)". */
+const named = (m: MemberAccount) => (m.email ? `${m.name} (${m.email})` : m.name);
+
+/** Why the owner may not remove this account here, or null when they may: staff only, and never their own. */
+export function removeRefusal(m: MemberAccount, ctx: Ctx): string | null {
+  if (!makesAccounts(ctx)) return ONLY_OWNER_REMOVES;
+
+  if (m.uid === ctx.who?.uid) return 'You cannot remove your own account.';
+
+  if (m.role === 'owner') return `${m.name} is an owner. An owner is removed in the Firebase console (docs/FIREBASE.md).`;
+
+  return null;
+}
+
+/** Refuses, with the sentence to show, unless the owner may remove this account. */
+export function checkRemoval(m: MemberAccount, ctx: Ctx): void {
+  const refusal = removeRefusal(m, ctx);
+
+  if (refusal) throw new KeystoneError(refusal);
+}
+
+/** What the owner is asked before removing an account. */
+export const removalQuestion = (m: MemberAccount) =>
+  `${named(m)} can no longer open APG's records, on any computer or phone. What they filed keeps their name. `
+  + 'Their sign-in stays but opens nothing; to let them back in, add them again in the Firebase console (docs/FIREBASE.md).';
+
+/** Logs the account the owner removed. */
+export function accountRemoved(s: TerminalState, m: MemberAccount, ctx: Ctx): Change<MemberAccount> {
+  return {
+    state: logged(s, TAG, `Account removed for ${named(m)}; they can no longer open APG's records.`, ctx),
+    record: m,
+    message: `${m.name} can no longer open APG's records.`,
   };
 }

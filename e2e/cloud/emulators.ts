@@ -149,6 +149,13 @@ export async function asMember(token: string, path: string, write?: Record<strin
   return res.status;
 }
 
+/** What firestore.rules answer a member who deletes a document under keystone/apg, signed in with `token` (200 allowed, 403 refused). */
+export async function deleteAsMember(token: string, path: string): Promise<number> {
+  const res = await fetch(`${DATABASE}/documents/keystone/apg${path}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+
+  return res.status;
+}
+
 // SAFETY: seed.json holds the sample data, whose `state` is a saved state.json (core › bundledSeed).
 const seed = JSON.parse(readFileSync(new URL('../../packages/core/src/seed.json', import.meta.url), 'utf8')) as { state: TerminalState };
 

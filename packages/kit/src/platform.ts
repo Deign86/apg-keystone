@@ -61,6 +61,12 @@ export interface AppAccounts {
    * owner may; throws the sentence to show when refused, with no sign-in left behind.
    */
   create(account: NewAccount): Promise<MemberAccount>;
+  /**
+   * Takes a member's access away: their member document goes, so they open nothing from then on (docs/adr/0015). Their
+   * sign-in itself stays, since only a server can delete someone else's. Only an owner may, and never their own; throws
+   * the sentence to show when refused.
+   */
+  remove(uid: string): Promise<void>;
 }
 
 export interface AppUpdater {

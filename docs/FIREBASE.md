@@ -63,8 +63,12 @@ up Auth and Firestore, and deploy `firestore.rules`.
 
 - **The config is not a secret.** It names the project; access is decided by signing in and by `firestore.rules`.
   It still stays out of the code, in `.env.local` (ignored by git) or the Actions variables.
-- **Someone leaving:** delete their document under `keystone/apg/members`, and they open nothing from then on. Turn
-  their sign-in off under Authentication › Users too. Keystone does not remove accounts yet.
+- **Someone leaving:** the owner removes a staff member in Keystone: **Settings › User Accounts**, the ⋯ menu on
+  their row, **Remove…** (docs/adr/0015). That deletes their document under `keystone/apg/members`, and they open
+  nothing from then on. Their sign-in stays, since Keystone cannot delete it; turn it off or delete it under
+  Authentication › Users if you like. To let them back in, add their document again here with their uid, `role` and
+  `name`: making an account with the same email in Keystone is refused while the sign-in exists. An owner is removed
+  here, by deleting their document.
 - **Signing out:** "Sign out" is in the rail. Keystone also signs out by itself after 10 minutes unused, with a
   minute's warning, and asks for the account again when it is opened after sitting unused that long (docs/adr/0012).
 - **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,

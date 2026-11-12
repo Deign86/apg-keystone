@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { bundledSeed, type Ctx, type Member } from '@keystone/core';
 import type { MemberAccount } from '@keystone/kit';
 import {
-  accountMade, accountsLine, checkAccount, makesAccounts, membersInOrder, newAccountDraft, NO_SIGN_IN, ONLY_OWNER,
+  accountMade, accountRemoved, accountsLine, checkAccount, checkRemoval, makesAccounts, membersInOrder, newAccountDraft, NO_SIGN_IN,
+  ONLY_OWNER, ONLY_OWNER_REMOVES, removalQuestion, removeRefusal,
 } from '../src/rules';
 
 /** 30 Oct 2026, 09:05 in Manila. */
@@ -80,5 +81,44 @@ describe('making an account', () => {
     expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Account made for Liza Bautista (liza.bautista@alphapremiergroup.com), staff.' });
     expect(r.state.log.slice(1)).toEqual(s.log);
     expect(JSON.stringify(r.state)).not.toContain('correct horse');
+  });
+});
+
+describe('removing an account', () => {
+  const [ana, mark, paolo] = members;
+
+  it('is for the owner, and only for staff other than themselves', () => {
+    expect(removeRefusal(ana, asOwner)).toBeNull();
+    expect(removeRefusal(paolo, asOwner)).toBeNull();
+    expect(removeRefusal(mark, asOwner)).toBe('You cannot remove your own account.');
+    expect(removeRefusal({ ...mark, uid: 'owner-2', name: 'Liza Bautista' }, asOwner))
+      .toBe('Liza Bautista is an owner. An owner is removed in the Firebase console (docs/FIREBASE.md).');
+    expect(removeRefusal(paolo, asStaff)).toBe(ONLY_OWNER_REMOVES);
+    expect(removeRefusal(paolo, local)).toBe(ONLY_OWNER_REMOVES);
+
+    expect(() => checkRemoval(ana, asOwner)).not.toThrow();
+    expect(() => checkRemoval(ana, asStaff)).toThrow(ONLY_OWNER_REMOVES);
+    expect(() => checkRemoval(mark, asOwner)).toThrow('You cannot remove your own account.');
+  });
+
+  it('says what removing does before it is done, with the email when there is one', () => {
+    expect(removalQuestion(ana)).toBe(
+      'Ana Cruz (ana.cruz@alphapremiergroup.com) can no longer open APG\'s records, on any computer or phone. What they filed keeps their '
+      + 'name. Their sign-in stays but opens nothing; to let them back in, add them again in the Firebase console (docs/FIREBASE.md).',
+    );
+    expect(removalQuestion(paolo)).toMatch(/^Paolo Santos can no longer open APG's records/);
+  });
+
+  it('logs whose account was removed', () => {
+    const s = structuredClone(bundledSeed.state);
+    const r = accountRemoved(s, ana, asOwner);
+
+    expect(r.record).toBe(ana);
+    expect(r.message).toBe('Ana Cruz can no longer open APG\'s records.');
+    expect(r.state.log[0]).toEqual({
+      when: '2026-10-30 09:05', mod: 'ACCT', text: 'Account removed for Ana Cruz (ana.cruz@alphapremiergroup.com); they can no longer open APG\'s records.',
+    });
+    expect(r.state.log.slice(1)).toEqual(s.log);
+    expect(accountRemoved(s, paolo, asOwner).state.log[0].text).toBe('Account removed for Paolo Santos; they can no longer open APG\'s records.');
   });
 });

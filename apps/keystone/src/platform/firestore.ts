@@ -6,7 +6,7 @@ import {
   inMemoryPersistence, signInWithEmailAndPassword, signOut, type Auth,
 } from 'firebase/auth';
 import {
-  collection, connectFirestoreEmulator, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   query, runTransaction, serverTimestamp, setDoc, where, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
@@ -27,6 +27,7 @@ const BATCH = 500;
 
 const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).';
 const ONLY_OWNER = 'Only the owner makes accounts.';
+const ONLY_OWNER_REMOVES = 'Only the owner removes accounts.';
 
 export interface CloudSession {
   remote: RemoteDocs;
@@ -37,7 +38,7 @@ export interface CloudSession {
   signOut(): Promise<void>;
   /** Who is signed in, from their member document. Throws when the account is not a member. */
   member(): Promise<Member>;
-  /** Who may open the records, and the owner making an account (docs/adr/0014). */
+  /** Who may open the records, and the owner making and removing accounts (docs/adr/0014, 0015). */
   accounts: AppAccounts;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;
@@ -245,6 +246,19 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
         });
       } catch (e) {
         throw new Error(explainCloudError(e));
+      }
+    },
+
+    async remove(uid) {
+      // firestore.rules refuse anyone but an owner too. An owner removing themselves would be locked out, so never that.
+      if (!owner) throw new Error(ONLY_OWNER_REMOVES);
+
+      if (uid === me()) throw new Error('You cannot remove your own account.');
+
+      try {
+        await deleteDoc(doc(members, uid));
+      } catch (e) {
+        throw new Error(e instanceof FirebaseError && e.code === 'permission-denied' ? ONLY_OWNER_REMOVES : explainCloudError(e));
       }
     },
   };
