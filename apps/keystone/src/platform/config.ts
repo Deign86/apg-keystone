@@ -17,6 +17,17 @@ export function firebaseConfig(env: Record<string, string | boolean | undefined>
   return { apiKey, projectId, appId, authDomain: text('VITE_FIREBASE_AUTH_DOMAIN') ?? `${projectId}.firebaseapp.com` };
 }
 
+/**
+ * Whether this is a beta build, which opens every screen; any other opens only the released ones (docs/adr/0017,
+ * modules.ts › RELEASED). VITE_KEYSTONE_CHANNEL decides, `beta` or `stable`, as CI sets it for each build. Without it
+ * the dev server is a beta and a built app is not, so no build opens an unreleased screen by accident.
+ */
+export function isBeta(env: Record<string, string | boolean | undefined>): boolean {
+  const channel = String(env.VITE_KEYSTONE_CHANNEL ?? '').trim();
+
+  return channel ? channel === 'beta' : env.DEV === true;
+}
+
 export interface FirebaseEmulators {
   /** `host:port` of the Auth emulator. */
   auth: string;

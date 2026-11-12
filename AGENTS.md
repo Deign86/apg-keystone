@@ -110,7 +110,8 @@ names the tests that still expect it.
 - **A screen:** copy `packages/modules/README.md` › Template into `packages/modules/<id>/` (it includes the
   `package.json`, `tsconfig.json` and `vitest.config.ts`), then add one import and one list entry to
   `apps/keystone/src/modules.ts`, add `"@keystone/module-<id>": "*"` to `apps/keystone/package.json`, and run
-  `npm install`.
+  `npm install`. A new screen opens only in beta builds and says "Coming soon" in a release until its id is added to
+  `RELEASED` in the same file (docs/adr/0017).
 - **A connected system:** the same with `packages/connectors/README.md` › Template, `apps/keystone/src/connectors.ts`
   and `@keystone/connector-<id>`.
 - **Its end-to-end tests:** add `e2e/modules/<id>.e2e.ts` (or `e2e/connectors/<id>.e2e.ts`) that walks what a person
@@ -138,6 +139,7 @@ regression suites that guard the architecture live in the composition root:
 | Payroll | `apps/keystone/src/test/payroll.test.tsx` | One cut-off with every kind of day, from saved days through Timekeeping, its service and Payroll's engine to the screen, sheet and payslip, to the centavo; and without Timekeeping |
 | Services | `apps/keystone/src/test/services.test.tsx` | Billing provides the statement-payments service, timekeeping the employee-attendance service, banks the bank-accounts service and vouchers the voucher-drafts service as shipped, and each one's absence refuses nothing |
 | End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or shortcut and what it shows after, including what it contributes to Home, Overview and the Activity Log |
+| Released | `apps/keystone/src/test/released.test.tsx`, and `e2e/stable/` (`npm run test:e2e:stable`, part of `npm run test:e2e`) in Chromium against a stable dev server | A release opens only the screens in `RELEASED` and the connected systems; the others are marked in the rail and say "Coming soon", and keep the same record layout and services as a beta |
 | Cloud end to end | `e2e/cloud/` (`npm run test:e2e:cloud`, part of `npm run test:e2e`), the cloud build against the Firebase Auth and Firestore emulators | Signing in and its refusals, the first computer moving its records in, each change written to Firestore under `firestore.rules`, even one made just before a reload, and another computer opening the same records; requests for funds that only the owner decides and only their requester reads; accounts that only the owner makes and removes; changing your password, and resetting a forgotten one by its emailed link; never a real project or account |
 
 A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's

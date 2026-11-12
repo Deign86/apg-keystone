@@ -94,6 +94,7 @@ function Screens({ onGo }: { onGo?: () => void }) {
               type="button"
               onClick={() => { go(m.id); onGo?.(); }}
               aria-current={active ? 'page' : undefined}
+              aria-label={m.soon ? `${m.title}, coming soon` : undefined}
               title={i < 10 ? `${m.title} (${mod}${i})` : m.title}
               className={cn(
                 'relative flex h-[38px] w-full items-center gap-2.5 rounded-control px-2.5 text-left text-[13px] font-semibold',
@@ -102,6 +103,7 @@ function Screens({ onGo }: { onGo?: () => void }) {
             >
               <KeyBadge n={i} active={active} />
               <span className="truncate">{m.title}</span>
+              {m.soon && <span aria-hidden="true" className="ml-auto shrink-0 rounded-pill border border-line px-1.5 text-[10px] leading-4 font-semibold text-ink-3">Soon</span>}
               {/* The one selection mark: a 1px gold line on the rail's edge. */}
               <span aria-hidden="true" className={cn('absolute top-1.5 -right-3.5 bottom-1.5 w-px bg-gold transition-opacity duration-150', active ? 'opacity-100' : 'opacity-0')} />
             </button>

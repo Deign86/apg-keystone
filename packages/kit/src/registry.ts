@@ -36,6 +36,8 @@ export interface ModuleDef {
   /** Rail position; the rail numbers modules 0, 1, 2… in this order for ⌘/Ctrl+number. */
   order: number;
   Screen: ComponentType;
+  /** Not open to everyone yet: marked "Soon" in the rail, its screen says so (`comingSoon`, docs/adr/0017). */
+  soon?: boolean;
 
   /** Ids of modules this one cannot work without. If one is missing, this module is left out, with the reason shown in Connections. */
   requires?: string[];

@@ -74,6 +74,18 @@ Either way the workflow runs every check, builds the macOS `.dmg` and the Window
 overrides `tauri.conf.json`), and publishes the release with both attached and install notes. A release stays a draft
 until both installers are on it.
 
+**Every release signs in.** The workflow refuses to make a release unless the Firebase project is set as Actions
+variables (`VITE_FIREBASE_*`, docs/FIREBASE.md › 8). Without them a copy would open on "Administrator access" with no
+sign-in.
+
+**Beta and stable** (docs/adr/0017). A release opens only the screens listed in `apps/keystone/src/modules.ts` ›
+`RELEASED`: Home with the connected systems, Check Vouchers and User Accounts. The others are in the rail marked "Soon" and say
+"Coming soon". A **beta** opens every screen:
+- **A beta release:** a version with a pre-release part, like `0.11.0-beta.1`, by any of the three ways above. It is
+  published as a GitHub pre-release, so installed stable copies never update to it.
+- **A beta build:** the installers under **Artifacts** from any run that releases nothing, and `npm run dev`.
+- **To release a screen to everyone:** add its id to `RELEASED`.
+
 **Signing updates.** Installed copies only accept updates signed with Keystone's updater key.
 - **Public half:** in `apps/keystone/src-tauri/tauri.conf.json` (`plugins.updater`).
 - **Private half:** goes in the repository secret `TAURI_SIGNING_PRIVATE_KEY`, under Settings › Secrets and variables
