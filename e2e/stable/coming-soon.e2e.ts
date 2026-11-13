@@ -3,14 +3,15 @@ import { expect } from 'e2e';
 
 // A release that is not a beta (e2e.stable.config.ts, docs/adr/0017): Home, with the connected systems, Check Vouchers,
 // User Accounts, and Bank Accounts and Company Details, which vouchers print from (docs/adr/0018), open; every other
-// screen keeps its place in the rail, marked "Soon", and opens on "Coming soon".
+// screen keeps its place in the rail and its tile on Home, marked, and shows behind "Coming soon" (docs/adr/0019).
 
-test('opens Home with Check Vouchers and the connected systems, and no other tile', async ({ app, screen }) => {
+test('opens Home with every tile, those coming soon marked, and the connected systems', async ({ app, screen }) => {
   await app.open('/');
   const tiles = screen.getByRole('main').getByRole('list').first();
 
-  await expect(tiles.getByRole('listitem')).toHaveCount(1);
+  await expect(tiles.getByRole('listitem')).toHaveCount(9);
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
+  await expect(tiles.getByRole('button', /^Billing Statements Coming soon .* Outstanding/)).toBeVisible();
   await expect(screen.getByText('Connected systems')).toBeVisible();
   await expect(screen.getByRole('button', 'Open Attendance Tracker')).toBeVisible();
 });
@@ -24,6 +25,10 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Billing Statements', level: 1 })).toBeVisible();
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
   await expect(screen.getByText('This screen hit a problem')).toBeHidden();
+  // The screen shows behind the notice, and nothing on it can be reached.
+  await expect(screen.getByText('Statements issued').first()).toBeVisible();
+  await expect(screen.getByText('New statement').first()).toBeVisible();
+  await expect(screen.getByRole('button', 'New statement')).toBeHidden();
 
   await rail.getByRole('button', 'Requests for Funds, coming soon').tap();
 

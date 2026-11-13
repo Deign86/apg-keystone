@@ -51,7 +51,7 @@ describe('a build that is not a beta', () => {
     }
   });
 
-  it('marks each screen not released in the rail, and opens it on "Coming soon"', async () => {
+  it('marks each screen not released in the rail, and opens it behind "Coming soon"', async () => {
     const store = await KeystoneStore.open(platform, stable.modules.flatMap((m) => (m.onOpen ? [m.onOpen] : [])));
 
     for (const m of stable.modules.filter((x) => x.soon)) {
@@ -63,20 +63,23 @@ describe('a build that is not a beta', () => {
       expect(rail.getByRole('button', { current: 'page' })).toHaveAccessibleName(`${m.title}, coming soon`);
       expect(screen.getByRole('heading', { name: m.title, level: 1 })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeInTheDocument();
+      // Its screen, out of reach behind the notice, never fails in its place.
+      expect(screen.queryByText('This screen hit a problem')).toBeNull();
 
       view.unmount();
     }
   });
 
-  it('shows Home with only the released tiles and every connected system', async () => {
+  it('shows Home with every tile, those coming soon marked, and every connected system', async () => {
     const store = await KeystoneStore.open(platform);
     window.location.hash = '#home';
     render(<App store={store} registry={stable} />);
     await act(async () => {});
 
     const main = within(screen.getByRole('main'));
-    expect(main.getByRole('button', { name: /^Check Vouchers/ })).toBeInTheDocument();
-    expect(main.queryByRole('button', { name: /^Billing Statements/ })).toBeNull();
+    expect(main.getByRole('button', { name: /^Check Vouchers/ })).not.toHaveTextContent('Coming soon');
+    expect(main.getByRole('button', { name: /^Billing Statements Coming soon/ })).toBeInTheDocument();
+    expect(main.getAllByRole('listitem').length).toBeGreaterThan(stable.connectors.length + 1);
     expect(main.getByText('Connected systems')).toBeInTheDocument();
   });
 });

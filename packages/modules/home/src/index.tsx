@@ -53,7 +53,10 @@ function Home() {
               >
                 <span className="flex items-start justify-between gap-3">
                   <span className="font-display text-sm font-semibold text-ink">{m.title}</span>
-                  <KeyBadge n={index(m.id)} />
+                  <span className="flex shrink-0 items-center gap-2">
+                    {m.soon && <span className="rounded-pill border border-line px-1.5 text-[10px] leading-4 font-semibold text-ink-3">Coming soon</span>}
+                    <KeyBadge n={index(m.id)} />
+                  </span>
                 </span>
                 <span className="flex-1 text-[13px] text-ink-2">{m.blurb}</span>
                 {label && (
