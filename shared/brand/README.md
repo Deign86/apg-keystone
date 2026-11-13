@@ -2,10 +2,13 @@
 
 Keystone's own mark: the APG phoenix, in gold line art, inside a keystone. It sits on APG's black (`bg`, `#0b0a08`)
 with a `goldSoft` hairline, so Keystone reads as one of APG's internal systems. It heads the app's sidebar. The APG
-phoenix itself (`shared/logo.png`) stays the company's logo: on Home, the printed documents and the ID card.
+phoenix itself (`shared/logo.png`) stays the company's logo on Home and the ID card; the printed documents carry the
+full APG logo, the phoenix with its wordmark, made for paper (`logo-paper.png`).
 
 | File | What it is | Used for |
 |---|---|---|
+| `apg-logo-horizontal.png` | The APG logo, the phoenix beside "ALPHA PREMIER GROUP", for black backgrounds (3520 px, from the website's `public/assets/images/logo-horizontal-transparent.png`) | The source of `logo-paper.png` |
+| `logo-paper.png` | The same logo for white paper, 360 px tall: the wordmark black instead of white, and the phoenix one solid gold so its highlights don't vanish; `python3 scripts/brand/derive-paper-logo.py` writes it | The letterhead of every printed document (`npm run sync` copies it to `@keystone/ui/logo-paper.png`) |
 | `keystone-logo.png` | The original artwork (1264 px, generated in Canva) | The source of everything below |
 | `keystone-mark.png` | The gold mark alone, on transparency | Documents, slides, light or dark backgrounds |
 | `keystone-mark-ui.png` | The same, 160 px tall | The app's sidebar (`npm run sync` copies it to `@keystone/ui/keystone-mark.png`) |
