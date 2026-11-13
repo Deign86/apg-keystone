@@ -108,8 +108,8 @@ export function Letterhead({ company, title, no, date, nameOnly }: { company: Co
           )}
         </div>
         <div className="shrink-0 text-right">
-          <p className="m-0 font-display text-[13px] font-semibold tracking-[0.1em] text-paper-gold uppercase">{title}</p>
-          <p className="m-0 text-xs font-medium tabular-nums">{no}</p>
+          <p className="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">{title}</p>
+          <p className="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">{no}</p>
           {date && <p className="m-0 text-xs font-medium tabular-nums">{date}</p>}
         </div>
       </div>

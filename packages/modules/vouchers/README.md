@@ -9,7 +9,9 @@
 - `src/VoucherPaper.tsx`: the printed Check Voucher, ruled into boxes like the company's cash voucher, out to near the
   paper's edges: payee and TIN, address, bank and issuer, the number, date, check no. and date of check, particulars
   and amount, the total in figures and in words, then a box each for Prepared, Audited, Approved and Received payment
-  by, each signatory's position above their name. Everything filled in is bold. The voucher prints twice on one A4
+  by, each signatory's position above their name. Everything filled in is bold. A firm line runs around the form and
+  between its parts, a light one between the boxes inside each part; the particulars' headings and the total sit on pale
+  gold bands, in the paper's gold. The voucher prints twice on one A4
   sheet, a copy on each half, cut apart along the dashed line across the middle; Export PDF makes the same page.
 - The TIN prints only when it is typed on the voucher; the directory's TIN is never put in. The issuer and the
   positions start as the last voucher's, like the signatories.
