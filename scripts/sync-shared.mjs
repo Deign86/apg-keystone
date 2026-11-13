@@ -5,10 +5,11 @@
 //   node scripts/sync-shared.mjs          write the generated files
 //   node scripts/sync-shared.mjs --check  exit 1 if any generated file is stale (CI)
 //
-// Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png, shared/brand/keystone-mark-ui.png,
+// Inputs:  shared/design/tokens.json, shared/fonts/*, shared/logo.png, shared/brand/logo-paper.png,
+//          shared/brand/keystone-mark-ui.png,
 //          shared/data/sample.json
 // Outputs: packages/ui/src/theme.css           Tailwind @theme + @font-face from the tokens
-//          packages/ui/src/assets/             fonts, the APG logo and Keystone's mark
+//          packages/ui/src/assets/             fonts, the APG logo (and its version for paper) and Keystone's mark
 //          packages/core/sample/sample.json    the tests' sample records (@keystone/core/sample), never shipped
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
@@ -88,6 +89,8 @@ for (const f of readdirSync(join(root, 'shared/fonts'))) {
 }
 
 emit('packages/ui/src/assets/logo.png', readFileSync(join(root, 'shared/logo.png')));
+
+emit('packages/ui/src/assets/logo-paper.png', readFileSync(join(root, 'shared/brand/logo-paper.png')));
 
 emit('packages/ui/src/assets/keystone-mark.png', readFileSync(join(root, 'shared/brand/keystone-mark-ui.png')));
 

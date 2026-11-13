@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css",
     "./logo.png": "./src/assets/logo.png",
+    "./logo-paper.png": "./src/assets/logo-paper.png",
     "./keystone-mark.png": "./src/assets/keystone-mark.png"
   },
   "scripts": {
