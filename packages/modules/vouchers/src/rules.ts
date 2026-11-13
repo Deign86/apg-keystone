@@ -19,31 +19,41 @@ export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) =
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
 export interface VoucherDraft extends Editing {
-  no: string; date: string; payee: string; check: string; checkDate: string;
+  no: string; date: string; payee: string;
+  /** The payee's TIN, printed only when typed in. */
+  tin: string;
+  check: string; checkDate: string;
   /** The account the check is drawn on, as printed: "BPI · 4011 0258 68". */
   bank: string;
+  issuer: string;
   lines: LineDraft[]; prepared: string; checked: string; approved: string;
+  preparedPos: string; checkedPos: string; approvedPos: string;
 }
 
 /**
- * A blank voucher. It is prepared by whoever is signed in. The other signatories start as the last voucher's (Company
- * Details' before the first), and so does the bank, or `bank` (the first account kept) before any. Nobody signed in, the
- * preparer is the last voucher's too, typed in full by whoever prepares vouchers.
+ * A blank voucher. It is prepared by whoever is signed in. The other signatories and every position start as the last
+ * voucher's (Company Details' names before the first), and so do the bank and its issuer, or `bank` (the first account
+ * kept) before any. Nobody signed in, the preparer is the last voucher's too, typed in full by whoever prepares vouchers.
+ * The TIN starts blank: it prints only when someone types it.
  */
 export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft {
   const d = companyOf(s);
   const last = s.cv.at(-1);
 
   return {
-    no: nextVoucherNo(s), date: today(ctx), payee: payees(s)[0]?.code ?? '', check: '', checkDate: '', bank: last?.bank || bank,
+    no: nextVoucherNo(s), date: today(ctx), payee: payees(s)[0]?.code ?? '', tin: '', check: '', checkDate: '',
+    bank: last?.bank || bank, issuer: last?.issuer ?? '',
     lines: [lineDraft()], prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy,
     approved: last?.approved ?? d.approvedBy,
+    preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
   };
 }
 
 export const voucherDraftOf = (v: Voucher): VoucherDraft => ({
-  editing: v.no, no: v.no, date: v.date, payee: v.payee, check: v.check, checkDate: v.checkDate ?? '', bank: v.bank ?? '',
+  editing: v.no, no: v.no, date: v.date, payee: v.payee, tin: v.tin ?? '', check: v.check, checkDate: v.checkDate ?? '',
+  bank: v.bank ?? '', issuer: v.issuer ?? '',
   lines: v.lines.map(lineDraftOf), prepared: v.prepared, checked: v.checked, approved: v.approved,
+  preparedPos: v.preparedPos ?? '', checkedPos: v.checkedPos ?? '', approvedPos: v.approvedPos ?? '',
 });
 
 /**
@@ -59,10 +69,14 @@ export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraf
   const d = voucherDraftOf(v);
 
   return {
-    no: nextVoucherNo(s), date: today(ctx), payee: d.payee, check: '', checkDate: '', bank: d.bank,
+    no: nextVoucherNo(s), date: today(ctx), payee: d.payee, tin: d.tin, check: '', checkDate: '', bank: d.bank, issuer: d.issuer,
     lines: d.lines, prepared: d.prepared, checked: d.checked, approved: d.approved,
+    preparedPos: d.preparedPos, checkedPos: d.checkedPos, approvedPos: d.approvedPos,
   };
 }
+
+/** The optional fields a voucher keeps only when they are filled in. */
+const OPTIONAL = ['tin', 'bank', 'issuer', 'preparedPos', 'checkedPos', 'approvedPos'] as const;
 
 export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval'): Voucher {
   const v: Voucher = {
@@ -72,7 +86,11 @@ export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval
 
   if (d.checkDate) v.checkDate = d.checkDate;
 
-  if (d.bank.trim()) v.bank = d.bank.trim();
+  for (const key of OPTIONAL) {
+    const value = d[key].trim();
+
+    if (value) v[key] = value;
+  }
 
   return v;
 }

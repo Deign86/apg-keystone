@@ -72,6 +72,11 @@ export interface AppAccounts {
    * in here. Throws the sentence to show when refused.
    */
   changePassword(current: string, next: string): Promise<void>;
+  /**
+   * Changes the name of the member signed in, as Keystone shows them to everyone (docs/adr/0020). Their role and email
+   * stay. Throws the sentence to show when refused.
+   */
+  rename(name: string): Promise<void>;
 }
 
 export interface AppUpdater {

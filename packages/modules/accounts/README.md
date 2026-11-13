@@ -1,8 +1,8 @@
 # User Accounts
 
 Who can open APG's records in the cloud, the owner making an account for each staff member (docs/adr/0014) and
-removing one (docs/adr/0015), and anyone signed in changing their own password (docs/adr/0016). First under Settings
-on the rail, before Data.
+removing one (docs/adr/0015), and anyone signed in changing their own password (docs/adr/0016). Under Settings on the
+rail, after Profile (where anyone signed in changes their own name) and before Data.
 
 ## Owns
 - `src/index.tsx`: the screen.
@@ -29,10 +29,10 @@ on the rail, before Data.
 - The screen against a stand-in sign-in is tested in `test/screen.test.tsx`.
 
 The accounts themselves are not in the saved state. They live with the sign-in, which the kit offers as
-`Platform.accounts` (`list`, `create`, `remove`, `changePassword`) when the build keeps its records in the cloud; the app's
-`platform/firestore.ts` makes the sign-in and the member document (`keystone/apg/members/{uid}`: `role`, `name`,
-`email`), and removing deletes that document (the sign-in stays, opening nothing). `firestore.rules` let only an owner
-write or delete a member.
+`Platform.accounts` (`list`, `create`, `remove`, `changePassword`; `rename` is Profile's) when the build keeps its
+records in the cloud; the app's `platform/firestore.ts` makes the sign-in and the member document
+(`keystone/apg/members/{uid}`: `role`, `name`, `email`), and removing deletes that document (the sign-in stays,
+opening nothing). `firestore.rules` let only an owner write or delete a member; a member changes only their own name.
 
 ## Contributes
 - **Activity:** log tag `ACCT` (filter "User Accounts"): each account made or removed, and each password changed.

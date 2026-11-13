@@ -6,10 +6,13 @@
   and prints as it was saved; Copy to new voucher starts a new one from it, with no check yet.
 - The order: For Approval, then Approved, then Released with the check number. Approval can be taken back until the
   check is released; a released voucher can only be voided, and a void voucher stays void.
-- `src/VoucherPaper.tsx`: the printed Check Voucher, ruled into boxes like the company's cash voucher: payee (with
-  TIN) and address, the number, date, check no., bank and date of check, particulars and amount, the total in figures
-  and in words, then a box each for Prepared, Audited, Approved and Received payment by. One voucher on the top half
-  of an A4 sheet, cut once along the dashed line; Print and Export PDF scale it to that half.
+- `src/VoucherPaper.tsx`: the printed Check Voucher, ruled into boxes like the company's cash voucher, out to near the
+  paper's edges: payee and TIN, address, bank and issuer, the number, date, check no. and date of check, particulars
+  and amount, the total in figures and in words, then a box each for Prepared, Audited, Approved and Received payment
+  by, each signatory's position above their name. Everything filled in is bold. The voucher prints twice on one A4
+  sheet, a copy on each half, cut apart along the dashed line across the middle; Export PDF makes the same page.
+- The TIN prints only when it is typed on the voucher; the directory's TIN is never put in. The issuer and the
+  positions start as the last voucher's, like the signatories.
 - `src/rules.ts`: its rules (numbering, saving, status changes, the release check number, the lock on an approved
   voucher, copying one) and what it contributes. Tested in `test/rules.test.ts`.
 - Numbering: 888-001, 888-002 and on, with no year (older vouchers keep their CV-2026-… or 8888-… numbers). A new

@@ -10,7 +10,7 @@ export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false;
 export class KeystoneStore {
   state: TerminalState;
   /** The rules' context: the clock, and who is signed in, if anyone. */
-  readonly ctx: Ctx;
+  ctx: Ctx;
   private listeners = new Set<() => void>();
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
   /** Form drafts by key, so a half-filled form survives switching screens. */
@@ -54,6 +54,14 @@ export class KeystoneStore {
     if (tidied !== state) store.commit(tidied);
 
     return store;
+  }
+
+  /**
+   * The member signed in, under the name they just changed to (docs/adr/0020). The rail and the rules see it from the
+   * next change on, so commit one after: the log line saying so.
+   */
+  renamed(name: string) {
+    if (this.ctx.who) this.ctx = { ...this.ctx, who: { ...this.ctx.who, name } };
   }
 
   subscribe = (fn: () => void) => {

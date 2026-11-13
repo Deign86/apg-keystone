@@ -1,6 +1,6 @@
 # 0017. Releases always sign in, and screens not released yet say "Coming soon"
 
-Status: Accepted · Date: 2026-11-12
+Status: Accepted; what a screen coming soon shows superseded by docs/adr/0019 · Date: 2026-11-12
 
 ## Context
 

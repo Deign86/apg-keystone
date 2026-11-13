@@ -42,18 +42,17 @@ afterEach(() => {
 });
 
 describe('a screen coming soon', () => {
-  it('keeps what it does for other parts and contributes nothing it shows', () => {
+  it('keeps what it does for other parts and what it shows, all but its finding', () => {
     const soon = comingSoon(ledger);
 
     expect(soon).toMatchObject({ id: 'ledger', title: 'Ledger', section: 'Books', blurb: 'Every peso in and out.', order: 1, soon: true });
-    expect(soon.requires).toBe(ledger.requires);
-    expect(soon.onOpen).toBe(ledger.onOpen);
-    expect(soon.provides).toBe(ledger.provides);
-    expect(soon.documents).toBe(ledger.documents);
 
-    for (const shown of ['onHome', 'stat', 'figure', 'finding', 'waiting', 'openWaiting', 'create', 'logTags'] as const) {
-      expect(soon[shown]).toBeUndefined();
+    for (const kept of ['requires', 'onOpen', 'provides', 'documents', 'onHome', 'stat', 'figure', 'waiting', 'openWaiting', 'create', 'logTags'] as const) {
+      expect(soon[kept]).toBe(ledger[kept]);
     }
+
+    // The sentence under Home and Overview speaks only of a screen that opens.
+    expect(soon.finding).toBeUndefined();
   });
 
   it('is marked in the rail and says so on its screen', async () => {
@@ -74,6 +73,10 @@ describe('a screen coming soon', () => {
 
     expect(screen.getByRole('heading', { name: 'Ledger', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeInTheDocument();
-    expect(screen.queryByText('The real ledger')).toBeNull();
+    // The screen shows behind the notice, out of reach and unread.
+    const behind = screen.getByText('The real ledger').parentElement!;
+    expect(behind).toHaveAttribute('inert');
+    expect(behind).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.queryByRole('heading', { name: 'The real ledger' })).toBeNull();
   });
 });

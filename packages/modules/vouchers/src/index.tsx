@@ -133,7 +133,9 @@ function Vouchers() {
               <Field label="Payee">
                 <SelectInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
               </Field>
+              <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
               <DrawnOn value={shown.bank} onChange={(b) => setDraft({ ...draft, bank: b })} />
+              <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer })} /></Field>
               <FieldRow>
                 <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
                 <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
@@ -143,10 +145,20 @@ function Vouchers() {
                 <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
                 <p className="m-0 text-xs text-ink-2">{amountInWords(total)}</p>
               </div>
+              {/* Each signatory's position over their name, as the voucher prints them. */}
               <FieldRow min={120}>
-                <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
-                <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
-                <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                <div className="flex min-w-0 flex-col gap-2.5">
+                  <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
+                  <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
+                </div>
+                <div className="flex min-w-0 flex-col gap-2.5">
+                  <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
+                  <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
+                </div>
+                <div className="flex min-w-0 flex-col gap-2.5">
+                  <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
+                  <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                </div>
               </FieldRow>
             </fieldset>
           </FormCard>
@@ -161,7 +173,7 @@ export const vouchersModule: ModuleDef = {
   id: 'vouchers',
   title: 'Check Vouchers',
   section: 'Disbursements',
-  blurb: 'Prepare check vouchers, print each on half an A4 sheet, and route them for signatures.',
+  blurb: 'Prepare check vouchers, print each twice on one A4 sheet to cut in half, and route them for signatures.',
   order: 2,
   onHome: true,
   stat: (s) => ['Awaiting approval', String(awaitingApproval(s).length)],

@@ -14,7 +14,8 @@ rules_version = '2';
 //
 // Only members can read or write anything. Only an owner adds, changes or removes members: Keystone's User Accounts
 // screen makes and removes staff members (docs/adr/0014, 0015), and the first owner is added by hand in the Firebase
-// console (docs/FIREBASE.md). A sign-in nobody made a member, or whose member was removed, opens nothing.
+// console (docs/FIREBASE.md). A sign-in nobody made a member, or whose member was removed, opens nothing. A member
+// changes only their own name (Profile, docs/adr/0020), never their role.
 //
 // Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
 // only their own, and only while it waits. Keystone reads a request's status, requester and decision from the fields
@@ -60,6 +61,11 @@ service cloud.firestore {
       match /members/{uid} {
         allow read: if member(company);
         allow write: if owner(company);
+        // Anyone signed in changes their own name on Profile, and nothing else of theirs (docs/adr/0020).
+        allow update: if member(company) && uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80;
       }
 
       match /company/{id} {

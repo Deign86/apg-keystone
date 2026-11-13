@@ -54,6 +54,22 @@ describe('check vouchers', () => {
     expect(voucherDraftOf({ ...state().cv[0], checkDate: undefined }).checkDate).toBe('');
   });
 
+  it('keeps a typed TIN, the issuer and each signatory\'s position, and starts the next voucher with all but the TIN', () => {
+    const d = {
+      ...newVoucher(state(), ctx), tin: ' 000-101-528-000 ', issuer: 'Alpha Premier Group of Companies OPC', preparedPos: 'Accounting Staff',
+      checkedPos: 'Finance Officer', approvedPos: 'CEO', lines: [lineDraft({ desc: 'Water bill', amount: '980' })],
+    };
+
+    const r = saveVoucher(state(), d, ctx);
+    expect(r.record).toMatchObject({ tin: '000-101-528-000', issuer: 'Alpha Premier Group of Companies OPC', preparedPos: 'Accounting Staff', checkedPos: 'Finance Officer', approvedPos: 'CEO' });
+    // Nothing typed, nothing kept: the TIN is never taken from the directory.
+    const blank = saveVoucher(state(), { ...d, tin: '', issuer: ' ', preparedPos: '', checkedPos: '', approvedPos: '' }, ctx).record;
+
+    for (const key of ['tin', 'issuer', 'preparedPos', 'checkedPos', 'approvedPos']) expect(blank).not.toHaveProperty(key);
+    expect(newVoucher(r.state, ctx)).toMatchObject({ tin: '', issuer: 'Alpha Premier Group of Companies OPC', preparedPos: 'Accounting Staff', checkedPos: 'Finance Officer', approvedPos: 'CEO' });
+    expect(copyVoucher(r.state, r.record, ctx)).toMatchObject({ tin: '000-101-528-000', issuer: 'Alpha Premier Group of Companies OPC', approvedPos: 'CEO' });
+  });
+
   it('refuses an empty voucher', () => {
     expect(() => saveVoucher(state(), newVoucher(state(), ctx), ctx)).toThrow('Add at least one particular with an amount.');
   });

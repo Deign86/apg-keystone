@@ -222,7 +222,7 @@ export const accountsModule: ModuleDef = {
   title: 'User Accounts',
   section: 'Settings',
   blurb: 'Who can open APG’s records, and the owner making an account for each staff member.',
-  // First under Settings, before Data and Bank Accounts.
+  // Under Settings after Profile, before Data and Bank Accounts.
   order: 89,
   logTags: { [TAG]: 'User Accounts' },
   Screen: Accounts,
