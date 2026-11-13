@@ -99,6 +99,13 @@ export interface BankAccounts {
   accounts(state: TerminalState): BankAccount[];
   /** How an account is named in a list: "BPI · 4011 0258 68". */
   label(account: BankAccount): string;
+  /**
+   * Keeps an account not in the list yet, last, under the next number, as the Bank Accounts screen adds one. Refuses
+   * one without its bank, account name or account number, or with a number already kept.
+   */
+  add(state: TerminalState, account: Omit<BankAccount, 'id'>, ctx: Ctx): Change<BankAccount>;
+  /** Removes a kept account. Whatever was saved naming it (a voucher's bank, a statement's instructions) keeps the text. */
+  remove(state: TerminalState, id: string, ctx: Ctx): Change<BankAccount>;
 }
 
 /** Spending approved elsewhere, to be paid by check: one amount to one payee. */

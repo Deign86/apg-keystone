@@ -16,30 +16,113 @@ function firstBank(app: ModuleApp): string {
   return banks && first ? banks.label(first) : '';
 }
 
-/** The account the check is drawn on, picked from Bank Accounts when it is installed. The voucher keeps it as printed. */
+/** The last choice in the Bank list, for an account not kept yet. No account's label is this: each has " · ". */
+const OTHERS = 'others';
+
+/** An account typed under Others, before Bank Accounts keeps it. */
+type NewAccount = { bank: string; branch: string; name: string; number: string };
+
+/**
+ * The account the check is drawn on, picked from Bank Accounts when it is installed. The voucher keeps it as printed.
+ * One not in the list is typed under Others and saved to Bank Accounts, so every voucher after lists it too; the one
+ * picked can be removed from there. Nothing needs adding on the Bank Accounts screen first.
+ */
 function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) => void }) {
+  const { state, run, store } = useKeystone();
   const app = useModuleApp();
+  const confirm = useConfirm();
   const banks = app.service(SERVICES.bankAccounts);
+  // The account's name starts as the company's: its checks are drawn on its own accounts.
+  const blank = (): NewAccount => ({ bank: '', branch: '', name: companyOf(state).name, number: '' });
+  const [adding, setAdding] = useState<NewAccount | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!banks) return null;
-  const labels = banks.accounts(app.state).map((a) => banks.label(a));
-
-  if (!labels.length) {
-    return (
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="m-0 text-xs text-pretty text-ink-2">No bank accounts are kept yet, so the voucher names no bank.</p>
-        {app.has('banks') && <Button size="sm" onClick={() => app.go('banks')}>Add a bank account</Button>}
-      </div>
-    );
-  }
-
+  const accounts = banks.accounts(state);
+  const labels = accounts.map((a) => banks.label(a));
+  const picked = accounts.find((a) => banks.label(a) === value);
   // An older voucher may name an account no longer kept, or one typed by hand; it stays as it was saved.
-  const options = value && !labels.includes(value) ? [value, ...labels] : labels;
+  const options = [...(value && !labels.includes(value) ? [value] : []), ...labels, OTHERS];
+
+  const pick = (choice: string) => {
+    setError(null);
+    setAdding(choice === OTHERS ? blank() : null);
+
+    if (choice !== OTHERS) onChange(choice);
+  };
+
+  const save = () => {
+    if (!adding) return;
+    const r = run((s, c) => banks.add(s, adding, c));
+
+    if (!r.ok) return setError(r.error);
+    onChange(banks.label(r.record));
+    setAdding(null);
+    setError(null);
+  };
+
+  const remove = (id: string) => {
+    const r = run((s, c) => banks.remove(s, id, c));
+    const next = banks.accounts(store.getState())[0];
+
+    // The check is then drawn on the first account still kept, if any.
+    if (r.ok) onChange(next ? banks.label(next) : '');
+  };
+
+  const field = (key: keyof NewAccount) => ({ value: adding?.[key] ?? '', onChange: (v: string) => adding && setAdding({ ...adding, [key]: v }) });
 
   return (
-    <Field label="Bank" hint="The account the check is drawn on.">
-      <SelectInput value={value} onChange={onChange} options={options.map((l) => ({ value: l, label: l }))} />
-    </Field>
+    <div className="flex flex-col gap-2.5">
+      <Field label="Bank" hint={accounts.length ? 'The account the check is drawn on. Others adds one not listed.' : 'No bank accounts are kept yet: add the one the check is drawn on under Others.'}>
+        <div className="flex gap-2">
+          <div className="min-w-0 flex-1">
+            <SelectInput
+              value={adding ? OTHERS : value}
+              onChange={pick}
+              options={options.map((l) => ({ value: l, label: l === OTHERS ? 'Others…' : l }))}
+            />
+          </div>
+          {picked && !adding && (
+            <Button
+              onClick={() => confirm({
+                title: `Remove ${picked.id}?`,
+                body: `${banks.label(picked)}, in the name of ${picked.name}, is removed from Bank Accounts and from this list. Vouchers already saved keep the bank written on them.`,
+                confirm: 'Remove account',
+                danger: true,
+                onConfirm: () => remove(picked.id),
+              })}
+            >
+              Remove…
+            </Button>
+          )}
+        </div>
+      </Field>
+      {adding && (
+        // Inside the voucher's own form, so Enter saves the account here, not the voucher.
+        <div
+          role="group"
+          aria-label="New bank account"
+          className="flex flex-col gap-2.5 rounded-control border border-line p-3"
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } }}
+        >
+          <FieldRow>
+            <Field label="Bank name"><TextInput autoFocus placeholder="BDO" {...field('bank')} /></Field>
+            <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" {...field('number')} /></Field>
+          </FieldRow>
+          <FieldRow>
+            <Field label="Account name" hint="As the bank holds it."><TextInput {...field('name')} /></Field>
+            <Field label="Branch"><TextInput placeholder="Optional" {...field('branch')} /></Field>
+          </FieldRow>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {error
+              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>
+              : <span className="mr-auto text-xs text-pretty text-ink-2">Saved to Bank Accounts, for every voucher after this one.</span>}
+            {accounts.length > 0 && <Button size="sm" onClick={() => { setAdding(null); setError(null); }}>Cancel</Button>}
+            <Button size="sm" onClick={save}>Save account</Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

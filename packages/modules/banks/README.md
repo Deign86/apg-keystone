@@ -23,9 +23,10 @@ after Data.
 
 ## Provides
 `banks.bank-accounts` (`SERVICES.bankAccounts`, typed `BankAccounts` in core): `accounts(state)`, the accounts
-in the order they were added, and `label(account)`, how one is named in a list ("BPI · 4011 0258 68"). Billing's
-**Pay into** lists them and writes the one picked into a statement's payment instructions; Check Vouchers' **Bank**
-lists them for the account a check is drawn on.
+in the order they were added, `label(account)`, how one is named in a list ("BPI · 4011 0258 68"), and `add` and
+`remove`, which keep and remove an account by the same rules and log lines as the screen. Billing's **Pay into** lists
+them and writes the one picked into a statement's payment instructions; Check Vouchers' **Bank** lists them for the
+account a check is drawn on, adds one typed under **Others…**, and removes the one picked.
 
 ## Needs
 Nothing.

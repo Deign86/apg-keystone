@@ -18,7 +18,11 @@ const bpi: BankAccount = { id: 'B-001', bank: 'BPI', branch: '', name: 'Alpha Pr
 const bdo: BankAccount = { id: 'B-002', bank: 'BDO', branch: 'Ortigas Center', name: 'APG Holdings OPC', number: '0012 3456 7890' };
 
 function banks(accounts: BankAccount[]): ModuleDef {
-  const service: BankAccounts = { accounts: () => accounts, label: (a) => `${a.bank} · ${a.number}` };
+  const service: BankAccounts = {
+    accounts: () => accounts, label: (a) => `${a.bank} · ${a.number}`,
+    // Billing only reads the accounts.
+    add: () => { throw new Error('Not in these tests.'); }, remove: () => { throw new Error('Not in these tests.'); },
+  };
 
   return { id: 'banks', title: 'Bank Accounts', section: 'Settings', blurb: '', order: 91, Screen: () => <h1>Bank Accounts</h1>, provides: { [SERVICES.bankAccounts]: service } };
 }
