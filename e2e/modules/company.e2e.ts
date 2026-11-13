@@ -72,5 +72,5 @@ test('a computer with nothing saved starts blank, says so on Home, and fills the
 
   // A new voucher's letterhead prints the name saved.
   await app.open('/#vouchers');
-  await expect(screen.getByRole('article', 'Check voucher 888-001').getByText('Alpha Premier Group')).toBeVisible();
+  await expect(screen.getByRole('article', 'Check voucher 888-001').getByText('Alpha Premier Group').first()).toBeVisible();
 });

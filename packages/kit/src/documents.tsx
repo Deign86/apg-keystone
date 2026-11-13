@@ -9,17 +9,40 @@ import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 /** The paper's width in CSS px: an A4 page less the print stylesheet's 12 mm margins (186 mm). */
 export const PAPER_WIDTH = Math.round((186 / 25.4) * 96);
 
-/** A half sheet's height in CSS px: from the top margin to the middle of the A4 page (148.5 mm less 12 mm), where it is cut. */
-export const HALF_PAGE_HEIGHT = Math.round((136.5 / 25.4) * 96);
+/** A whole A4 page's width in CSS px (210 mm, rounded down so it never spills onto a second page): a two-up sheet prints with no margin. */
+export const PAGE_WIDTH = Math.floor((210 / 25.4) * 96);
+
+/** Half an A4 page's height in CSS px (148.5 mm, rounded down): one copy on a two-up sheet, from an edge of the page to the middle, where it is cut. */
+export const HALF_PAGE_HEIGHT = Math.floor((148.5 / 25.4) * 96);
+
+/** How far a two-up sheet's copies keep in from the paper's edges and the cut: inside what any printer reaches. */
+const EDGE = '6mm';
+
+/** One copy on a two-up sheet. The second sits below the dashed line to cut along, and screen readers skip it. */
+function Copy({ children, second }: { children: ReactNode; second?: boolean }) {
+  return (
+    <div
+      data-sheet-copy=""
+      aria-hidden={second || undefined}
+      style={{ minHeight: HALF_PAGE_HEIGHT, padding: EDGE }}
+      className={`flex flex-col ${second ? 'border-t border-dashed border-paper-muted' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 /**
  * A document, always laid out at the paper's width. Where the column is narrower, the
  * preview is scaled down to fit (a transform on a wrapper, so the paper itself, which
  * Print and Export PDF take, stays at full size). `fit="page"` prints the sheet scaled to
- * a single page, however long it is; `fit="half"` to the top half of the page, above a
- * dashed line to cut along, so one cut leaves the document on half an A4.
+ * a single page, however long it is. `fit="halves"` lays the document out twice on one A4,
+ * once on each half, out to near the paper's edges with no print margin, and draws a
+ * dashed line across the middle: one cut leaves two copies, each on half an A4.
  */
-export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page' | 'half' }>(function Sheet({ children, label, fit: printFit }, ref) {
+export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page' | 'halves' }>(function Sheet({ children, label, fit: printFit }, ref) {
+  const halves = printFit === 'halves';
+  const width = halves ? PAGE_WIDTH : PAPER_WIDTH;
   const frame = useRef<HTMLDivElement>(null);
   // Holds only the paper, so its height is the paper's; a transform leaves that height unscaled.
   const scaler = useRef<HTMLDivElement>(null);
@@ -35,7 +58,7 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
       // A column with no width yet (a hidden screen) is measured again when it gets one.
       if (!f.clientWidth) return;
 
-      const scale = Math.min(1, f.clientWidth / PAPER_WIDTH);
+      const scale = Math.min(1, f.clientWidth / width);
       const next = scale < 1 ? { scale, height: s.offsetHeight * scale } : null;
       setFit((old) => (old?.scale === next?.scale && old?.height === next?.height ? old : next));
     };
@@ -46,7 +69,7 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
     measure();
 
     return () => watch.disconnect();
-  }, []);
+  }, [width]);
 
   return (
     <div ref={frame} data-sheet-frame="" className="overflow-hidden" style={fit ? { height: fit.height } : undefined}>
@@ -56,10 +79,11 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
           data-ui="document"
           data-print-fit={printFit}
           aria-label={label}
-          style={{ width: PAPER_WIDTH, minHeight: printFit === 'half' ? HALF_PAGE_HEIGHT : 420 }}
-          className={`border border-line bg-paper px-[30px] py-7 font-body text-[12.5px] leading-snug text-paper-ink ${printFit === 'half' ? 'border-b-paper-muted [border-bottom-style:dashed]' : ''}`}
+          style={{ width, minHeight: halves ? undefined : 420 }}
+          // A two-up sheet's frame only marks the paper's edge on screen; it never prints.
+          className={`border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink ${halves ? 'print:border-0' : 'px-[30px] py-7'}`}
         >
-          {children}
+          {halves ? <><Copy>{children}</Copy><Copy second>{children}</Copy></> : children}
         </article>
       </div>
     </div>

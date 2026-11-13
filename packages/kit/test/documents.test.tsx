@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
-import { HALF_PAGE_HEIGHT, PAPER_WIDTH, Sheet } from '../src/documents';
+import { HALF_PAGE_HEIGHT, PAGE_WIDTH, PAPER_WIDTH, Sheet } from '../src/documents';
 
 describe('document sheet', () => {
   it('lays the paper out at the printed width, whatever column it sits in', () => {
@@ -18,13 +18,20 @@ describe('document sheet', () => {
     expect(ref.current).toBe(paper);
   });
 
-  it('keeps a half sheet to the top half of an A4 page, cut at the middle', () => {
-    render(<Sheet label="Check voucher 888-001" fit="half">Paper</Sheet>);
+  it('lays a two-up sheet out twice on a whole A4 page, a copy on each half, for screen readers once', () => {
+    render(<Sheet label="Check voucher 888-001" fit="halves">Paper</Sheet>);
     const paper = screen.getByRole('article', { name: 'Check voucher 888-001' });
+    const [top, bottom] = paper.querySelectorAll<HTMLElement>('[data-sheet-copy]');
 
-    // 136.5 mm: from the top margin (12 mm) to the middle of the page (148.5 mm).
-    expect(HALF_PAGE_HEIGHT).toBe(516);
-    expect(paper.style.minHeight).toBe('516px');
-    expect(paper).toHaveAttribute('data-print-fit', 'half');
+    // 210 mm wide with no print margin, and 148.5 mm a copy: the dashed line between them is the middle of the page.
+    expect(PAGE_WIDTH).toBe(793);
+    expect(HALF_PAGE_HEIGHT).toBe(561);
+    expect(paper.style.width).toBe('793px');
+    expect(paper).toHaveAttribute('data-print-fit', 'halves');
+    expect([top.style.minHeight, bottom.style.minHeight]).toEqual(['561px', '561px']);
+    expect(top).toHaveTextContent('Paper');
+    expect(bottom).toHaveTextContent('Paper');
+    expect(bottom).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getAllByText('Paper', { ignore: '[aria-hidden], [aria-hidden] *' })).toHaveLength(1);
   });
 });

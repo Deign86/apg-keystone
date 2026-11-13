@@ -162,7 +162,7 @@ test('an approved voucher opens read-only and copies to a new voucher', async ({
   await expect(register.getByRole('row', /^CV-2026-0140 .*Approved/)).toBeVisible();
 });
 
-test('prints one voucher on half an A4 sheet, ruled into boxes like the cash voucher', async ({ app, screen }) => {
+test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash voucher', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
@@ -172,19 +172,25 @@ test('prints one voucher on half an A4 sheet, ruled into boxes like the cash vou
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   const paper = screen.getByRole('article', 'Check voucher 888-001');
 
-  // Cut once along its dashed lower edge, at the middle of the page.
-  await expect(paper).toHaveAttribute('data-print-fit', 'half');
-  await expect(paper.getByText('ALPHA PREMIER GROUP OF COMPANIES OPC')).toBeVisible();
-  await expect(paper.getByText('No. 888-001')).toBeVisible();
+  // A copy on each half of the page, cut apart along the dashed line between them.
+  await expect(paper).toHaveAttribute('data-print-fit', 'halves');
+  await expect(paper.getByText('No. 888-001')).toHaveCount(2);
+  await expect(paper.getByText('ALPHA PREMIER GROUP OF COMPANIES OPC').first()).toBeVisible();
   // The company's name alone at the top left, on one line: no address or contact under it.
   await expect(paper.getByText(/Philippine Stock Exchange Centre/)).toBeHidden();
   await expect(paper.getByText(/02 8650 2540/)).toBeHidden();
 
   const box = (text: string) => paper.getByRole('definition').filter({ hasText: text });
 
-  await expect(box('Manila Electric Company (Meralco) (TIN 000-101-528-000)')).toBeVisible();
+  // The payee's TIN prints only once someone types it; the directory's is never put in for them.
+  await expect(box('Manila Electric Company (Meralco)')).toBeVisible();
+  await expect(paper.getByText('000-101-528-000')).toBeHidden();
+  await form.getByRole('textbox', 'TIN').fill('000-101-528-000');
+  await expect(box('000-101-528-000')).toBeVisible();
   await expect(box('Ortigas Ave., Pasig City')).toBeVisible();
   await expect(box('BPI · 4011 0258 68')).toBeVisible();
+  await form.getByRole('textbox', 'Issuer').fill('Alpha Premier Group of Companies OPC');
+  await expect(box('Alpha Premier Group of Companies OPC')).toBeVisible();
   await expect(box('November 2, 2026')).toBeVisible();
   await expect(box('0004512')).toBeVisible();
   await expect(box('November 5, 2026')).toBeVisible();
@@ -192,7 +198,13 @@ test('prints one voucher on half an A4 sheet, ruled into boxes like the cash vou
   await expect(paper.getByRole('row', 'Total ₱1,250.50')).toBeVisible();
   await expect(box('One Thousand Two Hundred Fifty Pesos and 50/100 Only')).toBeVisible();
 
-  for (const role of ['Prepared by', 'Audited by', 'Approved by', 'Received payment by']) await expect(paper.getByText(role)).toBeVisible();
+  for (const role of ['Prepared by', 'Audited by', 'Approved by', 'Received payment by']) await expect(paper.getByText(role).first()).toBeVisible();
+
+  // Each signatory's position prints above their name.
+  await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
+  await form.getByRole('textbox', 'Approved by').fill('Mark Anthony Santos');
+  await expect(paper.getByText('Chief Executive Officer').first()).toBeVisible();
+  await expect(paper.getByText('Mark Anthony Santos').first()).toBeVisible();
 });
 
 test('draws the check on an account kept in Bank Accounts, and the next voucher starts with it', async ({ app, screen }) => {
@@ -238,7 +250,7 @@ test('starts each voucher with the signatories the last one was saved with', asy
 
   await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('888-002');
   await expect(form.getByRole('textbox', 'Prepared by')).toHaveValue('Kristine Joy L. Villanueva');
-  await expect(screen.getByRole('article', 'Check voucher 888-002').getByText('Kristine Joy L. Villanueva')).toBeVisible();
+  await expect(screen.getByRole('article', 'Check voucher 888-002').getByText('Kristine Joy L. Villanueva').first()).toBeVisible();
 });
 
 test('a saved voucher shows in the activity log', async ({ app, screen }) => {

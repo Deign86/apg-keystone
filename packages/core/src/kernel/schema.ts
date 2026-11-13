@@ -77,8 +77,12 @@ export interface Voucher {
   date: ISODate;
   /** Directory code of the payee. */
   payee: string;
-  /** Older vouchers: the bank account drawn on. No longer entered. */
+  /** The payee's TIN as printed, when one is typed in; never taken from the directory. */
+  tin?: string;
+  /** The account the check is drawn on, as printed: "BPI · 4011 0258 68". */
   bank?: string;
+  /** Who issues the check, printed beside the bank. */
+  issuer?: string;
   check: string;
   /** The date written on the check. */
   checkDate?: ISODate;
@@ -88,6 +92,10 @@ export interface Voucher {
   /** Printed as "Audited by" (the key is the prototype's). */
   checked: string;
   approved: string;
+  /** Each signatory's position, printed above their name: "CEO". */
+  preparedPos?: string;
+  checkedPos?: string;
+  approvedPos?: string;
 }
 
 export interface Statement {
