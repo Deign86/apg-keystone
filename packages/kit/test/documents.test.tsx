@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { createRef } from 'react';
-import { describe, expect, it } from 'vitest';
-import { HALF_PAGE_HEIGHT, PAGE_WIDTH, PAPER_WIDTH, Sheet } from '../src/documents';
+import { describe, expect, it, vi } from 'vitest';
+import { FitWidth, HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, PAPER_WIDTH, Sheet } from '../src/documents';
+import { printElement } from '../src/output';
+
+/** The @page rules in the document's head. */
+const pageRules = () => [...document.head.querySelectorAll('style')].flatMap((s) => (s.textContent?.startsWith('@page') ? [s.textContent] : []));
 
 describe('document sheet', () => {
   it('lays the paper out at the printed width, whatever column it sits in', () => {
@@ -33,5 +37,35 @@ describe('document sheet', () => {
     expect(bottom).toHaveTextContent('Paper');
     expect(bottom).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getAllByText('Paper', { ignore: '[aria-hidden], [aria-hidden] *' })).toHaveLength(1);
+  });
+
+  it('turns a sheet too wide to stand upright on its side, and prints it on a landscape page', () => {
+    render(<Sheet label="Payroll sheet, Oct 16–31, 2026" fit="page" orientation="landscape"><FitWidth><table><tbody><tr><td>Net pay</td></tr></tbody></table></FitWidth></Sheet>);
+    const paper = screen.getByRole('article', { name: 'Payroll sheet, Oct 16–31, 2026' });
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+
+    // 273 mm, a landscape A4 less the print margins.
+    expect(LANDSCAPE_PAPER_WIDTH).toBe(1032);
+    expect(paper.style.width).toBe('1032px');
+    expect(paper).toHaveAttribute('data-print-orientation', 'landscape');
+    expect(paper).toHaveTextContent('Net pay');
+
+    printElement(paper);
+    expect(print).toHaveBeenCalledOnce();
+    expect(pageRules()).toEqual(['@page { size: A4 landscape; }']);
+
+    // The page goes back to upright once the print is done.
+    window.dispatchEvent(new Event('afterprint'));
+    expect(pageRules()).toEqual([]);
+    expect(paper).not.toHaveAttribute('data-print-root');
+    print.mockRestore();
+  });
+
+  it('keeps a two-up sheet upright', () => {
+    render(<Sheet label="Check voucher 888-001" fit="halves" orientation="landscape">Paper</Sheet>);
+    const paper = screen.getByRole('article', { name: 'Check voucher 888-001' });
+
+    expect(paper.style.width).toBe('793px');
+    expect(paper).not.toHaveAttribute('data-print-orientation');
   });
 });

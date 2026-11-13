@@ -17,7 +17,7 @@ export {
 
 export { ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';
 
-export { amountColumn, Letterhead, Lines, Meta, orDash, paperHeading, paperLabel, Sheet, Signatures, type LineColumn } from './documents';
+export { amountColumn, FitWidth, Letterhead, Lines, Meta, orDash, paperHeading, paperLabel, Sheet, Signatures, type LineColumn } from './documents';
 
 export { printElement, savePdf } from './output';
 

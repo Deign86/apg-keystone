@@ -1,6 +1,6 @@
 import { forwardRef, type ReactNode } from 'react';
 import { peso, periodLabel, type Centavos, type Company } from '@keystone/core';
-import { Letterhead, Meta, Sheet, Signatures, orDash, paperHeading } from '@keystone/kit';
+import { FitWidth, Letterhead, Meta, Sheet, Signatures, orDash, paperHeading } from '@keystone/kit';
 import { totalOf, type Cutoff, type PayKey, type PayLine } from './rules';
 
 // These documents only lay out the fields of a Pay (./pay.ts). They add up nothing themselves: the payslip's late and
@@ -14,6 +14,8 @@ const figure = (c: Centavos) => (c ? peso(c).replace('₱', '') : '—');
 
 interface SheetColumn { header: string; cell: (l: PayLine) => ReactNode; total?: PayKey }
 
+// 22 columns, wider than even a landscape A4 at their narrowest: the sheet is printed on its side, and the table shrinks
+// to fit across it (FitWidth), on screen as on paper. Each row keeps to one line, so a long payroll still fits one page.
 const COLUMNS: SheetColumn[] = [
   { header: 'Employee no.', cell: (l) => orDash(l.setup.empNo) },
   { header: 'Employee name', cell: (l) => l.name },
@@ -43,28 +45,30 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
   const label = periodLabel(cutoff.period);
 
   return (
-    <Sheet ref={ref} label={`Payroll sheet, ${label}`} fit="page">
+    <Sheet ref={ref} label={`Payroll sheet, ${label}`} fit="page" orientation="landscape">
       <Letterhead company={company} title="Payroll" no={label} date={cutoff.closed ? `Closed ${cutoff.closed.slice(0, 10)}` : 'Open'} />
-      <table className="w-full border-collapse text-[11px] leading-tight">
-        <thead>
-          <tr className="border-y border-paper-ink bg-paper-tint align-bottom text-paper-gold">
-            {COLUMNS.map((c, i) => <th key={c.header} className={`px-1 py-1 font-semibold uppercase ${i > 1 ? 'text-right' : 'text-left'}`}>{c.header}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {cutoff.lines.map((l) => (
-            <tr key={l.setup.emp} className="border-b border-paper-rule">
-              {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 ${i > 1 ? 'text-right tabular-nums whitespace-nowrap' : ''} ${c.header === 'Signature' ? 'min-w-20' : ''}`}>{c.cell(l)}</td>)}
+      <FitWidth>
+        <table className="w-full border-collapse text-[11px] leading-tight">
+          <thead>
+            <tr className="border-y border-paper-ink bg-paper-tint align-bottom text-paper-gold">
+              {COLUMNS.map((c, i) => <th key={c.header} className={`px-1 py-1 font-semibold uppercase ${i > 1 ? 'text-right' : 'text-left'}`}>{c.header}</th>)}
             </tr>
-          ))}
-          {!cutoff.lines.length && <tr><td colSpan={COLUMNS.length} className="px-1 py-2 text-paper-muted">No employee has a pay setup yet.</td></tr>}
-        </tbody>
-        <tfoot>
-          <tr className="border-y border-paper-ink bg-paper-tint font-bold">
-            {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 ${i > 1 ? 'text-right tabular-nums whitespace-nowrap' : ''} ${i === 0 ? paperHeading : ''}`}>{i === 0 ? 'Total' : c.total ? figure(totalOf(cutoff, c.total)) : ''}</td>)}
-          </tr>
-        </tfoot>
-      </table>
+          </thead>
+          <tbody>
+            {cutoff.lines.map((l) => (
+              <tr key={l.setup.emp} className="border-b border-paper-rule">
+                {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 whitespace-nowrap ${i > 1 ? 'text-right tabular-nums' : ''} ${c.header === 'Signature' ? 'min-w-20' : ''}`}>{c.cell(l)}</td>)}
+              </tr>
+            ))}
+            {!cutoff.lines.length && <tr><td colSpan={COLUMNS.length} className="px-1 py-2 text-paper-muted">No employee has a pay setup yet.</td></tr>}
+          </tbody>
+          <tfoot>
+            <tr className="border-y border-paper-ink bg-paper-tint font-bold">
+              {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 ${i > 1 ? 'text-right tabular-nums whitespace-nowrap' : ''} ${i === 0 ? paperHeading : ''}`}>{i === 0 ? 'Total' : c.total ? figure(totalOf(cutoff, c.total)) : ''}</td>)}
+            </tr>
+          </tfoot>
+        </table>
+      </FitWidth>
       <Signatures names={[['', 'Prepared by'], ['', 'Checked by'], ['', 'Approved by']]} />
     </Sheet>
   );
