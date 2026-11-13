@@ -31,7 +31,12 @@ Older vouchers keep the account code they were saved with; it is no longer enter
 ## Needs
 Directory records to pay (data, not the Directory module). Payees are vendors, then clients, then employees.
 Optionally the bank-accounts service (Bank Accounts): the form's **Bank** lists its accounts for the one a check is
-drawn on. Without it there is no Bank field, and a voucher prints the bank it was saved with, if any.
+drawn on, and **Others…** last. Others opens a small form (Bank name, Account number, Account name starting as the
+company's, an optional Branch) whose **Save account** keeps the account in Bank Accounts through the service and picks
+it, so no account has to be added on that screen first, nor typed again on a later voucher. **Remove…** beside the list
+removes the account picked, after asking; the check is then drawn on the first account still kept. Vouchers already
+saved keep the bank written on them. Without the service there is no Bank field, and a voucher prints the bank it was
+saved with, if any.
 
 ## Removing it
 Its figure, finding, waiting items, tile and button disappear. Saved vouchers stay in `state.json`, and vendors they

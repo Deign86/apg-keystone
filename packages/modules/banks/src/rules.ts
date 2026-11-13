@@ -109,5 +109,13 @@ export function banksLine(accounts: BankAccount[]): string {
 
 // ---------- the service this module offers other parts ----------
 
-/** Published as SERVICES.bankAccounts, for a document that says where to pay (a statement's payment instructions). */
-export const bankAccounts: BankAccounts = { accounts: accountsOf, label: accountLabel };
+/**
+ * Published as SERVICES.bankAccounts, for a document that says where to pay (a statement's payment instructions) or
+ * where a check is drawn (a voucher's bank, which adds and removes accounts by the same rules as the screen).
+ */
+export const bankAccounts: BankAccounts = {
+  accounts: accountsOf,
+  label: accountLabel,
+  add: (s, account, ctx) => saveAccount(s, { ...newAccountDraft(), ...account }, ctx),
+  remove: removeAccount,
+};

@@ -107,6 +107,21 @@ describe('the bank-accounts service', () => {
     expect(accountLabel({ ...bpi, number: '' })).toBe('BPI');
   });
 
+  it('adds and removes accounts for another part by the same rules as the screen, logged the same', () => {
+    const added = bankAccounts.add(state(), bdo, ctx);
+
+    expect(added.record).toEqual({ id: 'B-002', ...bdo });
+    expect(bankAccounts.accounts(added.state).map(bankAccounts.label)).toEqual(['BPI · 4011 0258 68', 'BDO · 0012 3456 7890']);
+    expect(added.state.log[0]).toMatchObject({ mod: 'BANK', text: 'B-002 BDO · 0012 3456 7890 added, in the name of Alpha Premier Group of Companies OPC.' });
+    expect(() => bankAccounts.add(state(), { ...bdo, number: '4011-0258-68' }, ctx)).toThrow('Account number 4011-0258-68 is already saved as B-001');
+    expect(() => bankAccounts.add(state(), { ...bdo, bank: '' }, ctx)).toThrow('Enter the bank.');
+
+    const removed = bankAccounts.remove(added.state, 'B-001', ctx);
+
+    expect(removed.message).toBe('B-001 removed.');
+    expect(bankAccounts.accounts(removed.state)).toEqual([{ id: 'B-002', ...bdo }]);
+  });
+
   it('logs under its own tag, with its own filter label, and sits under Settings', () => {
     expect(banksModule).toMatchObject({ id: 'banks', title: 'Bank Accounts', section: 'Settings', logTags: { BANK: 'Bank Accounts' } });
   });

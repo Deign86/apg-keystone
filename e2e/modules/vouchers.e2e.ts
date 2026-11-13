@@ -237,6 +237,58 @@ test('draws the check on an account kept in Bank Accounts, and the next voucher 
   await expect(form.getByRole('combobox', 'Bank')).toHaveText('BDO · 0012 3456 7890');
 });
 
+test('adds an account not listed under Others, keeps it for the next voucher, and removes one from the Bank list', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const form = screen.getByRole('form', 'New voucher');
+
+  // A new account, typed on the voucher itself: nothing to add on the Bank Accounts screen first.
+  await form.getByRole('combobox', 'Bank').tap();
+  await screen.getByRole('option', 'Others…').tap();
+  const added = form.getByRole('group', 'New bank account');
+
+  // The account's name starts as the company's, as Company Details keeps it.
+  await expect(added.getByRole('textbox', 'Account name')).toHaveValue('ALPHA PREMIER GROUP OF COMPANIES OPC');
+  await added.getByRole('textbox', 'Bank name').fill('Security Bank');
+  await added.getByRole('textbox', 'Account number').fill('0000 1111');
+  await added.getByRole('button', 'Save account').tap();
+  await expect(screen.getByRole('dialog', 'B-002 added.')).toBeVisible();
+  await expect(added).toBeHidden();
+  await expect(form.getByRole('combobox', 'Bank')).toHaveText('Security Bank · 0000 1111');
+
+  // The same number again is refused, and says which account has it.
+  await form.getByRole('combobox', 'Bank').tap();
+  await screen.getByRole('option', 'Others…').tap();
+  await added.getByRole('textbox', 'Bank name').fill('BDO');
+  await added.getByRole('textbox', 'Account number').fill('0000-1111');
+  await added.getByRole('button', 'Save account').tap();
+  await expect(added.getByRole('alert')).toHaveText('Account number 0000-1111 is already saved as B-002 (Security Bank, ALPHA PREMIER GROUP OF COMPANIES OPC).');
+  await added.getByRole('button', 'Cancel').tap();
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
+  await form.getByRole('button', 'Save and route for approval').tap();
+  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
+
+  // The next voucher lists it, and Bank Accounts keeps it.
+  await form.getByRole('combobox', 'Bank').tap();
+  await expect(screen.getByRole('option', 'Security Bank · 0000 1111')).toBeVisible();
+  await screen.getByRole('option', 'BPI · 4011 0258 68').tap();
+
+  // Removing the one picked asks first, then the check is drawn on the first account still kept.
+  await form.getByRole('button', 'Remove…').tap();
+  const confirm = screen.getByRole('alertdialog', 'Remove B-001?');
+
+  await confirm.getByRole('button', 'Remove account').tap();
+  await expect(screen.getByRole('dialog', 'B-001 removed.')).toBeVisible();
+  await expect(form.getByRole('combobox', 'Bank')).toHaveText('Security Bank · 0000 1111');
+
+  await app.open('/#banks');
+  const accounts = screen.getByRole('table', 'Bank accounts');
+
+  await expect(accounts.getByRole('row', /^B-002 Security Bank /)).toBeVisible();
+  await expect(accounts.getByRole('row', /^B-001 /)).toBeHidden();
+});
+
 test('starts each voucher with the signatories the last one was saved with', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
