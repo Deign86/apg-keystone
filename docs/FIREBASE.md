@@ -40,7 +40,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
 
 6. **Members:** in Firestore, create `keystone/apg/members/<uid>` for the first owner, with the uid from
    Authentication › Users, and the fields `role` (`owner`), `name` and `email`. `name` is how Keystone shows the
-   person (who asked for funds, who decided). After that, the owner makes each staff member's account in Keystone:
+   person (who asked for funds, who decided); each member changes their own afterwards on **Settings › Profile**
+   (docs/adr/0020). After that, the owner makes each staff member's account in Keystone:
    **Settings › User Accounts › Make account**, with their name, email and the password they first sign in with,
    which the owner hands over (docs/adr/0014). It makes the sign-in and the member document together. A second owner,
    or a change of role, is still made here in the console. Only an owner approves or declines requests for funds and

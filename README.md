@@ -79,7 +79,7 @@ variables (`VITE_FIREBASE_*`, docs/FIREBASE.md › 8). Without them a copy would
 sign-in.
 
 **Beta and stable** (docs/adr/0017). A release opens only the screens listed in `apps/keystone/src/modules.ts` ›
-`RELEASED`: Home with the connected systems, Check Vouchers, User Accounts, Bank Accounts and Company Details. The others are in the rail
+`RELEASED`: Home with the connected systems, Check Vouchers, Profile, User Accounts, Bank Accounts and Company Details. The others are in the rail
 marked "Soon", on Home marked "Coming soon", and show as they will look behind a "Coming soon" notice (docs/adr/0019). A **beta** opens every screen:
 - **A beta release:** a version with a pre-release part, like `0.11.0-beta.1`, by any of the three ways above. It is
   published as a GitHub pre-release, so installed stable copies never update to it.

@@ -29,6 +29,7 @@ Consequences**.
 | [0017](0017-releases-sign-in-and-screens-coming-soon.md) | Releases always sign in, and screens not released yet say "Coming soon" | Accepted; what a screen coming soon shows superseded by 0019 |
 | [0018](0018-the-records-are-the-only-source.md) | What was saved is the only source: no records, company details or accounts built in | Accepted |
 | [0019](0019-coming-soon-screens-show-behind-a-notice.md) | Screens coming soon show behind a notice | Accepted |
+| [0020](0020-changing-your-own-name.md) | Changing your own name, on Profile | Accepted |
 
 Template:
 

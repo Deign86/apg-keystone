@@ -1,9 +1,11 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, makeAccount, recordsInCloud, setMember, signIn } from './emulators';
+import {
+  asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, makeAccount, recordsInCloud, setMember, setMemberFieldAs, signIn,
+} from './emulators';
 
 // The owner making and removing accounts, and anyone changing their own password (docs/adr/0014–0016,
-// packages/modules/accounts): from User Accounts, the owner makes a staff account, and that person signs in with it on
+// packages/modules/accounts) or, on Profile, their own name (docs/adr/0020, packages/modules/profile): from User Accounts, the owner makes a staff account, and that person signs in with it on
 // another computer and opens the records; once the owner removes it, they open nothing. Staff see who has an account and
 // make or remove none, and firestore.rules hold the same line for a member who goes past Keystone.
 // app.clearState() is another computer, signed out and empty.
@@ -215,6 +217,57 @@ test('staff change their own password, checked against the current one, and sign
   // Signing out kept the address, so Keystone reopens on User Accounts.
   await expect(screen.getByRole('navigation', 'Keystone').getByText('Ana Cruz · Staff')).toBeVisible({ timeout: 15_000 });
   await expect(screen.getByRole('heading', { name: 'User Accounts', level: 1 })).toBeVisible();
+});
+
+test('staff change their own name on Profile, and every computer shows it', async ({ app, screen }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+
+  await recordsInCloud();
+  await app.open('/');
+  await signIn(screen, owner);
+  await expectHome(screen);
+
+  // Ana, on her own computer.
+  await app.clearState();
+  await app.open('/');
+  await signIn(screen, hr);
+  await expectHome(screen);
+  await app.open('/#profile');
+  const form = screen.getByRole('form', 'Your profile');
+
+  await expect(form.getByRole('textbox', 'Your name')).toHaveValue('Ana Cruz');
+  await form.getByRole('textbox', 'Your name').fill('Ana Cruz-Reyes');
+  await form.getByRole('button', 'Save name').tap();
+
+  await expect(screen.getByRole('dialog', 'Keystone shows you as Ana Cruz-Reyes from now on.')).toBeVisible();
+  await expect(screen.getByRole('navigation', 'Keystone').getByText('Ana Cruz-Reyes · Staff')).toBeVisible();
+  expect(await field('members', hr.uid, 'name')).toBe('Ana Cruz-Reyes');
+  expect(await field('members', hr.uid, 'role')).toBe('staff');
+
+  // The owner, on theirs, sees the new name among the accounts.
+  await app.clearState();
+  await app.open('/');
+  await signIn(screen, owner);
+  await expectHome(screen);
+  await app.open('/#accounts');
+  await expect(screen.getByRole('table', 'User accounts').getByRole('row', /^Ana Cruz-Reyes /)).toBeVisible();
+});
+
+test('firestore.rules let a member change their own name, and nothing else of theirs or anyone\'s', async () => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+  const hrToken = await idToken(hr);
+
+  expect(await setMemberFieldAs(hrToken, hr.uid, 'name', 'Ana Cruz-Reyes')).toBe(200);
+  expect(await field('members', hr.uid, 'name')).toBe('Ana Cruz-Reyes');
+
+  // Never their role, never a blank name, never someone else's name.
+  expect(await setMemberFieldAs(hrToken, hr.uid, 'role', 'owner')).toBe(403);
+  expect(await setMemberFieldAs(hrToken, hr.uid, 'name', '')).toBe(403);
+  expect(await setMemberFieldAs(hrToken, owner.uid, 'name', 'Someone else')).toBe(403);
+  expect(await field('members', hr.uid, 'role')).toBe('staff');
+  expect(await field('members', owner.uid, 'name')).toBe('Mark Reyes');
 });
 
 test('firestore.rules let only the owner remove a member', async () => {

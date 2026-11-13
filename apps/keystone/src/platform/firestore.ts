@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import {
   collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  query, serverTimestamp, setDoc, where, writeBatch, type WriteBatch,
+  query, serverTimestamp, setDoc, updateDoc, where, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
 import type { FirebaseEmulators } from './config';
@@ -272,6 +272,19 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
       try {
         await updatePassword(user, next);
+      } catch (e) {
+        throw new Error(explainCloudError(e));
+      }
+    },
+
+    // firestore.rules let a member change their own name, and nothing else of their member document (docs/adr/0020).
+    async rename(name) {
+      const uid = me();
+
+      if (!uid) throw new Error('Sign out and in again, then change your name.');
+
+      try {
+        await updateDoc(doc(members, uid), { name });
       } catch (e) {
         throw new Error(explainCloudError(e));
       }

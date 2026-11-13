@@ -60,9 +60,10 @@ function Brand({ onGo }: { onGo?: () => void }) {
 
 /** Who is using Keystone and where the records are kept, signing out, the save error if any, and the keys. */
 function RailFoot() {
-  const { registry, store, platform } = useKeystone();
+  const { registry, store, platform, ctx } = useKeystone();
   const mod = shortcutKey();
-  const who = platform.who;
+  // As the rules see them: under a name changed since signing in, too.
+  const who = ctx.who;
 
   return (
     <div className="mt-auto text-[11.5px] leading-relaxed text-ink-2">

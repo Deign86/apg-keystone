@@ -23,6 +23,7 @@ function signIn(made: (a: NewAccount) => Promise<MemberAccount> = async (a) => (
 
   const accounts: AppAccounts = {
     list: vi.fn(async () => members), create: vi.fn(made), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}),
+    rename: vi.fn(async () => {}),
   };
 
   return accounts;

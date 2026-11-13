@@ -2,7 +2,7 @@ import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
 // A release that is not a beta (e2e.stable.config.ts, docs/adr/0017): Home, with the connected systems, Check Vouchers,
-// User Accounts, and Bank Accounts and Company Details, which vouchers print from (docs/adr/0018), open; every other
+// Profile, User Accounts, and Bank Accounts and Company Details, which vouchers print from (docs/adr/0018), open; every other
 // screen keeps its place in the rail and its tile on Home, marked, and shows behind "Coming soon" (docs/adr/0019).
 
 test('opens Home with every tile, those coming soon marked, and the connected systems', async ({ app, screen }) => {
@@ -36,11 +36,11 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 
-test('opens User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
+test('opens Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  for (const title of ['User Accounts', 'Bank Accounts', 'Company Details']) {
+  for (const title of ['Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
     await rail.getByRole('button', new RegExp(`${title}$`)).tap();
 
     await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
