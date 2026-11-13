@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { amountInWords, longDate, peso, toCentavos, type Company, type DirectoryRecord, type Voucher } from '@keystone/core';
 import { voucherTotal } from './rules';
-import { Letterhead, Sheet } from '@keystone/kit';
+import { Letterhead, paperHeading as heading, paperLabel, Sheet } from '@keystone/kit';
 
 // The company's Check Voucher, twice on one A4 sheet: once on each half, cut apart along the dashed line across the
 // middle. Ruled into boxes as the printed cash voucher is, out to near the paper's edges: who and where on the left, the
@@ -14,14 +14,11 @@ type Props = { voucher: Voucher; payee?: DirectoryRecord; company: Company };
 function Box({ label, children, className = '' }: { label: string; children?: ReactNode; className?: string }) {
   return (
     <div className={`flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ${className}`}>
-      <dt className="shrink-0 text-[10px] font-semibold tracking-[0.08em] text-paper-muted uppercase">{label}</dt>
+      <dt className={`shrink-0 ${paperLabel}`}>{label}</dt>
       <dd className="m-0 min-w-0 font-bold tabular-nums break-words">{children || '\u00a0'}</dd>
     </div>
   );
 }
-
-/** A column heading or the total's label: the paper's gold, in tracked capitals, on the form's tinted bands. */
-const heading = 'text-[10px] font-semibold tracking-[0.14em] text-paper-gold uppercase';
 
 export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPaper({ voucher: v, payee, company }, ref) {
   const total = voucherTotal(v);
@@ -86,7 +83,7 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
         <div className="grid grid-cols-4 border-t border-paper-ink text-[11px]">
           {signatures.map(([position, who, role], i) => (
             <div key={role} className={`flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
-              <p className="m-0 text-[10px] font-semibold tracking-[0.08em] text-paper-muted uppercase">{role}</p>
+              <p className={`m-0 ${paperLabel}`}>{role}</p>
               {/* Room to sign above the line; under it the signatory's position, then their name. */}
               <div className="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
                 <p className="m-0 min-h-4 font-semibold">{position}</p>

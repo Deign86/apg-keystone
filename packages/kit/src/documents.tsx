@@ -1,7 +1,7 @@
 // The APG logo made for white paper: the phoenix in solid gold and "ALPHA PREMIER GROUP" in black, drawn in HD so it
 // stays sharp on screen and in print.
 import logo from '@keystone/ui/logo-paper.png';
-import { forwardRef, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
@@ -124,15 +124,31 @@ export function Letterhead({ company, title, no, date, nameOnly }: { company: Co
   );
 }
 
+/** A heading on a paper's tinted band (a table's columns, a total): the paper's gold, in tracked capitals. */
+export const paperHeading = 'text-[10px] font-semibold tracking-[0.14em] text-paper-gold uppercase';
+
+/** The label of a box on a paper: small tracked capitals in the paper's grey. */
+export const paperLabel = 'text-[10px] font-semibold tracking-[0.08em] text-paper-muted uppercase';
+
+/**
+ * A document's facts as one ruled box, two to a row: a firm line around it and light ones between, each column's
+ * labels lined up so the values start together. `strong` sets a value in bold.
+ */
 export function Meta({ rows }: { rows: [string, ReactNode, boolean?][] }) {
+  const lastRow = Math.ceil(rows.length / 2) - 1;
+
   return (
-    <dl className="m-0 mb-3 grid grid-cols-2 gap-x-4 gap-y-1">
-      {rows.map(([k, v, strong]) => (
-        <div key={k} className="flex items-baseline gap-1.5 border-b border-dotted border-paper-line py-0.5">
-          <dt className="min-w-[100px] text-[11px] text-paper-muted">{k}</dt>
-          <dd className={`m-0 tabular-nums ${strong ? 'font-semibold' : ''}`}>{v}</dd>
-        </div>
-      ))}
+    <dl className="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+      {rows.map(([k, v, strong], i) => {
+        const under = Math.floor(i / 2) < lastRow ? 'border-b border-paper-line' : '';
+
+        return (
+          <Fragment key={k}>
+            <dt className={`flex items-center py-1.5 pr-3 pl-2.5 ${paperLabel} ${under} ${i % 2 ? 'border-l border-paper-line' : ''}`}>{k}</dt>
+            <dd className={`m-0 flex items-center py-1.5 pr-2.5 tabular-nums ${strong ? 'font-bold' : 'font-medium'} ${under}`}>{v}</dd>
+          </Fragment>
+        );
+      })}
     </dl>
   );
 }
@@ -147,35 +163,42 @@ export interface LineColumn {
 /** The line's amount before tax, as a column. */
 export const amountColumn = (header = 'Amount'): LineColumn => ({ header, figure: true, cell: (l) => peso(toCentavos(l.amt)) });
 
-/** A document's lines. `rows` pads the table with blank rows, as a printed form has. */
+/**
+ * A document's lines, ruled as the check voucher is: a firm line around the table and above its totals, light ones
+ * between columns and rows, the headings on a pale gold band and the grand total on another. `rows` pads the table with
+ * blank rows, as a printed form has.
+ */
 export function Lines({ columns, lines, empty, footer, rows = 0 }: { columns: LineColumn[]; lines: LineItem[]; empty: string; footer: [string, string, boolean?][]; rows?: number }) {
   const blank = Math.max(0, rows - Math.max(lines.length, 1));
+  const cell = (i: number, figure?: boolean) => `px-2.5 py-1.5 ${i ? 'border-l border-paper-line' : ''} ${figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`;
 
   return (
-    <table className="my-2 w-full border-collapse">
+    <table className="my-2 w-full border-collapse border border-paper-ink">
       <thead>
-        <tr className="border-y border-paper-ink text-left text-[11px] tracking-[0.04em] uppercase">
-          {columns.map((c) => <th key={c.header} className={`px-1.5 py-1 font-semibold ${c.figure ? 'text-right' : ''}`}>{c.header}</th>)}
+        <tr className={`border-b border-paper-line bg-paper-tint text-left ${paperHeading}`}>
+          {columns.map((c, i) => <th key={c.header} className={`${cell(i, c.figure)} font-semibold`}>{c.header}</th>)}
         </tr>
       </thead>
       <tbody>
         {lines.length === 0 && (
-          <tr className="border-b border-paper-rule"><td colSpan={columns.length} className="px-1.5 py-1.5 text-paper-muted">{empty}</td></tr>
+          <tr className="border-b border-paper-rule"><td colSpan={columns.length} className="px-2.5 py-1.5 text-paper-muted">{empty}</td></tr>
         )}
         {lines.map((l, i) => (
           <tr key={i} className="border-b border-paper-rule align-top">
-            {columns.map((c) => <td key={c.header} className={`px-1.5 py-1.5 ${c.figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`}>{c.cell(l)}</td>)}
+            {columns.map((c, j) => <td key={c.header} className={cell(j, c.figure)}>{c.cell(l)}</td>)}
           </tr>
         ))}
         {Array.from({ length: blank }, (_, i) => (
-          <tr key={`blank-${i}`} aria-hidden="true" className="border-b border-paper-rule"><td colSpan={columns.length} className="px-1.5 py-1.5">&nbsp;</td></tr>
+          <tr key={`blank-${i}`} aria-hidden="true" className="border-b border-paper-rule">
+            {columns.map((c, j) => <td key={c.header} className={cell(j)}>&nbsp;</td>)}
+          </tr>
         ))}
       </tbody>
       <tfoot>
-        {footer.map(([k, v, grand]) => (
-          <tr key={k} className={grand ? 'border-t-2 border-paper-gold text-[13.5px]' : ''}>
-            <td colSpan={columns.length - 1} className="px-1.5 py-1 font-semibold">{k}</td>
-            <td className="px-1.5 py-1 text-right font-semibold whitespace-nowrap tabular-nums">{v}</td>
+        {footer.map(([k, v, grand], i) => (
+          <tr key={k} className={`${i === 0 || grand ? 'border-t border-paper-ink' : ''} ${grand ? 'bg-paper-tint' : ''}`}>
+            <td colSpan={columns.length - 1} className={`px-2.5 py-1.5 text-right ${grand ? paperHeading : 'font-medium'}`}>{k}</td>
+            <td className={`border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums ${grand ? 'text-sm font-bold' : 'font-semibold'}`}>{v}</td>
           </tr>
         ))}
       </tfoot>
@@ -183,13 +206,14 @@ export function Lines({ columns, lines, empty, footer, rows = 0 }: { columns: Li
   );
 }
 
+/** Lines to sign on: room above a firm line, then who signs, in bold, and their role. */
 export function Signatures({ names, className = '' }: { names: [string, string][]; className?: string }) {
   return (
-    <div className={`mt-8 grid gap-3.5 ${className}`} style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
+    <div className={`mt-10 grid gap-8 ${className}`} style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
       {names.map(([who, role]) => (
         <div key={role} className="border-t border-paper-ink pt-1 text-[11px]">
-          <p className="m-0 min-h-4 font-semibold">{who}</p>
-          <p className="m-0 text-paper-muted">{role}</p>
+          <p className="m-0 min-h-4 font-bold">{who}</p>
+          <p className={`m-0 mt-0.5 ${paperLabel}`}>{role}</p>
         </div>
       ))}
     </div>
