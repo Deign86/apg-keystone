@@ -48,7 +48,8 @@ The ID card's foil stripe is flat gold. There are no gradients anywhere.
   small) with radius 6, and scale to 0.97 when pressed.
 - **Documents** (the voucher, the statement, the ID card) are drawn once. The same element is the live preview, the
   print and the PDF. The voucher and the statement are laid out at the paper's width (186 mm, A4 less the print
-  margins) and scaled down on screen to fit the preview column, so a narrow window never rewraps or crops them.
+  margins) and scaled down on screen to fit the preview column, so a narrow window never rewraps or crops them. The
+  payroll sheet is a landscape A4 (273 mm), and its 22-column table, wider than that, shrinks to fit across the paper.
 
 ## Checks, and their latest results
 

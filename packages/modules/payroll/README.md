@@ -15,7 +15,8 @@ it (the `PAYROLL` and `PAYSLIP` tabs), from the days Timekeeping counted.
   **Cut-off** shows the pay for a semi-monthly cut-off and closes or reopens it. Under it, the **payroll sheet** and
   each employee's **payslip**, with Print and Export PDF.
 - `src/PayrollPapers.tsx`: the payroll sheet (the spreadsheet's columns, totals, signatures) and the payslip
-  (earnings, deductions, net pay).
+  (earnings, deductions, net pay). The sheet's 22 columns are wider than the paper even on its side, so it is a
+  landscape A4 and its table shrinks to fit across it, one line per employee, on screen as in print and the PDF.
 - Its data: `state.ext.payroll` = `{ setups: [PaySetup], runs: [{ from, to, closed, rows }] }`.
 
 ### The pay setup (per employee)

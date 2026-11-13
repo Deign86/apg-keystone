@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Locator, type Screen } from 'e2e';
 
@@ -50,6 +51,14 @@ async function addHoliday(screen: Screen, date: string, name: string, kind: 'Reg
   await form.getByRole('combobox', 'Kind').tap();
   await screen.getByRole('option', kind).tap();
   await form.getByRole('button', 'Add holiday').tap();
+}
+
+/** Where the column headed `name` ends on the right, and where the sheet's paper does, as drawn on screen. */
+async function rightEdges(sheet: Locator, name: string) {
+  const column = await sheet.getByRole('columnheader', name).boundingBox();
+  const paper = await sheet.boundingBox();
+
+  return { column: column ? column.x + column.width : Infinity, paper: paper ? paper.x + paper.width : 0 };
 }
 
 test('HR sets each employee\'s own pay, and it needs a daily rate', async ({ app, screen }) => {
@@ -181,7 +190,7 @@ test('refuses to close a cut-off with no one on it or before it ends, and sets u
   await expect(screen.getByText('Nov 1–15, 2026: 1 employee, ₱280.87 net so far.')).toBeVisible();
 });
 
-test('shows the payroll sheet or one payslip, and saves the sheet as a PDF', async ({ app, screen, browser }) => {
+test('shows the payroll sheet or one payslip, the sheet on a landscape A4 with every column on the paper, and saves it as a PDF', async ({ app, screen, browser }) => {
   await app.open('/#payroll');
   await fillPay(await openJuansPay(screen), JUAN);
   const show = screen.getByRole('group', 'Show');
@@ -192,7 +201,19 @@ test('shows the payroll sheet or one payslip, and saves the sheet as a PDF', asy
   await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeHidden();
 
   await show.getByRole('button', 'Payroll sheet').tap();
-  await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeVisible();
+  const sheet = screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026');
+
+  await expect(sheet).toBeVisible();
+
+  // 22 columns, wider than the paper even on its side: the table shrinks to fit across it, out to the last two.
+  await expect(sheet).toHaveAttribute('data-print-orientation', 'landscape');
+
+  for (const name of ['Net pay', 'Signature']) {
+    await expect(sheet.getByRole('columnheader', name)).toBeVisible();
+    const { column, paper } = await rightEdges(sheet, name);
+
+    expect(column).toBeLessThanOrEqual(paper);
+  }
 
   // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
   // the sheet into a PDF takes several seconds on a busy machine.
@@ -202,6 +223,12 @@ test('shows the payroll sheet or one payslip, and saves the sheet as a PDF', asy
   });
 
   expect(file.suggestedFilename).toBe('Payroll Oct 16–31, 2026.pdf');
+
+  // The same paper, on an A4 page turned on its side: 842 × 595 pt.
+  const page = /\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/.exec(await readFile(file.absolutePath, 'latin1'));
+
+  expect(Number(page?.[1])).toBeCloseTo(841.89, 1);
+  expect(Number(page?.[2])).toBeCloseTo(595.28, 1);
 });
 
 test('closes and reopens a cut-off, and Overview and the Activity Log follow', async ({ app, screen }) => {

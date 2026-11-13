@@ -1,7 +1,7 @@
 // The APG logo made for white paper: the phoenix in solid gold and "ALPHA PREMIER GROUP" in black, drawn in HD so it
 // stays sharp on screen and in print.
 import logo from '@keystone/ui/logo-paper.png';
-import { forwardRef, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
@@ -10,6 +10,9 @@ import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 
 /** The paper's width in CSS px: an A4 page less the print stylesheet's 12 mm margins (186 mm). */
 export const PAPER_WIDTH = Math.round((186 / 25.4) * 96);
+
+/** The paper's width on an A4 page turned on its side, less the same margins (273 mm): a sheet too wide to stand upright. */
+export const LANDSCAPE_PAPER_WIDTH = Math.round((273 / 25.4) * 96);
 
 /** A whole A4 page's width in CSS px (210 mm, rounded down so it never spills onto a second page): a two-up sheet prints with no margin. */
 export const PAGE_WIDTH = Math.floor((210 / 25.4) * 96);
@@ -35,43 +38,56 @@ function Copy({ children, second }: { children: ReactNode; second?: boolean }) {
 }
 
 /**
- * A document, always laid out at the paper's width. Where the column is narrower, the
- * preview is scaled down to fit (a transform on a wrapper, so the paper itself, which
- * Print and Export PDF take, stays at full size). `fit="page"` prints the sheet scaled to
- * a single page, however long it is. `fit="halves"` lays the document out twice on one A4,
- * once on each half, out to near the paper's edges with no print margin, and draws a
- * dashed line across the middle: one cut leaves two copies, each on half an A4.
+ * How far `content` has to shrink to fit across `box`, and the height it then takes, or null when it fits. Measured
+ * again whenever either changes size; a box with no width yet (a hidden screen) is measured once it gets one.
  */
-export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page' | 'halves' }>(function Sheet({ children, label, fit: printFit }, ref) {
-  const halves = printFit === 'halves';
-  const width = halves ? PAGE_WIDTH : PAPER_WIDTH;
-  const frame = useRef<HTMLDivElement>(null);
-  // Holds only the paper, so its height is the paper's; a transform leaves that height unscaled.
-  const scaler = useRef<HTMLDivElement>(null);
+function useShrinkToFit(box: RefObject<HTMLElement>, content: RefObject<HTMLElement>) {
   const [fit, setFit] = useState<{ scale: number; height: number } | null>(null);
 
   useLayoutEffect(() => {
-    const f = frame.current;
-    const s = scaler.current;
+    const b = box.current;
+    const c = content.current;
 
-    if (!f || !s) return;
+    if (!b || !c) return;
 
     const measure = () => {
-      // A column with no width yet (a hidden screen) is measured again when it gets one.
-      if (!f.clientWidth) return;
+      if (!b.clientWidth) return;
 
-      const scale = Math.min(1, f.clientWidth / width);
-      const next = scale < 1 ? { scale, height: s.offsetHeight * scale } : null;
+      // Layout sizes, which a transform leaves alone: the scale this sets never changes what it measures.
+      const scale = Math.min(1, b.clientWidth / c.offsetWidth);
+      const next = scale < 1 ? { scale, height: c.offsetHeight * scale } : null;
       setFit((old) => (old?.scale === next?.scale && old?.height === next?.height ? old : next));
     };
 
     const watch = new ResizeObserver(measure);
-    watch.observe(f);
-    watch.observe(s);
+    watch.observe(b);
+    watch.observe(c);
     measure();
 
     return () => watch.disconnect();
-  }, [width]);
+  }, [box, content]);
+
+  return fit;
+}
+
+/**
+ * A document, always laid out at the paper's width. Where the column is narrower, the
+ * preview is scaled down to fit (a transform on a wrapper, so the paper itself, which
+ * Print and Export PDF take, stays at full size). `orientation="landscape"` turns the
+ * A4 on its side, for a sheet too wide to stand upright: the paper is `LANDSCAPE_PAPER_WIDTH`
+ * wide, and Print and Export PDF use a landscape page. `fit="page"` prints the sheet scaled to
+ * a single page, however long it is. `fit="halves"` lays the document out twice on one A4,
+ * upright, once on each half, out to near the paper's edges with no print margin, and draws a
+ * dashed line across the middle: one cut leaves two copies, each on half an A4.
+ */
+export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page' | 'halves'; orientation?: 'portrait' | 'landscape' }>(function Sheet({ children, label, fit: printFit, orientation }, ref) {
+  const halves = printFit === 'halves';
+  const landscape = !halves && orientation === 'landscape';
+  const width = halves ? PAGE_WIDTH : landscape ? LANDSCAPE_PAPER_WIDTH : PAPER_WIDTH;
+  const frame = useRef<HTMLDivElement>(null);
+  // Holds only the paper, so its size is the paper's; a transform leaves that size unscaled.
+  const scaler = useRef<HTMLDivElement>(null);
+  const fit = useShrinkToFit(frame, scaler);
 
   return (
     <div ref={frame} data-sheet-frame="" className="overflow-hidden" style={fit ? { height: fit.height } : undefined}>
@@ -80,6 +96,7 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
           ref={ref}
           data-ui="document"
           data-print-fit={printFit}
+          data-print-orientation={landscape ? 'landscape' : undefined}
           aria-label={label}
           style={{ width, minHeight: halves ? undefined : 420 }}
           // A two-up sheet's frame only marks the paper's edge on screen; it never prints.
@@ -91,6 +108,26 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
     </div>
   );
 });
+
+/**
+ * Part of a document that can be wider than the paper, such as a payroll sheet's 22 columns. It is laid out as narrow
+ * as it goes (a table's columns at their narrowest, headings wrapped), and where that is still wider than the paper it
+ * is scaled down as a whole to fit across it. A transform inside the paper, so the preview, the print and the PDF show
+ * it the same; the box keeps the scaled height, so what follows sits right under it.
+ */
+export function FitWidth({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const fit = useShrinkToFit(box, content);
+
+  return (
+    <div ref={box} style={fit ? { height: fit.height } : undefined}>
+      <div ref={content} className="w-min min-w-full origin-top-left" style={fit ? { transform: `scale(${fit.scale})` } : undefined}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 /**
  * The APG logo, the company and the document's title and number. The company is as Company Details keeps it, and
