@@ -10,15 +10,15 @@ const MARGIN_PT = (12 / 25.4) * 72;
 const isLandscape = (node: HTMLElement) => node.dataset.printOrientation === 'landscape';
 
 /**
- * Renders a document element to an A4 PDF (sharp at 3×) and asks where to save it, on a landscape page for a landscape
- * sheet. A two-up sheet (data-print-fit="halves") fills the whole page, as it prints: a copy on each half, the dashed
- * line between them.
+ * Renders a document element to an A4 PDF (sharp at 4×, about 380 dpi on A4) and asks where to save it, on a landscape
+ * page for a landscape sheet. A two-up sheet (data-print-fit="halves") fills the whole page, as it prints: a copy on
+ * each half, the dashed line between them.
  */
 export async function savePdf(node: HTMLElement, name: string, platform: Platform): Promise<string | null> {
   const halves = node.dataset.printFit === 'halves';
   const margin = halves ? 0 : MARGIN_PT;
   // A two-up sheet's frame marks the paper's edge on screen only.
-  const png = await toPng(node, { pixelRatio: 3, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style: halves ? { border: '0' } : undefined });
+  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style: halves ? { border: '0' } : undefined });
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: isLandscape(node) ? 'landscape' : 'portrait' });
   const page = { w: pdf.internal.pageSize.getWidth(), h: pdf.internal.pageSize.getHeight() };
   const room = { w: page.w - margin * 2, h: page.h - margin * 2 };

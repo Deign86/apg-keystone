@@ -139,6 +139,9 @@
   }
   /* Centred, so a sheet scaled down to one page keeps even margins either side. */
   [data-print-root] {
+    /* A document's tinted bands print as they show; browsers leave backgrounds out by default. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
     position: absolute;
     inset: 0 0 auto 0;
     width: 100%;

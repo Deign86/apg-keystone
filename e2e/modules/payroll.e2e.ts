@@ -105,12 +105,12 @@ test('edits pay from the row menu, refuses a rate it cannot read and an employee
   await fillPay(form, { ...JUAN, Bank: 'BDO', 'Account no.': '0012-3456-7890' });
   await expect(setups.getByRole('row', /Juan Miguel P\. Reyes/).getByRole('cell', 'BDO')).toBeVisible();
 
-  // His payslip names the bank and the account.
+  // His payslip names the bank and the account, under their labels in capitals.
   await screen.getByRole('group', 'Show').getByRole('button', 'Payslip: Juan Miguel P. Reyes').tap();
   const slip = screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026');
 
-  await expect(slip).toContainText('Bank BDO');
-  await expect(slip).toContainText('Account no. 0012-3456-7890');
+  await expect(slip).toContainText('BANK BDO');
+  await expect(slip).toContainText('ACCOUNT NO. 0012-3456-7890');
 
   // Two employees cannot share a number.
   await setups.getByRole('row', /Angelica S\. Bautista/).tap();
@@ -335,12 +335,13 @@ test('prices the regression cut-off from Timekeeping, closes it, and prints the 
   await expect(screen.getByRole('dialog', 'Payroll for Oct 16–31, 2026 closed: 1 employee, ₱9,229.30 net.')).toBeVisible();
   await expect(screen.getByText('Oct 16–31, 2026: 1 employee, ₱9,229.30 net, closed.')).toBeVisible();
 
-  // The payslip shows late and the half day under deductions, and comes to the same net pay.
+  // The payslip shows late and the half day under deductions, and comes to the same net pay. Its totals' labels are
+  // in capitals, on their gold bands.
   await cutoff.getByRole('row', /^Juan Miguel P\. Reyes /).tap();
   const slip = screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026');
 
-  await expect(slip).toContainText('Total earnings ₱10,415.50');
-  await expect(slip).toContainText('Total deductions ₱1,186.20');
+  await expect(slip).toContainText('TOTAL EARNINGS ₱10,415.50');
+  await expect(slip).toContainText('TOTAL DEDUCTIONS ₱1,186.20');
   await expect(slip).toContainText('Late / undertime 87.08');
   await expect(slip).toContainText('Half day 380.00');
   await expect(slip).toContainText('₱9,229.30');

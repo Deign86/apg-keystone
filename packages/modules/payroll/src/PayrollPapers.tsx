@@ -1,6 +1,6 @@
 import { forwardRef, type ReactNode } from 'react';
 import { peso, periodLabel, type Centavos, type Company } from '@keystone/core';
-import { FitWidth, Letterhead, Meta, Sheet, Signatures, orDash } from '@keystone/kit';
+import { FitWidth, Letterhead, Meta, Sheet, Signatures, orDash, paperHeading } from '@keystone/kit';
 import { totalOf, type Cutoff, type PayKey, type PayLine } from './rules';
 
 // These documents only lay out the fields of a Pay (./pay.ts). They add up nothing themselves: the payslip's late and
@@ -50,7 +50,7 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
       <FitWidth>
         <table className="w-full border-collapse text-[11px] leading-tight">
           <thead>
-            <tr className="border-y border-paper-ink align-bottom">
+            <tr className="border-y border-paper-ink bg-paper-tint align-bottom text-paper-gold">
               {COLUMNS.map((c, i) => <th key={c.header} className={`px-1 py-1 font-semibold uppercase ${i > 1 ? 'text-right' : 'text-left'}`}>{c.header}</th>)}
             </tr>
           </thead>
@@ -63,8 +63,8 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
             {!cutoff.lines.length && <tr><td colSpan={COLUMNS.length} className="px-1 py-2 text-paper-muted">No employee has a pay setup yet.</td></tr>}
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-paper-gold font-semibold">
-              {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1 ${i > 1 ? 'text-right tabular-nums whitespace-nowrap' : ''}`}>{i === 0 ? 'Total' : c.total ? figure(totalOf(cutoff, c.total)) : ''}</td>)}
+            <tr className="border-y border-paper-ink bg-paper-tint font-bold">
+              {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 ${i > 1 ? 'text-right tabular-nums whitespace-nowrap' : ''} ${i === 0 ? paperHeading : ''}`}>{i === 0 ? 'Total' : c.total ? figure(totalOf(cutoff, c.total)) : ''}</td>)}
             </tr>
           </tfoot>
         </table>
@@ -74,27 +74,34 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
   );
 });
 
-function Rows({ title, rows, total }: { title: string; rows: [string, Centavos][]; total: [string, Centavos] }) {
+/** One of the payslip's two tables, ruled as the check voucher is, padded to `rows` so the two totals line up. */
+function Rows({ title, rows, total, pad }: { title: string; rows: [string, Centavos][]; total: [string, Centavos]; pad: number }) {
   return (
-    <table className="w-full border-collapse self-start">
+    <table className="w-full self-start border-collapse border border-paper-ink">
       <thead>
-        <tr className="border-y border-paper-ink text-[11px] uppercase">
-          <th className="px-1.5 py-1 text-left font-semibold">{title}</th>
-          <th className="px-1.5 py-1 text-right font-semibold">Amount</th>
+        <tr className={`border-b border-paper-line bg-paper-tint ${paperHeading}`}>
+          <th className="px-2.5 py-1.5 text-left font-semibold">{title}</th>
+          <th className="border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
         </tr>
       </thead>
       <tbody>
         {rows.map(([k, v]) => (
           <tr key={k} className="border-b border-paper-rule">
-            <td className="px-1.5 py-1">{k}</td>
-            <td className="px-1.5 py-1 text-right tabular-nums">{figure(v)}</td>
+            <td className="px-2.5 py-1.5">{k}</td>
+            <td className="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">{figure(v)}</td>
+          </tr>
+        ))}
+        {Array.from({ length: Math.max(0, pad - rows.length) }, (_, i) => (
+          <tr key={`blank-${i}`} aria-hidden="true" className="border-b border-paper-rule">
+            <td className="px-2.5 py-1.5">&nbsp;</td>
+            <td className="border-l border-paper-line px-2.5 py-1.5" />
           </tr>
         ))}
       </tbody>
       <tfoot>
-        <tr className="border-t-2 border-paper-gold font-semibold">
-          <td className="px-1.5 py-1">{total[0]}</td>
-          <td className="px-1.5 py-1 text-right tabular-nums">{peso(total[1])}</td>
+        <tr className="border-t border-paper-ink bg-paper-tint">
+          <td className={`px-2.5 py-1.5 ${paperHeading}`}>{total[0]}</td>
+          <td className="border-l border-paper-line px-2.5 py-1.5 text-right font-bold tabular-nums">{peso(total[1])}</td>
         </tr>
       </tfoot>
     </table>
@@ -124,6 +131,7 @@ export const Payslip = forwardRef<HTMLDivElement, { line: PayLine; cutoff: Cutof
             ['Regular holiday', p.regularHoliday], ['Special holiday', p.specialHoliday], ['Overtime pay', p.overtime],
           ]}
           total={['Total earnings', p.earnings]}
+          pad={7}
         />
         <Rows
           title="Deductions"
@@ -132,11 +140,12 @@ export const Payslip = forwardRef<HTMLDivElement, { line: PayLine; cutoff: Cutof
             ['Salary advance', p.advance], ['Late / undertime', p.late], ['Half day', p.halfDay],
           ]}
           total={['Total deductions', p.totalDeductions]}
+          pad={7}
         />
       </div>
-      <div className="mt-4 flex items-baseline justify-between border-y-2 border-paper-gold px-1.5 py-2">
-        <span className="font-display text-[13px] font-semibold tracking-[0.08em] uppercase">Net pay</span>
-        <span className="text-[15px] font-semibold tabular-nums">{peso(p.net)}</span>
+      <div className="mt-4 flex items-baseline justify-between border border-paper-ink bg-paper-tint px-2.5 py-2.5">
+        <span className="font-display text-[13px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Net pay</span>
+        <span className="text-base font-bold tabular-nums">{peso(p.net)}</span>
       </div>
       <p className="m-0 mt-2 text-center text-[10.5px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
       <Signatures names={[['', 'Prepared by'], [line.name, 'Employee signature']]} />

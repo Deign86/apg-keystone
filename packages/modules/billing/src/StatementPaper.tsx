@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { longDate, peso, toCentavos, type Company, type DirectoryRecord, type Statement } from '@keystone/core';
 import { EWT_RATE, lineWithTax, statementTotals, VAT_RATE } from './rules';
-import { Letterhead, Lines, Meta, orDash, Sheet } from '@keystone/kit';
+import { Letterhead, Lines, Meta, orDash, paperHeading, Sheet } from '@keystone/kit';
 
 // The company's Billing Statement: who it is for, the invoice dates and penalty terms, the
 // charges with tax, then how to pay.
@@ -10,9 +10,9 @@ function Note({ title, text }: { title: string; text?: string }) {
   if (!text?.trim()) return null;
 
   return (
-    <section className="mt-3">
-      <p className="m-0 text-[11px] font-semibold tracking-[0.04em] uppercase">{title}</p>
-      <p className="m-0 mt-0.5 text-[11px] whitespace-pre-line text-paper-muted">{text}</p>
+    <section className="mt-4">
+      <p className={`m-0 ${paperHeading}`}>{title}</p>
+      <p className="m-0 mt-1 text-[11px] whitespace-pre-line text-paper-muted">{text}</p>
     </section>
   );
 }
