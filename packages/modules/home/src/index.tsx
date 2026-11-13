@@ -49,20 +49,28 @@ function Home() {
               <button
                 type="button"
                 onClick={() => go(m.id)}
-                className="group flex h-full w-full flex-col gap-3 rounded-tile border border-line bg-surface p-[22px] text-left transition-[border-color,background-color,transform] duration-200 ease-out hover:border-gold hover:bg-surface-2 motion-safe:hover:-translate-y-0.5"
+                className="group relative flex h-full w-full flex-col rounded-tile border border-line bg-surface p-[22px] text-left transition-[border-color,background-color,transform] duration-200 ease-out hover:border-gold hover:bg-surface-2 motion-safe:hover:-translate-y-0.5"
               >
-                <span className="flex items-start justify-between gap-3">
-                  <span className="font-display text-sm font-semibold text-ink">{m.title}</span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    {m.soon && <span className="rounded-pill border border-line px-1.5 text-[10px] leading-4 font-semibold text-ink-3">Coming soon</span>}
+                {/* A screen coming soon shows its tile as it will look, faded under a notice across the whole tile. */}
+                <span className={`flex flex-1 flex-col gap-3 ${m.soon ? 'opacity-30 blur-[2px]' : ''}`}>
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="font-display text-sm font-semibold text-ink">
+                      {m.title}
+                      {m.soon && <span className="sr-only"> Coming soon</span>}
+                    </span>
                     <KeyBadge n={index(m.id)} />
                   </span>
+                  <span className="flex-1 text-[13px] text-ink-2">{m.blurb}</span>
+                  {label && (
+                    <span className="flex items-center justify-between gap-2 border-t border-line pt-3 text-xs text-ink-2">
+                      {label}
+                      <b className="font-display text-[12.5px] font-semibold text-gold-bright tabular-nums">{value}</b>
+                    </span>
+                  )}
                 </span>
-                <span className="flex-1 text-[13px] text-ink-2">{m.blurb}</span>
-                {label && (
-                  <span className="flex items-center justify-between gap-2 border-t border-line pt-3 text-xs text-ink-2">
-                    {label}
-                    <b className="font-display text-[12.5px] font-semibold text-gold-bright tabular-nums">{value}</b>
+                {m.soon && (
+                  <span aria-hidden="true" className="absolute inset-0 grid place-items-center rounded-tile px-6 text-center">
+                    <span className="font-display text-lg font-semibold text-gold-bright">Coming soon</span>
                   </span>
                 )}
               </button>
