@@ -42,6 +42,8 @@ The ID card's foil stripe is flat gold. There are no gradients anywhere.
 - **Registers:**
   - Real `<table>` elements, with 45px rows and 1px lines.
   - The identity column takes the spare width, and figures are right-aligned.
+  - A figure is never cut short. Where a window is too narrow for every column, the register leaves out a breakdown
+    shown elsewhere (`detail` columns, such as the parts of gross pay on Payroll's cut-off) and keeps the totals.
   - One status capsule per row and one `⋯` menu at the far right.
   - Click a row, or press Enter on it, to load the record into the form.
 - **Buttons:** primary is flat gold with dark ink; secondary is outlined; quiet has no outline. They are 36px tall (28px

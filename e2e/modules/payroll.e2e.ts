@@ -231,6 +231,33 @@ test('shows the payroll sheet or one payslip, the sheet on a landscape A4 with e
   expect(Number(page?.[2])).toBeCloseTo(595.28, 1);
 });
 
+// 1100 px is Keystone's narrowest window. The cut-off cannot show all nine columns whole there, so it keeps Gross,
+// Deductions and Net pay and leaves what adds up to Gross to the payroll sheet below, until the window has room.
+test('keeps every figure of the cut-off whole in a narrow window, and shows its breakdown once there is room', async ({ app, screen, browser }) => {
+  await browser.setViewport({ width: 1100, height: 800 });
+  await app.open('/#payroll');
+  await fillPay(await openJuansPay(screen), JUAN);
+  const cutoff = screen.getByRole('table', 'Cut-off');
+
+  await expect(cutoff.getByRole('row', 'Juan Miguel P. Reyes 0/11 ₱1,000.00 -₱719.12 ₱280.88')).toBeVisible();
+  await expect(cutoff.getByRole('columnheader', 'Compensation')).toBeHidden();
+
+  // Net pay ends inside the panel, where its Close cut-off button does, not past its edge.
+  const netPay = await cutoff.getByRole('columnheader', 'Net pay').boundingBox();
+  const panelEdge = await screen.getByRole('button', 'Close cut-off').boundingBox();
+
+  expect((netPay?.x ?? 0) + (netPay?.width ?? Infinity)).toBeLessThanOrEqual((panelEdge?.x ?? 0) + (panelEdge?.width ?? 0));
+
+  // Nothing but a long name is cut short with an ellipsis.
+  const cutShort = await browser.evaluate(() => [...document.querySelectorAll<HTMLTableCellElement>('table[aria-label="Cut-off"] :is(th, td)')]
+    .flatMap((c) => (c.cellIndex > 0 && c.scrollWidth > c.clientWidth ? [c.textContent] : [])));
+
+  expect(cutShort).toEqual([]);
+
+  await browser.setViewport({ width: 1440, height: 900 });
+  await expect(cutoff.getByRole('row', 'Juan Miguel P. Reyes 0/11 ₱0.00 ₱1,000.00 ₱0.00 ₱0.00 ₱1,000.00 -₱719.12 ₱280.88')).toBeVisible();
+});
+
 test('closes and reopens a cut-off, and Overview and the Activity Log follow', async ({ app, screen }) => {
   await app.open('/#overview');
   await expect(screen.getByRole('definition').filter({ hasText: 'No cut-off closed yet' })).toBeVisible();
@@ -299,7 +326,9 @@ test('works out the monthly pay and the shares from the tables, and takes the em
   await expect(deductions()).toHaveText('₱756.62');
 });
 
-test('prices the regression cut-off from Timekeeping, closes it, and prints the payslip', async ({ app, screen }) => {
+test('prices the regression cut-off from Timekeeping, closes it, and prints the payslip', async ({ app, screen, browser }) => {
+  // Wide enough for the cut-off to show its breakdown of gross beside it.
+  await browser.setViewport({ width: 1440, height: 900 });
   await app.open('/#timekeeping');
   await addHoliday(screen, '2026-10-29', 'Special day', 'Special non-working day');
   await addHoliday(screen, '2026-10-30', 'Regular day', 'Regular holiday');

@@ -10,7 +10,8 @@ The APG design system: the look shared with the attendance tracker and the websi
   `EmptyState`, `FigureStrip`, `cn`.
 - `src/fields.tsx`: `Field`, `TextInput`, `CellInput`, `TextArea`, `SelectInput`, `Checkbox`, `FieldRow`, all built
   on Base UI's `Field` so every control is labelled.
-- `src/register.tsx`: `Register` (a real table with keyboard-openable rows) and `RowMenu`.
+- `src/register.tsx`: `Register` (a real table with keyboard-openable rows; a column marked `detail`, a breakdown it
+  can do without, is left out while the table is too narrow to show every column whole) and `RowMenu`.
 - `src/overlays.tsx`: `FeedbackProvider`, `useNotify` (toasts), `useConfirm` (an alert dialog for anything
   destructive), `AlertSheet` (an alert dialog its owner opens and closes, with its own buttons), `Sheet` (dialog).
 
