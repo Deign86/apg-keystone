@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
+import { tinyPaperText } from '../support/paper';
 
 // Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved (₱13,150.00 to
 // JL Santos Printing Services) and 0141 for approval (₱35,000.00 to Vergara & Associates Law Office, check 0001188).
@@ -162,7 +163,7 @@ test('an approved voucher opens read-only and copies to a new voucher', async ({
   await expect(register.getByRole('row', /^CV-2026-0140 .*Approved/)).toBeVisible();
 });
 
-test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash voucher', async ({ app, screen }) => {
+test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash voucher', async ({ app, screen, browser }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
@@ -205,6 +206,9 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   await form.getByRole('textbox', 'Approved by').fill('Mark Anthony Santos');
   await expect(paper.getByText('Chief Executive Officer').first()).toBeVisible();
   await expect(paper.getByText('Mark Anthony Santos').first()).toBeVisible();
+
+  // Its labels included, nothing on it is smaller than 11px.
+  expect(await tinyPaperText(browser)).toEqual([]);
 });
 
 test('draws the check on an account kept in Bank Accounts, and the next voucher starts with it', async ({ app, screen }) => {

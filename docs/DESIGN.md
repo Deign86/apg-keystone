@@ -24,8 +24,8 @@ These go against a skill rule because every APG system does them. Each one is ma
 - **The cream ink `#f6f2e9`:** the attendance tracker's text colour. The inspector warns about it; it stays.
 - **The 58px Orbitron greeting on Home:** the kiosk's own front door. Every other screen title is 34px.
 - **Small type on the ID card:** the card is drawn at true CR80 size (54mm wide), so its 8px text is about 2mm, normal
-  for a printed card. The ID Maker screen is inspected with `--allow tiny-text`; every other screen has nothing under
-  11px.
+  for a printed card. The ID Maker screen is inspected with `--allow tiny-text`; every other screen, its papers
+  included, has nothing under 11px.
 
 The ID card's foil stripe is flat gold. There are no gradients anywhere.
 

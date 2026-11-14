@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
+import { tinyPaperText } from '../support/paper';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
 // and 010099-2026 sent (due Nov 5), so a new statement is 010100-2026. Novatek (C-001) is a VAT client that withholds
@@ -110,13 +111,15 @@ test('asks before voiding a statement', async ({ app, screen }) => {
   await expect(row.getByRole('cell', 'Void')).toBeVisible();
 });
 
-test('prints the company billing statement with the payment instructions', async ({ app, screen }) => {
+test('prints the company billing statement with the payment instructions', async ({ app, screen, browser }) => {
   await app.open('/#billing');
   const statement = screen.getByRole('article', 'Billing statement 010100-2026');
 
   await expect(statement).toBeVisible();
   await expect(statement.getByText('Account Number: 4011 0258 68', { exact: false })).toBeVisible();
   await expect(statement.getByText('5% penalty charge will be applied to delayed monthly payments.')).toBeVisible();
+  // Its labels included, nothing on it is smaller than 11px.
+  expect(await tinyPaperText(browser)).toEqual([]);
 });
 
 // Pay into lists the company's bank accounts (packages/modules/banks, through the bank-accounts service). The sample
