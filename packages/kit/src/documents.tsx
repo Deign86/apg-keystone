@@ -161,11 +161,13 @@ export function Letterhead({ company, title, no, date, nameOnly }: { company: Co
   );
 }
 
+// The papers' smallest text is 11px, the house minimum (docs/DESIGN.md), like every screen's but the ID card's.
+
 /** A heading on a paper's tinted band (a table's columns, a total): the paper's gold, in tracked capitals. */
-export const paperHeading = 'text-[10px] font-semibold tracking-[0.14em] text-paper-gold uppercase';
+export const paperHeading = 'text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase';
 
 /** The label of a box on a paper: small tracked capitals in the paper's grey. */
-export const paperLabel = 'text-[10px] font-semibold tracking-[0.08em] text-paper-muted uppercase';
+export const paperLabel = 'text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase';
 
 /**
  * A document's facts as one ruled box, two to a row: a firm line around it and light ones between, each column's

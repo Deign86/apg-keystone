@@ -147,7 +147,7 @@ export const Payslip = forwardRef<HTMLDivElement, { line: PayLine; cutoff: Cutof
         <span className="font-display text-[13px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Net pay</span>
         <span className="text-base font-bold tabular-nums">{peso(p.net)}</span>
       </div>
-      <p className="m-0 mt-2 text-center text-[10.5px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
+      <p className="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
       <Signatures names={[['', 'Prepared by'], [line.name, 'Employee signature']]} />
     </Sheet>
   );
