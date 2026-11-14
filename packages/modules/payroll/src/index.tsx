@@ -139,13 +139,15 @@ function Payroll() {
     key, header, width: 116, align: 'right', cell: (l) => <span className={cn(strong && 'font-semibold')}>{peso(value(l))}</span>,
   });
 
+  // What adds up to Gross is a breakdown: in a narrow window the cut-off keeps Gross, Deductions and Net pay whole and
+  // leaves the breakdown to the payroll sheet below and the payslips.
   const cutColumns: Column<PayLine>[] = [
     { key: 'name', header: 'Employee', cell: (l) => <span title={l.name}>{l.name}</span> },
     { key: 'days', header: 'Days', width: 64, align: 'right', cell: (l) => `${l.pay.paidDays}/${l.pay.scheduled}` },
-    money('comp', 'Compensation', (l) => l.pay.compensation),
-    money('allow', 'Allowances', (l) => l.pay.allowances),
-    money('short', 'Late, half day', (l) => -l.pay.shortfall),
-    money('ot', 'Overtime', (l) => l.pay.overtime),
+    { ...money('comp', 'Compensation', (l) => l.pay.compensation), detail: true },
+    { ...money('allow', 'Allowances', (l) => l.pay.allowances), detail: true },
+    { ...money('short', 'Late, half day', (l) => -l.pay.shortfall), detail: true },
+    { ...money('ot', 'Overtime', (l) => l.pay.overtime), detail: true },
     money('gross', 'Gross', (l) => l.pay.gross),
     money('ded', 'Deductions', (l) => -l.pay.deductions),
     money('net', 'Net pay', (l) => l.pay.net, true),

@@ -1,6 +1,6 @@
 import { Menu } from '@base-ui/react/menu';
 import { MoreHorizontal } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from './primitives';
 
 // A register: a real <table> with gold header capitals, rows on a 45px pitch split by
@@ -13,7 +13,45 @@ export interface Column<T> {
   /** Fixed width in px; leave out for the identity column, which takes the spare width. */
   width?: number;
   align?: 'left' | 'right';
+  /**
+   * A breakdown the table can do without, such as the parts of a total shown beside it. Left out while the table is
+   * too narrow to show every column whole, so the figures that stay are never cut short; show it elsewhere too.
+   */
+  detail?: boolean;
   cell: (row: T) => ReactNode;
+}
+
+/** What an identity column (one with no width) needs before a table counts as wide enough for every column: a name. */
+const IDENTITY_ROOM = 160;
+
+/** The ⋯ menu's column. */
+const MENU_WIDTH = 40;
+
+/**
+ * Whether the box is at least `need` px wide, measured again whenever it changes size. Until it has a width (a hidden
+ * screen, or no layout at all), it counts as wide enough.
+ */
+function useRoomFor(need: number) {
+  const box = useRef<HTMLDivElement>(null);
+  const [roomy, setRoomy] = useState(true);
+
+  useLayoutEffect(() => {
+    const b = box.current;
+
+    if (!b) return;
+
+    const measure = () => {
+      if (b.clientWidth) setRoomy(b.clientWidth >= need);
+    };
+
+    const watch = new ResizeObserver(measure);
+    watch.observe(b);
+    measure();
+
+    return () => watch.disconnect();
+  }, [need]);
+
+  return [box, roomy] as const;
 }
 
 export interface RowAction {
@@ -38,18 +76,22 @@ export function Register<T>({
   empty: ReactNode;
   caption?: string;
 }) {
+  const need = columns.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), actions ? MENU_WIDTH : 0);
+  const [box, roomy] = useRoomFor(need);
+  const shown = roomy ? columns : columns.filter((c) => !c.detail);
+
   return (
     // Relative, so the screen-reader-only caption and header scroll with the table instead of widening a phone's page.
-    <div className="relative overflow-x-auto">
+    <div ref={box} className="relative overflow-x-auto">
       <table className="w-full border-collapse text-[13px]" aria-label={label}>
         {caption && <caption className="sr-only">{caption}</caption>}
         <colgroup>
-          {columns.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}
+          {shown.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}
           {actions && <col style={{ width: 40 }} />}
         </colgroup>
         <thead>
           <tr>
-            {columns.map((c) => (
+            {shown.map((c) => (
               <th
                 key={c.key}
                 scope="col"
@@ -70,7 +112,7 @@ export function Register<T>({
               onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(row); } : undefined}
               className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2')}
             >
-              {columns.map((c) => (
+              {shown.map((c) => (
                 <td key={c.key} className={cn('h-[45px] max-w-0 truncate px-2.5', c.align === 'right' && 'text-right tabular-nums')}>
                   {c.cell(row)}
                 </td>
