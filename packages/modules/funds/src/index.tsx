@@ -1,20 +1,30 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
-import { useCallback, useMemo, useState } from 'react';
-import { count, nameOf, payees, peso, SERVICES, shortDate } from '@keystone/core';
-import { FormCard, useDraft, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos } from '@keystone/core';
+import { FormCard, LineEditor, printElement, savePdf, useDraft, useKeystone, useModuleApp, Workspace, type ModuleDef } from '@keystone/kit';
 import {
-  ASAP, decideRefusal, decideRequest, decides, decisionLine, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting,
-  newRequest, requestDocuments, requestDraftOf, requestLock, requestOf, requestsNewestFirst, requestTone, requestTotal,
-  settleText, waitingRequests, withdrawRequest, type FundsRequest, type Verdict,
+  accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
+  fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftOf, requestLock, requestOf, requestPreview, requestsNewestFirst,
+  requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
+  type Verdict,
 } from './rules';
+import { TransferPaper } from './TransferPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
 const DRAFT = 'funds.draft';
 
 const WHEN = [{ value: ASAP, label: 'As soon as possible' }, { value: 'date', label: 'By a date' }];
 
-/** One request waiting for the owner: what, how much, to whom, by when, and the two answers. Fits a phone. */
-function Waiting({ request: r }: { request: FundsRequest }) {
+const PAID_BY = [{ value: 'transfer', label: 'Bank transfer' }, { value: 'check', label: 'Check' }];
+
+/** The name a fund transfer request's PDF is saved under. */
+const pdfName = (r: FundsRequest) => `${r.no} fund transfer request.pdf`;
+
+/**
+ * One request waiting for the owner: how much, what for, each expense, where the money goes, who asked and by when,
+ * and the two answers. Fits a phone. `onApproved` opens a transfer once it is approved, to print or save its paper.
+ */
+function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved: (no: string) => void }) {
   const { state, run } = useKeystone();
   const app = useModuleApp();
   const confirm = useConfirm();
@@ -22,7 +32,17 @@ function Waiting({ request: r }: { request: FundsRequest }) {
   const vouchers = app.service(SERVICES.voucherDrafts);
   const payee = nameOf(state, r.payee);
   const amount = peso(requestTotal(r));
-  const decide = (verdict: Verdict) => run((s, c) => decideRequest(s, r.no, verdict, note, c, vouchers));
+  const to = r.pay === 'transfer' ? (r.account ? accountLabel(r.account) : 'an account not given') : payee;
+
+  const approving = r.pay === 'transfer'
+    ? 'Approving makes its fund transfer request, ready to print or save as a PDF.'
+    : vouchers ? 'A check voucher for this amount goes to accounting, For Approval.' : 'Check Vouchers is not installed, so no voucher is drafted.';
+
+  const decide = (verdict: Verdict) => {
+    const out = run((s, c) => decideRequest(s, r.no, verdict, note, c, vouchers));
+
+    if (out.ok && verdict === 'Approved' && r.pay === 'transfer') onApproved(r.no);
+  };
 
   return (
     <li>
@@ -33,9 +53,18 @@ function Waiting({ request: r }: { request: FundsRequest }) {
         </div>
         <p className="m-0 font-display text-2xl text-ink tabular-nums">{amount}</p>
         <p className="m-0 text-[13px] text-pretty text-ink">{r.purpose}</p>
+        <ul aria-label={`Expenses on ${r.no}`} className="m-0 flex list-none flex-col gap-1 border-y border-line p-0 py-2 text-xs">
+          {expensesOf(r).map((l, i) => (
+            <li key={i} className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 text-pretty">{l.desc}</span>
+              <span className="shrink-0 tabular-nums">{peso(toCentavos(l.amt))}</span>
+            </li>
+          ))}
+        </ul>
         <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
-          <dt className="text-ink-2">Payee</dt>
-          <dd className="m-0 truncate">{payee}</dd>
+          {r.pay === 'transfer'
+            ? <><dt className="text-ink-2">Transfer to</dt><dd className="m-0 break-words">{to}</dd></>
+            : <><dt className="text-ink-2">Payee</dt><dd className="m-0 truncate">{payee} (by check)</dd></>}
           <dt className="text-ink-2">Asked by</dt>
           <dd className="m-0 truncate">{r.requester} on {shortDate(r.date)}</dd>
         </dl>
@@ -45,13 +74,13 @@ function Waiting({ request: r }: { request: FundsRequest }) {
         <div className="mt-auto flex flex-wrap justify-end gap-2">
           <Button
             kind="danger"
-            onClick={() => confirm({ title: `Decline ${r.no}?`, body: `${amount} to ${payee}. ${r.requester} sees your answer${note.trim() ? ' and your note' : ''}. A declined request cannot be reopened.`, confirm: 'Decline', danger: true, onConfirm: () => decide('Declined') })}
+            onClick={() => confirm({ title: `Decline ${r.no}?`, body: `${amount} to ${to}. ${r.requester} sees your answer${note.trim() ? ' and your note' : ''}. A declined request cannot be reopened.`, confirm: 'Decline', danger: true, onConfirm: () => decide('Declined') })}
           >
             Decline
           </Button>
           <Button
             kind="primary"
-            onClick={() => confirm({ title: `Approve ${r.no}?`, body: `${amount} to ${payee}. ${vouchers ? 'A check voucher for this amount goes to accounting, For Approval.' : 'Check Vouchers is not installed, so no voucher is drafted.'}`, confirm: 'Approve', onConfirm: () => decide('Approved') })}
+            onClick={() => confirm({ title: `Approve ${r.no}?`, body: `${amount} ${r.pay === 'transfer' ? 'by bank transfer ' : ''}to ${to}. ${approving}`, confirm: 'Approve', onConfirm: () => decide('Approved') })}
           >
             Approve
           </Button>
@@ -62,18 +91,33 @@ function Waiting({ request: r }: { request: FundsRequest }) {
 }
 
 function Funds() {
-  const { state, ctx, run, notify, store } = useKeystone();
+  const { state, ctx, run, notify, store, platform } = useKeystone();
   const app = useModuleApp();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newRequest(state, ctx));
   const [error, setError] = useState<string | null>(null);
+  const paper = useRef<HTMLElement>(null);
   const editing = draft.editing ? requestOf(state, draft.editing) : undefined;
   const locked = editing ? requestLock(editing, ctx) : null;
   // A request that can no longer be changed shows as it was saved.
   const shown = useMemo(() => (locked && editing ? requestDraftOf(editing) : draft), [locked, editing, draft]);
+  // The fund transfer request as it would print: as saved once the request can no longer change, else as typed.
+  const live = locked && editing ? editing : requestPreview(state, draft, ctx);
+  const ready = editing && transferReady(editing) ? editing : undefined;
   const waiting = decides(ctx) ? waitingRequests(state) : [];
   const refusal = decideRefusal(ctx);
   const staff = !!ctx.who && !decides(ctx);
+  const setAccount = (patch: Partial<TransferAccount>) => setDraft({ ...draft, account: { ...draft.account, ...patch } });
+
+  /** Opens a request in the form, and brings the form into view. */
+  const open = useCallback((no: string) => {
+    const r = requestOf(store.getState(), no);
+
+    if (!r) return;
+    setDraft(requestDraftOf(r));
+    setError(null);
+    requestAnimationFrame(() => document.getElementById('rf-form')?.scrollIntoView({ block: 'start' }));
+  }, [store, setDraft]);
 
   const save = useCallback(() => {
     const r = run((s, c) => fileRequest(s, draft, c));
@@ -93,12 +137,72 @@ function Funds() {
   const columns: Column<FundsRequest>[] = [
     { key: 'no', header: 'RF No.', width: 120, cell: (r) => <span className="font-semibold text-gold-bright tabular-nums">{r.no}</span> },
     { key: 'date', header: 'Filed', width: 104, cell: (r) => <span className="text-ink-2 tabular-nums">{shortDate(r.date)}</span> },
-    { key: 'purpose', header: 'For', cell: (r) => r.purpose },
+    { key: 'purpose', header: 'For', cell: (r) => <>{r.purpose} <span className="block text-xs text-ink-2">{r.pay === 'transfer' ? 'Bank transfer' : 'Check'}</span></> },
     { key: 'by', header: 'Asked by', width: 140, cell: (r) => r.requester },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (r) => <span className="font-semibold">{peso(requestTotal(r))}</span> },
     { key: 'settle', header: 'Settle', width: 104, cell: (r) => <span className="tabular-nums">{settleText(r)}</span> },
     { key: 'status', header: 'Status', width: 140, align: 'right', cell: (r) => <StatusPill status={r.status} tone={requestTone(r.status)} /> },
   ];
+
+  const form = (
+    <FormCard
+      id="rf-form"
+      eyebrow="Request for funds"
+      title={editing ? `${locked ? 'Viewing' : 'Editing'} ${editing.no}` : 'New request'}
+      onSubmit={save}
+      error={error}
+      actions={<>
+        {ready && <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>}
+        {ready && <Button onClick={() => paper.current && savePdf(paper.current, pdfName(ready), platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>}
+        {editing?.voucher && app.has('vouchers') && <Button onClick={() => app.go('vouchers')}>Open Check Vouchers</Button>}
+        {editing && !locked && <Button kind="danger" onClick={() => withdraw(editing)}>Withdraw…</Button>}
+        {locked
+          ? <Button onClick={() => { setDraft(newRequest(state, ctx)); setError(null); }}>New request</Button>
+          : <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Send for approval'}</Button>}
+      </>}
+    >
+      {locked && <p className="m-0 text-[13px] text-pretty text-ink-2">{locked}</p>}
+      {editing?.decision && (
+        <p className="m-0 text-[13px] text-pretty text-ink">
+          {decisionLine(editing)}{editing.voucher && ` ${editing.voucher} is drafted for accounting.`}{ready && ' Its fund transfer request is ready to print or save as a PDF.'}
+        </p>
+      )}
+      {/* A disabled fieldset turns every control inside it off at once. */}
+      <fieldset disabled={!!locked} className="m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0">
+        <Field label="What it is for" hint="In a line: the fund, event or purchase the expenses below are for.">
+          <TextArea value={shown.purpose} onChange={(purpose) => setDraft({ ...draft, purpose })} />
+        </Field>
+        <LineEditor title="Expenses" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
+        <p className="m-0 text-right font-display text-lg font-semibold text-gold-bright tabular-nums" aria-live="polite">
+          <span className="sr-only">Total </span>{peso(requestTotal(live))}
+        </p>
+        <Field label="Paid by" hint={shown.pay === 'transfer' ? 'Once approved, it becomes a fund transfer request to this account, to print or save as a PDF.' : 'Once approved, a check voucher for the total goes to accounting.'}>
+          <SelectInput value={shown.pay} onChange={(pay) => setDraft({ ...draft, pay: pay === 'check' ? 'check' : 'transfer' })} options={PAID_BY} />
+        </Field>
+        {shown.pay === 'transfer'
+          ? <>
+            <FieldRow>
+              <Field label="Bank"><TextInput placeholder="BDO" value={shown.account.bank} onChange={(bank) => setAccount({ bank })} /></Field>
+              <Field label="Branch"><TextInput placeholder="Optional" value={shown.account.branch} onChange={(branch) => setAccount({ branch })} /></Field>
+            </FieldRow>
+            <FieldRow>
+              <Field label="Account name" hint="As the bank holds it."><TextInput value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field>
+              <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" value={shown.account.number} onChange={(number) => setAccount({ number })} /></Field>
+            </FieldRow>
+          </>
+          : <Field label="Payee">
+            <SelectInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
+          </Field>}
+        <FieldRow>
+          <Field label="Settle"><SelectInput value={shown.when} onChange={(when) => setDraft({ ...draft, when: when === 'date' ? 'date' : ASAP })} options={WHEN} /></Field>
+          {shown.when === 'date' && <Field label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
+        </FieldRow>
+        <Field label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
+          <TextInput readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
+        </Field>
+      </fieldset>
+    </FormCard>
+  );
 
   return (
     <>
@@ -116,7 +220,7 @@ function Funds() {
             <span className="text-xs text-ink-2">{count(waiting.length, 'request')}</span>
           </div>
           <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
-            {waiting.map((r) => <Waiting key={r.no} request={r} />)}
+            {waiting.map((r) => <Waiting key={r.no} request={r} onApproved={open} />)}
           </ul>
         </section>
       )}
@@ -141,48 +245,9 @@ function Funds() {
         />
       </Panel>
 
-      <div className="max-w-[720px]">
-        <FormCard
-          id="rf-form"
-          eyebrow="Request for funds"
-          title={editing ? `${locked ? 'Viewing' : 'Editing'} ${editing.no}` : 'New request'}
-          onSubmit={save}
-          error={error}
-          actions={<>
-            {editing?.voucher && app.has('vouchers') && <Button onClick={() => app.go('vouchers')}>Open Check Vouchers</Button>}
-            {editing && !locked && <Button kind="danger" onClick={() => withdraw(editing)}>Withdraw…</Button>}
-            {locked
-              ? <Button onClick={() => { setDraft(newRequest(state, ctx)); setError(null); }}>New request</Button>
-              : <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Send for approval'}</Button>}
-          </>}
-        >
-          {locked && <p className="m-0 text-[13px] text-pretty text-ink-2">{locked}</p>}
-          {editing?.decision && (
-            <p className="m-0 text-[13px] text-pretty text-ink">
-              {decisionLine(editing)}{editing.voucher && ` ${editing.voucher} is drafted for accounting.`}
-            </p>
-          )}
-          {/* A disabled fieldset turns every control inside it off at once. */}
-          <fieldset disabled={!!locked} className="m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0">
-            <Field label="What it is for" hint="The event or purchase, and what the money pays for.">
-              <TextArea value={shown.purpose} onChange={(purpose) => setDraft({ ...draft, purpose })} />
-            </Field>
-            <FieldRow>
-              <Field label="Amount"><TextInput figures placeholder="0.00" value={shown.amount} onChange={(amount) => setDraft({ ...draft, amount })} /></Field>
-              <Field label="Payee">
-                <SelectInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
-              </Field>
-            </FieldRow>
-            <FieldRow>
-              <Field label="Settle"><SelectInput value={shown.when} onChange={(when) => setDraft({ ...draft, when: when === 'date' ? 'date' : ASAP })} options={WHEN} /></Field>
-              {shown.when === 'date' && <Field label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
-            </FieldRow>
-            <Field label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
-              <TextInput readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
-            </Field>
-          </fieldset>
-        </FormCard>
-      </div>
+      {shown.pay === 'transfer'
+        ? <Workspace form={form} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
+        : <div className="max-w-[720px]">{form}</div>}
     </>
   );
 }
@@ -191,7 +256,7 @@ export const fundsModule: ModuleDef = {
   id: 'funds',
   title: 'Requests for Funds',
   section: 'Disbursements',
-  blurb: 'Ask for money for a purpose. The owner approves or declines, and an approval drafts the check voucher.',
+  blurb: 'List the expenses you need money for. The owner approves or declines; an approval makes the fund transfer request, or drafts the check voucher.',
   // Right after Check Vouchers, which its approvals feed.
   order: 2.5,
   onHome: true,

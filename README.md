@@ -1,7 +1,7 @@
 # Keystone
 
-Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (staff ask, the owner approves or
-declines from a PC or a phone, and an approval drafts the check voucher), Billing Statements, the ID Maker, a shared
+Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (staff list the expenses, the owner
+approves or declines from a PC or a phone, and an approval makes the fund transfer request or drafts the check voucher), Billing Statements, the ID Maker, a shared
 Directory, an Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
 - **The attendance tracker:** starts the app, or opens its download page when it is not installed.

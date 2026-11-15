@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
+import { lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
-  dataOf, decideRefusal, decideRequest, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest, nextRequestNo,
-  requestDraftOf, requestLock, waitingRequests, withdrawRequest, type RequestDraft,
+  dataOf, decideRefusal, decideRequest, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
+  nextRequestNo, requestDraftOf, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -14,8 +14,22 @@ const it2: Member = { uid: 'it-1', name: 'Paolo Santos', role: 'staff' };
 const local = at();
 const state = () => sampleState();
 
+/** Expense lines as the form holds them: a description and the amount as typed. */
+const lines = (...typed: [string, string][]) => typed.map(([desc, amount]) => lineDraft({ desc, amount }));
+
+/** A request paid by check, to a payee in the directory. */
 const ask = (extra: Partial<RequestDraft> = {}): RequestDraft => ({
-  ...newRequest(state(), local), purpose: 'Christmas party: venue deposit', amount: '48,000', payee: 'V-002', requester: 'Ana Cruz', ...extra,
+  ...newRequest(state(), local), purpose: 'Christmas party: venue deposit', lines: lines(['Venue deposit', '48,000']), pay: 'check', payee: 'V-002',
+  requester: 'Ana Cruz', ...extra,
+});
+
+/** The account HR's revolving fund is topped up into. */
+const fund = { bank: 'BDO', branch: 'Makati Ayala', name: 'Liza Ramos', number: '0012 3456 7890' };
+
+/** HR's expenses for the fortnight, to be paid back by a transfer into the fund's account. A blank line in the middle. */
+const topUp = (extra: Partial<RequestDraft> = {}): RequestDraft => ask({
+  purpose: 'Revolving fund, Nov 1 to 15', lines: lines(['Pantry groceries', '3,250.75'], ['', ''], ['Courier for payroll documents', '480']), pay: 'transfer',
+  account: { ...fund }, ...extra,
 });
 
 /** A Check Vouchers stand-in: numbers from 888-001 and keeps what it was asked. */
@@ -33,7 +47,7 @@ const vouchers: VoucherDrafts = {
 /** The sample data with requests filed by HR and IT, as the owner reads them. */
 function filed(): TerminalState {
   let s = fileRequest(state(), ask(), at(hr)).state;
-  s = fileRequest(s, ask({ purpose: 'Replacement laptop charger', amount: '2,450.50', payee: 'V-001', when: 'date', by: '2026-11-20' }), at(it2)).state;
+  s = fileRequest(s, ask({ purpose: 'Replacement laptop charger', lines: lines(['Laptop charger', '2,450.50']), payee: 'V-001', when: 'date', by: '2026-11-20' }), at(it2)).state;
 
   return s;
 }
@@ -52,8 +66,8 @@ describe('filing a request', () => {
   it('files For Approval as the member signed in, and logs who filed it but never what for or how much', () => {
     const r = fileRequest(state(), { ...ask(), requester: 'Someone else' }, at(hr));
     expect(r.record).toEqual({
-      no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Christmas party: venue deposit', amount: 48000, payee: 'V-002', settle: 'ASAP',
-      requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
+      no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Christmas party: venue deposit', lines: [{ desc: 'Venue deposit', amt: 48000 }], amount: 48000,
+      pay: 'check', payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
     });
     expect(r.message).toBe('RF-2026-0001 sent to the owner for approval.');
     expect(r.state.log[0]).toEqual({ when: '2026-11-02 10:00', mod: 'RF', text: 'RF-2026-0001 filed by Ana Cruz.' });
@@ -72,7 +86,9 @@ describe('filing a request', () => {
   it('refuses a request it cannot act on, with the sentence to show', () => {
     const s = state();
     expect(() => fileRequest(s, ask({ purpose: '  ' }), local)).toThrow('Say what the money is for.');
-    expect(() => fileRequest(s, ask({ amount: '0' }), local)).toThrow('Enter the amount needed.');
+    expect(() => fileRequest(s, ask({ lines: [lineDraft()] }), local)).toThrow('List the expenses, each with its amount.');
+    expect(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '0']) }), local)).toThrow('Enter the amount for line 1, Venue deposit.');
+    expect(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '48000'], ['', '500']) }), local)).toThrow('Say what line 2 is for.');
     expect(() => fileRequest(s, ask({ payee: 'V-999' }), local)).toThrow('Choose a payee from the directory.');
     expect(() => fileRequest(s, ask({ when: 'date', by: '' }), local)).toThrow('Choose the date it must be settled by, or ASAP.');
     expect(() => fileRequest(s, ask({ when: 'date', by: '2026-11-01' }), local)).toThrow('Nov 1, 2026 has passed. Choose a later date, or ASAP.');
@@ -82,7 +98,7 @@ describe('filing a request', () => {
   it('lets the requester change or withdraw their own request while it waits, and nobody else', () => {
     const s = filed();
     const mine = dataOf(s).requests[0];
-    const edited = fileRequest(s, { ...requestDraftOf(mine), amount: '45000' }, at(hr));
+    const edited = fileRequest(s, { ...requestDraftOf(mine), lines: lines(['Venue deposit', '45000']) }, at(hr));
     expect(edited.record).toMatchObject({ no: 'RF-2026-0001', amount: 45000, status: 'For Approval', uid: 'hr-1' });
     expect(edited.state.log[0].text).toBe('RF-2026-0001 edited by Ana Cruz.');
 
@@ -94,6 +110,71 @@ describe('filing a request', () => {
     expect(withdrawn.record.status).toBe('Withdrawn');
     expect(withdrawn.state.log[0].text).toBe('RF-2026-0001 withdrawn by Ana Cruz.');
     expect(() => withdrawRequest(withdrawn.state, 'RF-2026-0001', at(hr))).toThrow('RF-2026-0001 is withdrawn and can no longer be changed.');
+  });
+});
+
+describe('a request paid by transfer', () => {
+  it('lists the expenses, totals them, and names the account to transfer to instead of a payee', () => {
+    const r = fileRequest(state(), topUp(), at(hr));
+    expect(r.record).toEqual({
+      no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Revolving fund, Nov 1 to 15',
+      lines: [{ desc: 'Pantry groceries', amt: 3250.75 }, { desc: 'Courier for payroll documents', amt: 480 }], amount: 3730.75,
+      pay: 'transfer', account: fund, payee: '', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
+    });
+    // The log, which everyone reads, still names only the request and who filed it.
+    expect(r.state.log[0].text).toBe('RF-2026-0001 filed by Ana Cruz.');
+  });
+
+  it('refuses an account it could not transfer to', () => {
+    const s = state();
+    expect(() => fileRequest(s, topUp({ account: { ...fund, bank: ' ' } }), local)).toThrow('Enter the bank of the account to transfer to.');
+    expect(() => fileRequest(s, topUp({ account: { ...fund, name: '' } }), local)).toThrow('Enter the account name, as the bank holds it.');
+    expect(() => fileRequest(s, topUp({ account: { ...fund, number: 'n/a' } }), local)).toThrow('Enter the account number to transfer to.');
+    // A check needs no account, and a transfer no payee.
+    expect(fileRequest(s, topUp({ payee: 'V-999' }), local).record.payee).toBe('');
+    expect(fileRequest(s, ask({ account: { ...fund, bank: '' } }), local).record).not.toHaveProperty('account');
+  });
+
+  it('starts each person\'s next request as their last one was paid, with the account their last transfer went to', () => {
+    const s = fileRequest(state(), topUp(), at(hr)).state;
+    expect(newRequest(s, at(hr))).toMatchObject({ pay: 'transfer', account: fund, purpose: '', lines: [{ desc: '', amount: '' }] });
+    // Nobody else's account is offered: IT starts as anyone who has filed nothing does, with a transfer to an account it types.
+    expect(newRequest(s, at(it2))).toMatchObject({ pay: 'transfer', account: { bank: '', branch: '', name: '', number: '' } });
+
+    const thenCheck = fileRequest(s, ask(), at(hr)).state;
+    expect(newRequest(thenCheck, at(hr))).toMatchObject({ pay: 'check', payee: 'V-002', account: fund });
+  });
+
+  it('keeps no account once switched to a check, and no payee once switched to a transfer', () => {
+    const r = fileRequest(state(), topUp(), at(hr));
+    const check = fileRequest(r.state, { ...requestDraftOf(r.record), pay: 'check', payee: 'V-002' }, at(hr)).record;
+    expect(check).toMatchObject({ pay: 'check', payee: 'V-002' });
+    expect(check).not.toHaveProperty('account');
+  });
+
+  it('approving makes the fund transfer request and drafts no voucher, even with Check Vouchers installed', () => {
+    const s = fileRequest(state(), topUp(), at(hr)).state;
+    const r = decideRequest(s, 'RF-2026-0001', 'Approved', '', at(owner), vouchers);
+    expect(r.record).toMatchObject({ status: 'Approved', decision: { by: 'Mark Reyes', at: '2026-11-02 10:00' } });
+    expect(r.record).not.toHaveProperty('voucher');
+    expect(r.state.cv).toEqual(s.cv);
+    expect(transferReady(r.record)).toBe(true);
+    expect(transferReady(dataOf(s).requests[0])).toBe(false);
+    expect(r.message).toBe('RF-2026-0001 approved. Its fund transfer request is ready to print or save as a PDF.');
+    expect(r.state.log[0].text).toBe('RF-2026-0001 approved by Mark Reyes.');
+    expect(fundsFinding(r.state, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; open it to print or save its fund transfer request.' });
+
+    const declined = decideRequest(s, 'RF-2026-0001', 'Declined', '', at(owner), vouchers).record;
+    expect(transferReady(declined)).toBe(false);
+  });
+
+  it('previews the paper as the form is typed, before anything is checked', () => {
+    const s = fileRequest(state(), ask(), at(hr)).state;
+    const preview = requestPreview(s, { ...topUp(), lines: lines(['Pantry groceries', '3,250.75'], ['Courier', '']) }, at(hr));
+    expect(preview).toMatchObject({
+      no: 'RF-2026-0002', date: '2026-11-02', lines: [{ desc: 'Pantry groceries', amt: 3250.75 }, { desc: 'Courier', amt: 0 }], amount: 3250.75,
+      pay: 'transfer', account: fund, requester: 'Ana Cruz', status: 'For Approval',
+    });
   });
 });
 
@@ -172,9 +253,22 @@ describe('the saved data', () => {
   it('reads damaged or older data as what it can', () => {
     const s = withModuleData(state(), 'funds', { requests: [{ no: 'RF-2026-0007', amount: 'lots', status: 'Paid', decision: 'yes' }, 'junk'], last: 3 });
     expect(dataOf(s)).toEqual({
-      requests: [{ no: 'RF-2026-0007', date: '', purpose: '', amount: 0, payee: '', settle: 'ASAP', requester: '', status: 'For Approval' }],
+      requests: [{ no: 'RF-2026-0007', date: '', purpose: '', lines: [], amount: 0, pay: 'check', payee: '', settle: 'ASAP', requester: '', status: 'For Approval' }],
       last: '',
     });
     expect(dataOf(state())).toEqual({ requests: [], last: '' });
+  });
+
+  it('reads a request filed before expenses and transfers as a check for its purpose', () => {
+    const s = withModuleData(state(), 'funds', {
+      requests: [{ no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Christmas party: venue deposit', amount: 48000, payee: 'V-002', status: 'Approved', account: { bank: 'BDO' } }],
+      last: 'RF-2026-0001',
+    });
+
+    const [r] = dataOf(s).requests;
+    expect(r).toMatchObject({ pay: 'check', lines: [] });
+    expect(r).not.toHaveProperty('account');
+    expect(expensesOf(r)).toEqual([{ desc: 'Christmas party: venue deposit', amt: 48000 }]);
+    expect(requestDraftOf(r).lines).toMatchObject([{ desc: 'Christmas party: venue deposit', amount: '48000' }]);
   });
 });
