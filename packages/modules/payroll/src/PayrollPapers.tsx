@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode } from 'react';
-import { peso, periodLabel, type Centavos, type Company } from '@keystone/core';
+import { DASH, peso, periodLabel, type Centavos, type Company } from '@keystone/core';
 import { FitWidth, Letterhead, Meta, Sheet, Signatures, orDash, paperHeading } from '@keystone/kit';
 import { totalOf, type Cutoff, type PayKey, type PayLine } from './rules';
 
@@ -10,7 +10,7 @@ import { totalOf, type Cutoff, type PayKey, type PayLine } from './rules';
 // everyone signs, and one payslip per employee.
 
 /** "7,068.00", or a dash for nothing, as on the sheet. */
-const figure = (c: Centavos) => (c ? peso(c).replace('₱', '') : '—');
+const figure = (c: Centavos) => (c ? peso(c).replace('₱', '') : DASH);
 
 interface SheetColumn { header: string; cell: (l: PayLine) => ReactNode; total?: PayKey }
 

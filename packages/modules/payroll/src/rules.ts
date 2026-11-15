@@ -1,5 +1,5 @@
 import {
-  addDays, count, halfMonthOf, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
+  DASH, addDays, count, halfMonthOf, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
   moduleData, parseAmount, periodLabel, peso, recordOf, shortDate, stamp, sumCentavos, toCentavos, toPesos, today,
   withModuleData, type AttendanceTally, type Centavos, type Change, type Ctx, type EmployeeAttendance, type Figure,
   type Finding, type JsonObject, type JsonValue, type Period, type TerminalState,
@@ -267,7 +267,7 @@ export function payrollFigure(s: TerminalState): Figure {
   const runs = dataOf(s).runs;
   const latest = [...runs].sort((a, b) => b.to.localeCompare(a.to))[0];
 
-  if (!latest) return { label: 'Last payroll', value: '—', caption: 'No cut-off closed yet' };
+  if (!latest) return { label: 'Last payroll', value: DASH, caption: 'No cut-off closed yet' };
   const net = sumCentavos(latest.rows, (r) => price(r.setup, r.tally, r.shares).net);
 
   return { label: 'Last payroll', value: peso(net), caption: `${periodLabel(latest)} · ${count(latest.rows.length, 'employee')}` };

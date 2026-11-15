@@ -4,6 +4,9 @@ import type { ISODate, Period } from './dates';
 // Fixed English (Philippines) formats, written out by hand so every machine prints the
 // same strings whatever its locale.
 
+/** What a missing value shows as: a dash (docs/DESIGN.md), in a register cell, a figure or a paper's blank field. */
+export const DASH = '—';
+
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -18,14 +21,14 @@ function parts(iso: ISODate | null | undefined) {
 export function longDate(iso: ISODate | null | undefined): string {
   const p = parts(iso);
 
-  return p ? `${MONTHS[p.m - 1]} ${p.d}, ${p.y}` : '—';
+  return p ? `${MONTHS[p.m - 1]} ${p.d}, ${p.y}` : DASH;
 }
 
 /** "Oct 20, 2026"; "—" when empty. */
 export function shortDate(iso: ISODate | null | undefined): string {
   const p = parts(iso);
 
-  return p ? `${MONTHS[p.m - 1].slice(0, 3)} ${p.d}, ${p.y}` : '—';
+  return p ? `${MONTHS[p.m - 1].slice(0, 3)} ${p.d}, ${p.y}` : DASH;
 }
 
 /** A pay period: "Nov 1–15, 2026", or across months "Oct 26 – Nov 8, 2026". */
@@ -33,7 +36,7 @@ export function periodLabel(p: Period): string {
   const a = parts(p.from);
   const b = parts(p.to);
 
-  if (!a || !b) return '—';
+  if (!a || !b) return DASH;
   const mon = (m: number) => MONTHS[m - 1].slice(0, 3);
 
   if (a.y !== b.y) return `${shortDate(p.from)} – ${shortDate(p.to)}`;

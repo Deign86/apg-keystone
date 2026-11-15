@@ -1,4 +1,5 @@
 import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { DASH } from '@keystone/core';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
 import {
@@ -137,7 +138,7 @@ function Members({ accounts }: { accounts: AppAccounts }) {
       key: 'name', header: 'Name',
       cell: (m) => <span title={m.name}>{m.name}{m.uid === ctx.who?.uid && <span className="text-ink-2"> (you)</span>}</span>,
     },
-    { key: 'email', header: 'Email', cell: (m) => (m.email ? <span title={m.email}>{m.email}</span> : <span className="text-ink-3">—</span>) },
+    { key: 'email', header: 'Email', cell: (m) => (m.email ? <span title={m.email}>{m.email}</span> : <span className="text-ink-3">{DASH}</span>) },
     { key: 'role', header: 'Role', width: 96, cell: (m) => roleLabel(m) },
   ];
 

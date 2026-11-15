@@ -1,5 +1,5 @@
 import {
-  count, datesBetween, isISODate, isJsonObject, isWeekday, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
+  DASH, count, datesBetween, isISODate, isJsonObject, isWeekday, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
   mondayOf, moduleData, nameOf, recordOf, recordsOf, shortDate, today, withModuleData, type AttendanceTally, type Change,
   type Ctx, type EmployeeAttendance, type Figure, type Finding, type ISODate, type TerminalState,
 } from '@keystone/core';
@@ -59,11 +59,11 @@ export const isTime = (t: string) => TIME.test(t);
 export const minutesOf = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 
 /** The local clock time of an instant, "08:15". */
-export const timeOf = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+export const timeOf = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; // taste-skill-ignore: a clock time
 
 /** "08:15" → "8:15 AM"; "" → "—". */
 export function clock12(t: string): string {
-  if (!isTime(t)) return '—';
+  if (!isTime(t)) return DASH;
   const h = Number(t.slice(0, 2));
 
   return `${h % 12 === 0 ? 12 : h % 12}:${t.slice(3, 5)} ${h < 12 ? 'AM' : 'PM'}`;

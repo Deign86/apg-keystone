@@ -142,8 +142,8 @@ export function RowMenu({ label, actions }: { label: string; actions: RowAction[
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner sideOffset={4} align="end" className="z-70 outline-none">
-          {/* taste-skill-ignore: a menu is a real overlay */}
-          <Menu.Popup className="min-w-48 rounded-control border border-line-bright bg-surface-2 p-1 shadow-[0_16px_48px_rgb(0_0_0/0.55)] outline-none transition-[opacity,transform] duration-150 ease-out data-[ending-style]:opacity-0 data-[starting-style]:-translate-y-1 data-[starting-style]:opacity-0">
+          <Menu.Popup className="min-w-48 rounded-control border border-line-bright bg-surface-2 p-1 shadow-[0_16px_48px_rgb(0_0_0/0.55)] outline-none transition-[opacity,transform] duration-150 ease-out data-[ending-style]:opacity-0 data-[starting-style]:-translate-y-1 data-[starting-style]:opacity-0" // taste-skill-ignore: a menu is a real overlay
+          >
             {actions.map((a) => (
               <Menu.Item
                 key={a.label}

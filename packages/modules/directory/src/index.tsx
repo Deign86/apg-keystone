@@ -1,7 +1,7 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column } from '@keystone/ui';
 import { useState } from 'react';
 import {
-  count, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
+  DASH, count, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
   type DirectoryDraft, type DirectoryRecord, type RecordType, type Figure, type TerminalState,
 } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
@@ -79,11 +79,11 @@ function Directory() {
     { key: 'code', header: 'Code', width: 68, cell: (d) => <span className="font-semibold text-gold-bright tabular-nums">{d.code}</span> },
     { key: 'type', header: 'Type', width: 88, cell: (d) => <span className="text-ink-2">{d.type}</span> },
     { key: 'name', header: 'Name', cell: (d) => <span title={d.name}>{d.name}</span> },
-    { key: 'tin', header: 'TIN', width: 138, cell: (d) => <span className="text-ink-2 tabular-nums">{d.tin || '—'}</span> },
+    { key: 'tin', header: 'TIN', width: 138, cell: (d) => <span className="text-ink-2 tabular-nums">{d.tin || DASH}</span> },
     {
       key: 'detail', header: 'Details', cell: (d) => (
         <span className="text-ink-2">
-          {[d.detail, d.dept, d.type === 'Client' ? `${d.vat ? 'VAT' : 'non-VAT'}${d.ewt ? ', EWT' : ''}` : null].filter(Boolean).join(' · ') || '—'}
+          {[d.detail, d.dept, d.type === 'Client' ? `${d.vat ? 'VAT' : 'non-VAT'}${d.ewt ? ', EWT' : ''}` : null].filter(Boolean).join(' · ') || DASH}
         </span>
       ),
     },
@@ -97,7 +97,7 @@ function Directory() {
             {used.map((u) => <Tag key={u}>{u}</Tag>)}
             {linked.map((l) => <Tag key={l}>{connector(l)?.tag ?? l.slice(0, 3).toUpperCase()}</Tag>)}
           </span>
-        ) : <span className="text-ink-3">—</span>;
+        ) : <span className="text-ink-3">{DASH}</span>;
       },
     },
   ];

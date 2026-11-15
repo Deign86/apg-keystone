@@ -4,7 +4,7 @@ import {
 } from '@keystone/ui';
 import { useState } from 'react';
 import {
-  count, halfMonthOf, halfMonthsTo, periodLabel, recordsOf, SERVICES, shortDate, today, weekdayLong, weekdayOf,
+  DASH, count, halfMonthOf, halfMonthsTo, periodLabel, recordsOf, SERVICES, shortDate, today, weekdayLong, weekdayOf,
 } from '@keystone/core';
 import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
@@ -149,8 +149,8 @@ function Timekeeping() {
     { key: 'in', header: 'In', width: 84, cell: (d) => <span className="tabular-nums">{clock12(d.record?.in ?? '')}</span> },
     { key: 'out', header: 'Out', width: 84, cell: (d) => <span className="tabular-nums">{clock12(d.record?.out ?? '')}</span> },
     { key: 'status', header: 'Status', width: 172, cell: (d) => <Status day={d} /> },
-    { key: 'ot', header: 'OT', width: 56, align: 'right', cell: (d) => (d.record?.ot ? `${d.record.ot} hr` : '—') },
-    { key: 'remarks', header: 'Remarks', cell: (d) => <span className="text-ink-2" title={remarks(d)}>{remarks(d) || '—'}</span> },
+    { key: 'ot', header: 'OT', width: 56, align: 'right', cell: (d) => (d.record?.ot ? `${d.record.ot} hr` : DASH) },
+    { key: 'remarks', header: 'Remarks', cell: (d) => <span className="text-ink-2" title={remarks(d)}>{remarks(d) || DASH}</span> },
   ];
 
   const holidayColumns: Column<Holiday>[] = [
