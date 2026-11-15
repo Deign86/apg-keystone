@@ -16,6 +16,8 @@ describe('document sheet', () => {
     // 186 mm, an A4 page less the print margins: the preview, the print and the PDF share one layout.
     expect(PAPER_WIDTH).toBe(703);
     expect(paper.style.width).toBe('703px');
+    // As tall as what it holds: no minimum leaves a blank band under a short paper.
+    expect(paper.style.minHeight).toBe('');
     expect(paper.style.transform).toBe('');
     expect(paper).toHaveAttribute('data-print-fit', 'page');
     // Print and Export PDF are handed the paper itself, not the frame that scales it on screen.
