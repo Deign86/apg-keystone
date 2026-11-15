@@ -60,7 +60,6 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
                 {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 whitespace-nowrap ${i > 1 ? 'text-right tabular-nums' : ''} ${c.header === 'Signature' ? 'min-w-20' : ''}`}>{c.cell(l)}</td>)}
               </tr>
             ))}
-            {!cutoff.lines.length && <tr><td colSpan={COLUMNS.length} className="px-1 py-2 text-paper-muted">No employee has a pay setup yet.</td></tr>}
           </tbody>
           <tfoot>
             <tr className="border-y border-paper-ink bg-paper-tint font-bold">

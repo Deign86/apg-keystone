@@ -65,7 +65,7 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
           {SHARES.map((f) => <Amount key={f} field={f} d={d} set={setD} placeholder={grey.shares[f].toFixed(2)} />)}
           <Amount field="advance" d={d} set={setD} />
         </FieldRow>
-        <p className="m-0 text-xs text-ink-2">Empty fields are worked out (shown in grey): monthly pay as the daily rate × 261 ÷ 12, shares from the 2026 tables on it. Type an amount, 0 included, to use this employee's own.</p>
+        <p className="m-0 text-[13px] text-ink-2">Empty fields are worked out (shown in grey): monthly pay as the daily rate × 261 ÷ 12, shares from the 2026 tables on it. Type an amount, 0 included, to use this employee's own.</p>
       </Group>
       <Group legend="Paid by">
         <FieldRow>
@@ -74,7 +74,7 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
         </FieldRow>
       </Group>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-        {error && <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-bad">{error}</p>}
+        {error && <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-bad">{error}</p>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">Save pay setup</Button>
       </div>
@@ -162,7 +162,7 @@ function Payroll() {
       <Panel className="mb-4">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <SectionLabel>Pay setup</SectionLabel>
-          <span className="text-xs text-ink-2">Set by HR for each employee. Open one to change it.</span>
+          <span className="text-[13px] text-ink-2">Set by HR for each employee. Open one to change it.</span>
         </div>
         <Register
           label="Pay setup"
@@ -194,7 +194,7 @@ function Payroll() {
               : <Button kind="primary" onClick={() => run((s, c) => closeCutoff(s, period, attendance, c))}>Close cut-off</Button>}
           </div>
         </div>
-        <p className="m-0 mb-2 text-xs text-ink-2">
+        <p className="m-0 mb-2 text-[13px] text-ink-2">
           {cut.closed
             ? `Closed ${cut.closed}. Its figures are frozen: later corrections and rate changes do not reprice it.`
             : cut.assumed
@@ -211,38 +211,46 @@ function Payroll() {
           empty={<EmptyState text={cut.closed ? 'No one was paid in this cut-off.' : 'No one has a pay setup yet.'} action={!cut.closed && employees[0] ? <Button size="sm" onClick={() => setEditing(setupDraftOf(state, employees[0].code))}>Set up pay</Button> : undefined} />}
         />
         {cut.lines.length > 0 && (
-          <p className="m-0 mt-3 border-t border-line pt-3 text-xs text-ink-2 tabular-nums">
+          <p className="m-0 mt-3 border-t border-line pt-3 text-[13px] text-ink-2 tabular-nums">
             {`Gross ${peso(totalOf(cut, 'gross'))} · deductions ${peso(totalOf(cut, 'deductions'))} · net ${peso(totalOf(cut, 'net'))}. Open an employee for their payslip.`}
           </p>
         )}
       </Panel>
 
-      <section aria-label="Payroll documents">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
-            {[{ id: null, name: 'Payroll sheet' }, ...cut.lines.map((l) => ({ id: l.setup.emp, name: `Payslip: ${l.name}` }))].map((o) => (
-              <button
-                key={o.id ?? 'sheet'}
-                type="button"
-                aria-pressed={(slip?.setup.emp ?? null) === o.id}
-                onClick={() => setSlipFor(o.id)}
-                className={cn('flex h-[30px] items-center rounded-full border px-3 text-[12.5px] font-semibold', (slip?.setup.emp ?? null) === o.id ? 'border-gold text-gold-bright' : 'border-line text-ink-2 hover:border-line-bright hover:text-ink')}
-              >
-                {o.name}
-              </button>
-            ))}
+      {/* The payroll sheet and payslips once someone is on the cut-off: with no one, there is nothing to print yet. */}
+      {cut.lines.length > 0 ? (
+        <section aria-label="Payroll documents">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
+              {[{ id: null, name: 'Payroll sheet' }, ...cut.lines.map((l) => ({ id: l.setup.emp, name: `Payslip: ${l.name}` }))].map((o) => (
+                <button
+                  key={o.id ?? 'sheet'}
+                  type="button"
+                  aria-pressed={(slip?.setup.emp ?? null) === o.id}
+                  onClick={() => setSlipFor(o.id)}
+                  className={cn('flex h-[30px] items-center rounded-full border px-3 text-[12.5px] font-semibold', (slip?.setup.emp ?? null) === o.id ? 'border-gold text-gold-bright' : 'border-line text-ink-2 hover:border-line-bright hover:text-ink')}
+                >
+                  {o.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, file, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-            <Button onClick={() => paper.current && savePdf(paper.current, file, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+          <div className="overflow-hidden rounded-card border border-line">
+            {slip
+              ? <Payslip ref={paper} line={slip} cutoff={cut} company={companyOf(state)} />
+              : <PayrollSheet ref={paper} cutoff={cut} company={companyOf(state)} />}
           </div>
-        </div>
-        <div className="overflow-hidden rounded-card border border-line">
-          {slip
-            ? <Payslip ref={paper} line={slip} cutoff={cut} company={companyOf(state)} />
-            : <PayrollSheet ref={paper} cutoff={cut} company={companyOf(state)} />}
-        </div>
-      </section>
+        </section>
+      ) : (
+        <Panel>
+          <div className="mb-2"><SectionLabel>Payroll documents</SectionLabel></div>
+          <EmptyState text="The payroll sheet and payslips show here, to print or save as a PDF, once someone has pay set up." />
+        </Panel>
+      )}
 
       <Sheet
         open={editing !== null}

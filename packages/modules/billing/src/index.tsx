@@ -22,7 +22,7 @@ function PayInto({ draft, setDraft }: { draft: StatementDraft; setDraft: (d: Sta
   if (!accounts.length) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="m-0 text-xs text-pretty text-ink-2">No bank accounts are kept yet, so the payment instructions are typed below.</p>
+        <p className="m-0 text-[13px] text-pretty text-ink-2">No bank accounts are kept yet, so the payment instructions are typed below.</p>
         {app.has('banks') && <Button size="sm" onClick={() => app.go('banks')}>Add a bank account</Button>}
       </div>
     );
@@ -135,7 +135,7 @@ function Billing() {
               <Checkbox checked={draft.ewt} onChange={(ewt) => setDraft({ ...draft, ewt })}>Less 5% expanded withholding tax</Checkbox>
             </div>
             <div className="text-right" aria-live="polite">
-              <p className="m-0 text-xs text-ink-2 tabular-nums">
+              <p className="m-0 text-[13px] text-ink-2 tabular-nums">
                 Subtotal {peso(t.subtotal)}{draft.vat ? ` · VAT ${peso(t.vat)}` : ''}{draft.ewt ? ` · EWT (${peso(t.ewt)})` : ''}
               </p>
               <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(t.due)}</p>

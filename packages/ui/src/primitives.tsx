@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         'inline-flex shrink-0 items-center justify-center gap-2 rounded-control border font-semibold whitespace-nowrap select-none',
         'transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.97]',
         'disabled:pointer-events-none disabled:opacity-40',
-        size === 'md' ? 'h-9 px-3.5 text-[13px]' : 'h-7 px-2.5 text-xs',
+        size === 'md' ? 'h-9 px-3.5 text-[13px]' : 'h-7 px-2.5 text-[13px]',
         BUTTON[kind],
         className,
       )}

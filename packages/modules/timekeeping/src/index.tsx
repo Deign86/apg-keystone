@@ -59,7 +59,7 @@ function DayForm({ draft, name, onDone }: { draft: DayDraft; name: string; onDon
       </Field>
       <Field label="Note"><TextInput placeholder="Why it was corrected" value={d.note} onChange={(v) => setD({ ...d, note: v })} /></Field>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-        {error && <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-bad">{error}</p>}
+        {error && <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-bad">{error}</p>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">Save day</Button>
       </div>
@@ -89,8 +89,8 @@ function HolidayForm() {
         </Field>
       </FieldRow>
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {error && <p role="alert" className="m-0 mr-auto text-xs text-bad">{error}</p>}
-        <span className="mr-auto text-xs text-ink-2">{error ? '' : 'A regular holiday is paid when not worked; working a special day adds 30%, a regular one 100%.'}</span>
+        {error && <p role="alert" className="m-0 mr-auto text-[13px] text-bad">{error}</p>}
+        <span className="mr-auto text-[13px] text-ink-2">{error ? '' : 'A regular holiday is paid when not worked; working a special day adds 30%, a regular one 100%.'}</span>
         <Button kind="primary" type="submit">Add holiday</Button>
       </div>
     </form>
@@ -166,7 +166,7 @@ function Timekeeping() {
       <Panel className="mb-4">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <SectionLabel>Today</SectionLabel>
-          <span className="text-xs text-ink-2">{weekdayLong(ctx.now())} · 8:00 AM to 5:00 PM · one 15-minute grace a week</span>
+          <span className="text-[13px] text-ink-2">{weekdayLong(ctx.now())} · 8:00 AM to 5:00 PM · one 15-minute grace a week</span>
         </div>
         <Register
           label="Today"
@@ -196,7 +196,7 @@ function Timekeeping() {
               onOpen={(d) => d.date <= t && setCorrecting(dayDraftOf(state, shown.code, d.date))}
               empty={<EmptyState text="No days in this cut-off." />}
             />
-            <p className="m-0 mt-3 border-t border-line pt-3 text-xs text-ink-2">
+            <p className="m-0 mt-3 border-t border-line pt-3 text-[13px] text-ink-2">
               {`${counted.worked} of ${count(counted.scheduled, 'working day')} worked so far · ${count(counted.absent, 'absence')} · ${count(counted.halfDays, 'half day')} · ${duration(counted.shortMinutes)} late or undertime · ${counted.overtimeHours} hr approved overtime. Open a past day to correct it.`}
             </p>
           </>
