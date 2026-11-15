@@ -65,6 +65,10 @@ async function rightEdges(sheet: Locator, name: string) {
 test('HR sets each employee\'s own pay, and it needs a daily rate', async ({ app, screen }) => {
   await app.open('/#payroll');
   await expect(screen.getByText('No employee has a pay setup yet, so there is no payroll to run.')).toBeVisible();
+  // With no one on the cut-off there is nothing to print yet: no payroll sheet, Print or Export PDF, only where they'll be.
+  await expect(screen.getByText('The payroll sheet and payslips show here, to print or save as a PDF, once someone has pay set up.')).toBeVisible();
+  await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeHidden();
+  await expect(screen.getByRole('button', 'Export PDF')).toBeHidden();
 
   const form = await openJuansPay(screen);
 
@@ -73,6 +77,7 @@ test('HR sets each employee\'s own pay, and it needs a daily rate', async ({ app
 
   await fillPay(form, { ...JUAN, SSS: '450' });
   await expect(screen.getByRole('dialog', 'Pay setup saved for Juan Miguel P. Reyes.')).toBeVisible();
+  await expect(screen.getByRole('region', 'Payroll documents').getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeVisible();
 
   const row = screen.getByRole('table', 'Pay setup').getByRole('row', /Juan Miguel P\. Reyes/);
 

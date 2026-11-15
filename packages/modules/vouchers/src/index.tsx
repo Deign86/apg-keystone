@@ -115,8 +115,8 @@ function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) 
           </FieldRow>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {error
-              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>
-              : <span className="mr-auto text-xs text-pretty text-ink-2">Saved to Bank Accounts, for every voucher after this one.</span>}
+              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-pretty text-bad">{error}</p>
+              : <span className="mr-auto text-[13px] text-pretty text-ink-2">Saved to Bank Accounts, for every voucher after this one.</span>}
             {accounts.length > 0 && <Button size="sm" onClick={() => { setAdding(null); setError(null); }}>Cancel</Button>}
             <Button size="sm" onClick={save}>Save account</Button>
           </div>
@@ -226,7 +226,7 @@ function Vouchers() {
               <LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
               <div className="text-right" aria-live="polite">
                 <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
-                <p className="m-0 text-xs text-ink-2">{amountInWords(total)}</p>
+                <p className="m-0 text-[13px] text-ink-2">{amountInWords(total)}</p>
               </div>
               {/* Each signatory's position over their name, as the voucher prints them. */}
               <FieldRow min={120}>

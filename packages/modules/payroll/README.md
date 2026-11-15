@@ -13,8 +13,9 @@ it (the `PAYROLL` and `PAYSLIP` tabs), from the days Timekeeping counted.
   reopening it, and what it contributes. It calls the engine for every amount. Tested in `test/rules.test.ts`.
 - `src/index.tsx`: the screen. **Pay setup** lists every employee in the Directory; opening one sets their pay.
   **Cut-off** shows the pay for a semi-monthly cut-off and closes or reopens it; in a narrow window it keeps gross,
-  deductions and net pay and leaves what adds up to gross to the payroll sheet. Under it, the **payroll sheet** and
-  each employee's **payslip**, with Print and Export PDF.
+  deductions and net pay and leaves what adds up to gross to the payroll sheet. Under it, once someone has pay set up,
+  the **payroll sheet** and each employee's **payslip**, with Print and Export PDF; before that, a line saying they
+  will show there.
 - `src/PayrollPapers.tsx`: the payroll sheet (the spreadsheet's columns, totals, signatures) and the payslip
   (earnings, deductions, net pay). The sheet's 22 columns are wider than the paper even on its side, so it is a
   landscape A4 and its table shrinks to fit across it, one line per employee, on screen as in print and the PDF.

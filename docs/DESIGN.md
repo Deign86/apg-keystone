@@ -29,15 +29,11 @@ These go against a skill rule because every APG system does them. Each one is ma
 
 The ID card's foil stripe is flat gold. There are no gradients anywhere.
 
-Two more come from the papers, which are drawn to be printed:
+One more comes from the papers, which are drawn to be printed:
 
 - **The check voucher's black rules:** it is printed and filled in by hand, so it is ruled in black as the company's
   cash voucher is. The inspector reads those boxes as heavy panel borders, so Check Vouchers is inspected with
   `--allow heavy-borders`.
-- **Small type by share:** the inspector also warns when over 45% of a screen's text is under 13px. The 11px gold
-  tracked capitals (with the rail's 11px lockup and key badges) and the papers, at print size, put Check Vouchers,
-  Billing and Payroll over that line (53–67%); without that 11px type their screens are at 37–42%. That warning stays,
-  not allowed by name: allowing `tiny-text` would also stop its check for anything under 11px.
 
 ## Rules
 
@@ -45,8 +41,10 @@ Two more come from the papers, which are drawn to be printed:
   in status. Everything else is ink, grey or line.
 - **Surfaces:** the ground, then a card one tone up with a 1px `line` border and radius 8. Only real overlays (menus,
   dialogs, toasts) have a shadow.
-- **Type:** titles are Poppins 34 bold, body text 14, captions 12–12.5. Orbitron is used for the greeting, the clock,
-  headline figures (24, with the lead at 30), and card titles (14–15).
+- **Type:** titles are Poppins 34 bold, body text 14. Anything read as a sentence or a label is 13: field labels,
+  hints and errors, captions, notes, and small buttons. Only short sublines (a count, "Updates as you type") are 12,
+  and the gold tracked capitals 11. That keeps under 45% of each screen's text below 13px, the inspector's line.
+  Orbitron is used for the greeting, the clock, headline figures (24, with the lead at 30), and card titles (14–15).
 - **Screen header:** the eyebrow (the section), then the title (a noun), then the finding (the one fact that matters
   on that screen). The finding never describes the interface.
 - **Registers:**
@@ -88,6 +86,7 @@ On 2026-10-30:
 On 2026-11-11, Check Vouchers at 1440 and 1100px: 0 fails. The three-copy voucher had grown taller than the inspector
 allows for a `data-ui` fragment at 1100px; drawing it at the paper's width and scaling it to the column fixed that.
 
-On 2026-11-15, on the production build, Check Vouchers, Billing and Payroll at 1440 and 1100px: 0 fails, and one
-warning each, the small type by share above. A paper is now as tall as what it holds: its old 420px minimum left a
-blank band under a statement with no charges yet.
+On 2026-11-15, on the production build, every screen at 1440 and 1100px: 0 fails. Check Vouchers, Billing, Payroll and
+Timekeeping have no warnings either. A paper is now as tall as what it holds: its old 420px minimum left a blank band
+under a statement with no charges yet. Sentences and labels went from 12 to 13px. Payroll shows its sheet and payslips
+once someone has pay set up; before that, where they will be.

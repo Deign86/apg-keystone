@@ -11,10 +11,10 @@ import { cn } from './primitives';
 export function Field({ label, hint, error, children, className }: { label: string; hint?: string; error?: string; children: ReactNode; className?: string }) {
   return (
     <BaseField.Root invalid={!!error} className={cn('flex min-w-0 flex-col gap-1.5', className)}>
-      <BaseField.Label className="text-[12.5px] font-medium text-ink">{label}</BaseField.Label>
+      <BaseField.Label className="text-[13px] font-medium text-ink">{label}</BaseField.Label>
       {children}
-      {hint && !error && <BaseField.Description className="m-0 text-xs text-ink-2">{hint}</BaseField.Description>}
-      {error && <BaseField.Error match className="m-0 text-xs text-bad">{error}</BaseField.Error>}
+      {hint && !error && <BaseField.Description className="m-0 text-[13px] text-ink-2">{hint}</BaseField.Description>}
+      {error && <BaseField.Error match className="m-0 text-[13px] text-bad">{error}</BaseField.Error>}
     </BaseField.Root>
   );
 }

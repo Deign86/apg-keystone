@@ -79,7 +79,7 @@ export function FormCard({
       </div>
       {children}
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-        {error && <p role="alert" className="m-0 mr-auto max-w-[44ch] text-xs text-bad">{error}</p>}
+        {error && <p role="alert" className="m-0 mr-auto max-w-[44ch] text-[13px] text-bad">{error}</p>}
         {actions}
       </div>
     </Panel>
