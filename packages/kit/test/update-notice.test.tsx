@@ -37,13 +37,19 @@ async function mount(answers: (AppUpdate | null | Error)[], platformOverrides: P
     </FeedbackProvider>,
   );
 
+  // The notice reads the running version from a promise; let it settle inside act, as a render's own updates do.
+  await act(async () => {});
+
   return { view, store, files, checks };
 }
 
 const release = (install: AppUpdate['install']): AppUpdate => ({ version: '0.2.0', notesUrl: 'https://example.test/v0.2.0', install });
 
 describe('Keystone updating itself', () => {
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it('shows the running version, checks a few seconds after start, and offers the newer one', async () => {
     vi.useFakeTimers();
@@ -61,15 +67,18 @@ describe('Keystone updating itself', () => {
 
   it('says nothing when up to date or offline, and looks again every 8 hours', async () => {
     vi.useFakeTimers();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { checks } = await mount([null, new Error('error sending request'), release(async () => {})]);
 
     await act(() => vi.advanceTimersByTimeAsync(FIRST_CHECK_MS));
     expect(screen.queryByRole('status')).toBeNull();
 
+    // Offline: nothing on screen, only a line in the console for whoever looks.
     await act(() => vi.advanceTimersByTimeAsync(CHECK_EVERY_MS));
     expect(checks.count).toBe(2);
     expect(screen.queryByRole('status')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
+    expect(warn).toHaveBeenCalledWith('Keystone could not check for updates; it tries again later.', new Error('error sending request'));
 
     await act(() => vi.advanceTimersByTimeAsync(CHECK_EVERY_MS));
     expect(screen.getByRole('status')).toHaveTextContent('Keystone 0.2.0 is ready.');
@@ -89,7 +98,7 @@ describe('Keystone updating itself', () => {
     })]);
 
     await act(() => vi.advanceTimersByTimeAsync(FIRST_CHECK_MS));
-    store.commit({ ...store.state, ext: { ...store.state.ext, pending: { saved: false } } });
+    act(() => store.commit({ ...store.state, ext: { ...store.state.ext, pending: { saved: false } } }));
     fireEvent.click(screen.getByRole('button', { name: 'Update and restart' }));
     await act(() => vi.advanceTimersByTimeAsync(0));
 
