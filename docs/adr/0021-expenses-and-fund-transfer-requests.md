@@ -51,4 +51,5 @@ Status: Accepted · Date: 2026-11-15
   - The account is kept on each request as typed, not in Bank Accounts. Bank Accounts holds the company's own
     accounts, which Billing offers clients to pay into, so a person's account does not belong there.
   - A paper printed before the answer says it is not approved yet. Only an approved one shows Print and Export PDF.
-  - Requests for Funds is still not in `RELEASED` (0017): a stable build shows it behind "Coming soon".
+- **Released.** Requests for Funds is in `RELEASED` (0017), so every build opens it, not only a beta. A release always
+  signs in, so only the owner decides, as 0011 requires; staff file their requests and read only their own.
