@@ -43,8 +43,11 @@ export interface ModuleDef {
   requires?: string[];
   /** Show as a tile on Home. */
   onHome?: boolean;
-  /** The live figure on its Home tile: [label, value]. */
-  stat?: (state: TerminalState, ctx: Ctx) => [string, string];
+  /**
+   * The live figure on its Home tile: [label, value]. It is given the installed modules too, so a module that collects
+   * their contributions (Overview counts what waits on you) can count them; it reads only what they contribute.
+   */
+  stat?: (state: TerminalState, ctx: Ctx, installed: readonly ModuleDef[]) => [string, string];
   /** Its cell in the Overview figure strip. */
   figure?: (state: TerminalState, ctx: Ctx) => Figure;
   /** Its candidate for the one sentence under Home and Overview. */

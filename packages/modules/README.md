@@ -6,7 +6,7 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | Package | Rail | Owns | Contributes | Provides |
 |---|---|---|---|---|
 | `home/` | 0 | The kiosk-style front door | Nothing; it collects tiles, the finding and the connected systems' shortcuts | |
-| `overview/` | 1 | Summary for the CEO | Nothing; it collects figures, waiting items, the finding and "New …" buttons | |
+| `overview/` | 1 | Summary for the CEO | stat (Waiting on you: the others' waiting items); it collects figures, waiting items, the finding and "New …" buttons | |
 | `vouchers/` | 2 | Check vouchers, their rules and the voucher document | figure, finding, waiting, create, stat, log tag `CV` | `vouchers.drafts` |
 | `funds/` | 3 | Requests for funds: filing, the owner's decision, and the voucher an approval drafts | figure, finding, waiting, create, stat, log tag `RF`, its requests as cloud documents of their own | |
 | `billing/` | 4 | Billing statements, their rules (VAT, EWT, payments) and the statement document | figure (lead), finding, waiting, create, stat, log tag `BS`, overdue on open | `billing.statement-payments` |

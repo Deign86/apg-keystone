@@ -5,7 +5,7 @@ The kiosk-style front door, shared with the attendance tracker: the clock, the O
 
 ## Contributes
 Nothing. It collects:
-- tiles from every module with `onHome` and `stat`;
+- tiles from every module with `onHome` and `stat`, handing each `stat` the installed modules (docs/adr/0021);
 - the finding, the highest `finding` among installed modules;
 - a shortcut for every connected system, its app's logo (`@keystone/kit` › `ConnectorShortcut`).
 

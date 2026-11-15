@@ -155,7 +155,7 @@ export const billingModule: ModuleDef = {
   id: 'billing',
   title: 'Billing Statements',
   section: 'Receivables',
-  blurb: 'Issue statements of account with VAT and withholding computed from each client’s setup.',
+  blurb: 'Issue statements of account, with VAT and withholding from each client’s setup.',
   order: 3,
   onHome: true,
   stat: (s) => ['Outstanding', peso(outstandingTotal(s))],

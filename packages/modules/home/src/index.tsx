@@ -42,7 +42,7 @@ function Home() {
       <h2 className="sr-only">Systems</h2>
       <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 min-[700px]:grid-cols-2 min-[1000px]:grid-cols-3">
         {tiles.map((m) => {
-          const [label, value] = m.stat?.(state, ctx) ?? ['', ''];
+          const [label, value] = m.stat?.(state, ctx, registry.modules) ?? ['', ''];
 
           return (
             <li key={m.id}>
