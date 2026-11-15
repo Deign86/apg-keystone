@@ -2,6 +2,7 @@ import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { devServer } from './e2e/support/dev-server';
 import { sampleRecords } from './e2e/support/sample-records';
+import { useUtf8Locale } from './e2e/support/locale';
 
 // A build that is not a beta (docs/adr/0017): only the released screens open, the others say "Coming soon". The main
 // suite (e2e.config.ts) runs the dev server, which is a beta and opens every screen; this one runs it with
@@ -9,6 +10,9 @@ import { sampleRecords } from './e2e/support/sample-records';
 // `npm run test:e2e`). Same sample data, clock and time zone as the main suite; records kept in the browser.
 const cdpEndpoint = process.env.E2E_CDP_ENDPOINT;
 const connect = cdpEndpoint ? { cdpEndpoint: () => cdpEndpoint } : undefined;
+
+// A download keeps its name, en dash and all, on a machine with no UTF-8 locale too (e2e/support/locale.ts).
+useUtf8Locale();
 
 export default {
   tests: 'e2e/stable/**/*.e2e.ts',

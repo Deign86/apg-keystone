@@ -2,6 +2,7 @@ import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { devServer } from './e2e/support/dev-server';
 import { sampleRecords } from './e2e/support/sample-records';
+import { useUtf8Locale } from './e2e/support/locale';
 
 // End-to-end tests drive Keystone's screens in Chromium against the browser dev server
 // (`npm run dev`, the same UI the Tauri shell shows, on the browser platform). No model is
@@ -23,6 +24,9 @@ import { sampleRecords } from './e2e/support/sample-records';
 // already running instead of launching one: useful where the browser download is blocked.
 const cdpEndpoint = process.env.E2E_CDP_ENDPOINT;
 const connect = cdpEndpoint ? { cdpEndpoint: () => cdpEndpoint } : undefined;
+
+// A download keeps its name, en dash and all, on a machine with no UTF-8 locale too (e2e/support/locale.ts).
+useUtf8Locale();
 
 export default {
   tests: ['e2e/**/*.e2e.ts', '!e2e/cloud/**', '!e2e/stable/**'],

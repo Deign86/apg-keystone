@@ -1,6 +1,7 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
 import { devServer } from './e2e/support/dev-server';
+import { useUtf8Locale } from './e2e/support/locale';
 
 // The cloud build (docs/adr/0009) end to end: signing in, moving a computer's records in, saving to the cloud and
 // opening the same records on another computer, against the Firebase Auth and Firestore emulators with the real
@@ -21,6 +22,9 @@ if (!project.startsWith('demo-') || !auth || !firestore) {
 
 const cdpEndpoint = process.env.E2E_CDP_ENDPOINT;
 const connect = cdpEndpoint ? { cdpEndpoint: () => cdpEndpoint } : undefined;
+
+// A download keeps its name, en dash and all, on a machine with no UTF-8 locale too (e2e/support/locale.ts).
+useUtf8Locale();
 
 export default {
   tests: 'e2e/cloud/**/*.e2e.ts',
