@@ -2,7 +2,7 @@
 // stays sharp on screen and in print.
 import logo from '@keystone/ui/logo-paper.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { peso, toCentavos, type Company, type LineItem } from '@keystone/core';
+import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
@@ -260,4 +260,4 @@ export function Signatures({ names, className = '' }: { names: [string, string][
   );
 }
 
-export const orDash = (s?: string) => (s && s.trim() ? s : '—');
+export const orDash = (s?: string) => (s && s.trim() ? s : DASH);

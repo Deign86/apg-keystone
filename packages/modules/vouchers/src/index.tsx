@@ -1,6 +1,6 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { amountInWords, companyOf, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
+import { DASH, amountInWords, companyOf, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
 import { awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -154,7 +154,7 @@ function Vouchers() {
     { key: 'date', header: 'Date', width: 104, cell: (v) => <span className="text-ink-2 tabular-nums">{shortDate(v.date)}</span> },
     { key: 'payee', header: 'Payee', cell: (v) => recordOf(state, v.payee)?.name ?? v.payee },
     // The check number over its date, so the payee keeps the width at the narrowest window.
-    { key: 'check', header: 'Check', width: 112, cell: (v) => <><span className="block truncate tabular-nums">{v.check || '—'}</span> {v.checkDate && <span className="block truncate text-xs text-ink-2 tabular-nums">{shortDate(v.checkDate)}</span>}</> },
+    { key: 'check', header: 'Check', width: 112, cell: (v) => <><span className="block truncate tabular-nums">{v.check || DASH}</span> {v.checkDate && <span className="block truncate text-xs text-ink-2 tabular-nums">{shortDate(v.checkDate)}</span>}</> },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (v) => <span className="font-semibold">{peso(voucherTotal(v))}</span> },
     { key: 'status', header: 'Status', width: 150, align: 'right', cell: (v) => <StatusPill status={v.status} tone={toneOf(v.status)} /> },
   ];

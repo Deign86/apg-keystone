@@ -1,6 +1,6 @@
 import logo from '@keystone/ui/logo.png';
 import { forwardRef } from 'react';
-import { shortDate, type Company, type IDRecord } from '@keystone/core';
+import { DASH, shortDate, type Company, type IDRecord } from '@keystone/core';
 import { verificationCells, verificationSeed, VERIFICATION_SIZE } from './verification';
 
 function Pattern({ text }: { text: string }) {
@@ -44,7 +44,7 @@ export const IDCardSheet = forwardRef<HTMLDivElement, { card: IDRecord; photo: s
         <div className="mt-[18px] h-[34px] bg-black" />
         <div className="px-3.5 pt-2.5 text-[8.5px] leading-snug text-ink-2">
           <p className="m-0 mb-0.5 text-[8px] tracking-[0.1em] text-gold uppercase">Emergency contact</p>
-          <p className="m-0 mb-2 text-ink">{card.iceName || '—'}{card.iceNo ? ` · ${card.iceNo}` : ''}<br />Blood type: {card.blood}</p>
+          <p className="m-0 mb-2 text-ink">{card.iceName || DASH}{card.iceNo ? ` · ${card.iceNo}` : ''}<br />Blood type: {card.blood}</p>
           <p className="m-0 mb-0.5 text-[8px] tracking-[0.1em] text-gold uppercase">If found</p>
           <p className="m-0 mb-1.5 text-ink">Please return to Alpha Premier Group, {company.shortAddress}, or call {company.phone}. This card is company property and must be surrendered upon separation.</p>
           <div className="flex justify-center"><Pattern text={verificationSeed(card.no, card.name)} /></div>

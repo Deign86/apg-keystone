@@ -27,7 +27,7 @@ class ModuleBoundary extends Component<{ module: ModuleDef; children: ReactNode 
 
     return (
       <div role="alert" className="rounded-card border border-bad/50 bg-surface p-6">
-        <p className="eyebrow m-0 text-bad">{this.props.module.title}</p>
+        <p className="eyebrow m-0 text-bad">{this.props.module.title}</p>{/* taste-skill-ignore: the APG brand eyebrow (docs/DESIGN.md) */}
         <h1 className="mt-2 mb-0 text-xl font-bold">This screen hit a problem</h1>
         <p className="mt-2 mb-4 text-sm text-ink-2">{this.state.error.message}. The rest of Keystone is unaffected and your data is safe.</p>
         <button type="button" className="h-9 rounded-control border border-line-bright px-3.5 text-[13px] font-semibold text-gold-bright hover:border-gold" onClick={() => this.setState({ error: null })}>

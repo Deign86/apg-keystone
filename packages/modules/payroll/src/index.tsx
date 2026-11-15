@@ -4,7 +4,7 @@ import {
 } from '@keystone/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import {
-  companyOf, count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
+  DASH, companyOf, count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
   type DirectoryRecord, type Period,
 } from '@keystone/core';
 import { printElement, savePdf, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
@@ -104,7 +104,7 @@ function Payroll() {
     : `${label}: ${count(cut.lines.length, 'employee')}, ${peso(totalOf(cut, 'net'))} net${cut.closed ? ', closed' : ' so far'}.`;
 
   const setupColumns: Column<DirectoryRecord>[] = [
-    { key: 'no', header: 'Employee no.', width: 124, cell: (e) => <span className="font-semibold text-gold-bright tabular-nums">{setupFor(state, e.code)?.empNo || '—'}</span> },
+    { key: 'no', header: 'Employee no.', width: 124, cell: (e) => <span className="font-semibold text-gold-bright tabular-nums">{setupFor(state, e.code)?.empNo || DASH}</span> },
     { key: 'name', header: 'Employee', cell: (e) => <span title={e.detail}>{e.name} <span className="text-ink-3">· {e.detail}</span></span> },
     {
       key: 'daily', header: 'Daily rate', width: 116, align: 'right', cell: (e) => {
@@ -117,7 +117,7 @@ function Payroll() {
       key: 'allow', header: 'Allowances', width: 212, cell: (e) => {
         const x = setupFor(state, e.code);
 
-        if (!x) return '—';
+        if (!x) return DASH;
         const sum = setupSummary(x, period);
 
         return <span className="text-ink-2 tabular-nums">{peso(sum.fixedAllowances)} + {peso(sum.perDayAllowance)} a day</span>;
@@ -127,12 +127,12 @@ function Payroll() {
       key: 'ded', header: 'Deductions', width: 116, align: 'right', cell: (e) => {
         const x = setupFor(state, e.code);
 
-        if (!x) return '—';
+        if (!x) return DASH;
 
         return <span title="SSS, PhilHealth, Pag-IBIG and salary advance, this cut-off">{peso(setupSummary(x, period).deductions)}</span>;
       },
     },
-    { key: 'bank', header: 'Paid by', width: 96, cell: (e) => <span className="text-ink-2">{setupFor(state, e.code) ? setupFor(state, e.code)?.bank || 'Cash' : '—'}</span> },
+    { key: 'bank', header: 'Paid by', width: 96, cell: (e) => <span className="text-ink-2">{setupFor(state, e.code) ? setupFor(state, e.code)?.bank || 'Cash' : DASH}</span> },
   ];
 
   const money = (key: string, header: string, value: (l: PayLine) => number, strong = false): Column<PayLine> => ({

@@ -5,10 +5,10 @@ import { X } from 'lucide-react';
 import { createContext, useCallback, useContext, useState, type ReactNode, type RefObject } from 'react';
 import { Button, cn } from './primitives';
 
-// taste-skill-ignore: dialogs and toasts are real overlays and may float.
+// Dialogs and toasts are real overlays, so they may float.
 const POPUP = cn(
   'fixed top-1/2 left-1/2 z-60 max-h-[calc(100dvh-32px)] w-[min(460px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-tile border border-line-bright bg-surface p-6',
-  'shadow-[0_16px_48px_rgb(0_0_0/0.55)] outline-none transition-[opacity,transform] duration-150 ease-out',
+  'shadow-[0_16px_48px_rgb(0_0_0/0.55)] outline-none transition-[opacity,transform] duration-150 ease-out', // taste-skill-ignore: a dialog floats
   'data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
 );
 

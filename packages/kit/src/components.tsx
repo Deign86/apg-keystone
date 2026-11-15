@@ -77,7 +77,7 @@ export function FormCard({
   return (
     <Panel as="form" id={id} aria-label={title} className="flex flex-col gap-3.5" onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(); }}>
       <div>
-        <p className="eyebrow m-0">{eyebrow}</p>
+        <p className="eyebrow m-0">{eyebrow}</p>{/* taste-skill-ignore: the APG brand eyebrow (docs/DESIGN.md) */}
         <h2 className="mt-1 mb-0 font-display text-[15px] font-semibold">{title}</h2>
       </div>
       {children}

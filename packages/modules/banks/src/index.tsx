@@ -1,6 +1,6 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useState } from 'react';
-import { SERVICES, type BankAccount } from '@keystone/core';
+import { DASH, SERVICES, type BankAccount } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 import {
   accountDraftOf, accountLabel, accountsOf, bankAccounts, banksLine, newAccountDraft, nextAccountId, removeAccount, saveAccount, TAG,
@@ -48,7 +48,7 @@ function Banks() {
   const columns: Column<BankAccount>[] = [
     { key: 'id', header: 'No.', width: 72, cell: (a) => <span className="font-semibold text-gold-bright tabular-nums">{a.id}</span> },
     { key: 'bank', header: 'Bank', width: 140, cell: (a) => <span title={a.bank}>{a.bank}</span> },
-    { key: 'branch', header: 'Branch', width: 160, cell: (a) => (a.branch ? <span className="text-ink-2" title={a.branch}>{a.branch}</span> : <span className="text-ink-3">—</span>) },
+    { key: 'branch', header: 'Branch', width: 160, cell: (a) => (a.branch ? <span className="text-ink-2" title={a.branch}>{a.branch}</span> : <span className="text-ink-3">{DASH}</span>) },
     { key: 'name', header: 'Account name', cell: (a) => <span title={a.name}>{a.name}</span> },
     { key: 'number', header: 'Account number', width: 170, cell: (a) => <span className="tabular-nums">{a.number}</span> },
   ];

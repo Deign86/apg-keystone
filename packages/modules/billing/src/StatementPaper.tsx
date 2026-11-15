@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { longDate, peso, toCentavos, type Company, type DirectoryRecord, type Statement } from '@keystone/core';
+import { DASH, longDate, peso, toCentavos, type Company, type DirectoryRecord, type Statement } from '@keystone/core';
 import { EWT_RATE, lineWithTax, statementTotals, VAT_RATE } from './rules';
 import { Letterhead, Lines, Meta, orDash, paperHeading, Sheet } from '@keystone/kit';
 
@@ -30,7 +30,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
     <Sheet ref={ref} label={`Billing statement ${b.no}`}>
       <Letterhead company={company} title="Billing Statement" no={`Invoice No. ${b.no}`} date={`Date: ${longDate(b.date)}`} />
       <Meta rows={[
-        ['Bill to', client?.name ?? '—', true], ['Invoice date', longDate(b.invoiceDate ?? b.date)],
+        ['Bill to', client?.name ?? DASH, true], ['Invoice date', longDate(b.invoiceDate ?? b.date)],
         ['Attention', orDash(b.attention)], ['Due date', longDate(b.due), true],
       ]} />
       <p className="mt-0 mb-2 text-[11px] text-paper-muted">{terms}</p>

@@ -1,5 +1,5 @@
 import { localDate, type ISODate } from './dates';
-import { shortDate, stamp } from './format';
+import { shortDate, stamp, DASH } from './format';
 import type { CompanyDetails, JsonValue, ModuleTag, TerminalState } from './schema';
 
 // What every domain builds on: the refusal type, the context a rule runs in, the shape
@@ -141,4 +141,4 @@ export const jsonNumber = (v: JsonValue | undefined): number => (Number.isFinite
 export const jsonObjects = (v: JsonValue | undefined): JsonObject[] => (Array.isArray(v) ? v.filter(isJsonObject) : []);
 
 /** The date of the newest log entry, or a dash. */
-export const lastEntryDate = (s: TerminalState) => (s.log.length ? shortDate(s.log[0].when.slice(0, 10)) : '—');
+export const lastEntryDate = (s: TerminalState) => (s.log.length ? shortDate(s.log[0].when.slice(0, 10)) : DASH);
