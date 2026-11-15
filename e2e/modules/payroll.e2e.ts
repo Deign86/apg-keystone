@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Locator, type Screen } from 'e2e';
-import { tinyPaperText } from '../support/paper';
+import { faintPaperText, tinyPaperText } from '../support/paper';
 
 // Payroll (packages/modules/payroll). The clock starts at 10:00 on Monday, Nov 2, 2026, so the cut-off to close is
 // Oct 16–31, 2026 (11 standard working days). The sample data has four employees and no pay setups. The cut-off
@@ -200,14 +200,16 @@ test('shows the payroll sheet or one payslip, the sheet on a landscape A4 with e
   await show.getByRole('button', 'Payslip: Juan Miguel P. Reyes').tap();
   await expect(screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026')).toBeVisible();
   await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeHidden();
-  // Its labels included, nothing on either paper is smaller than 11px.
+  // Its labels included, nothing on either paper is smaller than 11px or fainter than 4.5:1.
   expect(await tinyPaperText(browser)).toEqual([]);
+  expect(await faintPaperText(browser)).toEqual([]);
 
   await show.getByRole('button', 'Payroll sheet').tap();
   const sheet = screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026');
 
   await expect(sheet).toBeVisible();
   expect(await tinyPaperText(browser)).toEqual([]);
+  expect(await faintPaperText(browser)).toEqual([]);
 
   // 22 columns, wider than the paper even on its side: the table shrinks to fit across it, out to the last two.
   await expect(sheet).toHaveAttribute('data-print-orientation', 'landscape');
