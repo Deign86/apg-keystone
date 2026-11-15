@@ -52,6 +52,8 @@ The ID card's foil stripe is flat gold. There are no gradients anywhere.
   print and the PDF. The voucher and the statement are laid out at the paper's width (186 mm, A4 less the print
   margins) and scaled down on screen to fit the preview column, so a narrow window never rewraps or crops them. The
   payroll sheet is a landscape A4 (273 mm), and its 22-column table, wider than that, shrinks to fit across the paper.
+  On paper, gold text is the darker `paperGold` (`#7d6936`), which reads at least 4.5:1 on white and on the pale gold
+  band (`paperTint`) behind headings and totals.
 
 ## Checks, and their latest results
 

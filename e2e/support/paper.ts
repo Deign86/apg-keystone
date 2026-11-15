@@ -13,3 +13,45 @@ export function tinyPaperText(browser: Browser) {
     return hasText && size < 11 ? [`${e.textContent?.trim()} ${size}px`] : [];
   }));
 }
+
+/**
+ * The text on the papers on screen that reads under 4.5:1 against what it sits on (WCAG AA for text this small: a
+ * gold heading on a tinted band, a grey label on white), as "text 4.2:1". Empty when every line passes.
+ */
+export function faintPaperText(browser: Browser) {
+  return browser.evaluate(() => {
+    const rgb = (css: string) => (css.match(/[\d.]+/g) ?? []).map(Number);
+
+    const luminance = (css: string) => {
+      const [r, g, b] = rgb(css).slice(0, 3).map((c) => {
+        const v = c / 255;
+
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      });
+
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+
+    // The nearest background behind an element that isn't see-through: a band's row, a box, or the paper.
+    const ground = (e: HTMLElement | null): string => {
+      for (let at = e; at; at = at.parentElement) {
+        const bg = getComputedStyle(at).backgroundColor;
+
+        if (rgb(bg)[3] !== 0) return bg;
+      }
+
+      return 'rgb(255, 255, 255)';
+    };
+
+    return [...document.querySelectorAll<HTMLElement>('[data-ui="document"] *')].flatMap((e) => {
+      const hasText = [...e.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim());
+
+      if (!hasText) return [];
+
+      const [fg, bg] = [luminance(getComputedStyle(e).color), luminance(ground(e))];
+      const ratio = (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+
+      return ratio < 4.5 ? [`${e.textContent?.trim()} ${ratio.toFixed(2)}:1`] : [];
+    });
+  });
+}
