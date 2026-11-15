@@ -9,7 +9,7 @@ const state = () => sampleState();
 describe('directory', () => {
   it('contributes its figure and its home stat', () => {
     expect(directoryModule.figure!(state(), ctx)).toEqual({ label: 'Directory records', value: '11', caption: '4 vendors · 3 clients · 4 employees' });
-    expect(directoryModule.stat!(state(), ctx)).toEqual(['Records', '11']);
+    expect(directoryModule.stat!(state(), ctx, [])).toEqual(['Records', '11']);
   });
 
   it('counts what is there, not what the sample had', () => {

@@ -22,7 +22,8 @@ These go against a skill rule because every APG system does them. Each one is ma
 - **Gold tracked capitals:** screen eyebrows, table headers, status capsules. The inspector runs with
   `--allow micro-label`.
 - **The cream ink `#f6f2e9`:** the attendance tracker's text colour. The inspector runs with `--allow palette-cream`.
-- **The 58px Orbitron greeting on Home:** the kiosk's own front door. Every other screen title is 34px.
+- **The 58px Orbitron greeting on Home:** the kiosk's own front door. Every other screen title is 34px. Home is
+  inspected with `--allow app-title-size`.
 - **Small type on the ID card:** the card is drawn at true CR80 size (54mm wide), so its 8px text is about 2mm, normal
   for a printed card. The ID Maker screen is inspected with `--allow tiny-text`; every other screen, its papers
   included, has nothing under 11px.
@@ -34,6 +35,15 @@ One more comes from the papers, which are drawn to be printed:
 - **The check voucher's black rules:** it is printed and filled in by hand, so it is ruled in black as the company's
   cash voucher is. The inspector reads those boxes as heavy panel borders, so Check Vouchers is inspected with
   `--allow heavy-borders`.
+
+And one more from screens that have little to show in a new Keystone:
+
+- **A short screen's blank first screen:** Overview, Directory, Activity Log, Bank Accounts and Data start empty
+  (docs/adr/0018), and Profile and User Accounts have nothing to show where nobody signs in. The inspector's
+  `hero-void` judges a landing page's first screen; the skill's app mode already skips its sibling rules (`no-hero`,
+  `empty-screens`). Its `unused-canvas` counts only text, so a one-sentence screen trips it too. Those screens are
+  inspected with `--allow hero-void`, and Data, Profile and User Accounts with `unused-canvas` as well. A screen with
+  records fills its first screen.
 
 ## Rules
 
@@ -73,8 +83,17 @@ npm run lint:taste
 VITE_KEYSTONE_CHANNEL=beta VITE_FIREBASE_API_KEY= VITE_FIREBASE_PROJECT_ID= VITE_FIREBASE_APP_ID= VITE_FIREBASE_AUTH_DOMAIN= npm run build:web
 (cd apps/keystone && npx vite preview --port 4173)
 CHROME_PATH=<chromium> node .agents/skills/design-taste-frontend/scripts/inspect.mjs "http://127.0.0.1:4173/#billing" --app --widths 1440,1100 --allow micro-label,palette-cream
-CHROME_PATH=<chromium> node .agents/skills/design-taste-frontend/scripts/inspect.mjs "http://127.0.0.1:4173/#vouchers" --app --widths 1440,1100 --allow micro-label,palette-cream,heavy-borders
 ```
+
+Every screen takes `--allow micro-label,palette-cream`, and the exceptions above add their own:
+
+| Screen | Also allowed |
+|---|---|
+| Home | `app-title-size` |
+| Check Vouchers | `heavy-borders` |
+| ID Maker | `tiny-text` |
+| Overview, Directory, Activity Log, Bank Accounts | `hero-void` |
+| Data, Profile, User Accounts | `hero-void`, `unused-canvas` |
 
 On 2026-10-30:
 - **Lint (app mode):** 0 fails.
@@ -90,3 +109,6 @@ On 2026-11-15, on the production build, every screen at 1440 and 1100px: 0 fails
 Timekeeping have no warnings either. A paper is now as tall as what it holds: its old 420px minimum left a blank band
 under a statement with no charges yet. Sentences and labels went from 12 to 13px. Payroll shows its sheet and payslips
 once someone has pay set up; before that, where they will be.
+
+Later on 2026-11-15, every screen at 1440 and 1100px, with the allowances above: 0 fails and 0 warnings. Overview's two
+cards end level, and Home's Overview tile shows how many things wait on you (docs/adr/0021).

@@ -46,6 +46,7 @@ module-directory  ──contributes──▶  figure · stat · logTags
 module-timekeeping ─contributes──▶  figure · finding · stat · logTags
 module-payroll    ──contributes──▶  figure · finding · stat · logTags
 module-banks      ──contributes──▶  logTags
+module-overview   ──contributes──▶  stat (counting the others' waiting items)
                                          │
                               @keystone/kit registry (buildRegistry)
                                          │
@@ -66,7 +67,7 @@ changes.
 |---|---|---|
 | `id`, `title`, `section`, `blurb`, `order`, `Screen` | yes | Identity, rail position (`order`) and the screen itself |
 | `requires` | | Module ids it cannot work without. If one is missing, the module is left out with its reason. |
-| `onHome`, `stat` | | A tile on Home with one live figure |
+| `onHome`, `stat` | | A tile on Home with one live figure. `stat` is given the installed modules too, so a collector such as Overview can count what they contribute (docs/adr/0021). |
 | `figure` | | A cell in Overview's figure strip. Mark the one that answers the screen's question `lead: true`. |
 | `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20, IDs 10. |
 | `waiting`, `openWaiting` | | Records waiting on someone, listed on Overview, and how to open one |

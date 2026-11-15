@@ -256,7 +256,7 @@ export const fundsModule: ModuleDef = {
   id: 'funds',
   title: 'Requests for Funds',
   section: 'Disbursements',
-  blurb: 'List the expenses you need money for. The owner approves or declines; an approval makes the fund transfer request, or drafts the check voucher.',
+  blurb: 'List the expenses you need money for. The owner decides; an approval drafts the fund transfer or check voucher.',
   // Right after Check Vouchers, which its approvals feed.
   order: 2.5,
   onHome: true,

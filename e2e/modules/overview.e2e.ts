@@ -16,6 +16,10 @@ test('sums up the figures from every screen', async ({ app, screen }) => {
 });
 
 test('lists what waits on you, and opens each one in its own screen', async ({ app, screen }) => {
+  // Home's Overview tile counts the same items.
+  await app.open('/#home');
+  await expect(screen.getByRole('button', /^Overview /)).toContainText('Waiting on you 4');
+
   await app.open('/#overview');
   const waiting = screen.getByRole('region', 'Waiting on you');
 
@@ -124,6 +128,7 @@ test('says nothing is waiting once every voucher, statement and card is dealt wi
 
   await app.open('/');
   await expect(screen.getByText('Nothing is waiting on you.')).toBeVisible();
+  await expect(screen.getByRole('button', /^Overview /)).toContainText('Waiting on you 0');
 });
 
 test('shows who is in today and the last payroll among the figures', async ({ app, screen }) => {

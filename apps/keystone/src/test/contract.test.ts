@@ -17,7 +17,7 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
   it('contributes well-formed figures, findings and waiting items', () => {
     const s = state();
 
-    if (m.stat) expect(m.stat(s, ctx)).toEqual([expect.any(String), expect.any(String)]);
+    if (m.stat) expect(m.stat(s, ctx, registry.modules)).toEqual([expect.any(String), expect.any(String)]);
 
     if (m.figure) expect(m.figure(s, ctx)).toEqual(expect.objectContaining({ label: expect.any(String), value: expect.any(String), caption: expect.any(String) }));
 
@@ -33,7 +33,7 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
   it('leaves the state it is given alone', () => {
     const s = state();
     const before = JSON.stringify(s);
-    m.stat?.(s, ctx); m.figure?.(s, ctx); m.finding?.(s, ctx); m.waiting?.(s, ctx);
+    m.stat?.(s, ctx, registry.modules); m.figure?.(s, ctx); m.finding?.(s, ctx); m.waiting?.(s, ctx);
 
     if (m.onOpen) m.onOpen(s, ctx);
     expect(JSON.stringify(s)).toBe(before);
@@ -66,5 +66,17 @@ describe('across the installed modules', () => {
     // Without billing installed, the vouchers finding leads.
     expect(finding(registry.modules.map((m) => m.id).filter((id) => id !== 'billing'))).toBe('1 voucher worth ₱35,000.00 waits for approval.');
     expect(finding([])).toBe('Nothing is waiting on you.');
+  });
+
+  it('Overview\'s Home figure counts what the installed modules say waits on you, and follows them', () => {
+    const overview = registry.modules.find((m) => m.id === 'overview');
+    const waiting = (mods: typeof registry.modules) => mods.reduce((n, m) => n + (m.waiting?.(state(), ctx).length ?? 0), 0);
+    const withoutBilling = registry.modules.filter((m) => m.id !== 'billing');
+
+    // Billing's sent and overdue statements are among them, so removing it lowers the count.
+    expect(waiting(withoutBilling)).toBeLessThan(waiting(registry.modules));
+    expect(overview?.stat?.(state(), ctx, registry.modules)).toEqual(['Waiting on you', String(waiting(registry.modules))]);
+    expect(overview?.stat?.(state(), ctx, withoutBilling)).toEqual(['Waiting on you', String(waiting(withoutBilling))]);
+    expect(overview?.stat?.(state(), ctx, [])).toEqual(['Waiting on you', '0']);
   });
 });
