@@ -7,7 +7,7 @@ import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 import { sampleState } from '@keystone/core/sample';
 
-// A request for funds across the parts as shipped (docs/adr/0011, 0021): the owner, signed in, approves it on the
+// A request for funds across the parts as shipped (docs/adr/0011, 0021): the CEO, signed in, approves it on the
 // Requests for Funds screen. A check: Check Vouchers drafts the voucher through its vouchers.drafts service, and without
 // Check Vouchers the approval still stands. A transfer: the fund transfer request opens, ready to print or save, and no
 // voucher is drafted. Staff and a computer with nobody signed in are never offered the decision.
@@ -67,7 +67,7 @@ afterEach(() => {
 });
 
 describe('a request for funds, as shipped', () => {
-  it('the owner approves it, and Check Vouchers drafts the voucher for the amount', async () => {
+  it('the CEO approves it, and Check Vouchers drafts the voucher for the amount', async () => {
     const store = await openFunds(builtInModules, owner);
 
     await approve();
@@ -87,12 +87,12 @@ describe('a request for funds, as shipped', () => {
     expect(await screen.findByText('RF-2026-0001 approved. Check Vouchers is not installed, so no voucher was drafted.')).toBeInTheDocument();
   });
 
-  it('the owner approves a transfer, and its fund transfer request opens to print or save, with no voucher drafted', async () => {
+  it('the CEO approves a transfer, and its fund transfer request opens to print or save, with no voucher drafted', async () => {
     const store = await openFunds(builtInModules, owner, transferState());
     const vouchers = store.state.cv.length;
     const card = screen.getByRole('article', { name: 'RF-2026-0001' });
 
-    // The owner sees each expense, and the account the money goes to, before deciding.
+    // The CEO sees each expense, and the account the money goes to, before deciding.
     expect(within(card).getByRole('list', { name: 'Expenses on RF-2026-0001' })).toHaveTextContent('Pantry groceries₱3,250.75Courier for payroll documents₱480.00');
     expect(card).toHaveTextContent('Transfer toBDO · Liza Ramos · 0012 3456 7890');
 
@@ -113,12 +113,12 @@ describe('a request for funds, as shipped', () => {
   it('is never offered to staff', async () => {
     await openFunds(builtInModules, hr);
     expect(screen.queryByRole('article', { name: 'RF-2026-0001' })).toBeNull();
-    expect(screen.getByText('Only the owner approves or declines requests. The answer shows here once it is given.')).toBeInTheDocument();
+    expect(screen.getByText('Only the CEO approves or declines requests. The answer shows here once it is given.')).toBeInTheDocument();
   });
 
   it('is never offered on a computer where nobody signs in', async () => {
     await openFunds(builtInModules);
     expect(screen.queryByRole('article', { name: 'RF-2026-0001' })).toBeNull();
-    expect(screen.getByText(/^Only the owner approves or declines requests, signed in to APG's records in the cloud\./)).toBeInTheDocument();
+    expect(screen.getByText(/^Only the CEO approves or declines requests, signed in to APG's records in the cloud\./)).toBeInTheDocument();
   });
 });

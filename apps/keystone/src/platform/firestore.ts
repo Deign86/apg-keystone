@@ -27,9 +27,9 @@ const COMPANY = 'apg';
 /** Firestore takes at most 500 writes in one batch. */
 const BATCH = 500;
 
-const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).';
-const ONLY_OWNER = 'Only the owner makes accounts.';
-const ONLY_OWNER_REMOVES = 'Only the owner removes accounts.';
+const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the CEO to add it in the Firebase console (keystone/apg/members).';
+const ONLY_OWNER = 'Only the CEO makes accounts.';
+const ONLY_OWNER_REMOVES = 'Only the CEO removes accounts.';
 const WRONG_CURRENT = 'That is not your current password.';
 const ENTER_EMAIL = 'Enter the email you sign in with, like ana.cruz@alphapremiergroup.com.';
 
@@ -47,7 +47,7 @@ export interface CloudSession {
   signOut(): Promise<void>;
   /** Who is signed in, from their member document. Throws when the account is not a member. */
   member(): Promise<Member>;
-  /** Who may open the records, the owner making and removing accounts, and changing your password (docs/adr/0014–0016). */
+  /** Who may open the records, the CEO making and removing accounts, and changing your password (docs/adr/0014–0016). */
   accounts: AppAccounts;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;
@@ -72,7 +72,7 @@ export function explainCloudError(cause: unknown): string {
     case 'auth/user-not-found':
       return 'That email and password do not match an account.';
     case 'auth/user-disabled':
-      return 'This account has been turned off. Ask the owner.';
+      return 'This account has been turned off. Ask the CEO.';
     case 'auth/too-many-requests':
       return 'Too many tries. Wait a few minutes, then try again.';
     case 'auth/network-request-failed':
@@ -187,7 +187,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
   /**
    * A sign-in of its own, kept in memory, for making someone else's account: creating one signs it in, and doing that
-   * here leaves the owner signed in on this computer. Each gets its own name, so two at once never share one.
+   * here leaves the CEO signed in on this computer. Each gets its own name, so two at once never share one.
    */
   let helpers = 0;
 

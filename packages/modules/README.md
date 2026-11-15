@@ -8,14 +8,14 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `home/` | 0 | The kiosk-style front door | Nothing; it collects tiles, the finding and the connected systems' shortcuts | |
 | `overview/` | 1 | Summary for the CEO | stat (Waiting on you: the others' waiting items); it collects figures, waiting items, the finding and "New …" buttons | |
 | `vouchers/` | 2 | Check vouchers, their rules and the voucher document | figure, finding, waiting, create, stat, log tag `CV` | `vouchers.drafts` |
-| `funds/` | 3 | Requests for funds: filing, the owner's decision, and the voucher an approval drafts | figure, finding, waiting, create, stat, log tag `RF`, its requests as cloud documents of their own | |
+| `funds/` | 3 | Requests for funds: filing, the CEO's decision, and the voucher an approval drafts | figure, finding, waiting, create, stat, log tag `RF`, its requests as cloud documents of their own | |
 | `billing/` | 4 | Billing statements, their rules (VAT, EWT, payments) and the statement document | figure (lead), finding, waiting, create, stat, log tag `BS`, overdue on open | `billing.statement-payments` |
 | `id-maker/` | 5 | Employee ID cards, their rules and the verification pattern | figure, finding, waiting, create, stat, log tag `ID`, expiry on open | |
 | `directory/` | 6 | The directory screen (the records themselves are shared kernel, in core) | figure, stat, log tag `DIR` | |
 | `activity/` | 7 | The audit trail | Nothing; its filters come from every module's `logTags` | |
 | `timekeeping/` | 8 | Employees' time-ins and time-outs, the weekly grace, holidays | figure, finding, stat, log tag `DTR` | `timekeeping.employee-attendance` |
 | `payroll/` | 9 | Each employee's pay setup, the cut-off, the payroll sheet and payslips | figure, finding, stat, log tag `PAY` | |
-| `accounts/` | Settings, first | Who can open the records in the cloud, and the owner making and removing staff accounts | log tag `ACCT` | |
+| `accounts/` | Settings, first | Who can open the records in the cloud, and the CEO making and removing staff accounts | log tag `ACCT` | |
 | `data/` | Settings, after User Accounts | Backup and restore, and the parts left out | Nothing | |
 | `banks/` | Settings, after Data | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
 | `company/` | last | Changing the company's details (the details themselves are kernel, in core: `state.company`) | finding, log tag `CO` | |
@@ -23,7 +23,7 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 The website connector adds a `website` screen (rail 7). It settles statements through `billing.statement-payments`
 and keeps working, without matching, when billing is not installed. Billing asks for `banks.bank-accounts` to offer
 "Pay into" on a statement, and without it the payment instructions are typed as before. Requests for Funds asks for
-`vouchers.drafts` to draft the check voucher when the owner approves; without it the approval stands and no voucher is
+`vouchers.drafts` to draft the check voucher when the CEO approves; without it the approval stands and no voucher is
 drafted.
 
 ## Rules

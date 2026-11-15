@@ -38,7 +38,7 @@ function CompanyDetailsScreen() {
         error={error}
         actions={editable
           ? <Button kind="primary" type="submit">Save company details</Button>
-          : <p className="m-0 text-xs text-ink-2">Only the owner changes these.</p>}
+          : <p className="m-0 text-xs text-ink-2">Only the CEO changes these.</p>}
       >
         <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
           <legend className="mb-2 text-[12.5px] font-semibold text-ink-2">Letterhead</legend>

@@ -3,7 +3,7 @@ import { expect } from 'e2e';
 import { asMember, documentIds, emptyCloud, expectHome, idToken, keepRecordsHere, makeAccount, marker, record, recordsInCloud, signIn } from './emulators';
 
 // The records in the cloud (apps/keystone/src/platform/cloud.ts, firestore.ts; docs/adr/0009), their only source
-// (docs/adr/0018): the owner's first sign-in starts them empty and nothing a computer holds is ever copied in, every
+// (docs/adr/0018): the CEO's first sign-in starts them empty and nothing a computer holds is ever copied in, every
 // change is written as the documents it touched, even one the page reloads on before the cloud has it (pending.ts,
 // docs/adr/0013), and any computer opens the same records. Most tests start with the sample records already saved in
 // the cloud (recordsInCloud). app.restart() reopens Keystone on the same computer; app.clearState() is another
@@ -13,7 +13,7 @@ test.beforeEach(async () => {
   await emptyCloud();
 });
 
-test('the owner\'s first sign-in starts the records empty, copying in nothing this computer holds', async ({ app, screen, browser }) => {
+test('the CEO\'s first sign-in starts the records empty, copying in nothing this computer holds', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner');
 
   await keepRecordsHere(app, browser, 'the office computer');
@@ -30,7 +30,7 @@ test('the owner\'s first sign-in starts the records empty, copying in nothing th
 
   for (const list of ['dir', 'cv', 'bs', 'ids', 'log', 'ext', 'company']) expect(await documentIds(list)).toEqual([]);
 
-  // What the owner then saves is what the cloud holds: the company's details, a document of their own.
+  // What the CEO then saves is what the cloud holds: the company's details, a document of their own.
   await app.open('/#company');
   const form = screen.getByRole('form', 'Company details');
 
@@ -54,20 +54,21 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
 
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
-  await form.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
+  // The CEO's own voucher needs nobody's approval: it is approved as it is saved.
+  await form.getByRole('button', 'Save and approve').tap();
+  await expect(screen.getByRole('dialog', '888-001 saved and approved.')).toBeVisible();
 
   // The new voucher and its log entry reach the cloud; the other vouchers are not written again.
-  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ no: '888-001', status: 'For Approval' });
+  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ no: '888-001', status: 'Approved' });
   await expect.poll(async () => (await documentIds('log')).length, { timeout: 10_000 }).toBe(8);
   expect(await documentIds('cv')).toEqual(['888-001', 'CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
 
   // Reopened on the same computer: still signed in, and the voucher is there.
   await app.restart();
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .* For Approval/)).toBeVisible({ timeout: 15_000 });
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .* Approved/)).toBeVisible({ timeout: 15_000 });
 
-  // Another computer: signed out, with no records of its own. A staff member signs in and sees the owner's voucher.
+  // Another computer: signed out, with no records of its own. A staff member signs in and sees the CEO's voucher.
   await app.clearState();
   await app.open('/');
   await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
@@ -77,13 +78,26 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await app.open('/#vouchers');
   const register = screen.getByRole('table', 'Voucher register');
 
-  await expect(register.getByRole('row', /^888-001 .* ₱1,250\.50 For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^888-001 .* ₱1,250\.50 Approved/)).toBeVisible();
 
-  // The staff member's change reaches the cloud too (firestore.rules lets members write records).
-  await register.getByRole('button', 'Actions for 888-001').tap();
-  await screen.getByRole('menuitem', 'Mark approved').tap();
-  await expect(register.getByRole('row', /^888-001 /).getByRole('cell', 'Approved')).toBeVisible();
-  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });
+  // The staff member's change reaches the cloud too (firestore.rules lets members write records): the check, written
+  // after the CEO approved the voucher.
+  await register.getByRole('cell', '888-001').tap();
+  const approved = screen.getByRole('form', 'Viewing 888-001');
+
+  await approved.getByRole('textbox', 'Check No.').fill('0004530');
+  await approved.getByRole('button', 'Save check').tap();
+  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved', check: '0004530' });
+
+  // A staff member's own voucher still waits for the CEO's approval.
+  await screen.getByRole('button', 'New voucher').tap();
+  const mine = screen.getByRole('form', 'New voucher');
+
+  await mine.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await mine.getByRole('textbox', 'Line 1 amount').fill('980');
+  await mine.getByRole('button', 'Save and route for approval').tap();
+  await expect(screen.getByRole('dialog', '888-002 saved and routed for approval.')).toBeVisible();
+  await expect.poll(() => record('cv', '888-002'), { timeout: 10_000 }).toMatchObject({ status: 'For Approval' });
 });
 
 test('a computer with records of its own opens the cloud\'s, never copying its own over them', async ({ app, screen, browser }) => {
@@ -103,7 +117,7 @@ test('a computer with records of its own opens the cloud\'s, never copying its o
   expect(await documentIds('log')).toHaveLength(7);
 });
 
-test('firestore.rules let only the owner change the company\'s details, and every member read them', async () => {
+test('firestore.rules let only the CEO change the company\'s details, and every member read them', async () => {
   await recordsInCloud();
   const owner = await idToken(await makeAccount('owner'));
   const staff = await idToken(await makeAccount('staff'));

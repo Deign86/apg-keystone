@@ -57,7 +57,7 @@ describe('company details', () => {
     expect(canChange(at(owner))).toBe(true);
     expect(canChange(at())).toBe(true);
     expect(canChange(at(staff))).toBe(false);
-    expect(() => saveCompany(sampleState(), d, at(staff))).toThrow('Only the owner changes the company\'s details.');
+    expect(() => saveCompany(sampleState(), d, at(staff))).toThrow('Only the CEO changes the company\'s details.');
     expect(saveCompany(sampleState(), d, at()).record.phone).toBe('02 8650 2541');
   });
 

@@ -46,7 +46,7 @@ export interface MemberAccount extends Member {
   email: string;
 }
 
-/** What the owner gives for a new account: the person's name, their email, and the password they first sign in with. */
+/** What the CEO gives for a new account: the person's name, their email, and the password they first sign in with. */
 export interface NewAccount {
   name: string;
   email: string;
@@ -57,7 +57,7 @@ export interface AppAccounts {
   /** Everyone who may open the records. Throws the sentence to show when they cannot be read. */
   list(): Promise<MemberAccount[]>;
   /**
-   * Makes a sign-in with this email and password and makes it a staff member, leaving the owner signed in. Only an
+   * Makes a sign-in with this email and password and makes it a staff member, leaving the CEO signed in. Only an
    * owner may; throws the sentence to show when refused, with no sign-in left behind.
    */
   create(account: NewAccount): Promise<MemberAccount>;

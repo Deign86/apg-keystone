@@ -3,12 +3,12 @@ import { expect, type Screen } from 'e2e';
 import { faintPaperText, tinyPaperText } from '../support/paper';
 
 // Requests for Funds (packages/modules/funds, docs/adr/0011, 0021). This suite runs the build that keeps its records on
-// the computer, where nobody signs in: requests are filed, edited and withdrawn here, and never decided. The owner's
+// the computer, where nobody signs in: requests are filed, edited and withdrawn here, and never decided. The CEO's
 // decision, the fund transfer request it makes and the voucher it drafts are tested in the cloud suite
 // (e2e/cloud/funds.e2e.ts). The sample data has no requests; payees come from the directory, vendors first. A first
 // request is paid by transfer.
 
-const OWNER_ONLY = 'Only the owner approves or declines requests, signed in to APG\'s records in the cloud. This copy of Keystone keeps its records on this computer, where nobody signs in.';
+const OWNER_ONLY = 'Only the CEO approves or declines requests, signed in to APG\'s records in the cloud. This copy of Keystone keeps its records on this computer, where nobody signs in.';
 
 /** Fills in a request paid by check, with one expense, and sends it; `by` settles it by a date instead of ASAP. */
 async function ask(screen: Screen, request: { purpose: string; expense: string; amount: string; payee: string; name: string; by?: string }) {
@@ -34,20 +34,20 @@ async function ask(screen: Screen, request: { purpose: string; expense: string; 
 
 const party = { purpose: 'Christmas party: venue deposit', expense: 'Venue deposit', amount: '48000', payee: 'Manila Water Company (V-002)', name: 'Ana Cruz' };
 
-test('asks for funds, and the request waits for the owner, who decides it signed in', async ({ app, screen }) => {
+test('asks for funds, and the request waits for the CEO, who decides it signed in', async ({ app, screen }) => {
   await app.open('/#funds');
 
   await expect(screen.getByRole('heading', { name: 'Requests for Funds', level: 1 })).toBeVisible();
-  await expect(screen.getByText('No request is waiting. Ask for funds here, and the owner approves or declines.')).toBeVisible();
+  await expect(screen.getByText('No request is waiting. Ask for funds here, and the CEO approves or declines.')).toBeVisible();
   await expect(screen.getByText(OWNER_ONLY)).toBeVisible();
 
   await ask(screen, party);
 
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
   const register = screen.getByRole('table', 'Requests for funds');
 
   await expect(register.getByRole('row', /^RF-2026-0001 Nov 2, 2026 Christmas party: venue deposit Check Ana Cruz ₱48,000\.00 ASAP For Approval/)).toBeVisible();
-  await expect(screen.getByText('Ana Cruz asks for ₱48,000.00 ASAP; it waits for the owner\'s decision.')).toBeVisible();
+  await expect(screen.getByText('Ana Cruz asks for ₱48,000.00 ASAP; it waits for the CEO\'s decision.')).toBeVisible();
 
   // Nobody here can decide it: there is nothing to approve or decline.
   await expect(screen.getByRole('region', 'Waiting for your decision')).toBeHidden();
@@ -90,14 +90,14 @@ test('refuses a request it cannot act on, and says why', async ({ app, screen })
 
   await form.getByRole('textbox', 'Settle by').fill('2026-11-20');
   await form.getByRole('button', 'Send for approval').tap();
-  await expect(form.getByRole('alert')).toHaveText('Enter your name, so the owner knows who is asking.');
+  await expect(form.getByRole('alert')).toHaveText('Enter your name, so the CEO knows who is asking.');
 
   await form.getByRole('textbox', 'Requested by').fill('Paolo Santos');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Bank transfer Paolo Santos ₱2,450\.50 Nov 20, 2026 For Approval/)).toBeVisible();
 });
 
-test('lists the expenses to be paid back by transfer, and previews the fund transfer request the owner\'s approval makes', async ({ app, screen, browser }) => {
+test('lists the expenses to be paid back by transfer, and previews the fund transfer request the CEO\'s approval makes', async ({ app, screen, browser }) => {
   await app.open('/#funds');
   const form = screen.getByRole('form', 'New request');
 
@@ -123,13 +123,13 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
   await expect(paper).toContainText('Pantry groceries ₱3,250.75');
   await expect(paper).toContainText('Courier for payroll documents ₱480.00');
   await expect(paper).toContainText('Three Thousand Seven Hundred Thirty Pesos and 75/100 Only');
-  await expect(paper).toContainText('Not approved yet: this request waits for the owner\'s decision.');
+  await expect(paper).toContainText('Not approved yet: this request waits for the CEO\'s decision.');
   await expect(form.getByRole('button', 'Export PDF')).toBeHidden();
   expect(await tinyPaperText(browser)).toEqual([]);
   expect(await faintPaperText(browser)).toEqual([]);
 
   await form.getByRole('button', 'Send for approval').tap();
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
   await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Revolving fund, Nov 1 to 15 Bank transfer Ana Cruz ₱3,730\.75 ASAP For Approval/)).toBeVisible();
 
   // The next request starts with the same account: the fund is topped up into it each time.
@@ -159,7 +159,7 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
   await screen.getByRole('alertdialog', 'Withdraw RF-2026-0001?').getByRole('button', 'Withdraw').tap();
 
   await expect(register.getByRole('row', /^RF-2026-0001 /).getByRole('cell', 'Withdrawn')).toBeVisible();
-  await expect(screen.getByText('No request is waiting. Ask for funds here, and the owner approves or declines.')).toBeVisible();
+  await expect(screen.getByText('No request is waiting. Ask for funds here, and the CEO approves or declines.')).toBeVisible();
 
   // A withdrawn request opens read-only.
   await register.getByRole('cell', 'RF-2026-0001').tap();
@@ -175,7 +175,7 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
 test('shows a waiting request on Home and Overview, opens it from there, and logs it', async ({ app, screen }) => {
   await app.open('/#funds');
   await ask(screen, { ...party, purpose: 'Replacement laptop charger', expense: 'Laptop charger', amount: '2450.50', name: 'Paolo Santos', by: '2026-11-20' });
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
 
   await app.open('/');
   await expect(screen.getByRole('main').getByRole('list').first().getByRole('button', /^Requests for Funds .* Waiting for a decision 1$/)).toBeVisible();

@@ -1,4 +1,4 @@
-import { companyOf } from '@keystone/core';
+import { companyOf, roleLabel } from '@keystone/core';
 import { Button, KeyBadge, Sheet, cn } from '@keystone/ui';
 import { Menu } from 'lucide-react';
 import keystoneMark from '@keystone/ui/keystone-mark.png';
@@ -70,7 +70,7 @@ function RailFoot() {
       <UpdateNotice />
       <p className="m-0 flex items-center gap-1.5 font-semibold text-ink">
         <span aria-hidden="true" className="size-[7px] rounded-full bg-good" />
-        {who ? `${who.name} · ${who.role === 'owner' ? 'Owner' : 'Staff'}` : 'Administrator access'}
+        {who ? `${who.name} · ${roleLabel(who)}` : 'Administrator access'}
       </p>
       <p className="m-0">{who ? 'Saved in APG\'s records in the cloud' : platform.kind === 'desktop' ? 'Saved on this computer' : 'Browser preview · saved in this browser'}</p>
       <SignOutButton />

@@ -82,8 +82,49 @@ describe('check vouchers', () => {
     expect(edited.state.cv).toHaveLength(3);
     expect(edited.message).toBe(`${pending.no} updated.`);
     const approved = s.cv.find((v) => v.status === 'Approved')!;
-    expect(() => saveVoucher(s, voucherDraftOf(approved), ctx)).toThrow(/can no longer be changed/);
     expect(saveVoucher(s, voucherDraftOf(approved), ctx, true).record.no).toBe('888-001');
+  });
+
+  it('approves the CEO\'s voucher as it is saved, and routes anyone else\'s for approval', () => {
+    const ceo: Ctx = { ...ctx, who: { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' } };
+    const staff: Ctx = { ...ctx, who: { uid: 'staff-1', name: 'Ana Cruz', role: 'staff' } };
+    const d = { ...newVoucher(state(), ceo), payee: 'V-002', lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' })] };
+
+    const mine = saveVoucher(state(), d, ceo);
+    expect(mine.record).toMatchObject({ no: '888-001', status: 'Approved', prepared: 'Mark Reyes' });
+    expect(mine.message).toBe('888-001 saved and approved.');
+    expect(mine.state.log[0].text).toBe('888-001 for Manila Water Company saved and approved by Mark Reyes (₱8,412.30).');
+    expect(voucherWaiting(mine.state).map((w) => w.no)).toEqual(['CV-2026-0141']);
+    // Save as new is a new voucher too.
+    expect(saveVoucher(state(), { ...d, editing: 'CV-2026-0141' }, ceo, true).record.status).toBe('Approved');
+
+    const theirs = saveVoucher(state(), d, staff);
+    expect(theirs.record.status).toBe('For Approval');
+    expect(theirs.message).toBe('888-001 saved and routed for approval.');
+    // An edit approves nothing, even the CEO's: one waiting still waits.
+    expect(saveVoucher(theirs.state, { ...voucherDraftOf(theirs.record), check: '0004512' }, ceo).record.status).toBe('For Approval');
+  });
+
+  it('takes the check number and date of check on an approved voucher until it is released, and nothing else', () => {
+    const s = state();
+    const approved = s.cv.find((v) => v.no === 'CV-2026-0140')!;
+    const d = { ...voucherDraftOf(approved), check: ' 0004530 ', checkDate: '2026-11-03', payee: 'V-002', lines: [lineDraft({ desc: 'Something else', amount: '1' })] };
+
+    const r = saveVoucher(s, d, ctx);
+    expect(r.record).toEqual({ ...approved, check: '0004530', checkDate: '2026-11-03' });
+    expect(r.state.cv.find((v) => v.no === 'CV-2026-0140')).toEqual(r.record);
+    expect(r.message).toBe('CV-2026-0140 updated.');
+    expect(r.state.log[0].text).toBe('CV-2026-0140 check 0004530 entered, dated Nov 3, 2026.');
+    expect(setVoucherStatus(r.state, 'CV-2026-0140', 'Released', ctx).state.log[0].text).toBe('CV-2026-0140 released; check 0004530 to JL Santos Printing Services.');
+
+    const cleared = saveVoucher(r.state, { ...voucherDraftOf(r.record), check: '', checkDate: '' }, ctx);
+    expect(cleared.record.check).toBe('');
+    expect(cleared.record).not.toHaveProperty('checkDate');
+    expect(cleared.state.log[0].text).toBe('CV-2026-0140 check number cleared.');
+    expect(saveVoucher(r.state, voucherDraftOf(r.record), ctx)).toMatchObject({ state: r.state, message: 'CV-2026-0140 is unchanged.' });
+
+    const released = s.cv.find((v) => v.no === 'CV-2026-0139')!;
+    expect(() => saveVoucher(s, { ...voucherDraftOf(released), check: '0009999' }, ctx)).toThrow(/released and can no longer be changed/);
   });
 
   it('logs status changes and needs a check number to release', () => {
@@ -110,7 +151,8 @@ describe('check vouchers', () => {
     const s = state();
     const byNo = (no: string) => s.cv.find((v) => v.no === no)!;
     expect(voucherLock(byNo('CV-2026-0141'))).toBeNull();
-    expect(voucherLock(byNo('CV-2026-0140'))).toBe('CV-2026-0140 is approved and can no longer be changed. Copy it to a new voucher to change it.');
+    expect(voucherLock(byNo('CV-2026-0140'))).toBe('CV-2026-0140 is approved: only its check number and date of check can change until it is released. Copy it to a new voucher to change the rest.');
+    expect(voucherLock(byNo('CV-2026-0139'))).toBe('CV-2026-0139 is released and can no longer be changed. Copy it to a new voucher to change it.');
     expect(() => saveVoucher(s, voucherDraftOf(byNo('CV-2026-0139')), ctx)).toThrow(voucherLock(byNo('CV-2026-0139'))!);
 
     const copy = copyVoucher(s, byNo('CV-2026-0140'), ctx);
@@ -139,5 +181,8 @@ describe('check vouchers', () => {
     expect(r.state.log[0].text).toBe('888-001 for Manila Water Company saved and routed for approval (₱48,230.55).');
     expect(() => voucherDrafts.draft(s, { payee: 'V-999', amount: 100, particulars: 'Nothing' }, ctx)).toThrow('Choose a payee from the directory.');
     expect(() => voucherDrafts.draft(s, { payee: 'V-002', amount: 0, particulars: 'Nothing' }, ctx)).toThrow('Add at least one particular with an amount.');
+    // The CEO's decision drafts it, and accounting still completes it: it waits for approval like any other.
+    const ceo: Ctx = { ...ctx, who: { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' } };
+    expect(voucherDrafts.draft(s, { payee: 'V-002', amount: 100, particulars: 'Venue deposit' }, ceo).record.status).toBe('For Approval');
   });
 });

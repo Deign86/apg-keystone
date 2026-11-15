@@ -1,13 +1,13 @@
 import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
-import { DASH } from '@keystone/core';
+import { DASH, roleLabel } from '@keystone/core';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
 import {
   accountMade, accountRemoved, accountsLine, checkAccount, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
-  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLabel, TAG,
+  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, TAG,
 } from './rules';
 
-/** The owner's form for a new staff account: name, email and the password they first sign in with. */
+/** The CEO's form for a new staff account: name, email and the password they first sign in with. */
 function AccountForm({ accounts, members, onDone, onCancel }: {
   accounts: AppAccounts; members: MemberAccount[]; onDone: (made: MemberAccount) => void; onCancel: () => void;
 }) {
@@ -101,7 +101,7 @@ function PasswordForm({ accounts, onDone }: { accounts: AppAccounts; onDone: () 
   );
 }
 
-/** Who can open the records in the cloud; for the owner, making and removing staff accounts; for anyone, their password. */
+/** Who can open the records in the cloud; for the CEO, making and removing staff accounts; for anyone, their password. */
 function Members({ accounts }: { accounts: AppAccounts }) {
   const { ctx, run, notify } = useKeystone();
   const confirm = useConfirm();
@@ -166,7 +166,7 @@ function Members({ accounts }: { accounts: AppAccounts }) {
           rows={membersInOrder(members ?? [])}
           rowKey={(m) => m.uid}
           rowLabel={(m) => m.name}
-          // The owner removes staff accounts from a row's menu; owners and their own account have none.
+          // The CEO removes staff accounts from a row's menu; owners and their own account have none.
           actions={owner ? (m) => (removeRefusal(m, ctx) ? [] : [{
             label: 'Remove…', danger: true,
             onSelect: () => confirm({
@@ -180,7 +180,7 @@ function Members({ accounts }: { accounts: AppAccounts }) {
         open={making}
         onOpenChange={(o) => !o && setMaking(false)}
         title="Make account"
-        description="A staff account opens APG's records, and files and reads its own requests for funds. Only the owner decides them."
+        description="A staff account opens APG's records, and files and reads its own requests for funds. Only the CEO decides them."
       >
         {making && members && (
           <AccountForm
@@ -222,7 +222,7 @@ export const accountsModule: ModuleDef = {
   id: 'accounts',
   title: 'User Accounts',
   section: 'Settings',
-  blurb: 'Who can open APG’s records, and the owner making an account for each staff member.',
+  blurb: 'Who can open APG’s records, and the CEO making an account for each staff member.',
   // Under Settings after Profile, before Data and Bank Accounts.
   order: 89,
   logTags: { [TAG]: 'User Accounts' },

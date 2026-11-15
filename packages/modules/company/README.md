@@ -7,8 +7,8 @@ starts from. Last under Settings on the rail, after Bank Accounts (docs/adr/0018
 - `src/rules.ts`: changing the details. Tested in `test/rules.test.ts`.
   - **Saving** needs the company's name. Each line is kept with single spaces; payment instructions and the closing
     note keep their lines. Days to pay (0–365) and years an ID is valid (0–10) are whole numbers, blank for not set.
-  - **Signed in, only an owner saves them;** staff see them read-only. firestore.rules hold the same: in the cloud the
-    details are one document, `keystone/apg/company/details`, that only an owner writes. Where nobody signs in (the
+  - **Signed in, only a CEO saves them;** staff see them read-only. firestore.rules hold the same: in the cloud the
+    details are one document, `keystone/apg/company/details`, that only a CEO writes. Where nobody signs in (the
     records on one computer), whoever uses it may.
 - `src/index.tsx`: the screen. One form in four parts: the letterhead (name, address, contact line, short address,
   phone, billing email), check vouchers (prepared, audited and approved by), billing statements (payment instructions,

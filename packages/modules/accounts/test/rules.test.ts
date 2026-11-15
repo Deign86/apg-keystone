@@ -25,7 +25,7 @@ const members: MemberAccount[] = [
 const draft = { name: '  Liza   Bautista ', email: ' Liza.Bautista@AlphaPremierGroup.com ', password: 'correct horse' };
 
 describe('who makes accounts', () => {
-  it('is the owner signed in to the cloud, and nobody else', () => {
+  it('is the CEO signed in to the cloud, and nobody else', () => {
     expect(makesAccounts(asOwner)).toBe(true);
     expect(makesAccounts(asStaff)).toBe(false);
     expect(makesAccounts(local)).toBe(false);
@@ -33,7 +33,7 @@ describe('who makes accounts', () => {
 
   it('is what the line under the title says', () => {
     expect(accountsLine(members, asOwner)).toBe('3 people can open APG\'s records. Make an account for each new staff member.');
-    expect(accountsLine(members.slice(0, 1), asStaff)).toBe('1 person can open APG\'s records. Only the owner makes accounts.');
+    expect(accountsLine(members.slice(0, 1), asStaff)).toBe('1 person can open APG\'s records. Only the CEO makes accounts.');
     expect(accountsLine(null, asOwner)).toBe('Who can open APG\'s records. Make an account for each new staff member.');
     expect(accountsLine(null, local)).toBe(NO_SIGN_IN);
   });
@@ -88,12 +88,12 @@ describe('making an account', () => {
 describe('removing an account', () => {
   const [ana, mark, paolo] = members;
 
-  it('is for the owner, and only for staff other than themselves', () => {
+  it('is for the CEO, and only for staff other than themselves', () => {
     expect(removeRefusal(ana, asOwner)).toBeNull();
     expect(removeRefusal(paolo, asOwner)).toBeNull();
     expect(removeRefusal(mark, asOwner)).toBe('You cannot remove your own account.');
     expect(removeRefusal({ ...mark, uid: 'owner-2', name: 'Liza Bautista' }, asOwner))
-      .toBe('Liza Bautista is an owner. An owner is removed in the Firebase console (docs/FIREBASE.md).');
+      .toBe('Liza Bautista is the CEO. A CEO\'s account is removed in the Firebase console (docs/FIREBASE.md).');
     expect(removeRefusal(paolo, asStaff)).toBe(ONLY_OWNER_REMOVES);
     expect(removeRefusal(paolo, local)).toBe(ONLY_OWNER_REMOVES);
 

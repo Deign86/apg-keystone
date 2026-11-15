@@ -1,6 +1,6 @@
 # Keystone
 
-Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (staff list the expenses, the owner
+Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (staff list the expenses, the CEO
 approves or declines from a PC or a phone, and an approval makes the fund transfer request or drafts the check voucher), Billing Statements, the ID Maker, a shared
 Directory, an Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
@@ -128,7 +128,7 @@ Adding or removing one is one package plus one line in `apps/keystone/src/module
   picks the one its client pays into.
 - **In the cloud** (docs/FIREBASE.md), every signed-in computer opens the same records, and the web build can be
   hosted for phones, where a menu takes the rail's place. **User Accounts**, first under Settings, lists who can open
-  them; there the owner makes and removes staff accounts, and anyone changes their password. A forgotten one is
+  them; there the CEO makes and removes staff accounts, and anyone changes their password. A forgotten one is
   reset from the sign-in screen.
 - Sample records are made up; company details are APG's real ones.
 

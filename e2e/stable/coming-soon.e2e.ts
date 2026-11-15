@@ -63,7 +63,7 @@ test('asks for funds, listing the expenses to be paid back by transfer', async (
   await form.getByRole('textbox', 'Requested by').fill('Ana Cruz');
   await form.getByRole('button', 'Send for approval').tap();
 
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
 });
 
 test('saves a check voucher as before', async ({ app, screen }) => {

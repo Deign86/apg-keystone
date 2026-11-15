@@ -103,7 +103,7 @@ export function SignIn({ signIn, sendReset }: { signIn: (email: string, password
   }
 
   return (
-    <Frame title="Sign in to Keystone" line="APG's records are kept in the cloud. Sign in with the account the owner made for you.">
+    <Frame title="Sign in to Keystone" line="APG's records are kept in the cloud. Sign in with the account the CEO made for you.">
       <Panel as="form" onSubmit={submit} className="flex flex-col gap-4" aria-label="Sign in">
         <Field label="Email">
           <TextInput type="email" value={email} onChange={setEmail} autoFocus autoComplete="username" />

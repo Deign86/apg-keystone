@@ -27,9 +27,9 @@ test('asks for the account before anything else, and refuses a wrong password', 
   await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
 });
 
-test('staff signing in before the owner has started the records are told so, and nothing is copied in', async ({ app, screen, browser }) => {
+test('staff signing in before the CEO has started the records are told so, and nothing is copied in', async ({ app, screen, browser }) => {
   const staff = await makeAccount('staff');
-  const notStarted = 'APG\'s records are not set up in the cloud yet. The owner signs in first, and Keystone starts them, empty.';
+  const notStarted = 'APG\'s records are not set up in the cloud yet. The CEO signs in first, and Keystone starts them, empty.';
 
   // A computer with records of its own: they never take the cloud's place (docs/adr/0018).
   await keepRecordsHere(app, browser, 'the office computer');
@@ -47,14 +47,14 @@ test('staff signing in before the owner has started the records are told so, and
   await expect(screen.getByRole('form', 'Sign in')).toBeHidden();
 });
 
-test('refuses an account the owner has not added, and signs out to switch to one they have', async ({ app, screen }) => {
+test('refuses an account the CEO has not added, and signs out to switch to one they have', async ({ app, screen }) => {
   const outsider = await makeAccount();
   const owner = await makeAccount('owner');
 
   await app.open('/');
   await signIn(screen, outsider);
 
-  await expect(screen.getByRole('alert')).toHaveText('This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).');
+  await expect(screen.getByRole('alert')).toHaveText('This account may not open APG\'s records. Ask the CEO to add it in the Firebase console (keystone/apg/members).');
   expect(await marker('status')).toBeNull();
 
   await screen.getByRole('button', 'Sign in as someone else').tap();
@@ -74,7 +74,7 @@ test('signs out from the rail, and asks for the account again, also after a relo
 
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  await expect(rail.getByText('Owner · Owner')).toBeVisible();
+  await expect(rail.getByText('Owner · CEO')).toBeVisible();
   await rail.getByRole('button', 'Sign out').tap();
 
   await expect(screen.getByRole('heading', { name: 'Sign in to Keystone', level: 1 })).toBeVisible();
@@ -127,7 +127,7 @@ test('a forgotten password: a link to choose a new one, then signing in with it'
     `If ${owner.email} has a Keystone account, a link to choose a new password is on its way to it. It can take a few minutes; look in spam too.`,
   );
 
-  // The owner opens the emailed link and chooses a new password; the old one no longer signs in.
+  // The CEO opens the emailed link and chooses a new password; the old one no longer signs in.
   const code = await resetCode(owner.email);
 
   expect(code).not.toBeNull();
