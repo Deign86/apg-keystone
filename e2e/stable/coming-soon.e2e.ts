@@ -2,8 +2,9 @@ import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
 // A release that is not a beta (e2e.stable.config.ts, docs/adr/0017): Home, with the connected systems, Check Vouchers,
-// Profile, User Accounts, and Bank Accounts and Company Details, which vouchers print from (docs/adr/0018), open; every other
-// screen keeps its place in the rail and its tile on Home, marked, and shows behind "Coming soon" (docs/adr/0019).
+// Requests for Funds (docs/adr/0021), Profile, User Accounts, and Bank Accounts and Company Details, which vouchers print
+// from (docs/adr/0018), open; every other screen keeps its place in the rail and its tile on Home, marked, and shows
+// behind "Coming soon" (docs/adr/0019).
 
 test('opens Home with every tile, those coming soon marked, and the connected systems', async ({ app, screen }) => {
   await app.open('/');
@@ -11,6 +12,7 @@ test('opens Home with every tile, those coming soon marked, and the connected sy
 
   await expect(tiles.getByRole('listitem')).toHaveCount(9);
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
+  await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements Coming soon .* Outstanding/)).toBeVisible();
   await expect(screen.getByText('Connected systems')).toBeVisible();
   await expect(screen.getByRole('button', 'Open Attendance Tracker')).toBeVisible();
@@ -30,22 +32,38 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByText('New statement').first()).toBeVisible();
   await expect(screen.getByRole('button', 'New statement')).toBeHidden();
 
-  await rail.getByRole('button', 'Requests for Funds, coming soon').tap();
+  await rail.getByRole('button', 'ID Maker, coming soon').tap();
 
-  await expect(screen.getByRole('heading', { name: 'Requests for Funds', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('heading', { name: 'ID Maker', level: 1 })).toBeVisible();
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 
-test('opens Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
+test('opens Requests for Funds, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  for (const title of ['Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
+  for (const title of ['Requests for Funds', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
     await rail.getByRole('button', new RegExp(`${title}$`)).tap();
 
     await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
     await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeHidden();
   }
+});
+
+test('asks for funds, listing the expenses to be paid back by transfer', async ({ app, screen }) => {
+  await app.open('/#funds');
+  const form = screen.getByRole('form', 'New request');
+
+  await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');
+  await form.getByRole('textbox', 'Line 1 description').fill('Pantry groceries');
+  await form.getByRole('textbox', 'Line 1 amount').fill('3250.75');
+  await form.getByRole('textbox', 'Bank').fill('BDO');
+  await form.getByRole('textbox', 'Account name').fill('Liza Ramos');
+  await form.getByRole('textbox', 'Account number').fill('0012 3456 7890');
+  await form.getByRole('textbox', 'Requested by').fill('Ana Cruz');
+  await form.getByRole('button', 'Send for approval').tap();
+
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
 });
 
 test('saves a check voucher as before', async ({ app, screen }) => {
