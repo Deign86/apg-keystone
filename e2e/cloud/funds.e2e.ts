@@ -4,16 +4,16 @@ import { expect, type Screen } from 'e2e';
 import { asMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
 
 // Requests for funds in the cloud (docs/adr/0011, 0021): staff ask, each on their own computer and seeing only their
-// own requests; the owner decides them from a phone. Approving a check drafts the check voucher through Check Vouchers;
-// approving a transfer makes the fund transfer request, which the owner and the requester print or save as a PDF.
-// Then firestore.rules on their own, for a member who goes past Keystone: only the owner decides, and staff read only
+// own requests; the CEO decides them from a phone. Approving a check drafts the check voucher through Check Vouchers;
+// approving a transfer makes the fund transfer request, which the CEO and the requester print or save as a PDF.
+// Then firestore.rules on their own, for a member who goes past Keystone: only the CEO decides, and staff read only
 // theirs. app.clearState() is another computer, signed out and empty.
 
 test.beforeEach(async () => {
   await emptyCloud();
 });
 
-/** Signs in on a computer with nothing of its own, to the records the owner keeps in the cloud. */
+/** Signs in on a computer with nothing of its own, to the records the CEO keeps in the cloud. */
 async function signInElsewhere(app: { clearState(): Promise<void>; open(path: string): Promise<void> }, screen: Screen, account: Parameters<typeof signIn>[1]) {
   await app.clearState();
   await app.open('/');
@@ -21,7 +21,7 @@ async function signInElsewhere(app: { clearState(): Promise<void>; open(path: st
   await expectHome(screen);
 }
 
-test('staff ask for funds, the owner decides from a phone, and the approved one becomes a voucher', async ({ app, screen, browser }) => {
+test('staff ask for funds, the CEO decides from a phone, and the approved one becomes a voucher', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
   const it = await makeAccount('staff', 'Paolo Santos');
@@ -31,13 +31,13 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
   await signIn(screen, owner);
   await expectHome(screen);
 
-  // HR asks for the party's venue deposit. The requester is the member signed in, and only the owner may decide.
+  // HR asks for the party's venue deposit. The requester is the member signed in, and only the CEO may decide.
   await signInElsewhere(app, screen, hr);
   await app.open('/#funds');
   const form = screen.getByRole('form', 'New request');
 
   await expect(form.getByRole('textbox', 'Requested by')).toHaveValue('Ana Cruz');
-  await expect(screen.getByText('Only the owner approves or declines requests. The answer shows here once it is given.')).toBeVisible();
+  await expect(screen.getByText('Only the CEO approves or declines requests. The answer shows here once it is given.')).toBeVisible();
   await form.getByRole('textbox', 'What it is for').fill('Christmas party: venue deposit');
   await form.getByRole('textbox', 'Line 1 description').fill('Venue deposit');
   await form.getByRole('textbox', 'Line 1 amount').fill('48000');
@@ -46,7 +46,7 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
   await form.getByRole('combobox', 'Payee').tap();
   await screen.getByRole('option', 'Manila Water Company (V-002)').tap();
   await form.getByRole('button', 'Send for approval').tap();
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
 
   // The request is its own document, with its status and requester beside it for the rules.
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('For Approval');
@@ -68,10 +68,10 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
   await screen.getByRole('option', 'By a date').tap();
   await mine.getByRole('textbox', 'Settle by').fill('2026-11-20');
   await mine.getByRole('button', 'Send for approval').tap();
-  await expect(screen.getByRole('dialog', 'RF-2026-0002 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0002 sent to the CEO for approval.')).toBeVisible();
   await expect.poll(() => field('rf', 'RF-2026-0002', 'uid'), { timeout: 10_000 }).toBe(it.uid);
 
-  // The owner, on a phone, is told what waits, opens the screen from the menu, approves one and declines the other.
+  // The CEO, on a phone, is told what waits, opens the screen from the menu, approves one and declines the other.
   await app.clearState();
   await browser.setViewport({ width: 390, height: 844 });
   await app.open('/');
@@ -112,7 +112,7 @@ test('staff ask for funds, the owner decides from a phone, and the approved one 
   await expect(screen.getByText('RF-2026-0002 was declined: Use the spare in the IT cabinet.')).toBeVisible();
 });
 
-test('HR lists the fund\'s expenses, the owner approves the transfer from a phone, and both save its fund transfer request', async ({ app, screen, browser }) => {
+test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone, and both save its fund transfer request', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
 
@@ -136,10 +136,10 @@ test('HR lists the fund\'s expenses, the owner approves the transfer from a phon
   await form.getByRole('textbox', 'Account name').fill('Liza Ramos');
   await form.getByRole('textbox', 'Account number').fill('0012 3456 7890');
   await form.getByRole('button', 'Send for approval').tap();
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the owner for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('For Approval');
 
-  // The owner, on a phone, sees each expense and where the money goes before approving.
+  // The CEO, on a phone, sees each expense and where the money goes before approving.
   await app.clearState();
   await browser.setViewport({ width: 390, height: 844 });
   await app.open('/');
@@ -182,7 +182,7 @@ test('HR lists the fund\'s expenses, the owner approves the transfer from a phon
   await expect(screen.getByRole('article', 'Fund transfer request RF-2026-0001')).toContainText('ACCOUNT NO. 0012 3456 7890');
 });
 
-test('firestore.rules let only the owner decide a request, and staff read only their own', async () => {
+test('firestore.rules let only the CEO decide a request, and staff read only their own', async () => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
   const it = await makeAccount('staff', 'Paolo Santos');
@@ -195,12 +195,12 @@ test('firestore.rules let only the owner decide a request, and staff read only t
   expect(await asMember(hrToken, path, request('For Approval', it.uid))).toBe(403);
   expect(await asMember(hrToken, path, request('For Approval', hr.uid))).toBe(200);
 
-  // Only HR and the owner read it.
+  // Only HR and the CEO read it.
   expect(await asMember(itToken, path)).toBe(403);
   expect(await asMember(hrToken, path)).toBe(200);
   expect(await asMember(ownerToken, path)).toBe(200);
 
-  // HR may not approve its own request, IT may not touch it, and the owner decides it.
+  // HR may not approve its own request, IT may not touch it, and the CEO decides it.
   expect(await asMember(hrToken, path, request('Approved', hr.uid))).toBe(403);
   expect(await asMember(itToken, path, request('Withdrawn', it.uid))).toBe(403);
   expect(await asMember(ownerToken, path, request('Approved', hr.uid))).toBe(200);

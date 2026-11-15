@@ -1,12 +1,18 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, payees, peso, recordOf, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
-import { awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting } from './rules';
+import {
+  approvesOnSave, awaitingApproval, copyVoucher, newVoucher, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting, withCheck,
+} from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
 const DRAFT = 'vouchers.draft';
+
+/** A group of the form's fields, turned off together while the voucher is locked. */
+const FIELDS = 'm-0 flex min-w-0 flex-col gap-3.5 border-0 p-0';
 
 /** The first account Bank Accounts keeps, as printed: a new voucher's bank before any voucher names one. "" without it. */
 function firstBank(app: ModuleApp): string {
@@ -136,9 +142,17 @@ function Vouchers() {
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
   const locked = editing ? voucherLock(editing) : null;
-  // A voucher past approval shows, prints and exports exactly as it was saved.
-  const live = locked && editing ? editing : voucherOf(draft);
-  const shown = useMemo(() => (locked && editing ? voucherDraftOf(editing) : draft), [locked, editing, draft]);
+  const checkOpen = !!editing && takesCheck(editing);
+
+  // A voucher past approval shows, prints and exports exactly as it was saved; an approved one with the check typed since.
+  const shown = useMemo(() => {
+    if (!locked || !editing) return draft;
+    const saved = voucherDraftOf(editing);
+
+    return checkOpen ? { ...saved, check: draft.check, checkDate: draft.checkDate } : saved;
+  }, [locked, editing, checkOpen, draft]);
+
+  const live = locked && editing ? (checkOpen ? withCheck(editing, shown) : editing) : voucherOf(draft);
   const total = voucherTotal(live);
 
   const save = useCallback((asNew = false) => {
@@ -198,17 +212,14 @@ function Vouchers() {
             actions={<>
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
               <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
-              {editing && locked
-                ? <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>
-                : <>
-                  {editing && <Button onClick={() => save(true)}>Save as new</Button>}
-                  <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and route for approval'}</Button>
-                </>}
+              {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
+              {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
+              {(!locked || checkOpen) && <Button kind="primary" type="submit">{checkOpen ? 'Save check' : editing ? 'Save changes' : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
             </>}
           >
             {locked && <p className="m-0 text-[13px] text-pretty text-ink-2">{locked}</p>}
-            {/* A disabled fieldset turns every control inside it off at once. */}
-            <fieldset disabled={!!locked} className="m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0">
+            {/* A disabled fieldset turns every control inside it off at once; the check's stays on while it is approved. */}
+            <fieldset disabled={!!locked} className={FIELDS}>
               <FieldRow>
                 <Field label="CV No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
                 <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
@@ -219,10 +230,14 @@ function Vouchers() {
               <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
               <DrawnOn value={shown.bank} onChange={(b) => setDraft({ ...draft, bank: b })} />
               <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer })} /></Field>
+            </fieldset>
+            <fieldset disabled={!!locked && !checkOpen} className={FIELDS}>
               <FieldRow>
                 <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
                 <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
               </FieldRow>
+            </fieldset>
+            <fieldset disabled={!!locked} className={FIELDS}>
               <LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
               <div className="text-right" aria-live="polite">
                 <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>

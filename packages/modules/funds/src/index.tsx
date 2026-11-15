@@ -21,7 +21,7 @@ const PAID_BY = [{ value: 'transfer', label: 'Bank transfer' }, { value: 'check'
 const pdfName = (r: FundsRequest) => `${r.no} fund transfer request.pdf`;
 
 /**
- * One request waiting for the owner: how much, what for, each expense, where the money goes, who asked and by when,
+ * One request waiting for the CEO: how much, what for, each expense, where the money goes, who asked and by when,
  * and the two answers. Fits a phone. `onApproved` opens a transfer once it is approved, to print or save its paper.
  */
 function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved: (no: string) => void }) {
@@ -256,7 +256,7 @@ export const fundsModule: ModuleDef = {
   id: 'funds',
   title: 'Requests for Funds',
   section: 'Disbursements',
-  blurb: 'List the expenses you need money for. The owner decides; an approval drafts the fund transfer or check voucher.',
+  blurb: 'List the expenses you need money for. The CEO decides; an approval drafts the fund transfer or check voucher.',
   // Right after Check Vouchers, which its approvals feed.
   order: 2.5,
   onHome: true,

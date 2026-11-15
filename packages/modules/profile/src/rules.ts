@@ -11,8 +11,6 @@ export const MAX_NAME = 80;
 
 export const NO_SIGN_IN = 'This Keystone keeps its records on this computer, where nobody signs in, so there is no profile to change.';
 
-export const roleLabel = (who: Member) => (who.role === 'owner' ? 'Owner' : 'Staff');
-
 /** The new name on one line with single spaces, or the sentence saying what to fix. */
 export function checkName(name: string, ctx: Ctx): string {
   if (!ctx.who) throw new KeystoneError(NO_SIGN_IN);

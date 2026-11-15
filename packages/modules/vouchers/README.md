@@ -2,10 +2,13 @@
 
 ## Owns
 - `src/index.tsx`: the register (status changes from the row menu; void asks first), the form, editing in place while a
-  voucher is For Approval, Save as new, Print, and Export PDF. An approved, released or void voucher opens read-only
-  and prints as it was saved; Copy to new voucher starts a new one from it, with no check yet.
-- The order: For Approval, then Approved, then Released with the check number. Approval can be taken back until the
-  check is released; a released voucher can only be voided, and a void voucher stays void.
+  voucher is For Approval, Save as new, Print, and Export PDF. An approved voucher opens read-only but for its Check
+  No. and Date of check, which **Save check** keeps until it is released; a released or void one opens read-only. Each
+  prints as it was saved; Copy to new voucher starts a new one from it, with no check yet.
+- The order: For Approval, then Approved, then Released with the check number. A voucher the CEO saves (signed in,
+  role `owner`) is approved as it is saved, with **Save and approve** (docs/adr/0022); anyone else's waits for approval.
+  Approval can be taken back until the check is released; a released voucher can only be voided, and a void voucher
+  stays void.
 - `src/VoucherPaper.tsx`: the printed Check Voucher, ruled into boxes like the company's cash voucher, out to near the
   paper's edges: payee and TIN, address, bank and issuer, the number, date, check no. and date of check, particulars
   and amount, the total in figures and in words, then a box each for Prepared, Audited, Approved and Received payment
@@ -15,8 +18,9 @@
   sheet, a copy on each half, cut apart along the dashed line across the middle; Export PDF makes the same page.
 - The TIN prints only when it is typed on the voucher; the directory's TIN is never put in. The issuer and the
   positions start as the last voucher's, like the signatories.
-- `src/rules.ts`: its rules (numbering, saving, status changes, the release check number, the lock on an approved
-  voucher, copying one) and what it contributes. Tested in `test/rules.test.ts`.
+- `src/rules.ts`: its rules (numbering, saving, approving the CEO's own, status changes, the release check number, the
+  lock on an approved voucher and the check it still takes, copying one) and what it contributes. Tested in
+  `test/rules.test.ts`.
 - Numbering: 888-001, 888-002 and on, with no year (older vouchers keep their CV-2026-… or 8888-… numbers). A new
   voucher's signatories start as the last voucher's, so each preparer types their full name once.
 

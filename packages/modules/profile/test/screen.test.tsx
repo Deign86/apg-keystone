@@ -47,11 +47,11 @@ describe('the Profile screen', () => {
     const store = await open(owner, accounts);
     const rail = within(screen.getByRole('navigation', { name: 'Keystone' }));
 
-    expect(rail.getByText('Deign Lazaro · Owner')).toBeInTheDocument();
+    expect(rail.getByText('Deign Lazaro · CEO')).toBeInTheDocument();
     await rename('  Mark Anthony   Santos ');
 
     expect(accounts.rename).toHaveBeenCalledWith('Mark Anthony Santos');
-    expect(rail.getByText('Mark Anthony Santos · Owner')).toBeInTheDocument();
+    expect(rail.getByText('Mark Anthony Santos · CEO')).toBeInTheDocument();
     expect(store.ctx.who).toEqual({ uid: 'owner-1', name: 'Mark Anthony Santos', role: 'owner' });
     expect(store.state.log[0].text).toBe('Deign Lazaro changed their name to Mark Anthony Santos.');
   });

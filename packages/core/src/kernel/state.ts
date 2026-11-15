@@ -17,9 +17,15 @@ export class KeystoneError extends Error {
 export interface Member {
   uid: string;
   name: string;
-  /** An owner adds members and decides requests for funds; staff do neither. */
+  /** An owner, shown as the CEO, adds members and decides requests for funds; staff do neither. */
   role: 'owner' | 'staff';
 }
+
+/**
+ * What Keystone calls a member's role. The owner is the CEO; the role stays saved as `owner` in the cloud, where
+ * firestore.rules and every member document read it.
+ */
+export const roleLabel = (m: Pick<Member, 'role'>) => (m.role === 'owner' ? 'CEO' : 'Staff');
 
 /** What every rule needs from outside: the time, and who is signed in. Everything else is in the records. */
 export interface Ctx {

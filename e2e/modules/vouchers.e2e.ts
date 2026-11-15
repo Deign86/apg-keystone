@@ -85,6 +85,17 @@ test('releases a voucher only once it is approved and has its check number', asy
 
   await expect(screen.getByRole('dialog', 'Enter the check number on 888-001 before releasing it.')).toBeVisible();
   await expect(row.getByRole('cell', 'Approved')).toBeVisible();
+
+  // The check is often written after approval: an approved voucher still takes it, and then it is released.
+  await row.getByRole('cell', '888-001').tap();
+  const approved = screen.getByRole('form', 'Viewing 888-001');
+
+  await approved.getByRole('textbox', 'Check No.').fill('0004530');
+  await approved.getByRole('button', 'Save check').tap();
+  await expect(screen.getByRole('dialog', '888-001 updated.')).toBeVisible();
+  await row.getByRole('button', 'Actions for 888-001').tap();
+  await screen.getByRole('menuitem', 'Mark released').tap();
+  await expect(row.getByRole('cell', 'Released')).toBeVisible();
 });
 
 test('a released voucher stays released', async ({ app, screen }) => {
@@ -135,20 +146,34 @@ test('edits a voucher while it waits for approval, and saves changes in place', 
   await expect(register.getByRole('row')).toHaveCount(4);
 });
 
-test('an approved voucher opens read-only and copies to a new voucher', async ({ app, screen }) => {
+test('an approved voucher takes only its check, and copies to a new voucher', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const register = screen.getByRole('table', 'Voucher register');
 
   await register.getByRole('cell', 'CV-2026-0140').tap();
   const form = screen.getByRole('form', 'Viewing CV-2026-0140');
 
-  // What was approved is what prints: nothing on it can be typed over.
-  await expect(form.getByText('CV-2026-0140 is approved and can no longer be changed. Copy it to a new voucher to change it.')).toBeVisible();
+  // What was approved is what prints: nothing on it can be typed over but the check, until it is released.
+  await expect(form.getByText('CV-2026-0140 is approved: only its check number and date of check can change until it is released. Copy it to a new voucher to change the rest.')).toBeVisible();
   await expect(form.getByRole('textbox', 'Line 1 amount')).toBeDisabled();
+  await expect(form.getByRole('textbox', 'Approved by')).toBeDisabled();
   await expect(form.getByRole('button', 'Save changes')).toBeHidden();
+  await expect(form.getByRole('button', 'Save as new')).toBeHidden();
   const paper = screen.getByRole('article', 'Check voucher CV-2026-0140');
 
   await expect(paper.getByRole('row', 'Printing of lease folders (500 pcs) ₱12,500.00').first()).toBeVisible();
+
+  await form.getByRole('textbox', 'Check No.').fill('0004531');
+  await form.getByRole('textbox', 'Date of check').fill('2026-11-03');
+  await expect(paper.getByRole('definition').filter({ hasText: '0004531' }).first()).toBeVisible();
+  await form.getByRole('button', 'Save check').tap();
+  await expect(screen.getByRole('dialog', 'CV-2026-0140 updated.')).toBeVisible();
+  await expect(register.getByRole('row', /^CV-2026-0140 .* 0004531 Nov 3, 2026 .*Approved/)).toBeVisible();
+
+  await app.open('/#activity');
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('CV-2026-0140 check 0004531 entered, dated Nov 3, 2026.');
+  await app.open('/#vouchers');
+  await register.getByRole('cell', 'CV-2026-0140').tap();
 
   await form.getByRole('button', 'Copy to new voucher').tap();
   const copy = screen.getByRole('form', 'New voucher');
@@ -161,6 +186,17 @@ test('an approved voucher opens read-only and copies to a new voucher', async ({
 
   await expect(register.getByRole('row', /^888-001 Nov 2, 2026 JL Santos Printing Services 0004521 .*₱13,150\.00 For Approval/)).toBeVisible();
   await expect(register.getByRole('row', /^CV-2026-0140 .*Approved/)).toBeVisible();
+});
+
+test('a released voucher opens read-only, its check too', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await screen.getByRole('table', 'Voucher register').getByRole('cell', 'CV-2026-0139').tap();
+  const form = screen.getByRole('form', 'Viewing CV-2026-0139');
+
+  await expect(form.getByText('CV-2026-0139 is released and can no longer be changed. Copy it to a new voucher to change it.')).toBeVisible();
+  await expect(form.getByRole('textbox', 'Check No.')).toBeDisabled();
+  await expect(form.getByRole('button', 'Save check')).toBeHidden();
+  await expect(form.getByRole('button', 'Copy to new voucher')).toBeVisible();
 });
 
 test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash voucher', async ({ app, screen, browser }) => {

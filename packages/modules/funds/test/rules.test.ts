@@ -44,7 +44,7 @@ const vouchers: VoucherDrafts = {
   },
 };
 
-/** The sample data with requests filed by HR and IT, as the owner reads them. */
+/** The sample data with requests filed by HR and IT, as the CEO reads them. */
 function filed(): TerminalState {
   let s = fileRequest(state(), ask(), at(hr)).state;
   s = fileRequest(s, ask({ purpose: 'Replacement laptop charger', lines: lines(['Laptop charger', '2,450.50']), payee: 'V-001', when: 'date', by: '2026-11-20' }), at(it2)).state;
@@ -69,7 +69,7 @@ describe('filing a request', () => {
       no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Christmas party: venue deposit', lines: [{ desc: 'Venue deposit', amt: 48000 }], amount: 48000,
       pay: 'check', payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
     });
-    expect(r.message).toBe('RF-2026-0001 sent to the owner for approval.');
+    expect(r.message).toBe('RF-2026-0001 sent to the CEO for approval.');
     expect(r.state.log[0]).toEqual({ when: '2026-11-02 10:00', mod: 'RF', text: 'RF-2026-0001 filed by Ana Cruz.' });
   });
 
@@ -92,7 +92,7 @@ describe('filing a request', () => {
     expect(() => fileRequest(s, ask({ payee: 'V-999' }), local)).toThrow('Choose a payee from the directory.');
     expect(() => fileRequest(s, ask({ when: 'date', by: '' }), local)).toThrow('Choose the date it must be settled by, or ASAP.');
     expect(() => fileRequest(s, ask({ when: 'date', by: '2026-11-01' }), local)).toThrow('Nov 1, 2026 has passed. Choose a later date, or ASAP.');
-    expect(() => fileRequest(s, ask({ requester: ' ' }), local)).toThrow('Enter your name, so the owner knows who is asking.');
+    expect(() => fileRequest(s, ask({ requester: ' ' }), local)).toThrow('Enter your name, so the CEO knows who is asking.');
   });
 
   it('lets the requester change or withdraw their own request while it waits, and nobody else', () => {
@@ -179,11 +179,11 @@ describe('a request paid by transfer', () => {
 });
 
 describe('deciding a request', () => {
-  it('is the owner\'s alone, signed in to the cloud', () => {
+  it('is the CEO\'s alone, signed in to the cloud', () => {
     const s = filed();
     expect(decideRefusal(at(owner))).toBeNull();
-    expect(() => decideRequest(s, 'RF-2026-0001', 'Approved', '', local, vouchers)).toThrow(/^Only the owner approves or declines requests, signed in to APG's records in the cloud\./);
-    expect(() => decideRequest(s, 'RF-2026-0001', 'Approved', '', at(hr), vouchers)).toThrow('Only the owner approves or declines requests. The answer shows here once it is given.');
+    expect(() => decideRequest(s, 'RF-2026-0001', 'Approved', '', local, vouchers)).toThrow(/^Only the CEO approves or declines requests, signed in to APG's records in the cloud\./);
+    expect(() => decideRequest(s, 'RF-2026-0001', 'Approved', '', at(hr), vouchers)).toThrow('Only the CEO approves or declines requests. The answer shows here once it is given.');
   });
 
   it('approving drafts the check voucher for the amount, and the request keeps its number', () => {
@@ -207,7 +207,7 @@ describe('deciding a request', () => {
     expect(gone.message).toBe('RF-2026-0001 approved. V-002 is no longer in the directory, so no voucher was drafted.');
   });
 
-  it('declining keeps the owner\'s note for the requester, and drafts nothing', () => {
+  it('declining keeps the CEO\'s note for the requester, and drafts nothing', () => {
     const r = decideRequest(filed(), 'RF-2026-0002', 'Declined', '  Use the spare in the IT cabinet  ', at(owner), vouchers);
     expect(r.record).toMatchObject({ status: 'Declined', decision: { by: 'Mark Reyes', note: 'Use the spare in the IT cabinet' } });
     expect(r.record).not.toHaveProperty('voucher');
@@ -217,7 +217,7 @@ describe('deciding a request', () => {
 });
 
 describe('what it tells Home and Overview', () => {
-  it('shows the owner what waits for a decision, ASAP first', () => {
+  it('shows the CEO what waits for a decision, ASAP first', () => {
     const s = filed();
     expect(waitingRequests(s).map((r) => r.no)).toEqual(['RF-2026-0001', 'RF-2026-0002']);
     expect(fundsFinding(s, at(owner))).toEqual({ priority: 35, text: '2 requests for funds worth ₱50,450.50 wait for your decision, 1 of them ASAP.' });
@@ -231,9 +231,9 @@ describe('what it tells Home and Overview', () => {
     expect(fundsFinding(one, at(owner))).toEqual({ priority: 25, text: 'Paolo Santos asks for ₱2,450.50 by Nov 20, 2026; it waits for your decision.' });
   });
 
-  it('on a computer where nobody signs in, says the requests wait for the owner', () => {
-    expect(fundsFinding(filed(), local)).toEqual({ priority: 15, text: '2 requests for funds worth ₱50,450.50 wait for the owner\'s decision, 1 of them ASAP.' });
-    expect(fundsLine(state(), local)).toBe('No request is waiting. Ask for funds here, and the owner approves or declines.');
+  it('on a computer where nobody signs in, says the requests wait for the CEO', () => {
+    expect(fundsFinding(filed(), local)).toEqual({ priority: 15, text: '2 requests for funds worth ₱50,450.50 wait for the CEO\'s decision, 1 of them ASAP.' });
+    expect(fundsLine(state(), local)).toBe('No request is waiting. Ask for funds here, and the CEO approves or declines.');
   });
 
   it('tells a requester the answer for a week, then only what still waits', () => {
@@ -242,7 +242,7 @@ describe('what it tells Home and Overview', () => {
     expect(fundsFinding(approved, at(hr, 9))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted.' });
     expect(fundsFinding(approved, at(hr, 10))).toBeNull();
     // IT's own request still waits; HR's answer is not theirs.
-    expect(fundsFinding(approved, at(it2))).toEqual({ priority: 5, text: '1 request for funds waits for the owner\'s decision.' });
+    expect(fundsFinding(approved, at(it2))).toEqual({ priority: 5, text: '1 request for funds waits for the CEO\'s decision.' });
 
     const declined = decideRequest(filed(), 'RF-2026-0002', 'Declined', 'Use the spare in the IT cabinet', at(owner)).state;
     expect(fundsFinding(declined, at(it2))).toEqual({ priority: 40, text: 'RF-2026-0002 was declined: Use the spare in the IT cabinet.' });

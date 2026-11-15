@@ -6,9 +6,9 @@ import {
   type VoucherDrafts, type WaitingItem,
 } from '@keystone/core';
 
-// Requests for funds (docs/adr/0011, 0021): staff list the expenses they need money for, the owner approves or
+// Requests for funds (docs/adr/0011, 0021): staff list the expenses they need money for, the CEO approves or
 // declines, and an approval either makes the fund transfer request, for a transfer to the account the request names,
-// or drafts the check voucher through Check Vouchers' service. Only the owner, signed in to the records in the cloud,
+// or drafts the check voucher through Check Vouchers' service. Only the CEO, signed in to the records in the cloud,
 // decides; firestore.rules holds the same line, and lets staff read only their own requests.
 
 export const MODULE = 'funds';
@@ -25,9 +25,9 @@ export const requestTone = (s: RequestStatus): Tone => TONES[s];
 /** Settle by: as soon as possible, or a date. */
 export const ASAP = 'ASAP';
 
-/** The owner's answer. */
+/** The CEO's answer. */
 export type Decision = {
-  /** The owner's name, as on their member document. */
+  /** The CEO's name, as on their member document. */
   by: string;
   uid: string;
   /** Local time, "yyyy-MM-dd HH:mm". */
@@ -74,7 +74,7 @@ export type FundsRequest = {
   settle: string;
   /** Who asked, by name. */
   requester: string;
-  /** Who asked, when they were signed in to the cloud: only they and the owner may read it there. */
+  /** Who asked, when they were signed in to the cloud: only they and the CEO may read it there. */
   uid?: string;
   status: RequestStatus;
   decision?: Decision;
@@ -93,7 +93,7 @@ export type FundsData = {
 
 /**
  * In the cloud each request is its own document (keystone/apg/rf/{no}), with the fields the rules check beside it, and
- * read only by its requester and the owner. Locally nothing changes.
+ * read only by its requester and the CEO. Locally nothing changes.
  */
 export const requestDocuments: RecordDocuments = { collection: 'rf', list: 'requests', key: 'no', fields: ['status', 'uid', 'decision'], readBy: 'uid' };
 
@@ -160,7 +160,7 @@ export const expensesOf = (r: Pick<FundsRequest, 'lines' | 'purpose' | 'amount'>
 /** How an account reads in a sentence or a list: "BDO · Liza Ramos · 0012 3456 7890". */
 export const accountLabel = (a: TransferAccount) => [a.bank, a.name, a.number].join(' · ');
 
-/** Whether the request's fund transfer request can be printed and saved: a transfer, once the owner approved it. */
+/** Whether the request's fund transfer request can be printed and saved: a transfer, once the CEO approved it. */
 export const transferReady = (r: FundsRequest) => r.pay === 'transfer' && r.status === 'Approved';
 
 /** The next number after the highest given out: RF-2026-0003. */
@@ -170,7 +170,7 @@ export function nextRequestNo(s: TerminalState, ctx: Ctx): string {
   return nextNumber([...data.requests.map((r) => r.no), data.last], `RF-${thisYear(ctx)}-`);
 }
 
-/** Waiting for the owner, the ones to settle as soon as possible first, then by the date they are needed. */
+/** Waiting for the CEO, the ones to settle as soon as possible first, then by the date they are needed. */
 export function waitingRequests(s: TerminalState): FundsRequest[] {
   const key = (r: FundsRequest) => (r.settle === ASAP ? '' : r.settle);
 
@@ -182,11 +182,11 @@ export const settleText = (r: Pick<FundsRequest, 'settle'>) => (r.settle === ASA
 
 // ---------- who may do what ----------
 
-/** Whether this person decides requests: the owner, signed in to the cloud. */
+/** Whether this person decides requests: the CEO, signed in to the cloud. */
 export const decides = (ctx: Ctx) => ctx.who?.role === 'owner';
 
-const SIGNED_OUT = 'Only the owner approves or declines requests, signed in to APG\'s records in the cloud. This copy of Keystone keeps its records on this computer, where nobody signs in.';
-const NOT_OWNER = 'Only the owner approves or declines requests. The answer shows here once it is given.';
+const SIGNED_OUT = 'Only the CEO approves or declines requests, signed in to APG\'s records in the cloud. This copy of Keystone keeps its records on this computer, where nobody signs in.';
+const NOT_OWNER = 'Only the CEO approves or declines requests. The answer shows here once it is given.';
 
 /** Why this person cannot decide requests, or null when they can. */
 export const decideRefusal = (ctx: Ctx): string | null => (!ctx.who ? SIGNED_OUT : decides(ctx) ? null : NOT_OWNER);
@@ -320,7 +320,7 @@ export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change
 
   if (d.when === 'date' && d.by < today(ctx)) throw new KeystoneError(`${shortDate(d.by)} has passed. Choose a later date, or ASAP.`);
 
-  if (!requester) throw new KeystoneError('Enter your name, so the owner knows who is asking.');
+  if (!requester) throw new KeystoneError('Enter your name, so the CEO knows who is asking.');
 
   const data = dataOf(s);
   const amount = toPesos(sumCentavos(lines, (l) => toCentavos(l.amt)));
@@ -348,7 +348,7 @@ export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change
 
   return {
     state: logged(saved(s, { requests: [...data.requests, request], last: request.no }), TAG, `${request.no} filed by ${requester}.`, ctx),
-    record: request, message: `${request.no} sent to the owner for approval.`,
+    record: request, message: `${request.no} sent to the CEO for approval.`,
   };
 }
 
@@ -374,7 +374,7 @@ export function withdrawRequest(s: TerminalState, no: string, ctx: Ctx): Change<
 export type Verdict = 'Approved' | 'Declined';
 
 /**
- * The owner's answer. Approving a transfer makes its fund transfer request, ready to print or save as a PDF; approving
+ * The CEO's answer. Approving a transfer makes its fund transfer request, ready to print or save as a PDF; approving
  * a check drafts the check voucher for the amount through Check Vouchers' service (`vouchers`, absent when Check
  * Vouchers is not installed), and the request keeps the voucher's number. A decision is final.
  */
@@ -423,7 +423,7 @@ export function decideRequest(s: TerminalState, no: string, verdict: Verdict, no
   };
 }
 
-/** The end of a sentence that may carry the owner's note: ": Keep it under ₱40,000." or ".". */
+/** The end of a sentence that may carry the CEO's note: ": Keep it under ₱40,000." or ".". */
 const noteEnd = (note?: string) => (note ? `: ${note}${/[.!?]$/.test(note) ? '' : '.'}` : '.');
 
 /** "Approved by Mark Reyes on Nov 11, 2026: Keep it under ₱40,000." */
@@ -465,14 +465,14 @@ export function fundsFinding(s: TerminalState, ctx: Ctx): Finding | null {
 
     if (!mine.length) return null;
 
-    return { priority: 5, text: `${count(mine.length, 'request')} for funds ${mine.length === 1 ? 'waits' : 'wait'} for the owner's decision.` };
+    return { priority: 5, text: `${count(mine.length, 'request')} for funds ${mine.length === 1 ? 'waits' : 'wait'} for the CEO's decision.` };
   }
 
   const waiting = waitingRequests(s);
 
   if (!waiting.length) return null;
   const asap = waiting.filter((r) => r.settle === ASAP).length;
-  const whose = decides(ctx) ? 'your' : 'the owner\'s';
+  const whose = decides(ctx) ? 'your' : 'the CEO\'s';
   const urgent = asap ? `, ${asap} of them ASAP` : '';
 
   const text = waiting.length === 1
@@ -483,7 +483,7 @@ export function fundsFinding(s: TerminalState, ctx: Ctx): Finding | null {
 }
 
 /** The sentence under the screen's title. */
-export const fundsLine = (s: TerminalState, ctx: Ctx) => fundsFinding(s, ctx)?.text ?? 'No request is waiting. Ask for funds here, and the owner approves or declines.';
+export const fundsLine = (s: TerminalState, ctx: Ctx) => fundsFinding(s, ctx)?.text ?? 'No request is waiting. Ask for funds here, and the CEO approves or declines.';
 
 export function fundsFigure(s: TerminalState): Figure {
   const waiting = waitingRequests(s);

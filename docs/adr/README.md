@@ -32,6 +32,7 @@ Consequences**.
 | [0020](0020-changing-your-own-name.md) | Changing your own name, on Profile | Accepted |
 | [0021](0021-a-home-figure-can-count-the-others-contributions.md) | A Home figure can count what the other modules contribute | Accepted |
 | [0021](0021-expenses-and-fund-transfer-requests.md) | A request lists its expenses, and an approved transfer makes a fund transfer request | Accepted |
+| [0022](0022-the-ceo-approves-their-own-vouchers.md) | The owner is the CEO, and the CEO's own vouchers need no approval | Accepted |
 
 Template:
 

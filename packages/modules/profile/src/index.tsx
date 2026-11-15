@@ -1,8 +1,8 @@
 import { Button, Field, Panel, ScreenHeader, TextInput } from '@keystone/ui';
 import { useState, type FormEvent } from 'react';
-import type { Member } from '@keystone/core';
+import { roleLabel, type Member } from '@keystone/core';
 import { useKeystone, useModuleApp, type AppAccounts, type ModuleDef } from '@keystone/kit';
-import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, roleLabel, TAG } from './rules';
+import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG } from './rules';
 
 const LINE = 'How Keystone shows you to everyone: in the rail, on what you prepare and file, and in the activity log.';
 
@@ -42,7 +42,7 @@ function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) 
           <Field label="Your name" hint={`Your full name, up to ${MAX_NAME} characters. Everyone signed in sees it.`}>
             <TextInput autoComplete="name" value={name} onChange={setName} />
           </Field>
-          <p className="m-0 text-[13px] text-ink-2">Role: <span className="font-semibold text-ink">{roleLabel(who)}</span>. Only the owner changes roles.</p>
+          <p className="m-0 text-[13px] text-ink-2">Role: <span className="font-semibold text-ink">{roleLabel(who)}</span>. Only the CEO changes roles.</p>
           <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
             {error
               ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>

@@ -1,6 +1,6 @@
 import {
   companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber, payees,
-  peso, recordOf, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
+  peso, recordOf, shortDate, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher, type VoucherDrafts,
   type VoucherStatus, type WaitingItem
 } from '@keystone/core';
@@ -58,11 +58,32 @@ export const voucherDraftOf = (v: Voucher): VoucherDraft => ({
 
 /**
  * Why a voucher can no longer be changed, or null while it is still For Approval. Once
- * approved, the voucher prints as it was approved; a change goes on a new voucher.
+ * approved, the voucher prints as it was approved; a change goes on a new voucher. Only
+ * the check, often written after approval, still goes on it until it is released.
  */
 export function voucherLock(v: Voucher): string | null {
-  return v.status === 'For Approval' ? null : `${v.no} is ${v.status.toLowerCase()} and can no longer be changed. Copy it to a new voucher to change it.`;
+  if (v.status === 'For Approval') return null;
+
+  if (takesCheck(v)) return `${v.no} is approved: only its check number and date of check can change until it is released. Copy it to a new voucher to change the rest.`;
+
+  return `${v.no} is ${v.status.toLowerCase()} and can no longer be changed. Copy it to a new voucher to change it.`;
 }
+
+/** Whether an approved voucher still takes its check number and date of check: until the check is released. */
+export const takesCheck = (v: Voucher) => v.status === 'Approved';
+
+/** The voucher with the check number and date of check typed on `d`, and nothing else of `d`. */
+export function withCheck(v: Voucher, d: Pick<VoucherDraft, 'check' | 'checkDate'>): Voucher {
+  const out: Voucher = { ...v, check: d.check.trim() };
+
+  if (d.checkDate) out.checkDate = d.checkDate;
+  else delete out.checkDate;
+
+  return out;
+}
+
+/** Whether a voucher saved by whoever is signed in is approved as it is saved: the CEO's are; everyone else's wait for approval. */
+export const approvesOnSave = (ctx: Ctx) => ctx.who?.role === 'owner';
 
 /** A new voucher drafted from another: its payee, particulars and signatories, under the next number, dated today, with no check yet. */
 export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraft {
@@ -95,20 +116,49 @@ export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval
   return v;
 }
 
-/**
- * Saves a voucher. A draft loaded from the register updates that voucher while it is
- * still For Approval; `asNew` (or a voucher already approved) saves a copy under the
- * next number.
- */
-export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew = false): Change<Voucher> {
+/** The voucher on the form, refused without a particular with an amount or a payee from the directory. */
+function checkedVoucher(s: TerminalState, d: VoucherDraft): Voucher {
   const v = voucherOf(d);
-  const total = voucherTotal(v);
 
-  if (!v.lines.length || total <= 0) throw new KeystoneError('Add at least one particular with an amount.');
+  if (!v.lines.length || voucherTotal(v) <= 0) throw new KeystoneError('Add at least one particular with an amount.');
 
   if (!recordOf(s, v.payee)) throw new KeystoneError('Choose a payee from the directory.');
 
+  return v;
+}
+
+/** Adds a voucher under the next number: For Approval, or approved by the CEO who saved it. */
+function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string): Change<Voucher> {
+  const saved: Voucher = { ...v, no: nextVoucherNo(s), status: approvedBy ? 'Approved' : 'For Approval' };
+  const routed = approvedBy ? `saved and approved by ${approvedBy}` : 'saved and routed for approval';
+
+  return {
+    state: logged({ ...s, cv: [...s.cv, saved] }, 'CV', `${saved.no} for ${nameOf(s, v.payee)} ${routed} (${peso(voucherTotal(saved))}).`, ctx),
+    record: saved, message: `${saved.no} ${approvedBy ? 'saved and approved' : 'saved and routed for approval'}.`,
+  };
+}
+
+/**
+ * Saves a voucher. A draft loaded from the register updates that voucher while it is
+ * still For Approval, or only its check while it is approved; `asNew` (or a voucher
+ * released or void) saves a copy under the next number. A new voucher waits for
+ * approval, unless the CEO saves it: theirs is approved as it is saved.
+ */
+export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew = false): Change<Voucher> {
+  const v = checkedVoucher(s, d);
   const original = d.editing ? s.cv.find((x) => x.no === d.editing) : undefined;
+
+  if (original && !asNew && takesCheck(original)) {
+    const updated = withCheck(original, d);
+    const dated = updated.checkDate ? `, dated ${shortDate(updated.checkDate)}` : '';
+
+    if (updated.check === original.check && updated.checkDate === original.checkDate) return { state: s, record: original, message: `${original.no} is unchanged.` };
+
+    return {
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
+      record: updated, message: `${updated.no} updated.`,
+    };
+  }
 
   if (original && !asNew) {
     const lock = voucherLock(original);
@@ -118,17 +168,12 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     const updated = { ...v, no: original.no, status: original.status };
 
     return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(total)}).`, ctx),
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(voucherTotal(v))}).`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
 
-  const saved = { ...v, no: nextVoucherNo(s) };
-
-  return {
-    state: logged({ ...s, cv: [...s.cv, saved] }, 'CV', `${saved.no} for ${nameOf(s, v.payee)} saved and routed for approval (${peso(total)}).`, ctx),
-    record: saved, message: `${saved.no} saved and routed for approval.`,
-  };
+  return addVoucher(s, v, ctx, approvesOnSave(ctx) ? ctx.who?.name : undefined);
 }
 
 /**
@@ -165,10 +210,11 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
 
 /**
  * The vouchers.drafts service (SERVICES.voucherDrafts): a voucher for spending approved elsewhere, saved For Approval
- * like any other, with one particular and no check yet. Accounting adds the check and it is approved as usual.
+ * with one particular and no check yet, even when the CEO's decision drafts it. Accounting completes it and adds the
+ * check, and it is approved as usual.
  */
 export const voucherDrafts: VoucherDrafts = {
-  draft: (s, r, ctx) => saveVoucher(s, { ...newVoucher(s, ctx), payee: r.payee, lines: [lineDraft({ desc: r.particulars, amount: String(r.amount) })] }, ctx),
+  draft: (s, r, ctx) => addVoucher(s, checkedVoucher(s, { ...newVoucher(s, ctx), payee: r.payee, lines: [lineDraft({ desc: r.particulars, amount: String(r.amount) })] }), ctx),
 };
 
 // ---------- what the vouchers domain tells Overview and Home ----------

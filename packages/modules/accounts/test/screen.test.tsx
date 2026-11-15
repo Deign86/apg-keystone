@@ -5,7 +5,7 @@ import { App, buildRegistry, KeystoneStore, type AppAccounts, type MemberAccount
 import { accountsModule } from '../src';
 
 // The User Accounts screen against a stand-in for the sign-in (Platform.accounts), as the cloud build provides it:
-// the owner makes and removes staff accounts, staff only see who has one, anyone signed in changes their own
+// the CEO makes and removes staff accounts, staff only see who has one, anyone signed in changes their own
 // password, and a computer with nobody signed in has none of it.
 
 const owner: Member = { uid: 'owner-1', name: 'Mark Reyes', role: 'owner' };
@@ -76,14 +76,14 @@ describe('User Accounts', () => {
     const table = screen.getByRole('table', { name: 'User accounts' });
 
     expect(within(table).getAllByRole('row').map((r) => r.textContent)).toEqual([
-      'NameEmailRole', 'Mark Reyesmark@alphapremiergroup.comOwner', 'Ana Cruz (you)ana.cruz@alphapremiergroup.comStaff',
+      'NameEmailRole', 'Mark Reyesmark@alphapremiergroup.comCEO', 'Ana Cruz (you)ana.cruz@alphapremiergroup.comStaff',
     ]);
-    expect(screen.getByText('2 people can open APG\'s records. Only the owner makes accounts.')).toBeInTheDocument();
+    expect(screen.getByText('2 people can open APG\'s records. Only the CEO makes accounts.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Make account' })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Actions for / })).toBeNull();
   });
 
-  it('lets the owner make a staff account, lists it and logs it', async () => {
+  it('lets the CEO make a staff account, lists it and logs it', async () => {
     const accounts = signIn();
     const store = await open(owner, accounts);
 
@@ -133,11 +133,11 @@ describe('User Accounts', () => {
     expect(within(screen.getByRole('table', { name: 'User accounts' })).getAllByRole('row')).toHaveLength(3);
   });
 
-  it('lets the owner remove a staff account after asking, and logs it', async () => {
+  it('lets the CEO remove a staff account after asking, and logs it', async () => {
     const accounts = signIn();
     const store = await open(owner, accounts);
 
-    // Only staff rows have a menu: never the owner's own.
+    // Only staff rows have a menu: never the CEO's own.
     expect(screen.queryByRole('button', { name: 'Actions for Mark Reyes' })).toBeNull();
     await removeFromRow('Ana Cruz');
 
@@ -152,13 +152,13 @@ describe('User Accounts', () => {
   it('keeps the account listed, and says why, when the sign-in refuses to remove it', async () => {
     const accounts = signIn();
 
-    vi.mocked(accounts.remove).mockRejectedValue(new Error('Only the owner removes accounts.'));
+    vi.mocked(accounts.remove).mockRejectedValue(new Error('Only the CEO removes accounts.'));
     const store = await open(owner, accounts);
     const log = store.state.log.length;
 
     await removeFromRow('Ana Cruz');
 
-    expect(await screen.findByText('Only the owner removes accounts.')).toBeInTheDocument();
+    expect(await screen.findByText('Only the CEO removes accounts.')).toBeInTheDocument();
     expect(within(screen.getByRole('table', { name: 'User accounts' })).getByText('Ana Cruz')).toBeInTheDocument();
     expect(store.state.log).toHaveLength(log);
   });

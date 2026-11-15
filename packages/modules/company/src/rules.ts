@@ -38,7 +38,7 @@ function whole(text: string, most: number, what: string): number {
 }
 
 export function saveCompany(s: TerminalState, d: CompanyDraft, ctx: Ctx): Change<CompanyDetails> {
-  if (!canChange(ctx)) throw new KeystoneError('Only the owner changes the company\'s details.');
+  if (!canChange(ctx)) throw new KeystoneError('Only the CEO changes the company\'s details.');
   const name = line(d.name);
 
   if (!name) throw new KeystoneError('Enter the company\'s name, as its documents print it.');

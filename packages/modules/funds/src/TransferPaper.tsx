@@ -3,7 +3,7 @@ import { amountInWords, longDate, peso, type Company } from '@keystone/core';
 import { amountColumn, Letterhead, Lines, Meta, orDash, paperLabel, Sheet, Signatures } from '@keystone/kit';
 import { expensesOf, requestTotal, settleText, type FundsRequest } from './rules';
 
-// The fund transfer request (docs/adr/0021): once the owner approves a request paid by transfer, the paper that asks
+// The fund transfer request (docs/adr/0021): once the CEO approves a request paid by transfer, the paper that asks
 // for its total to be sent to the account it names, for the expenses it lists. One A4 page: who asked and when, the
 // account in its own ruled box, the amount in figures and in words, the expenses, and who asked and who approved.
 
@@ -16,7 +16,7 @@ const when = (at: string) => `${longDate(at.slice(0, 10))} at ${at.slice(11, 16)
 function standing(r: FundsRequest): string {
   if (r.status === 'Approved' && r.decision) return `Approved in Keystone by ${r.decision.by} on ${when(r.decision.at)}.`;
 
-  if (r.status === 'For Approval') return 'Not approved yet: this request waits for the owner\'s decision.';
+  if (r.status === 'For Approval') return 'Not approved yet: this request waits for the CEO\'s decision.';
 
   return `This request was ${r.status.toLowerCase()} and is not to be paid.`;
 }

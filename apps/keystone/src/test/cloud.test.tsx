@@ -12,7 +12,7 @@ import { firebaseConfig, firebaseEmulators } from '../platform/config';
 import type { StoredText } from '../platform/web-storage';
 import { sampleState } from '@keystone/core/sample';
 
-// The records in the cloud (docs/adr/0009), against a cloud held in memory: the owner starting them empty and nothing
+// The records in the cloud (docs/adr/0009), against a cloud held in memory: the CEO starting them empty and nothing
 // copied in from a computer (docs/adr/0018), reading back, writing only what changed, never saving over records it
 // could not read, and writing a save the page closed on before the cloud had it (docs/adr/0013).
 
@@ -105,7 +105,7 @@ afterEach(() => {
 });
 
 describe('the records in the cloud', () => {
-  it('the owner\'s first sign-in starts the records empty, copying in nothing this computer holds', async () => {
+  it('the CEO\'s first sign-in starts the records empty, copying in nothing this computer holds', async () => {
     const { remote, cloud, docs } = memoryCloud();
     const local = localPlatform(JSON.stringify(sample()));
     const store = await KeystoneStore.open(cloudPlatform(local.platform, remote, {}, owner));
@@ -121,7 +121,7 @@ describe('the records in the cloud', () => {
     expect(cloud.starts).toBe(1);
   });
 
-  it('staff, or a member not known yet, are told the owner starts the records, and nothing is written', async () => {
+  it('staff, or a member not known yet, are told the CEO starts the records, and nothing is written', async () => {
     for (const who of [staff, undefined]) {
       const { remote, cloud } = memoryCloud();
       await expect(KeystoneStore.open(cloudPlatform(localPlatform(JSON.stringify(sample())).platform, remote, {}, who))).rejects.toThrow(NOT_STARTED);

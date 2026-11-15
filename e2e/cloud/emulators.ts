@@ -46,7 +46,7 @@ export interface Account {
 }
 
 /**
- * A throwaway account in the Auth emulator, with a made-up address and password. With a role, the owner has also made
+ * A throwaway account in the Auth emulator, with a made-up address and password. With a role, the CEO has also made
  * it a member (keystone/apg/members/<uid>, as docs/FIREBASE.md › Members describes) under `name`; without one, it is not.
  */
 export async function makeAccount(role?: 'owner' | 'staff', name = role === 'owner' ? 'Owner' : 'Staff'): Promise<Account> {
@@ -67,7 +67,7 @@ export async function makeAccount(role?: 'owner' | 'staff', name = role === 'own
   return { email, password, uid };
 }
 
-/** Makes an account a member with this role and name, or changes them, as the owner would in the Firebase console. */
+/** Makes an account a member with this role and name, or changes them, as the CEO would in the Firebase console. */
 export async function setMember(uid: string, role: 'owner' | 'staff', name: string) {
   await call(`${DATABASE}/documents/keystone/apg/members/${uid}`, {
     method: 'PATCH',

@@ -29,4 +29,4 @@ there is no profile. The link to change the password is shown only when User Acc
 
 ## Removing it
 The screen and its log filter disappear. Names are changed in the Firebase console again (docs/FIREBASE.md › Members),
-or by the owner making the account again.
+or by the CEO making the account again.

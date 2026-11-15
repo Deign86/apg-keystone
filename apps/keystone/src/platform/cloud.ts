@@ -10,7 +10,7 @@ import { webStorage, type StoredText } from './web-storage';
 export interface RemoteDocs {
   /** Every document, or null while nobody has started the records yet. Throws when the cloud cannot be read. */
   readAll(): Promise<StateDocument[] | null>;
-  /** Marks the records as started, with nothing in them yet: the owner's first sign-in (docs/adr/0018). */
+  /** Marks the records as started, with nothing in them yet: the CEO's first sign-in (docs/adr/0018). */
   start(): Promise<void>;
   /**
    * Writes new and changed documents and deletes removed ones. The writes are handed over before this returns, in the
@@ -20,7 +20,7 @@ export interface RemoteDocs {
   write(change: DocumentChanges): Promise<void>;
 }
 
-export const NOT_STARTED = 'APG\'s records are not set up in the cloud yet. The owner signs in first, and Keystone starts them, empty.';
+export const NOT_STARTED = 'APG\'s records are not set up in the cloud yet. The CEO signs in first, and Keystone starts them, empty.';
 export const NOT_READ = 'Keystone has not read the records from the cloud, so it did not save over them. Reopen Keystone.';
 
 /**
@@ -56,7 +56,7 @@ export function cloudPlatform(
 
     if (docs) return opened(fromDocuments(docs, layout));
 
-    // Nothing in the cloud yet. The records are only ever what people save there: the owner starts them empty, and
+    // Nothing in the cloud yet. The records are only ever what people save there: the CEO starts them empty, and
     // whatever this computer holds, records of its own or made-up ones, is never copied in.
     if (who?.role !== 'owner') throw new Error(NOT_STARTED);
     await remote.start();

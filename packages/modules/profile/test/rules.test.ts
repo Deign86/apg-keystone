@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyState, type Ctx } from '@keystone/core';
 import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN } from '../src/rules';
 
-/** 12 Nov 2026, 10:46 in Manila, signed in as the owner. */
+/** 12 Nov 2026, 10:46 in Manila, signed in as the CEO. */
 const ctx: Ctx = { now: () => new Date(2026, 10, 12, 10, 46), who: { uid: 'owner-1', name: 'Deign Lazaro', role: 'owner' } };
 
 describe('your profile', () => {

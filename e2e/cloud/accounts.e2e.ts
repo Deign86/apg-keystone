@@ -4,9 +4,9 @@ import {
   asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, makeAccount, recordsInCloud, setMember, setMemberFieldAs, signIn,
 } from './emulators';
 
-// The owner making and removing accounts, and anyone changing their own password (docs/adr/0014–0016,
-// packages/modules/accounts) or, on Profile, their own name (docs/adr/0020, packages/modules/profile): from User Accounts, the owner makes a staff account, and that person signs in with it on
-// another computer and opens the records; once the owner removes it, they open nothing. Staff see who has an account and
+// The CEO making and removing accounts, and anyone changing their own password (docs/adr/0014–0016,
+// packages/modules/accounts) or, on Profile, their own name (docs/adr/0020, packages/modules/profile): from User Accounts, the CEO makes a staff account, and that person signs in with it on
+// another computer and opens the records; once the CEO removes it, they open nothing. Staff see who has an account and
 // make or remove none, and firestore.rules hold the same line for a member who goes past Keystone.
 // app.clearState() is another computer, signed out and empty.
 
@@ -16,7 +16,7 @@ test.beforeEach(async () => {
 
 const liza = { name: 'Liza Bautista', email: 'liza.bautista@keystone.test', password: 'starting-password-1' };
 
-/** Fills in the owner's Make account dialog and sends it. */
+/** Fills in the CEO's Make account dialog and sends it. */
 async function makeAccountFor(screen: Screen, person: { name: string; email: string; password: string }) {
   await screen.getByRole('button', 'Make account').tap();
   const dialog = screen.getByRole('dialog', 'Make account');
@@ -29,7 +29,7 @@ async function makeAccountFor(screen: Screen, person: { name: string; email: str
   return dialog;
 }
 
-test('the owner makes a staff account, and that person signs in with it on another computer', async ({ app, screen, browser }) => {
+test('the CEO makes a staff account, and that person signs in with it on another computer', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
 
@@ -42,7 +42,7 @@ test('the owner makes a staff account, and that person signs in with it on anoth
   await expect(screen.getByText('2 people can open APG\'s records. Make an account for each new staff member.')).toBeVisible();
   const table = screen.getByRole('table', 'User accounts');
 
-  await expect(table.getByRole('row', /^Mark Reyes \(you\) — Owner$/)).toBeVisible();
+  await expect(table.getByRole('row', /^Mark Reyes \(you\) — CEO$/)).toBeVisible();
   await expect(table.getByRole('row', /^Ana Cruz — Staff Actions for Ana Cruz$/)).toBeVisible();
 
   // A slip is caught on the form, and nothing is made.
@@ -59,10 +59,10 @@ test('the owner makes a staff account, and that person signs in with it on anoth
   await expect(table.getByRole('row', /^Liza Bautista liza\.bautista@keystone\.test Staff Actions for Liza Bautista$/)).toBeVisible();
   await expect(screen.getByText('3 people can open APG\'s records. Make an account for each new staff member.')).toBeVisible();
 
-  // Its log line reaches the cloud. Making it signed nobody else in here: reopened, Keystone is still the owner's.
+  // Its log line reaches the cloud. Making it signed nobody else in here: reopened, Keystone is still the CEO's.
   await expect.poll(async () => (await documentIds('log')).length, { timeout: 10_000 }).toBe(logged + 1);
   await browser.reload();
-  await expect(screen.getByRole('navigation', 'Keystone').getByText('Mark Reyes · Owner')).toBeVisible({ timeout: 15_000 });
+  await expect(screen.getByRole('navigation', 'Keystone').getByText('Mark Reyes · CEO')).toBeVisible({ timeout: 15_000 });
 
   // The new member is in the cloud as staff.
   const uid = (await documentIds('members')).find((id) => id !== owner.uid && id !== hr.uid) ?? '';
@@ -90,7 +90,7 @@ test('the owner makes a staff account, and that person signs in with it on anoth
 
   // Staff see who has an account, and make none.
   await rail.getByRole('button', /User Accounts$/).tap();
-  await expect(screen.getByText('3 people can open APG\'s records. Only the owner makes accounts.')).toBeVisible();
+  await expect(screen.getByText('3 people can open APG\'s records. Only the CEO makes accounts.')).toBeVisible();
   await expect(screen.getByRole('table', 'User accounts').getByRole('row', /^Liza Bautista \(you\) liza\.bautista@keystone\.test Staff$/)).toBeVisible();
   await expect(screen.getByRole('button', 'Make account')).toBeHidden();
 });
@@ -126,7 +126,7 @@ test('an owner no longer one by the time they make an account is refused, and le
   await setMember(owner.uid, 'staff', 'Mark Reyes');
   const dialog = await makeAccountFor(screen, liza);
 
-  await expect(dialog.getByRole('alert')).toHaveText('Only the owner makes accounts.');
+  await expect(dialog.getByRole('alert')).toHaveText('Only the CEO makes accounts.');
   expect(await documentIds('members')).toEqual([owner.uid]);
 
   // Owner again, the same email is free: the refused attempt took its sign-in back.
@@ -136,7 +136,7 @@ test('an owner no longer one by the time they make an account is refused, and le
   expect(await documentIds('members')).toHaveLength(2);
 });
 
-test('the owner removes a staff account after asking, and that person can no longer open the records', async ({ app, screen }) => {
+test('the CEO removes a staff account after asking, and that person can no longer open the records', async ({ app, screen }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
 
@@ -147,7 +147,7 @@ test('the owner removes a staff account after asking, and that person can no lon
   await app.open('/#accounts');
   const table = screen.getByRole('table', 'User accounts');
 
-  // The owner's own row has no menu; a staff row's has Remove…, which asks first.
+  // The CEO's own row has no menu; a staff row's has Remove…, which asks first.
   await expect(table.getByRole('row', /^Ana Cruz — Staff Actions for Ana Cruz$/)).toBeVisible();
   await expect(table.getByRole('button', 'Actions for Mark Reyes')).toBeHidden();
   await table.getByRole('button', 'Actions for Ana Cruz').tap();
@@ -171,7 +171,7 @@ test('the owner removes a staff account after asking, and that person can no lon
   await app.clearState();
   await app.open('/');
   await signIn(screen, hr);
-  await expect(screen.getByRole('alert')).toHaveText('This account may not open APG\'s records. Ask the owner to add it in the Firebase console (keystone/apg/members).');
+  await expect(screen.getByRole('alert')).toHaveText('This account may not open APG\'s records. Ask the CEO to add it in the Firebase console (keystone/apg/members).');
   await expect(screen.getByRole('navigation', 'Keystone')).toBeHidden();
 });
 
@@ -245,7 +245,7 @@ test('staff change their own name on Profile, and every computer shows it', asyn
   expect(await field('members', hr.uid, 'name')).toBe('Ana Cruz-Reyes');
   expect(await field('members', hr.uid, 'role')).toBe('staff');
 
-  // The owner, on theirs, sees the new name among the accounts.
+  // The CEO, on theirs, sees the new name among the accounts.
   await app.clearState();
   await app.open('/');
   await signIn(screen, owner);
@@ -270,39 +270,39 @@ test('firestore.rules let a member change their own name, and nothing else of th
   expect(await field('members', owner.uid, 'name')).toBe('Mark Reyes');
 });
 
-test('firestore.rules let only the owner remove a member', async () => {
+test('firestore.rules let only the CEO remove a member', async () => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
   const it = await makeAccount('staff', 'Paolo Santos');
   const [ownerToken, hrToken] = await Promise.all([owner, hr].map(idToken));
 
-  // Staff remove nobody, not even themselves, and never the owner.
+  // Staff remove nobody, not even themselves, and never the CEO.
   expect(await deleteAsMember(hrToken, `/members/${it.uid}`)).toBe(403);
   expect(await deleteAsMember(hrToken, `/members/${owner.uid}`)).toBe(403);
   expect(await deleteAsMember(hrToken, `/members/${hr.uid}`)).toBe(403);
   expect(await documentIds('members')).toHaveLength(3);
 
-  // The owner can, and then the removed member reads nothing.
+  // The CEO can, and then the removed member reads nothing.
   expect(await deleteAsMember(ownerToken, `/members/${it.uid}`)).toBe(200);
   expect(await documentIds('members')).toEqual([owner.uid, hr.uid].sort());
   expect(await asMember(await idToken(it), `/members/${owner.uid}`)).toBe(403);
 });
 
-test('firestore.rules let only the owner make someone a member', async () => {
+test('firestore.rules let only the CEO make someone a member', async () => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
   const outsider = await makeAccount();
   const [ownerToken, hrToken, outsiderToken] = await Promise.all([owner, hr, outsider].map(idToken));
   const member = { role: 'staff', name: 'Someone', email: outsider.email };
 
-  // Staff can read who is a member, but cannot add one, nor make themselves the owner; an outsider cannot add itself.
+  // Staff can read who is a member, but cannot add one, nor make themselves the CEO; an outsider cannot add itself.
   expect(await asMember(hrToken, `/members/${owner.uid}`)).toBe(200);
   expect(await asMember(hrToken, `/members/${outsider.uid}`, member)).toBe(403);
   expect(await asMember(hrToken, `/members/${hr.uid}`, { role: 'owner', name: 'Ana Cruz' })).toBe(403);
   expect(await asMember(outsiderToken, `/members/${outsider.uid}`, member)).toBe(403);
   expect(await field('members', hr.uid, 'role')).toBe('staff');
 
-  // The owner can.
+  // The CEO can.
   expect(await asMember(ownerToken, `/members/${outsider.uid}`, member)).toBe(200);
   expect(await field('members', outsider.uid, 'role')).toBe('staff');
 });
