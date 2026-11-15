@@ -30,6 +30,7 @@ Consequences**.
 | [0018](0018-the-records-are-the-only-source.md) | What was saved is the only source: no records, company details or accounts built in | Accepted |
 | [0019](0019-coming-soon-screens-show-behind-a-notice.md) | Screens coming soon show behind a notice | Accepted |
 | [0020](0020-changing-your-own-name.md) | Changing your own name, on Profile | Accepted |
+| [0021](0021-expenses-and-fund-transfer-requests.md) | A request lists its expenses, and an approved transfer makes a fund transfer request | Accepted |
 
 Template:
 

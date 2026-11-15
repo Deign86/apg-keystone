@@ -112,7 +112,7 @@ And Check Vouchers and Requests for Funds (docs/adr/0011):
 
 ```
 core: SERVICES.voucherDrafts = 'vouchers.drafts', interface VoucherDrafts
-module-vouchers: provides it               module-funds: app.service(SERVICES.voucherDrafts) when the owner approves, or no voucher
+module-vouchers: provides it               module-funds: app.service(SERVICES.voucherDrafts) when the owner approves a check, or no voucher
 ```
 
 This is the OSGi service-registry pattern, and the "published interface" of Fowler and of Spring Modulith's named

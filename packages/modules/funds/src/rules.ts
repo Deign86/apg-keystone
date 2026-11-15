@@ -1,14 +1,15 @@
 import {
-  addDays, count, editText, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged, moduleData,
-  nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
-  toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure,
-  type Finding, type ISODate, type JsonObject, type JsonValue, type RecordDocuments, type TerminalState, type Tone, type VoucherDrafts,
-  type WaitingItem,
+  addDays, count, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, logged,
+  moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
+  toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
+  type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type TerminalState, type Tone,
+  type VoucherDrafts, type WaitingItem,
 } from '@keystone/core';
 
-// Requests for funds (docs/adr/0011): staff ask for money for a purpose, the owner approves or declines, and an
-// approval drafts the check voucher through Check Vouchers' service. Only the owner, signed in to the records in the
-// cloud, decides; firestore.rules holds the same line, and lets staff read only their own requests.
+// Requests for funds (docs/adr/0011, 0021): staff list the expenses they need money for, the owner approves or
+// declines, and an approval either makes the fund transfer request, for a transfer to the account the request names,
+// or drafts the check voucher through Check Vouchers' service. Only the owner, signed in to the records in the cloud,
+// decides; firestore.rules holds the same line, and lets staff read only their own requests.
 
 export const MODULE = 'funds';
 export const TAG = 'RF';
@@ -34,15 +35,40 @@ export type Decision = {
   note?: string;
 }
 
+/** How an approved request is paid: by a bank transfer to an account, or by a check to a payee in the directory. */
+export const PAY_METHODS = ['transfer', 'check'] as const;
+
+export type PayMethod = (typeof PAY_METHODS)[number];
+
+/** One expense a request lists: what it is, and its amount in pesos. A line as a voucher has one. */
+export type Expense = { desc: string; amt: number };
+
+/** The account a transfer goes to, as the requester typed it. */
+export type TransferAccount = {
+  bank: string;
+  /** Optional. */
+  branch: string;
+  /** The account name, as the bank holds it. */
+  name: string;
+  /** As printed: "0012 3456 7890". */
+  number: string;
+}
+
 export type FundsRequest = {
   no: string;
   /** The day it was filed. */
   date: ISODate;
-  /** What the money is for. */
+  /** What the money is for, in a line. */
   purpose: string;
-  /** Pesos. */
+  /** The expenses it covers, each a description and its amount. Requests filed before 0021 have none. */
+  lines: Expense[];
+  /** Pesos: the expenses' total. */
   amount: number;
-  /** Directory code of the payee. */
+  /** Requests filed before 0021 are checks. */
+  pay: PayMethod;
+  /** Transfers: the account to transfer to. */
+  account?: TransferAccount;
+  /** Checks: directory code of the payee. */
   payee: string;
   /** ASAP, or the date it must be settled by. */
   settle: string;
@@ -52,7 +78,7 @@ export type FundsRequest = {
   uid?: string;
   status: RequestStatus;
   decision?: Decision;
-  /** The voucher drafted when it was approved. */
+  /** Checks: the voucher drafted when it was approved. */
   voucher?: string;
 }
 
@@ -73,6 +99,12 @@ export const requestDocuments: RecordDocuments = { collection: 'rf', list: 'requ
 
 const statusOf = (v: JsonValue | undefined): RequestStatus => REQUEST_STATUSES.find((s) => s === v) ?? 'For Approval';
 
+function accountOf(v: JsonValue | undefined): TransferAccount | undefined {
+  if (!isJsonObject(v)) return undefined;
+
+  return { bank: jsonText(v.bank), branch: jsonText(v.branch), name: jsonText(v.name), number: jsonText(v.number) };
+}
+
 function decisionOf(v: JsonObject): Decision | undefined {
   if (!isJsonObject(v.decision)) return undefined;
   const d = v.decision;
@@ -91,11 +123,16 @@ export function dataOf(s: TerminalState): FundsData {
 
   const requests = jsonObjects(raw.requests).map((r): FundsRequest => {
     const request: FundsRequest = {
-      no: jsonText(r.no), date: jsonText(r.date), purpose: jsonText(r.purpose), amount: jsonNumber(r.amount), payee: jsonText(r.payee),
-      settle: jsonText(r.settle) || ASAP, requester: jsonText(r.requester), status: statusOf(r.status),
+      no: jsonText(r.no), date: jsonText(r.date), purpose: jsonText(r.purpose),
+      lines: jsonObjects(r.lines).map((l) => ({ desc: jsonText(l.desc), amt: jsonNumber(l.amt) })), amount: jsonNumber(r.amount),
+      pay: r.pay === 'transfer' ? 'transfer' : 'check', payee: jsonText(r.payee), settle: jsonText(r.settle) || ASAP,
+      requester: jsonText(r.requester), status: statusOf(r.status),
     };
 
     const decision = decisionOf(r);
+    const account = request.pay === 'transfer' ? accountOf(r.account) : undefined;
+
+    if (account) request.account = account;
 
     if (jsonText(r.uid)) request.uid = jsonText(r.uid);
 
@@ -109,11 +146,22 @@ export function dataOf(s: TerminalState): FundsData {
   return { requests, last: jsonText(raw.last) };
 }
 
-const saved = (s: TerminalState, data: FundsData) => withModuleData(s, MODULE, { requests: data.requests.map((r) => ({ ...r })), last: data.last });
+const saved = (s: TerminalState, data: FundsData) => withModuleData(s, MODULE, {
+  requests: data.requests.map((r) => ({ ...r, lines: r.lines.map((l) => ({ ...l })), ...(r.account && { account: { ...r.account } }) })), last: data.last,
+});
 
 export const requestsNewestFirst = (s: TerminalState) => newestFirst(dataOf(s).requests);
 export const requestOf = (s: TerminalState, no: string) => dataOf(s).requests.find((r) => r.no === no);
 export const requestTotal = (r: Pick<FundsRequest, 'amount'>): Centavos => toCentavos(r.amount);
+
+/** The expenses a request lists; one filed before it listed them is its purpose for its amount. */
+export const expensesOf = (r: Pick<FundsRequest, 'lines' | 'purpose' | 'amount'>): Expense[] => (r.lines.length ? r.lines : [{ desc: r.purpose, amt: r.amount }]);
+
+/** How an account reads in a sentence or a list: "BDO · Liza Ramos · 0012 3456 7890". */
+export const accountLabel = (a: TransferAccount) => [a.bank, a.name, a.number].join(' · ');
+
+/** Whether the request's fund transfer request can be printed and saved: a transfer, once the owner approved it. */
+export const transferReady = (r: FundsRequest) => r.pay === 'transfer' && r.status === 'Approved';
 
 /** The next number after the highest given out: RF-2026-0003. */
 export function nextRequestNo(s: TerminalState, ctx: Ctx): string {
@@ -159,9 +207,13 @@ export function requestLock(r: FundsRequest, ctx: Ctx): string | null {
 
 export interface RequestDraft extends Editing {
   purpose: string;
-  /** As typed. */
-  amount: string;
+  /** The expenses, as typed. */
+  lines: LineDraft[];
+  pay: PayMethod;
+  /** Checks: the payee's directory code. */
   payee: string;
+  /** Transfers: the account, as typed. */
+  account: TransferAccount;
   /** ASAP, or "date" to settle by `by`. */
   when: typeof ASAP | 'date';
   by: string;
@@ -169,14 +221,85 @@ export interface RequestDraft extends Editing {
   requester: string;
 }
 
-export const newRequest = (s: TerminalState, ctx: Ctx): RequestDraft => ({
-  purpose: '', amount: '', payee: payees(s)[0]?.code ?? '', when: ASAP, by: '', requester: ctx.who?.name ?? '',
-});
+const NO_ACCOUNT: TransferAccount = { bank: '', branch: '', name: '', number: '' };
+
+/**
+ * A blank request. It is paid as this person's last request was, by a transfer when they have filed none, and a
+ * transfer starts with the account their last transfer went to: the fund they keep is topped up into the same account
+ * each time, and nothing about it is built in (docs/adr/0018).
+ */
+export function newRequest(s: TerminalState, ctx: Ctx): RequestDraft {
+  const mine = newestFirst(dataOf(s).requests).filter((r) => filedBy(r, ctx));
+  const account = mine.find((r) => r.account)?.account;
+
+  return {
+    purpose: '', lines: [lineDraft()], pay: mine[0]?.pay ?? 'transfer',
+    payee: mine.find((r) => r.pay === 'check' && recordOf(s, r.payee))?.payee ?? payees(s)[0]?.code ?? '',
+    account: account ? { ...account } : { ...NO_ACCOUNT }, when: ASAP, by: '', requester: ctx.who?.name ?? '',
+  };
+}
 
 export const requestDraftOf = (r: FundsRequest): RequestDraft => ({
-  editing: r.no, purpose: r.purpose, amount: r.amount ? editText(r.amount) : '', payee: r.payee,
-  when: r.settle === ASAP ? ASAP : 'date', by: r.settle === ASAP ? '' : r.settle, requester: r.requester,
+  editing: r.no, purpose: r.purpose, lines: expensesOf(r).map(lineDraftOf), pay: r.pay, payee: r.payee,
+  account: r.account ? { ...r.account } : { ...NO_ACCOUNT }, when: r.settle === ASAP ? ASAP : 'date', by: r.settle === ASAP ? '' : r.settle,
+  requester: r.requester,
 });
+
+/**
+ * The expenses as typed, each with its amount. A line left blank is dropped; a line with only a description or only an
+ * amount is refused, naming the line as the form numbers it.
+ */
+function expensesTyped(lines: LineDraft[]): Expense[] {
+  const expenses = lines.flatMap((l, i) => {
+    const desc = l.desc.trim();
+    const amount = parseAmount(l.amount) ?? 0;
+
+    if (!desc && !l.amount.trim()) return [];
+
+    if (!desc) throw new KeystoneError(`Say what line ${i + 1} is for.`);
+
+    if (amount <= 0) throw new KeystoneError(`Enter the amount for line ${i + 1}, ${desc}.`);
+
+    return [{ desc, amt: toPesos(amount) }];
+  });
+
+  if (!expenses.length) throw new KeystoneError('List the expenses, each with its amount.');
+
+  return expenses;
+}
+
+/** The account to transfer to, as typed, or the sentence that says what it is missing. */
+function accountTyped(a: TransferAccount): TransferAccount {
+  const account = { bank: a.bank.trim(), branch: a.branch.trim(), name: a.name.trim(), number: a.number.trim() };
+
+  if (!account.bank) throw new KeystoneError('Enter the bank of the account to transfer to.');
+
+  if (!account.name) throw new KeystoneError('Enter the account name, as the bank holds it.');
+
+  if (!/\d/.test(account.number)) throw new KeystoneError('Enter the account number to transfer to.');
+
+  return account;
+}
+
+/**
+ * The request as the form shows it now, for the fund transfer request's preview: nothing checked, and a line still
+ * being typed shown as far as it goes.
+ */
+export function requestPreview(s: TerminalState, d: RequestDraft, ctx: Ctx): FundsRequest {
+  const saved = d.editing ? requestOf(s, d.editing) : undefined;
+
+  const lines = d.lines.flatMap((l) => {
+    const amt = toPesos(parseAmount(l.amount) ?? 0);
+
+    return l.desc.trim() || amt ? [{ desc: l.desc.trim(), amt }] : [];
+  });
+
+  return {
+    no: saved?.no ?? nextRequestNo(s, ctx), date: saved?.date ?? today(ctx), purpose: d.purpose.trim(), lines,
+    amount: toPesos(sumCentavos(lines, (l) => toCentavos(l.amt))), pay: d.pay, account: { ...d.account }, payee: d.payee,
+    settle: d.when === 'date' ? d.by : ASAP, requester: ctx.who?.name ?? d.requester.trim(), status: saved?.status ?? 'For Approval',
+  };
+}
 
 /**
  * Files a request For Approval, or saves changes to one still waiting. Signed in, the requester is the member; with
@@ -185,14 +308,13 @@ export const requestDraftOf = (r: FundsRequest): RequestDraft => ({
  */
 export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change<FundsRequest> {
   const purpose = d.purpose.trim();
-  const amount = parseAmount(d.amount) ?? 0;
   const requester = ctx.who?.name ?? d.requester.trim();
 
   if (!purpose) throw new KeystoneError('Say what the money is for.');
+  const lines = expensesTyped(d.lines);
+  const account = d.pay === 'transfer' ? accountTyped(d.account) : undefined;
 
-  if (amount <= 0) throw new KeystoneError('Enter the amount needed.');
-
-  if (!recordOf(s, d.payee)) throw new KeystoneError('Choose a payee from the directory.');
+  if (d.pay === 'check' && !recordOf(s, d.payee)) throw new KeystoneError('Choose a payee from the directory.');
 
   if (d.when === 'date' && !isISODate(d.by)) throw new KeystoneError('Choose the date it must be settled by, or ASAP.');
 
@@ -201,15 +323,18 @@ export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change
   if (!requester) throw new KeystoneError('Enter your name, so the owner knows who is asking.');
 
   const data = dataOf(s);
-  const fields = { purpose, amount: toPesos(amount), payee: d.payee, settle: d.when === ASAP ? ASAP : d.by };
+  const amount = toPesos(sumCentavos(lines, (l) => toCentavos(l.amt)));
+  // A transfer names no payee and a check no account, so a request switched from one to the other keeps neither.
+  const fields = { purpose, lines, amount, pay: d.pay, payee: account ? '' : d.payee, settle: d.when === ASAP ? ASAP : d.by, ...(account && { account }) };
   const original = d.editing ? data.requests.find((r) => r.no === d.editing) : undefined;
 
   if (original) {
     const lock = requestLock(original, ctx);
 
     if (lock) throw new KeystoneError(lock);
+    const { account: _before, ...kept } = original;
     // Signed in, the requester stays the member who filed it; on a computer with no sign-in, the name typed is theirs.
-    const updated: FundsRequest = { ...original, ...fields, ...(!ctx.who && { requester }) };
+    const updated: FundsRequest = { ...kept, ...fields, ...(!ctx.who && { requester }) };
 
     return {
       state: logged(saved(s, { ...data, requests: data.requests.map((r) => (r.no === original.no ? updated : r)) }), TAG, `${original.no} edited by ${requester}.`, ctx),
@@ -249,8 +374,9 @@ export function withdrawRequest(s: TerminalState, no: string, ctx: Ctx): Change<
 export type Verdict = 'Approved' | 'Declined';
 
 /**
- * The owner's answer. Approving drafts the check voucher for the amount through Check Vouchers' service (`vouchers`,
- * absent when Check Vouchers is not installed); the request keeps the voucher's number. A decision is final.
+ * The owner's answer. Approving a transfer makes its fund transfer request, ready to print or save as a PDF; approving
+ * a check drafts the check voucher for the amount through Check Vouchers' service (`vouchers`, absent when Check
+ * Vouchers is not installed), and the request keeps the voucher's number. A decision is final.
  */
 export function decideRequest(s: TerminalState, no: string, verdict: Verdict, note: string, ctx: Ctx, vouchers?: VoucherDrafts): Change<FundsRequest> {
   const who = ctx.who;
@@ -273,7 +399,9 @@ export function decideRequest(s: TerminalState, no: string, verdict: Verdict, no
   let outcome = '';
 
   if (verdict === 'Approved') {
-    if (!vouchers) {
+    if (r.pay === 'transfer') {
+      outcome = ' Its fund transfer request is ready to print or save as a PDF.';
+    } else if (!vouchers) {
       outcome = ' Check Vouchers is not installed, so no voucher was drafted.';
     } else if (!recordOf(s, r.payee)) {
       outcome = ` ${r.payee} is no longer in the directory, so no voucher was drafted.`;
@@ -321,6 +449,8 @@ function answered(s: TerminalState, ctx: Ctx): FundsRequest[] {
 
 function answerText(r: FundsRequest): string {
   if (r.status === 'Declined') return `${r.no} was declined${noteEnd(r.decision?.note)}`;
+
+  if (r.pay === 'transfer') return `${r.no} was approved; open it to print or save its fund transfer request.`;
 
   return `${r.no} was approved${r.voucher ? `; ${r.voucher} is drafted.` : '.'}`;
 }

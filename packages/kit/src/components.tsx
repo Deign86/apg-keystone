@@ -38,10 +38,13 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { tit
   );
 }
 
-/** The form on the left, the document it produces on the right; stacked under 1100px. */
+/**
+ * The form on the left, the document it produces on the right; stacked under 1100px. Stacked, the one column is as wide
+ * as the screen, never as wide as the paper, so the paper scales down to fit a phone.
+ */
 export function Workspace({ form, preview, previewTitle, previewNote = 'Updates as you type' }: { form: ReactNode; preview: ReactNode; previewTitle: string; previewNote?: string }) {
   return (
-    <div className="grid items-start gap-4 min-[1100px]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1100px]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       {form}
       <section aria-label={previewTitle} className="min-[1100px]:sticky min-[1100px]:top-4">
         <div className="mb-2 flex items-center justify-between">

@@ -52,7 +52,8 @@ billing is not installed. No part that ships asks for it today. Likewise timekee
 in full and says so (docs/adr/0008). Bank Accounts provides `banks.bank-accounts`, the company's bank accounts, and
 billing asks for it to show "Pay into" on a statement; without it, the payment instructions are typed as before
 (docs/adr/0010). Check Vouchers provides `vouchers.drafts`, and Requests for Funds asks for it to draft the check
-voucher when the owner approves a request; without it, the approval stands and no voucher is drafted (docs/adr/0011).
+voucher when the owner approves a request paid by check; without it, the approval stands and no voucher is drafted
+(docs/adr/0011). A request paid by transfer needs no service: approving it makes the fund transfer request (docs/adr/0021).
 The registry allows one provider per service.
 
 ## How connected systems plug in
