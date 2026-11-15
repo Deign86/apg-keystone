@@ -98,7 +98,8 @@ export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: strin
           data-print-fit={printFit}
           data-print-orientation={landscape ? 'landscape' : undefined}
           aria-label={label}
-          style={{ width, minHeight: halves ? undefined : 420 }}
+          // As tall as what it holds: a short paper (a statement with no charges yet) leaves no blank band at its foot.
+          style={{ width }}
           // A two-up sheet's frame only marks the paper's edge on screen; it never prints.
           className={`border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink ${halves ? 'print:border-0' : 'px-[30px] py-7'}`}
         >

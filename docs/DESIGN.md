@@ -21,13 +21,23 @@ These go against a skill rule because every APG system does them. Each one is ma
 
 - **Gold tracked capitals:** screen eyebrows, table headers, status capsules. The inspector runs with
   `--allow micro-label`.
-- **The cream ink `#f6f2e9`:** the attendance tracker's text colour. The inspector warns about it; it stays.
+- **The cream ink `#f6f2e9`:** the attendance tracker's text colour. The inspector runs with `--allow palette-cream`.
 - **The 58px Orbitron greeting on Home:** the kiosk's own front door. Every other screen title is 34px.
 - **Small type on the ID card:** the card is drawn at true CR80 size (54mm wide), so its 8px text is about 2mm, normal
   for a printed card. The ID Maker screen is inspected with `--allow tiny-text`; every other screen, its papers
   included, has nothing under 11px.
 
 The ID card's foil stripe is flat gold. There are no gradients anywhere.
+
+Two more come from the papers, which are drawn to be printed:
+
+- **The check voucher's black rules:** it is printed and filled in by hand, so it is ruled in black as the company's
+  cash voucher is. The inspector reads those boxes as heavy panel borders, so Check Vouchers is inspected with
+  `--allow heavy-borders`.
+- **Small type by share:** the inspector also warns when over 45% of a screen's text is under 13px. The 11px gold
+  tracked capitals (with the rail's 11px lockup and key badges) and the papers, at print size, put Check Vouchers,
+  Billing and Payroll over that line (53–67%); without that 11px type their screens are at 37–42%. That warning stays,
+  not allowed by name: allowing `tiny-text` would also stop its check for anything under 11px.
 
 ## Rules
 
@@ -57,9 +67,15 @@ The ID card's foil stripe is flat gold. There are no gradients anywhere.
 
 ## Checks, and their latest results
 
+The inspector measures a production build, as people get it: the dev server's CSS isn't what ships, and the
+inspector warns about it. A beta build opens every screen, and blank Firebase variables keep the records on the computer.
+
 ```bash
 npm run lint:taste
-CHROME_PATH=<chromium> node .agents/skills/design-taste-frontend/scripts/inspect.mjs "http://127.0.0.1:5174/#vouchers" --app --widths 1440,1100 --allow micro-label
+VITE_KEYSTONE_CHANNEL=beta VITE_FIREBASE_API_KEY= VITE_FIREBASE_PROJECT_ID= VITE_FIREBASE_APP_ID= VITE_FIREBASE_AUTH_DOMAIN= npm run build:web
+(cd apps/keystone && npx vite preview --port 4173)
+CHROME_PATH=<chromium> node .agents/skills/design-taste-frontend/scripts/inspect.mjs "http://127.0.0.1:4173/#billing" --app --widths 1440,1100 --allow micro-label,palette-cream
+CHROME_PATH=<chromium> node .agents/skills/design-taste-frontend/scripts/inspect.mjs "http://127.0.0.1:4173/#vouchers" --app --widths 1440,1100 --allow micro-label,palette-cream,heavy-borders
 ```
 
 On 2026-10-30:
@@ -71,3 +87,7 @@ On 2026-10-30:
 
 On 2026-11-11, Check Vouchers at 1440 and 1100px: 0 fails. The three-copy voucher had grown taller than the inspector
 allows for a `data-ui` fragment at 1100px; drawing it at the paper's width and scaling it to the column fixed that.
+
+On 2026-11-15, on the production build, Check Vouchers, Billing and Payroll at 1440 and 1100px: 0 fails, and one
+warning each, the small type by share above. A paper is now as tall as what it holds: its old 420px minimum left a
+blank band under a statement with no charges yet.
