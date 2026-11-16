@@ -71,7 +71,10 @@ test('a computer with nothing saved starts blank, says so on Home, and fills the
   await app.open('/');
   await expect(screen.getByText(/^Fill in Company Details/)).toBeHidden();
 
-  // A new voucher's letterhead prints the address saved, beside the logo that names the company.
+  // A voucher's letterhead prints its own built-in address (docs/adr/0023), not the one saved here.
   await app.open('/#vouchers');
-  await expect(screen.getByRole('article', 'Check voucher 888-001').getByText('Tektite East Tower, Ortigas Center, Pasig City').first()).toBeVisible();
+  const voucher = screen.getByRole('article', 'Check voucher 888-001');
+
+  await expect(voucher.getByText('Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila').first()).toBeVisible();
+  await expect(voucher.getByText('Tektite East Tower, Ortigas Center, Pasig City')).toBeHidden();
 });

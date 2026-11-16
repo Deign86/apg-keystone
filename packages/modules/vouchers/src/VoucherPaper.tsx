@@ -10,6 +10,9 @@ import { Letterhead, paperHeading as heading, paperLabel, Sheet } from '@keyston
 
 type Props = { voucher: Voucher; payee?: DirectoryRecord; company: Company };
 
+/** The address every check voucher prints beside the Group of Companies logo: built in, not typed (docs/adr/0023). */
+export const VOUCHER_ADDRESS = 'Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila';
+
 /** One labelled box in the ruled grid. */
 function Box({ label, children, className = '' }: { label: string; children?: ReactNode; className?: string }) {
   return (
@@ -30,8 +33,8 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
   return (
     <Sheet ref={ref} fit="halves" label={`Check voucher ${v.no}`}>
-      {/* The Group of Companies logo, with the company's address right beside it; the logo names the company. */}
-      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} logo="companies" beside />
+      {/* The Group of Companies logo, with the company's built-in address right beside it; the logo names the company. */}
+      <Letterhead company={{ ...company, address: VOUCHER_ADDRESS }} title="Check Voucher" no={`No. ${v.no}`} logo="companies" beside />
 
       {/* One ruled form: a firm line around it and between its parts, a light one between the boxes inside each part. */}
       <div className="flex flex-1 flex-col border border-paper-ink">

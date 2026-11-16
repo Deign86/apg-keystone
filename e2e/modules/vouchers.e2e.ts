@@ -212,10 +212,11 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   // A copy on each half of the page, cut apart along the dashed line between them.
   await expect(paper).toHaveAttribute('data-print-fit', 'halves');
   await expect(paper.getByText('No. 888-001')).toHaveCount(2);
-  // The Group of Companies logo, with the company's address right beside it: the logo names the company, so neither
-  // the registered name nor the contact prints at the top.
+  // The Group of Companies logo, with the voucher's built-in address right beside it (docs/adr/0023), not the one in
+  // Company Details: the logo names the company, so neither the registered name nor the contact prints at the top.
   await expect(paper.getByRole('img', 'Alpha Premier Group of Companies')).toBeVisible();
-  await expect(paper.getByText(/Philippine Stock Exchange Centre/).first()).toBeVisible();
+  await expect(paper.getByText('Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila').first()).toBeVisible();
+  await expect(paper.getByText(/Philippine Stock Exchange Centre/)).toBeHidden();
   await expect(paper.getByText('ALPHA PREMIER GROUP OF COMPANIES OPC', { exact: true })).toBeHidden();
   await expect(paper.getByText(/02 8650 2540/)).toBeHidden();
 
