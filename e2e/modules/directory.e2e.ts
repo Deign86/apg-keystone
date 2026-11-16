@@ -12,7 +12,7 @@ async function directoryLog(screen: Screen) {
   return screen.getByRole('region', 'Entries');
 }
 
-test('adds a vendor, who can then be paid by voucher', async ({ app, screen }) => {
+test('adds a vendor, who can then be paid by a request for funds', async ({ app, screen }) => {
   await app.open('/#directory');
   await screen.getByRole('button', 'Add record').tap();
   const dialog = screen.getByRole('dialog', 'Add record');
@@ -23,12 +23,16 @@ test('adds a vendor, who can then be paid by voucher', async ({ app, screen }) =
   await dialog.getByRole('textbox', 'Address').fill('Shaw Blvd., Pasig City');
   await dialog.getByRole('button', 'Add record').tap();
 
-  await expect(screen.getByRole('dialog', 'V-005 added. It is now selectable in Check Vouchers.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'V-005 added. It is now selectable in Requests for Funds.')).toBeVisible();
   await expect(screen.getByRole('table', 'Directory').getByRole('row', /^V-005 Vendor Pasig Office Depot 123-456-789-000 Shaw Blvd\., Pasig City/)).toBeVisible();
   await expect(screen.getByRole('button', 'Vendors 5')).toBeVisible();
 
-  await app.open('/#vouchers');
-  await screen.getByRole('form', 'New voucher').getByRole('combobox', 'Payee').tap();
+  await app.open('/#funds');
+  const request = screen.getByRole('form', 'New request');
+
+  await request.getByRole('combobox', 'Paid by').tap();
+  await screen.getByRole('option', 'Check').tap();
+  await request.getByRole('combobox', 'Payee').tap();
   await expect(screen.getByRole('option', 'Pasig Office Depot (V-005)')).toBeVisible();
 
   await app.open('/');

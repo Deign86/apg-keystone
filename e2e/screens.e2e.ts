@@ -185,6 +185,7 @@ test('keeps a save made just before the page reloads', async ({ app, screen, bro
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
@@ -203,6 +204,7 @@ test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();

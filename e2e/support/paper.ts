@@ -69,3 +69,30 @@ export function paperValueLines(browser: Browser, text: string) {
     return value ? Math.round(value.offsetHeight / parseFloat(getComputedStyle(value).lineHeight)) : 0;
   }, text);
 }
+
+/**
+ * Where the line before a voucher's right-hand column is painted in each part of the ruled form, in px from the paper's
+ * left edge: beside the dates, the Amount heading, each amount, the blank box under them and the total. A line drawn on
+ * a box's right falls inside that box; a collapsed table border is painted astride the cell's edge. One value when they
+ * all meet in one straight line.
+ */
+export function voucherColumnLines(browser: Browser) {
+  return browser.evaluate(() => {
+    const copy = document.querySelector<HTMLElement>('[data-ui="document"] [data-sheet-copy]') ?? document.querySelector<HTMLElement>('[data-ui="document"]')!;
+    const origin = copy.getBoundingClientRect().left;
+    const scale = copy.getBoundingClientRect().width / copy.offsetWidth;
+    const at = (x: number) => ((x - origin) / scale).toFixed(1);
+    const parts = [...copy.querySelectorAll<HTMLElement>('dl:first-of-type > div, th, td, [aria-hidden="true"] > span')];
+
+    return [...new Set(parts.flatMap((e) => {
+      const style = getComputedStyle(e);
+      const box = e.getBoundingClientRect();
+      const [l, r] = [parseFloat(style.borderLeftWidth), parseFloat(style.borderRightWidth)];
+      const collapsed = !!e.closest('table') && getComputedStyle(e.closest('table')!).borderCollapse === 'collapse';
+      // Only the line into the right-hand column: the form's own frame is drawn by the box around it.
+      const lines = [...(l > 0 ? [box.left - (collapsed ? (l * scale) / 2 : 0)] : []), ...(r > 0 && box.right < copy.getBoundingClientRect().right - 40 ? [box.right - r * scale] : [])];
+
+      return lines.map(at);
+    }))];
+  });
+}

@@ -9,10 +9,11 @@ import { startEmpty } from '../support/sample-records';
 // (001-keystone-backup-2026-11-02.json), and that is the name the chooser hands Keystone. Keystone has no sample data
 // to reset to (docs/adr/0018).
 
-/** Saves 888-001 for Meralco, the payee a new voucher starts with. */
+/** Saves 888-001 for Meralco. */
 async function saveVoucher(screen: Screen) {
   const form = screen.getByRole('form', 'New voucher');
 
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
