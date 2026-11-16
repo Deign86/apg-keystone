@@ -1,12 +1,12 @@
 import {
-  companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber, payees,
+  companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
   peso, recordOf, shortDate, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher, type VoucherDrafts,
   type VoucherStatus, type WaitingItem
 } from '@keystone/core';
 
 // Check vouchers: disbursements routed for signatures, printed as the company's
-// Check Voucher. Reads the directory for payees.
+// Check Voucher. The payee is typed on each voucher; an older voucher's directory code is read through the directory.
 
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
@@ -18,8 +18,23 @@ const SERIES = '888-';
 export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
+/** Who a voucher pays, as printed on it. */
+export interface Payee { name: string; address: string }
+
+/**
+ * Who a voucher pays, as printed: the name and address typed on it, or, for a voucher saved before payees were typed,
+ * the directory record its code names.
+ */
+export function payeeOf(s: TerminalState, v: Pick<Voucher, 'payee' | 'address'>): Payee {
+  const record = recordOf(s, v.payee);
+
+  return { name: record?.name ?? v.payee, address: v.address ?? record?.detail ?? '' };
+}
+
 export interface VoucherDraft extends Editing {
-  no: string; date: string; payee: string;
+  no: string; date: string;
+  /** The payee's name and address, typed in. */
+  payee: string; address: string;
   /** The payee's TIN, printed only when typed in. */
   tin: string;
   check: string; checkDate: string;
@@ -34,14 +49,14 @@ export interface VoucherDraft extends Editing {
  * A blank voucher. It is prepared by whoever is signed in. The other signatories and every position start as the last
  * voucher's (Company Details' names before the first), and so do the bank and its issuer, or `bank` (the first account
  * kept) before any. Nobody signed in, the preparer is the last voucher's too, typed in full by whoever prepares vouchers.
- * The TIN starts blank: it prints only when someone types it.
+ * The payee, their address and TIN start blank, for whoever prepares the voucher to type.
  */
 export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft {
   const d = companyOf(s);
   const last = s.cv.at(-1);
 
   return {
-    no: nextVoucherNo(s), date: today(ctx), payee: payees(s)[0]?.code ?? '', tin: '', check: '', checkDate: '',
+    no: nextVoucherNo(s), date: today(ctx), payee: '', address: '', tin: '', check: '', checkDate: '',
     bank: last?.bank || bank, issuer: last?.issuer ?? '',
     lines: [lineDraft()], prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy,
     approved: last?.approved ?? d.approvedBy,
@@ -49,8 +64,8 @@ export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft 
   };
 }
 
-export const voucherDraftOf = (v: Voucher): VoucherDraft => ({
-  editing: v.no, no: v.no, date: v.date, payee: v.payee, tin: v.tin ?? '', check: v.check, checkDate: v.checkDate ?? '',
+export const voucherDraftOf = (s: TerminalState, v: Voucher): VoucherDraft => ({
+  editing: v.no, no: v.no, date: v.date, payee: payeeOf(s, v).name, address: payeeOf(s, v).address, tin: v.tin ?? '', check: v.check, checkDate: v.checkDate ?? '',
   bank: v.bank ?? '', issuer: v.issuer ?? '',
   lines: v.lines.map(lineDraftOf), prepared: v.prepared, checked: v.checked, approved: v.approved,
   preparedPos: v.preparedPos ?? '', checkedPos: v.checkedPos ?? '', approvedPos: v.approvedPos ?? '',
@@ -87,21 +102,21 @@ export const approvesOnSave = (ctx: Ctx) => ctx.who?.role === 'owner';
 
 /** A new voucher drafted from another: its payee, particulars and signatories, under the next number, dated today, with no check yet. */
 export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraft {
-  const d = voucherDraftOf(v);
+  const d = voucherDraftOf(s, v);
 
   return {
-    no: nextVoucherNo(s), date: today(ctx), payee: d.payee, tin: d.tin, check: '', checkDate: '', bank: d.bank, issuer: d.issuer,
+    no: nextVoucherNo(s), date: today(ctx), payee: d.payee, address: d.address, tin: d.tin, check: '', checkDate: '', bank: d.bank, issuer: d.issuer,
     lines: d.lines, prepared: d.prepared, checked: d.checked, approved: d.approved,
     preparedPos: d.preparedPos, checkedPos: d.checkedPos, approvedPos: d.approvedPos,
   };
 }
 
 /** The optional fields a voucher keeps only when they are filled in. */
-const OPTIONAL = ['tin', 'bank', 'issuer', 'preparedPos', 'checkedPos', 'approvedPos'] as const;
+const OPTIONAL = ['address', 'tin', 'bank', 'issuer', 'preparedPos', 'checkedPos', 'approvedPos'] as const;
 
 export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval'): Voucher {
   const v: Voucher = {
-    no: d.no, date: d.date, payee: d.payee, check: d.check.trim(), lines: lineItemsOf(d.lines, 'amount'),
+    no: d.no, date: d.date, payee: d.payee.trim(), check: d.check.trim(), lines: lineItemsOf(d.lines, 'amount'),
     status, prepared: d.prepared, checked: d.checked, approved: d.approved,
   };
 
@@ -116,13 +131,13 @@ export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval
   return v;
 }
 
-/** The voucher on the form, refused without a particular with an amount or a payee from the directory. */
-function checkedVoucher(s: TerminalState, d: VoucherDraft): Voucher {
+/** The voucher on the form, refused without a particular with an amount or a payee. */
+function checkedVoucher(d: VoucherDraft): Voucher {
   const v = voucherOf(d);
 
   if (!v.lines.length || voucherTotal(v) <= 0) throw new KeystoneError('Add at least one particular with an amount.');
 
-  if (!recordOf(s, v.payee)) throw new KeystoneError('Choose a payee from the directory.');
+  if (!v.payee) throw new KeystoneError('Enter the payee.');
 
   return v;
 }
@@ -145,7 +160,7 @@ function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string)
  * approval, unless the CEO saves it: theirs is approved as it is saved.
  */
 export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew = false): Change<Voucher> {
-  const v = checkedVoucher(s, d);
+  const v = checkedVoucher(d);
   const original = d.editing ? s.cv.find((x) => x.no === d.editing) : undefined;
 
   if (original && !asNew && takesCheck(original)) {
@@ -214,7 +229,13 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
  * check, and it is approved as usual.
  */
 export const voucherDrafts: VoucherDrafts = {
-  draft: (s, r, ctx) => addVoucher(s, checkedVoucher(s, { ...newVoucher(s, ctx), payee: r.payee, lines: [lineDraft({ desc: r.particulars, amount: String(r.amount) })] }), ctx),
+  draft: (s, r, ctx) => {
+    const payee = recordOf(s, r.payee);
+
+    if (!payee) throw new KeystoneError('Choose a payee from the directory.');
+
+    return addVoucher(s, checkedVoucher({ ...newVoucher(s, ctx), payee: payee.name, address: payee.detail, lines: [lineDraft({ desc: r.particulars, amount: String(r.amount) })] }), ctx);
+  },
 };
 
 // ---------- what the vouchers domain tells Overview and Home ----------

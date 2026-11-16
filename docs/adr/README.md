@@ -34,6 +34,7 @@ Consequences**.
 | [0021](0021-expenses-and-fund-transfer-requests.md) | A request lists its expenses, and an approved transfer makes a fund transfer request | Accepted |
 | [0022](0022-the-ceo-approves-their-own-vouchers.md) | The owner is the CEO, and the CEO's own vouchers need no approval | Accepted |
 | [0023](0023-the-company-itself-is-built-in.md) | The company itself is built in | Accepted |
+| [0024](0024-a-voucher-payee-is-typed.md) | A voucher's payee is typed | Accepted |
 
 Template:
 

@@ -100,7 +100,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   // The decisions and the voucher reach the cloud: accounting finds the voucher For Approval, naming the request.
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
   await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({
-    payee: 'V-002', status: 'For Approval', check: '', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }],
+    payee: 'Manila Water Company', address: 'MWSS Compound, Quezon City', status: 'For Approval', check: '', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }],
   });
   await expect.poll(() => field('rf', 'RF-2026-0002', 'status'), { timeout: 10_000 }).toBe('Declined');
 

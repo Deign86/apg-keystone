@@ -53,6 +53,7 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   // The CEO's own voucher needs nobody's approval: it is approved as it is saved.
@@ -94,6 +95,7 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await screen.getByRole('button', 'New voucher').tap();
   const mine = screen.getByRole('form', 'New voucher');
 
+  await mine.getByRole('textbox', 'Payee').fill('Manila Water Company');
   await mine.getByRole('textbox', 'Line 1 description').fill('Water bill');
   await mine.getByRole('textbox', 'Line 1 amount').fill('980');
   await mine.getByRole('button', 'Save and route for approval').tap();

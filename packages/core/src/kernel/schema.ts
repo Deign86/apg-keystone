@@ -11,7 +11,7 @@ export type JsonValue = string | number | boolean | null | JsonValue[] | { [key:
 
 export const RECORD_TYPES: RecordType[] = ['Vendor', 'Client', 'Employee'];
 export const CODE_PREFIX: Record<RecordType, string> = { Vendor: 'V-', Client: 'C-', Employee: 'E-' };
-export const USED_IN: Record<RecordType, string> = { Vendor: 'Check Vouchers', Client: 'Billing Statements', Employee: 'the ID Maker' };
+export const USED_IN: Record<RecordType, string> = { Vendor: 'Requests for Funds', Client: 'Billing Statements', Employee: 'the ID Maker' };
 
 export interface DirectoryRecord {
   code: string;
@@ -75,8 +75,13 @@ export const toneOf = (s: Status): Tone => TONES[s] ?? 'neutral';
 export interface Voucher {
   no: string;
   date: ISODate;
-  /** Directory code of the payee. */
+  /**
+   * The payee's name as printed, typed on the voucher. A voucher saved before payees were typed holds a directory code
+   * instead, and prints that record's name.
+   */
   payee: string;
+  /** The payee's address as printed, typed on the voucher. */
+  address?: string;
   /** The payee's TIN as printed, when one is typed in; never taken from the directory. */
   tin?: string;
   /** The account the check is drawn on, as printed: "BPI · 4011 0258 68". */
