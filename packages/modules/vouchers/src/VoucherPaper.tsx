@@ -33,8 +33,9 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
       {/* The Group of Companies logo, with the company's address right beside it; the logo names the company. */}
       <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} logo="companies" beside />
 
-      {/* One ruled form: a firm line around it and between its parts, a light one between the boxes inside each part. */}
-      <div className="flex flex-1 flex-col border border-paper-ink">
+      {/* One ruled form: a firm line between its parts, a light one between the boxes inside each part. No frame around
+          it, so nothing is drawn along the paper's edges. */}
+      <div className="flex flex-1 flex-col">
         {/* The payee and the bank each share their row: the TIN beside the payee, the issuer beside the bank. Their
             column is as wide as the issuer needs to print on one line beside its label (Alpha Premier Realty), up to
             17rem, and never narrower than 13.5rem, room to write one in by hand; the payee and bank take the rest. */}
