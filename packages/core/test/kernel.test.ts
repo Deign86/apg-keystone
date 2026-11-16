@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, companyOf, datesBetween, emptyState, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
+  addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   openDesktopApp, toCentavos, topFinding, validateConnector, withDeadline, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
@@ -107,11 +107,11 @@ describe('module data', () => {
 });
 
 describe('what Keystone starts from (docs/adr/0018)', () => {
-  it('is no records and no company details: nothing is built in', () => {
+  it('is no records, the built-in company (docs/adr/0023), and nothing else filled in', () => {
     expect(emptyState()).toEqual({ dir: [], cv: [], bs: [], ids: [], log: [] });
     expect(companyOf(emptyState())).toEqual({
-      name: '', address: '', contact: '', shortAddress: '', phone: '', billingEmail: '', preparedBy: '', checkedBy: '', approvedBy: '',
-      paymentInstructions: '', billingNote: '', signatory: '', billingTerms: '', dueInDays: 0, idValidYears: 0,
+      ...COMPANY, preparedBy: '', checkedBy: '', approvedBy: '', paymentInstructions: '', billingNote: '', signatory: '',
+      billingTerms: '', dueInDays: 0, idValidYears: 0,
     });
   });
 

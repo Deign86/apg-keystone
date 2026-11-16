@@ -10,7 +10,7 @@
   Approval can be taken back until the check is released; a released voucher can only be voided, and a void voucher
   stays void.
 - `src/VoucherPaper.tsx`: the printed Check Voucher, headed by the Alpha Premier Group of Companies logo with the
-  company's address right beside it (the logo names the company), and ruled into boxes like the company's cash
+  company's built-in address right beside it (core's `COMPANY`, docs/adr/0023; the logo names the company), and ruled into boxes like the company's cash
   voucher, out to near the paper's edges: payee and TIN, address, bank and issuer, the number, date, check no. and date
   of check, particulars and amount, the total in figures and in words, then a box each for Prepared, Audited, Approved
   and Received payment by, each signatory's name above their position, as the form lists them. Everything filled in

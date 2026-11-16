@@ -27,12 +27,13 @@ Consequences**.
 | [0015](0015-the-owner-removes-staff-accounts.md) | The owner removes staff accounts in Keystone | Accepted |
 | [0016](0016-changing-and-resetting-a-password.md) | Changing your password, and resetting a forgotten one | Accepted |
 | [0017](0017-releases-sign-in-and-screens-coming-soon.md) | Releases always sign in, and screens not released yet say "Coming soon" | Accepted; what a screen coming soon shows superseded by 0019 |
-| [0018](0018-the-records-are-the-only-source.md) | What was saved is the only source: no records, company details or accounts built in | Accepted |
+| [0018](0018-the-records-are-the-only-source.md) | What was saved is the only source: no records, company details or accounts built in | Accepted; the company's own details superseded by 0023 |
 | [0019](0019-coming-soon-screens-show-behind-a-notice.md) | Screens coming soon show behind a notice | Accepted |
 | [0020](0020-changing-your-own-name.md) | Changing your own name, on Profile | Accepted |
 | [0021](0021-a-home-figure-can-count-the-others-contributions.md) | A Home figure can count what the other modules contribute | Accepted |
 | [0021](0021-expenses-and-fund-transfer-requests.md) | A request lists its expenses, and an approved transfer makes a fund transfer request | Accepted |
 | [0022](0022-the-ceo-approves-their-own-vouchers.md) | The owner is the CEO, and the CEO's own vouchers need no approval | Accepted |
+| [0023](0023-the-company-itself-is-built-in.md) | The company itself is built in | Accepted |
 
 Template:
 
