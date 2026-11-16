@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, tinyPaperText } from '../support/paper';
+import { faintPaperText, paperValueLines, tinyPaperText } from '../support/paper';
 
 // Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved (₱13,150.00 to
 // JL Santos Printing Services) and 0141 for approval (₱35,000.00 to Vergara & Associates Law Office, check 0001188).
@@ -212,9 +212,11 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   // A copy on each half of the page, cut apart along the dashed line between them.
   await expect(paper).toHaveAttribute('data-print-fit', 'halves');
   await expect(paper.getByText('No. 888-001')).toHaveCount(2);
-  await expect(paper.getByText('ALPHA PREMIER GROUP OF COMPANIES OPC').first()).toBeVisible();
-  // The company's name alone at the top left, on one line: no address or contact under it.
-  await expect(paper.getByText(/Philippine Stock Exchange Centre/)).toBeHidden();
+  // The Group of Companies logo, with the company's address right beside it: the logo names the company, so neither
+  // the registered name nor the contact prints at the top.
+  await expect(paper.getByRole('img', 'Alpha Premier Group of Companies')).toBeVisible();
+  await expect(paper.getByText(/Philippine Stock Exchange Centre/).first()).toBeVisible();
+  await expect(paper.getByText('ALPHA PREMIER GROUP OF COMPANIES OPC', { exact: true })).toBeHidden();
   await expect(paper.getByText(/02 8650 2540/)).toBeHidden();
 
   const box = (text: string) => paper.getByRole('definition').filter({ hasText: text });
@@ -226,8 +228,10 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   await expect(box('000-101-528-000')).toBeVisible();
   await expect(box('Ortigas Ave., Pasig City')).toBeVisible();
   await expect(box('BPI · 4011 0258 68')).toBeVisible();
-  await form.getByRole('textbox', 'Issuer').fill('Alpha Premier Group of Companies OPC');
-  await expect(box('Alpha Premier Group of Companies OPC')).toBeVisible();
+  await form.getByRole('textbox', 'Issuer').fill('Alpha Premier Realty');
+  await expect(box('Alpha Premier Realty')).toBeVisible();
+  // The issuer's column is wide enough for one of the group's companies on one line, beside its label.
+  expect(await paperValueLines(browser, 'Alpha Premier Realty')).toBe(1);
   await expect(box('November 2, 2026')).toBeVisible();
   await expect(box('0004512')).toBeVisible();
   await expect(box('November 5, 2026')).toBeVisible();
@@ -237,11 +241,12 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
 
   for (const role of ['Prepared by', 'Audited by', 'Approved by', 'Received payment by']) await expect(paper.getByText(role).first()).toBeVisible();
 
-  // Each signatory's position prints above their name.
-  await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
+  // Each signatory's name prints above their position.
   await form.getByRole('textbox', 'Approved by').fill('Mark Anthony Santos');
-  await expect(paper.getByText('Chief Executive Officer').first()).toBeVisible();
+  await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
   await expect(paper.getByText('Mark Anthony Santos').first()).toBeVisible();
+  await expect(paper.getByText('Chief Executive Officer').first()).toBeVisible();
+  await expect(paper).toContainText(/Mark Anthony Santos\s*Chief Executive Officer/);
 
   // Its labels included, nothing on it is smaller than 11px or fainter than 4.5:1.
   expect(await tinyPaperText(browser)).toEqual([]);

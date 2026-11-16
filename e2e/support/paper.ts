@@ -55,3 +55,17 @@ export function faintPaperText(browser: Browser) {
     });
   });
 }
+
+/**
+ * How many lines a filled-in value on a paper takes (the first box whose value is exactly `text`): 1 when it fits
+ * beside its label, 0 when no box holds it. Measured once the paper's fonts have loaded, in laid-out sizes, so a
+ * preview scaled down to fit its column counts the same.
+ */
+export function paperValueLines(browser: Browser, text: string) {
+  return browser.evaluate(async (wanted: string) => {
+    await document.fonts.ready;
+    const value = [...document.querySelectorAll<HTMLElement>('[data-ui="document"] dd')].find((e) => e.textContent?.trim() === wanted);
+
+    return value ? Math.round(value.offsetHeight / parseFloat(getComputedStyle(value).lineHeight)) : 0;
+  }, text);
+}

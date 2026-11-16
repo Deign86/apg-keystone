@@ -1,6 +1,7 @@
 // The APG logo made for white paper: the phoenix in solid gold and "ALPHA PREMIER GROUP" in black, drawn in HD so it
-// stays sharp on screen and in print.
+// stays sharp on screen and in print; and the same with "GROUP OF COMPANIES" under "ALPHA PREMIER".
 import logo from '@keystone/ui/logo-paper.png';
+import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 
@@ -132,17 +133,22 @@ export function FitWidth({ children }: { children: ReactNode }) {
 
 /**
  * The APG logo, the company and the document's title and number. The company is as Company Details keeps it, and
- * nothing of it shows until it is filled in. `nameOnly` leaves the address and contact out and puts the name beside the
- * logo: one line. Otherwise the name, address and contact run under the logo, across the page.
+ * nothing of it shows until it is filled in. `logo="companies"` is the Alpha Premier Group of Companies logo. `beside`
+ * puts the address alone beside the logo, which already names the company, and leaves the name and contact out.
+ * Otherwise the name, address and contact run under the logo, across the page.
  */
-export function Letterhead({ company, title, no, date, nameOnly }: { company: Company; title: string; no: string; date?: string; nameOnly?: boolean }) {
+export function Letterhead({ company, title, no, date, logo: variant, beside }: {
+  company: Company; title: string; no: string; date?: string; logo?: 'group' | 'companies'; beside?: boolean;
+}) {
   return (
     <header className="mb-3.5 border-b-2 border-paper-gold pb-2.5">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          <img src={logo} alt="Alpha Premier Group" className="h-15 w-auto shrink-0" />
-          {nameOnly && company.name && (
-            <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[12.5px] font-semibold">{company.name}</p>
+          {variant === 'companies'
+            ? <img src={companiesLogo} alt="Alpha Premier Group of Companies" className="h-15 w-auto shrink-0" />
+            : <img src={logo} alt="Alpha Premier Group" className="h-15 w-auto shrink-0" />}
+          {beside && company.address && (
+            <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>
           )}
         </div>
         <div className="shrink-0 text-right">
@@ -151,7 +157,7 @@ export function Letterhead({ company, title, no, date, nameOnly }: { company: Co
           {date && <p className="m-0 text-xs font-medium tabular-nums">{date}</p>}
         </div>
       </div>
-      {!nameOnly && (company.name || company.address || company.contact) && (
+      {!beside && (company.name || company.address || company.contact) && (
         <div className="mt-2">
           {company.name && <p className="m-0 text-[12.5px] font-semibold">{company.name}</p>}
           {company.address && <p className="m-0 text-[11px] text-pretty text-paper-muted">{company.address}</p>}

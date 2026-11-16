@@ -30,20 +30,22 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
   return (
     <Sheet ref={ref} fit="halves" label={`Check voucher ${v.no}`}>
-      {/* The company's name alone, on one line: no address or contact running down the top left. */}
-      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} nameOnly />
+      {/* The Group of Companies logo, with the company's address right beside it; the logo names the company. */}
+      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} logo="companies" beside />
 
       {/* One ruled form: a firm line around it and between its parts, a light one between the boxes inside each part. */}
       <div className="flex flex-1 flex-col border border-paper-ink">
-        {/* The payee and the bank each share their row: the TIN beside the payee, the issuer beside the bank. */}
-        <dl className="m-0 grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)_15rem]">
+        {/* The payee and the bank each share their row: the TIN beside the payee, the issuer beside the bank. Their
+            column is as wide as the issuer needs to print on one line beside its label (Alpha Premier Realty), up to
+            17rem, and never narrower than 13.5rem, room to write one in by hand; the payee and bank take the rest. */}
+        <dl className="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
           <Box label="Payee" className="border-b border-paper-line">{payee?.name}</Box>
-          <Box label="TIN" className="border-r border-b border-paper-line">{v.tin}</Box>
+          <Box label="TIN" className="max-w-[17rem] border-r border-b border-paper-line">{v.tin}</Box>
           <Box label="Date" className="border-b border-paper-line">{longDate(v.date)}</Box>
           <Box label="Address" className="col-span-2 border-r border-b border-paper-line">{payee?.detail}</Box>
           <Box label="Check no." className="border-b border-paper-line">{v.check}</Box>
           <Box label="Bank">{v.bank}</Box>
-          <Box label="Issuer" className="border-r border-paper-line">{v.issuer}</Box>
+          <Box label="Issuer" className="max-w-[17rem] border-r border-paper-line">{v.issuer}</Box>
           <Box label="Date of check">{v.checkDate ? longDate(v.checkDate) : ''}</Box>
         </dl>
 
@@ -84,10 +86,10 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
           {signatures.map(([position, who, role], i) => (
             <div key={role} className={`flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
               <p className={`m-0 ${paperLabel}`}>{role}</p>
-              {/* Room to sign above the line; under it the signatory's position, then their name. */}
+              {/* Room to sign above the line; under it the signatory's name, then their position. */}
               <div className="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-                <p className="m-0 min-h-4 font-semibold">{position}</p>
                 <p className="m-0 min-h-4 font-bold">{who}</p>
+                <p className="m-0 min-h-4 font-semibold">{position}</p>
               </div>
             </div>
           ))}
