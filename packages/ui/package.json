@@ -11,6 +11,7 @@
     "./styles.css": "./src/styles.css",
     "./logo.png": "./src/assets/logo.png",
     "./logo-paper.png": "./src/assets/logo-paper.png",
+    "./logo-paper-companies.png": "./src/assets/logo-paper-companies.png",
     "./keystone-mark.png": "./src/assets/keystone-mark.png"
   },
   "scripts": {

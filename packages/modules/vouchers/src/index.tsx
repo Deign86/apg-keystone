@@ -243,19 +243,19 @@ function Vouchers() {
                 <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
                 <p className="m-0 text-[13px] text-ink-2">{amountInWords(total)}</p>
               </div>
-              {/* Each signatory's position over their name, as the voucher prints them. */}
+              {/* Each signatory's name over their position, as the voucher prints them. */}
               <FieldRow min={120}>
                 <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
                   <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
+                  <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
                   <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
+                  <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
                   <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                  <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
                 </div>
               </FieldRow>
             </fieldset>

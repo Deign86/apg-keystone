@@ -59,6 +59,7 @@ test('a computer with nothing saved starts blank, says so on Home, and fills the
   await expect(form.getByRole('alert')).toHaveText('Enter the company\'s name, as its documents print it.');
 
   await form.getByRole('textbox', 'Name').fill('Alpha Premier Group');
+  await form.getByRole('textbox', 'Address').fill('Tektite East Tower, Ortigas Center, Pasig City');
   await form.getByRole('textbox', 'Days to pay').fill('two weeks');
   await form.getByRole('button', 'Save company details').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the days to pay as a whole number from 0 to 365, or leave it blank.');
@@ -70,7 +71,7 @@ test('a computer with nothing saved starts blank, says so on Home, and fills the
   await app.open('/');
   await expect(screen.getByText(/^Fill in Company Details/)).toBeHidden();
 
-  // A new voucher's letterhead prints the name saved.
+  // A new voucher's letterhead prints the address saved, beside the logo that names the company.
   await app.open('/#vouchers');
-  await expect(screen.getByRole('article', 'Check voucher 888-001').getByText('Alpha Premier Group').first()).toBeVisible();
+  await expect(screen.getByRole('article', 'Check voucher 888-001').getByText('Tektite East Tower, Ortigas Center, Pasig City').first()).toBeVisible();
 });
