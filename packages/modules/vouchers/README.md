@@ -14,7 +14,8 @@
   voucher, out to near the paper's edges: payee and TIN, address, issuer and bank, the number, date, check no. and date
   of check, particulars and amount, the total in figures and in words, then a box each for Prepared, Audited, Approved
   and Received payment by, each signatory's name above their position, as the form lists them. Everything filled in
-  is bold. A firm line runs around the form and between its parts, a light one between the boxes inside each part; the
+  is bold. A firm line runs between the form's parts, a light one between the boxes inside each part, and no frame
+  runs around it, so nothing is drawn along the paper's edges; the
   particulars' headings and the total sit on pale gold bands, in the paper's gold. The voucher prints twice on one A4
   sheet, a copy on each half, cut apart along the dashed line across the middle; Export PDF makes the same page.
 - The payee and their address are typed on the voucher, not picked from the directory, and a new voucher starts with
