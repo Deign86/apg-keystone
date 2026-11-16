@@ -170,6 +170,10 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
   await expect(viewing.getByRole('button', 'Save changes')).toBeHidden();
   await register.getByRole('button', 'Actions for RF-2026-0001').tap();
   await expect(screen.getByRole('menuitem', 'Withdraw…')).toBeDisabled();
+
+  // Withdrawn, it no longer waits: Home's tile counts none.
+  await app.open('/');
+  await expect(screen.getByRole('main').getByRole('list').first().getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
 });
 
 test('shows a waiting request on Home and Overview, opens it from there, and logs it', async ({ app, screen }) => {

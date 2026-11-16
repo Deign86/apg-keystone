@@ -21,6 +21,10 @@ async function signInElsewhere(app: { clearState(): Promise<void>; open(path: st
   await expectHome(screen);
 }
 
+/** Home's Requests for Funds tile, with the number of requests the member signed in sees waiting. */
+const fundsTile = (screen: Screen, waiting: number) =>
+  screen.getByRole('main').getByRole('list').first().getByRole('button', new RegExp(`^Requests for Funds .* Waiting for a decision ${waiting}$`));
+
 test('staff ask for funds, the CEO decides from a phone, and the approved one becomes a voucher', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
@@ -71,6 +75,10 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await expect(screen.getByRole('dialog', 'RF-2026-0002 sent to the CEO for approval.')).toBeVisible();
   await expect.poll(() => field('rf', 'RF-2026-0002', 'uid'), { timeout: 10_000 }).toBe(it.uid);
 
+  // IT's Home counts only its own request, not HR's.
+  await app.open('/');
+  await expect(fundsTile(screen, 1)).toBeVisible();
+
   // The CEO, on a phone, is told what waits, opens the screen from the menu, approves one and declines the other.
   await app.clearState();
   await browser.setViewport({ width: 390, height: 844 });
@@ -78,6 +86,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await signIn(screen, owner);
   await expectHome(screen);
   await expect(screen.getByText('2 requests for funds worth ₱50,450.50 wait for your decision, 1 of them ASAP.')).toBeVisible();
+  await expect(fundsTile(screen, 2)).toBeVisible();
 
   await screen.getByRole('button', 'Menu').tap();
   await screen.getByRole('dialog', 'Keystone').getByRole('button', /Requests for Funds$/).tap();
@@ -104,12 +113,18 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   });
   await expect.poll(() => field('rf', 'RF-2026-0002', 'status'), { timeout: 10_000 }).toBe('Declined');
 
-  // Each requester sees their own answer the next time Keystone opens.
+  // Decided, neither waits any more: the CEO's Home tile counts none.
+  await app.open('/');
+  await expect(fundsTile(screen, 0)).toBeVisible();
+
+  // Each requester sees their own answer the next time Keystone opens, and nothing of theirs still waits.
   await signInElsewhere(app, screen, hr);
   await expect(screen.getByText('RF-2026-0001 was approved; 888-001 is drafted.')).toBeVisible();
+  await expect(fundsTile(screen, 0)).toBeVisible();
 
   await signInElsewhere(app, screen, it);
   await expect(screen.getByText('RF-2026-0002 was declined: Use the spare in the IT cabinet.')).toBeVisible();
+  await expect(fundsTile(screen, 0)).toBeVisible();
 });
 
 test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone, and both save its fund transfer request', async ({ app, screen, browser }) => {
@@ -146,6 +161,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   await signIn(screen, owner);
   await expectHome(screen);
   await expect(screen.getByText('Ana Cruz asks for ₱3,730.75 ASAP; it waits for your decision.')).toBeVisible();
+  await expect(fundsTile(screen, 1)).toBeVisible();
   await app.open('/#funds');
   const card = screen.getByRole('article', 'RF-2026-0001');
 
@@ -171,6 +187,8 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   expect((await readFile(pdf.absolutePath)).subarray(0, 5).toString()).toBe('%PDF-');
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
   expect(await record('cv', '888-001')).toBeNull();
+  await app.open('/');
+  await expect(fundsTile(screen, 0)).toBeVisible();
 
   // HR is told, opens it, and can save the same paper.
   await browser.setViewport({ width: 1280, height: 800 });
