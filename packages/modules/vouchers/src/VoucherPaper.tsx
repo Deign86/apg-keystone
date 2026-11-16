@@ -35,16 +35,17 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
       {/* One ruled form: a firm line around it and between its parts, a light one between the boxes inside each part. */}
       <div className="flex flex-1 flex-col border border-paper-ink">
-        {/* The payee and the bank each share their row: the TIN beside the payee, the issuer beside the bank, wide
-            enough for an issuer such as Alpha Premier Realty on one line. */}
-        <dl className="m-0 grid grid-cols-[minmax(0,4fr)_minmax(0,3fr)_15rem]">
+        {/* The payee and the bank each share their row: the TIN beside the payee, the issuer beside the bank. Their
+            column is as wide as the issuer needs to print on one line beside its label (Alpha Premier Realty), up to
+            17rem, and never narrower than 13.5rem, room to write one in by hand; the payee and bank take the rest. */}
+        <dl className="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
           <Box label="Payee" className="border-b border-paper-line">{payee?.name}</Box>
-          <Box label="TIN" className="border-r border-b border-paper-line">{v.tin}</Box>
+          <Box label="TIN" className="max-w-[17rem] border-r border-b border-paper-line">{v.tin}</Box>
           <Box label="Date" className="border-b border-paper-line">{longDate(v.date)}</Box>
           <Box label="Address" className="col-span-2 border-r border-b border-paper-line">{payee?.detail}</Box>
           <Box label="Check no." className="border-b border-paper-line">{v.check}</Box>
           <Box label="Bank">{v.bank}</Box>
-          <Box label="Issuer" className="border-r border-paper-line">{v.issuer}</Box>
+          <Box label="Issuer" className="max-w-[17rem] border-r border-paper-line">{v.issuer}</Box>
           <Box label="Date of check">{v.checkDate ? longDate(v.checkDate) : ''}</Box>
         </dl>
 
