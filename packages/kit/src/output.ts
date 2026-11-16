@@ -17,8 +17,9 @@ const isLandscape = (node: HTMLElement) => node.dataset.printOrientation === 'la
 export async function savePdf(node: HTMLElement, name: string, platform: Platform): Promise<string | null> {
   const halves = node.dataset.printFit === 'halves';
   const margin = halves ? 0 : MARGIN_PT;
-  // A two-up sheet's frame marks the paper's edge on screen only.
-  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style: halves ? { border: '0' } : undefined });
+  // A two-up sheet's frame marks the paper's edge on screen only. The copy html-to-image draws keeps the frame's sides
+  // as border-inline, which `border: 0` alone leaves in place: two lines down the page's edges, printed when it is fit.
+  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style: halves ? { border: '0', borderInline: '0', borderBlock: '0' } : undefined });
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: isLandscape(node) ? 'landscape' : 'portrait' });
   const page = { w: pdf.internal.pageSize.getWidth(), h: pdf.internal.pageSize.getHeight() };
   const room = { w: page.w - margin * 2, h: page.h - margin * 2 };
