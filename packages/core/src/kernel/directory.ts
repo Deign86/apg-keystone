@@ -8,7 +8,7 @@ export const recordOf = (s: TerminalState, code: string) => s.dir.find((d) => d.
 export const recordsOf = (s: TerminalState, type: RecordType) => s.dir.filter((d) => d.type === type);
 export const nameOf = (s: TerminalState, code: string) => recordOf(s, code)?.name ?? code;
 
-/** Vouchers can pay anyone in the directory: vendors first, then clients, then employees. */
+/** A request paid by check can pay anyone in the directory: vendors first, then clients, then employees. */
 export const payees = (s: TerminalState) => [...recordsOf(s, 'Vendor'), ...recordsOf(s, 'Client'), ...recordsOf(s, 'Employee')];
 
 /**

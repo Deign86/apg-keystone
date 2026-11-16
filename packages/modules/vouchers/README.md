@@ -10,16 +10,21 @@
   Approval can be taken back until the check is released; a released voucher can only be voided, and a void voucher
   stays void.
 - `src/VoucherPaper.tsx`: the printed Check Voucher, headed by the Alpha Premier Group of Companies logo with the
-  company's address right beside it (the logo names the company), and ruled into boxes like the company's cash
-  voucher, out to near the paper's edges: payee and TIN, address, bank and issuer, the number, date, check no. and date
+  company's built-in address right beside it (core's `COMPANY`, docs/adr/0023; the logo names the company), and ruled into boxes like the company's cash
+  voucher, out to near the paper's edges: payee and TIN, address, issuer and bank, the number, date, check no. and date
   of check, particulars and amount, the total in figures and in words, then a box each for Prepared, Audited, Approved
   and Received payment by, each signatory's name above their position, as the form lists them. Everything filled in
   is bold. A firm line runs between the form's parts, a light one between the boxes inside each part, and no frame
   runs around it, so nothing is drawn along the paper's edges; the
   particulars' headings and the total sit on pale gold bands, in the paper's gold. The voucher prints twice on one A4
   sheet, a copy on each half, cut apart along the dashed line across the middle; Export PDF makes the same page.
-- The TIN prints only when it is typed on the voucher; the directory's TIN is never put in. The issuer and the
-  positions start as the last voucher's, like the signatories.
+- The payee and their address are typed on the voucher, not picked from the directory, and a new voucher starts with
+  neither. A voucher saved before then holds a directory code, and prints and loads that record's name and address
+  (`payeeOf`). The TIN prints only when it is typed on the voucher. The issuer and the positions start as the last
+  voucher's, like the signatories.
+- One line divides the form's right-hand column, the dates and the amounts, from top to total: each part draws it on
+  that column's left, and the tables keep their borders separate, inside each cell, so none falls half a pixel to one
+  side.
 - `src/rules.ts`: its rules (numbering, saving, approving the CEO's own, status changes, the release check number, the
   lock on an approved voucher and the check it still takes, copying one) and what it contributes. Tested in
   `test/rules.test.ts`.
@@ -37,7 +42,8 @@ Older vouchers keep the account code they were saved with; it is no longer enter
 - **Draft key:** `vouchers.draft`.
 
 ## Needs
-Directory records to pay (data, not the Directory module). Payees are vendors, then clients, then employees.
+Directory records (data, not the Directory module), only for vouchers saved with a directory code, and for one drafted
+through `vouchers.drafts`, which still names its payee by code and takes that record's name and address.
 Optionally the bank-accounts service (Bank Accounts): the form's **Bank** lists its accounts for the one a check is
 drawn on, and **Others…** last. Others opens a small form (Bank name, Account number, Account name starting as the
 company's, an optional Branch) whose **Save account** keeps the account in Bank Accounts through the service and picks

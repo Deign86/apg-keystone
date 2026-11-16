@@ -13,7 +13,8 @@ describe('store', () => {
   it('starts with no records when nothing is saved, never made-up ones (docs/adr/0018)', async () => {
     const store = await KeystoneStore.open(memoryPlatform().platform);
     expect(store.state).toEqual(emptyState());
-    expect(companyOf(store.state).name).toBe('');
+    // Only the company itself is built in (docs/adr/0023); what documents start from is blank.
+    expect(companyOf(store.state)).toMatchObject({ name: 'ALPHA PREMIER GROUP OF COMPANIES OPC', preparedBy: '', dueInDays: 0 });
   });
 
   it('opens the records as saved', async () => {

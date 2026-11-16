@@ -70,6 +70,7 @@ test('saves a check voucher as before', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const form = screen.getByRole('form', 'New voucher');
 
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
