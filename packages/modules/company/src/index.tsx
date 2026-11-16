@@ -1,7 +1,7 @@
 import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput } from '@keystone/ui';
 import { useCallback, useState } from 'react';
 import { FormCard, useKeystone, type ModuleDef } from '@keystone/kit';
-import { canChange, companyDraftOf, companyFinding, companyLine, saveCompany, TAG, type CompanyDraft } from './rules';
+import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft } from './rules';
 
 /** The company's details, in one form. Staff see them; only an owner changes them. */
 function CompanyDetailsScreen() {
@@ -30,7 +30,7 @@ function CompanyDetailsScreen() {
 
   return (
     <>
-      <ScreenHeader eyebrow="Settings" title="Company Details" line={companyLine(state)} />
+      <ScreenHeader eyebrow="Settings" title="Company Details" line={COMPANY_LINE} />
       <FormCard
         eyebrow="Kept with APG's records"
         title="Company details"
@@ -41,17 +41,6 @@ function CompanyDetailsScreen() {
           : <p className="m-0 text-xs text-ink-2">Only the CEO changes these.</p>}
       >
         <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-          <legend className="mb-2 text-[12.5px] font-semibold text-ink-2">Letterhead</legend>
-          {text('name', 'Name', 'As every document prints it.')}
-          {text('address', 'Address')}
-          {text('contact', 'Contact line', 'Phones and website, under the address.')}
-          <FieldRow>
-            {text('shortAddress', 'Short address', 'Under the name in the sidebar.')}
-            {text('phone', 'Phone')}
-            {text('billingEmail', 'Billing email')}
-          </FieldRow>
-        </fieldset>
-        <fieldset className="m-0 flex flex-col gap-3 border-0 border-t border-line p-0 pt-3">
           <legend className="mb-2 text-[12.5px] font-semibold text-ink-2">Check vouchers</legend>
           <FieldRow min={140}>
             {text('preparedBy', 'Prepared by', 'When nobody is signed in. Signed in, it is the person preparing it.')}
@@ -84,10 +73,9 @@ export const companyModule: ModuleDef = {
   id: 'company',
   title: 'Company Details',
   section: 'Settings',
-  blurb: 'The company\'s name, address and contacts as documents print them, and what each new document starts from.',
+  blurb: 'What each new voucher, statement and ID starts from: signatories, payment instructions and terms.',
   // Last under Settings, after Bank Accounts.
   order: 92,
-  finding: companyFinding,
   logTags: { [TAG]: 'Company Details' },
   Screen: CompanyDetailsScreen,
 };

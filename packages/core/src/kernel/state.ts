@@ -1,6 +1,6 @@
 import { localDate, type ISODate } from './dates';
 import { shortDate, stamp, DASH } from './format';
-import type { CompanyDetails, JsonValue, ModuleTag, TerminalState } from './schema';
+import type { Company, CompanyDetails, JsonValue, ModuleTag, TerminalState } from './schema';
 
 // What every domain builds on: the refusal type, the context a rule runs in, the shape
 // of a change, the activity log, numbering, and loading a saved state. Nothing here
@@ -120,8 +120,24 @@ function companyDetails(raw: JsonObject): CompanyDetails {
   };
 }
 
-/** The company's details as saved (Company Details), with "" or 0 for anything not filled in yet. Never made up. */
-export const companyOf = (s: TerminalState): CompanyDetails => ({ ...companyDetails({}), ...s.company });
+/**
+ * The company itself, built in (docs/adr/0023): every document, the rail and every new record print these, whatever
+ * was saved before. Changing them is a code change and a release.
+ */
+export const COMPANY: Company = {
+  name: 'ALPHA PREMIER GROUP OF COMPANIES OPC',
+  address: 'Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila',
+  contact: '0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com',
+  shortAddress: 'Tektite East Tower, Ortigas Center, Pasig',
+  phone: '02 8650 2540',
+  billingEmail: 'billing@alphapremiergroup.com',
+};
+
+/**
+ * The company's details: the built-in company (`COMPANY`), and what documents start from as saved on Company Details,
+ * with "" or 0 for anything not filled in yet.
+ */
+export const companyOf = (s: TerminalState): CompanyDetails => ({ ...companyDetails({}), ...s.company, ...COMPANY });
 
 /** What a module keeps under `state.ext[id]`, or undefined when it has kept nothing yet (rule 9 in AGENTS.md). */
 export const moduleData = (s: TerminalState, id: string): JsonValue | undefined => s.ext?.[id];

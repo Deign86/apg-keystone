@@ -210,8 +210,8 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
   `packages/core/sample/sample.json` are regenerated from `shared/` by `npm run sync`.
 - **Nothing hardcoded (docs/adr/0018):** Keystone shows only what was saved, in the cloud for a signed-in build. No
   records, company details, signatories or bank accounts in the code: a new one starts empty, a document leaves a
-  field blank until Company Details fills it (except the check voucher's address, built in by docs/adr/0023), and nothing
-  a computer holds is copied into the cloud. Made-up records
+  field blank until Company Details fills it, and nothing a computer holds is copied into the cloud. The one exception is
+  the company itself, its name, address and contacts: core's `COMPANY` (docs/adr/0023). Made-up records
   are the tests' alone (`@keystone/core/sample`, which `npm run check:boundaries` lets only a test import).
 - **The other APG repos:**
   - Treat them as external systems. Keystone only opens them; it reads nothing from them (docs/adr/0007).

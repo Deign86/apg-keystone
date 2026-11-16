@@ -1,6 +1,6 @@
 # 0018. What was saved is the only source: no records, company details or accounts built in
 
-Status: Accepted; the check voucher's address superseded by 0023 · Date: 2026-11-12 · Replaces moving a computer's records in (0009) and the reference bank account (0010)
+Status: Accepted; the company's own details superseded by 0023 · Date: 2026-11-12 · Replaces moving a computer's records in (0009) and the reference bank account (0010)
 
 ## Context
 

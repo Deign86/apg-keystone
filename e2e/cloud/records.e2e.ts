@@ -20,8 +20,9 @@ test('the CEO\'s first sign-in starts the records empty, copying in nothing this
   await signIn(screen, owner);
   await expectHome(screen);
 
-  // Nothing of this computer's: no records, no log, and no company details, which Home asks for.
-  await expect(screen.getByText('Fill in Company Details: documents print without the company\'s name and address until then.')).toBeVisible();
+  // Nothing of this computer's: no records and no log. The company itself is built in (docs/adr/0023), so Home asks
+  // for nothing.
+  await expect(screen.getByText(/^Fill in Company Details/)).toBeHidden();
   await app.open('/#activity');
   await expect(screen.getByRole('region', 'Entries').getByText('No activity yet.')).toBeVisible();
 
@@ -30,14 +31,14 @@ test('the CEO\'s first sign-in starts the records empty, copying in nothing this
 
   for (const list of ['dir', 'cv', 'bs', 'ids', 'log', 'ext', 'company']) expect(await documentIds(list)).toEqual([]);
 
-  // What the CEO then saves is what the cloud holds: the company's details, a document of their own.
+  // What the CEO then saves is what the cloud holds: what documents start from, a document of its own.
   await app.open('/#company');
   const form = screen.getByRole('form', 'Company details');
 
-  await form.getByRole('textbox', 'Name').fill('Alpha Premier Group');
+  await form.getByRole('textbox', 'Audited by').fill('Accounting');
   await form.getByRole('button', 'Save company details').tap();
   await expect(screen.getByRole('dialog', 'Company details saved.')).toBeVisible();
-  await expect.poll(() => record('company', 'details'), { timeout: 10_000 }).toMatchObject({ name: 'Alpha Premier Group', dueInDays: 0 });
+  await expect.poll(() => record('company', 'details'), { timeout: 10_000 }).toMatchObject({ checkedBy: 'Accounting', dueInDays: 0 });
 });
 
 test('writes each change to the cloud, stays signed in when reopened, and another computer opens the same records', async ({ app, screen }) => {
