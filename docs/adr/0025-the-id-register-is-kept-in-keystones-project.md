@@ -17,7 +17,9 @@ Status: Accepted · Date: 2026-11-17
 
 - **The register is a list in this project:** `keystone/apg/idreg/{number}`, one document per employee number
   (`APG-2026-124`), named by the number. It holds what the Sheet held: the number, the name and job title as printed,
-  when it was issued and whether it was a replacement, plus who issued it (`by`, `byEmail`). No photograph.
+  when it was issued and whether it was a replacement, plus who issued it (`by`, `byEmail`). No photograph. Since
+  the ID Maker's v2.0.4 it also holds `kind`, `intern` or `employee`: the attendance tracker keeps interns only and is
+  to take new ones from here.
 - **The ID Maker writes it, not Keystone.** It signs in over Firebase Auth's REST API with a Keystone account, and reads
   and creates documents over Firestore's REST API. Keystone's own ID Maker screen (`packages/modules/id-maker`, list
   `ids`) is unchanged and still unreleased.
