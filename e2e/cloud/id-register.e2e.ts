@@ -22,7 +22,7 @@ test.beforeEach(async () => {
 const taken = (status: number) => status === 409 || status === 403;
 
 /** An issued ID as the ID Maker sends it (apg-id-creator, windows/IdMaker.Core/Register.cs › Document). */
-const issued = (by: Account, over: Record<string, FirestoreValue> = {}): Record<string, FirestoreValue> => ({
+const issued = (by: Account, over: Record<string, FirestoreValue> = {}) => ({
   id: words('APG-2026-124'),
   year: whole(2026),
   seq: whole(124),
