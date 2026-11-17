@@ -93,6 +93,10 @@ up Auth and Firestore, and deploy `firestore.rules`.
   sign-in starts the records again, empty.
 - **Rules:** deploy `firestore.rules` after changing them (step 5). Only a CEO starts the records and changes
   `keystone/apg/company/details`, which every document prints, payment instructions included.
+- **The ID register:** the Alpha Premier ID Maker (Deign86/apg-id-creator) keeps the register of issued employee IDs
+  in this project, under `keystone/apg/idreg`, and HR signs in to it with their Keystone account (docs/adr/0025).
+  Keystone does not read or write it yet. Its rules are in `firestore.rules` with the rest: deploy them (step 5) before
+  an ID Maker release that uses them. Removing someone in User Accounts also stops them issuing IDs.
 - **Tests never touch the project.** The end-to-end cloud suite (`npm run test:e2e:cloud`, `e2e/cloud/`) runs the
   cloud build against the Firebase Auth and Firestore emulators with `firestore.rules`, as the demo project
   `demo-keystone`, which exists only in the emulators. A build connects to emulators only for a `demo-` project

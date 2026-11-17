@@ -170,6 +170,28 @@ export async function deleteAsMember(token: string, path: string): Promise<numbe
   return res.status;
 }
 
+/** A field's value as the Firestore REST API takes it: text, a whole number (which travels as text) or yes/no. */
+export type FirestoreValue = { stringValue: string } | { integerValue: string } | { booleanValue: boolean };
+
+export const words = (value: string): FirestoreValue => ({ stringValue: value });
+export const whole = (value: number): FirestoreValue => ({ integerValue: String(value) });
+export const flag = (value: boolean): FirestoreValue => ({ booleanValue: value });
+
+/**
+ * What firestore.rules answer a member who creates a document under keystone/apg with these fields, signed in with
+ * `token`, as the ID Maker creates an issued ID (200 allowed, 403 refused, 409 when it is already there). A create is
+ * not a write over: Firestore refuses it for a document that exists before the rules are asked.
+ */
+export async function createAsMember(token: string, collection: string, id: string, fields: Record<string, FirestoreValue>): Promise<number> {
+  const res = await fetch(`${DATABASE}/documents/keystone/apg${collection}?documentId=${encodeURIComponent(id)}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields }),
+  });
+
+  return res.status;
+}
+
 /** The tests' sample records (packages/core/sample/sample.json), with one more log entry saying where these are kept. */
 function sampleRecords(where: string): TerminalState {
   const state = parseState(readFileSync(new URL('../../packages/core/sample/sample.json', import.meta.url), 'utf8'));

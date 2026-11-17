@@ -35,6 +35,7 @@ Consequences**.
 | [0022](0022-the-ceo-approves-their-own-vouchers.md) | The owner is the CEO, and the CEO's own vouchers need no approval | Accepted |
 | [0023](0023-the-company-itself-is-built-in.md) | The company itself is built in | Accepted |
 | [0024](0024-a-voucher-payee-is-typed.md) | A voucher's payee is typed | Accepted |
+| [0025](0025-the-id-register-is-kept-in-keystones-project.md) | The register of issued employee IDs is kept in Keystone's Firebase project | Accepted |
 
 Template:
 
