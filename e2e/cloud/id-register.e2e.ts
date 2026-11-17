@@ -96,6 +96,27 @@ test('an ID is refused unless it is named by its own number and signed by whoeve
   expect(await createAsMember(token, '/idreg', 'APG-2026-124', issued(hr))).toBe(200);
 });
 
+test('an ID says whether it is for an intern or an employee, or says nothing, and nothing else', async () => {
+  const hr = await makeAccount('staff', 'Ana Cruz');
+  const token = await idToken(hr);
+  const numbered = (seq: number) => ({ id: words(`APG-2026-${seq}`), seq: whole(seq) });
+
+  // The ID Maker asks who each ID is for since v2.0.4; the attendance tracker takes interns, and only interns, from it.
+  expect(await createAsMember(token, '/idreg', 'APG-2026-201', issued(hr, { ...numbered(201), kind: words('intern') }))).toBe(200);
+  expect(await createAsMember(token, '/idreg', 'APG-2026-202', issued(hr, { ...numbered(202), kind: words('employee') }))).toBe(200);
+  expect(await field('idreg', 'APG-2026-201', 'kind')).toBe('intern');
+
+  // An ID Maker from before it asked sends none, and is still taken.
+  expect(await createAsMember(token, '/idreg', 'APG-2026-203', issued(hr, numbered(203)))).toBe(200);
+  expect(await field('idreg', 'APG-2026-203', 'kind')).toBe(null);
+
+  // Anything else is refused: another word, a different case, or not text.
+  expect(await createAsMember(token, '/idreg', 'APG-2026-204', issued(hr, { ...numbered(204), kind: words('contractor') }))).toBe(403);
+  expect(await createAsMember(token, '/idreg', 'APG-2026-204', issued(hr, { ...numbered(204), kind: words('Intern') }))).toBe(403);
+  expect(await createAsMember(token, '/idreg', 'APG-2026-204', issued(hr, { ...numbered(204), kind: flag(true) }))).toBe(403);
+  expect(await createAsMember(token, '/idreg', 'APG-2026-204', issued(hr, { ...numbered(204), kind: words('') }))).toBe(403);
+});
+
 test('a replacement is recorded under the card it replaces, which stays as it was', async () => {
   const hr = await makeAccount('staff', 'Ana Cruz');
   const token = await idToken(hr);

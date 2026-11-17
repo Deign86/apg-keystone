@@ -7,7 +7,7 @@ rules_version = '2';
 //   keystone/{company}/{list}/{id}       one record each: { pos, body } (list is dir, cv, bs, ids, log or ext)
 //   keystone/{company}/company/details   the company's details: { pos, body } (docs/adr/0018)
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
-//   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, by } (docs/adr/0025)
+//   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, kind, by } (docs/adr/0025)
 //   keystone/{company}/idreg/{no}/replacements/{at}   a replacement card for that number (docs/adr/0025)
 //
 // The records are only ever what members save here: an owner starts them empty, and Keystone copies nothing in from a
@@ -56,16 +56,18 @@ service cloud.firestore {
         && (!('uid' in d) || d.uid is string) && (!('decision' in d) || d.decision is map);
     }
 
-    // An issued employee ID as the ID Maker writes it: named by its own number, and signed by whoever is asking.
+    // An issued employee ID as the ID Maker writes it: named by its own number, and signed by whoever is asking. `kind`
+    // says who the ID is for, an intern or an employee; an ID Maker from before it asked (v2.0.3) sends none.
     function issuedId(no) {
       let d = request.resource.data;
       return no.matches('^APG-[0-9]{4}-[0-9]{3,6}$')
-        && d.keys().hasOnly(['id', 'year', 'seq', 'name', 'title', 'issuedAt', 'replacement', 'last', 'first', 'middle', 'suffix', 'role1', 'role2', 'by', 'byEmail'])
+        && d.keys().hasOnly(['id', 'year', 'seq', 'name', 'title', 'issuedAt', 'replacement', 'last', 'first', 'middle', 'suffix', 'role1', 'role2', 'kind', 'by', 'byEmail'])
         && d.keys().hasAll(['id', 'year', 'seq', 'name', 'issuedAt', 'replacement', 'by'])
         && d.id == no && d.year is int && d.seq is int && d.seq > 0
         && d.name is string && d.name.size() > 0 && d.name.size() <= 200
         && d.issuedAt is string && d.issuedAt.size() <= 40
         && d.replacement is bool
+        && (!('kind' in d) || d.kind in ['intern', 'employee'])
         && d.by == request.auth.uid;
     }
 
