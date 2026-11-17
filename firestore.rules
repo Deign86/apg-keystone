@@ -9,6 +9,7 @@ rules_version = '2';
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
 //   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, kind, by } (docs/adr/0025)
 //   keystone/{company}/idreg/{no}/replacements/{at}   a replacement card for that number (docs/adr/0025)
+//   keystone/{company}/devices/{uid}     a kiosk's own account, which reads the ID register and nothing else: { name } (docs/adr/0026)
 //
 // The records are only ever what members save here: an owner starts them empty, and Keystone copies nothing in from a
 // computer. Only an owner starts them and changes the company's details, which every document prints (payment
@@ -24,6 +25,10 @@ rules_version = '2';
 // number given once cannot be given again, overwritten or lost. A replacement card is recorded under the card it
 // replaces, which stays as it was.
 //
+// A device is not a member. It is an account an owner lists under devices for a kiosk, such as the attendance tracker
+// (Deign86/alpha-premier-attendance), which takes new interns from the register. It reads issued IDs and its own
+// device document, and writes nothing.
+//
 // Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
 // only their own, and only while it waits. Keystone reads a request's status, requester and decision from the fields
 // beside its body, so a body edited past these rules changes none.
@@ -37,6 +42,11 @@ service cloud.firestore {
     function owner(company) {
       return member(company)
         && get(/databases/$(database)/documents/keystone/$(company)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    function device(company) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/keystone/$(company)/devices/$(request.auth.uid));
     }
 
     function record() {
@@ -90,6 +100,15 @@ service cloud.firestore {
           && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80;
       }
 
+      // A kiosk's account (docs/adr/0026). Only an owner lists, renames or removes one; a device sees only its own.
+      match /devices/{uid} {
+        allow read: if owner(company) || (request.auth != null && uid == request.auth.uid);
+        allow create, update: if owner(company) && request.resource.data.keys().hasOnly(['name'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80;
+        allow delete: if owner(company);
+      }
+
       match /company/{id} {
         allow read: if member(company);
         allow create, update: if owner(company) && id == 'details' && record();
@@ -110,8 +129,9 @@ service cloud.firestore {
 
       // Issued employee IDs (docs/adr/0025). Created only: there is no update and no delete, for an owner either, so
       // creating the document of a number that already has one is refused, and the first card stands.
+      // A device reads them too, and only reads: the cards themselves, not the replacements under them.
       match /idreg/{no} {
-        allow read: if member(company);
+        allow read: if member(company) || device(company);
         allow create: if member(company) && issuedId(no);
 
         match /replacements/{at} {

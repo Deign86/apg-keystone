@@ -1,7 +1,8 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import {
-  asMember, createAsMember, deleteAsMember, emptyCloud, field, flag, idToken, makeAccount, whole, words, type Account, type FirestoreValue,
+  asMember, createAsMember, deleteAsMember, emptyCloud, field, flag, idToken, internsAs, makeAccount, setDevice, whole, words,
+  type Account, type FirestoreValue,
 } from './emulators';
 
 // The register of issued employee IDs (docs/adr/0025). Keystone does not write it: the Alpha Premier ID Maker
@@ -144,4 +145,65 @@ test('someone who is not a member reads and writes nothing in the register', asy
   expect(await asMember(outsiderToken, '/idreg/APG-2026-124')).toBe(403);
   expect(await asMember(outsiderToken, '/idreg')).toBe(403);
   expect(await createAsMember(outsiderToken, '/idreg', 'APG-2026-125', issued(outsider, { id: words('APG-2026-125'), seq: whole(125) }))).toBe(403);
+});
+
+// A kiosk's device account (docs/adr/0026): the attendance tracker signs in as one to take new interns from the
+// register. It asks two things, how many interns there are and which, and is allowed nothing else.
+test('a kiosk device reads the register, counts and lists its interns, and can do nothing else', async () => {
+  const owner = await makeAccount('owner');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+  const kiosk = await makeAccount();
+  const hrToken = await idToken(hr);
+  const kioskToken = await idToken(kiosk);
+
+  const card = (seq: number, over: Record<string, FirestoreValue> = {}) =>
+    issued(hr, { id: words(`APG-2026-${seq}`), seq: whole(seq), ...over });
+
+  expect(await createAsMember(hrToken, '/idreg', 'APG-2026-124', card(124))).toBe(200);
+  expect(await createAsMember(hrToken, '/idreg', 'APG-2026-126', card(126, { kind: words('intern') }))).toBe(200);
+  expect(await createAsMember(hrToken, '/idreg', 'APG-2026-127', card(127, { kind: words('employee') }))).toBe(200);
+  expect(await createAsMember(hrToken, '/idreg', 'APG-2026-128', card(128, { kind: words('intern') }))).toBe(200);
+
+  // An account nobody listed as a device is an outsider.
+  expect(await internsAs(kioskToken)).toEqual({ count: 403, counted: null, list: 403, numbers: [] });
+
+  await setDevice(kiosk.uid, 'Attendance kiosk');
+  const seen = await internsAs(kioskToken);
+  expect(seen.count).toBe(200);
+  expect(seen.counted).toBe(2);
+  expect(seen.list).toBe(200);
+  expect(seen.numbers.sort()).toEqual(['APG-2026-126', 'APG-2026-128']);
+  expect(await asMember(kioskToken, '/idreg/APG-2026-126')).toBe(200);
+  expect(await asMember(kioskToken, `/devices/${kiosk.uid}`)).toBe(200);
+
+  // It writes nothing: no card, no change, no removal, not even its own listing.
+  expect(await createAsMember(kioskToken, '/idreg', 'APG-2026-129', issued(kiosk, { id: words('APG-2026-129'), seq: whole(129) }))).toBe(403);
+  expect(await asMember(kioskToken, '/idreg/APG-2026-126', { name: 'Someone Else' })).toBe(403);
+  expect(await deleteAsMember(kioskToken, '/idreg/APG-2026-126')).toBe(403);
+  expect(await createAsMember(kioskToken, '/devices', 'another', { name: words('Another kiosk') })).toBe(403);
+  expect(await deleteAsMember(kioskToken, `/devices/${kiosk.uid}`)).toBe(403);
+
+  // It is not a member: Keystone's records, its members and other devices are closed to it.
+  expect(await asMember(kioskToken, '')).toBe(403);
+  expect(await asMember(kioskToken, '/members')).toBe(403);
+  expect(await asMember(kioskToken, `/members/${hr.uid}`)).toBe(403);
+  expect(await asMember(kioskToken, '/dir')).toBe(403);
+  expect(await asMember(kioskToken, '/dir/0', { body: 'x' })).toBe(403);
+  expect(await asMember(kioskToken, '/rf')).toBe(403);
+  expect(await asMember(kioskToken, '/company/details')).toBe(403);
+  expect(await asMember(kioskToken, '/devices')).toBe(403);
+  expect(await asMember(kioskToken, '/idreg/APG-2026-124/replacements')).toBe(403);
+
+  // Only an owner lists or removes a device; a staff member cannot make one, or see them.
+  const ownerToken = await idToken(owner);
+  expect(await createAsMember(hrToken, '/devices', hr.uid, { name: words('Mine') })).toBe(403);
+  expect(await asMember(hrToken, '/devices')).toBe(403);
+  expect(await createAsMember(ownerToken, '/devices', 'second-kiosk', { name: words('Second kiosk') })).toBe(200);
+  expect(await createAsMember(ownerToken, '/devices', 'third-kiosk', { name: words('Third'), role: words('owner') })).toBe(403);
+  expect(await asMember(ownerToken, '/devices')).toBe(200);
+
+  // Removed from the list, the kiosk is an outsider again.
+  expect(await deleteAsMember(ownerToken, `/devices/${kiosk.uid}`)).toBe(200);
+  expect(await internsAs(kioskToken)).toEqual({ count: 403, counted: null, list: 403, numbers: [] });
+  expect(await asMember(kioskToken, '/idreg/APG-2026-126')).toBe(403);
 });
