@@ -7,6 +7,8 @@ rules_version = '2';
 //   keystone/{company}/{list}/{id}       one record each: { pos, body } (list is dir, cv, bs, ids, log or ext)
 //   keystone/{company}/company/details   the company's details: { pos, body } (docs/adr/0018)
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
+//   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, by } (docs/adr/0025)
+//   keystone/{company}/idreg/{no}/replacements/{at}   a replacement card for that number (docs/adr/0025)
 //
 // The records are only ever what members save here: an owner starts them empty, and Keystone copies nothing in from a
 // computer. Only an owner starts them and changes the company's details, which every document prints (payment
@@ -16,6 +18,11 @@ rules_version = '2';
 // screen makes and removes staff members (docs/adr/0014, 0015), and the first owner is added by hand in the Firebase
 // console (docs/FIREBASE.md). A sign-in nobody made a member, or whose member was removed, opens nothing. A member
 // changes only their own name (Profile, docs/adr/0020), never their role.
+//
+// The register of issued employee IDs is written by the Alpha Premier ID Maker (Deign86/apg-id-creator), not by
+// Keystone. A member reads it and adds to it, as themselves; nobody changes or removes an issued ID from an app, so a
+// number given once cannot be given again, overwritten or lost. A replacement card is recorded under the card it
+// replaces, which stays as it was.
 //
 // Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
 // only their own, and only while it waits. Keystone reads a request's status, requester and decision from the fields
@@ -47,6 +54,19 @@ service cloud.firestore {
       return d.keys().hasOnly(['pos', 'body', 'status', 'uid', 'decision']) && d.pos is int && d.pos >= 0
         && d.body is string && d.body.size() < 900000 && d.status in ['For Approval', 'Approved', 'Declined', 'Withdrawn']
         && (!('uid' in d) || d.uid is string) && (!('decision' in d) || d.decision is map);
+    }
+
+    // An issued employee ID as the ID Maker writes it: named by its own number, and signed by whoever is asking.
+    function issuedId(no) {
+      let d = request.resource.data;
+      return no.matches('^APG-[0-9]{4}-[0-9]{3,6}$')
+        && d.keys().hasOnly(['id', 'year', 'seq', 'name', 'title', 'issuedAt', 'replacement', 'last', 'first', 'middle', 'suffix', 'role1', 'role2', 'by', 'byEmail'])
+        && d.keys().hasAll(['id', 'year', 'seq', 'name', 'issuedAt', 'replacement', 'by'])
+        && d.id == no && d.year is int && d.seq is int && d.seq > 0
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 200
+        && d.issuedAt is string && d.issuedAt.size() <= 40
+        && d.replacement is bool
+        && d.by == request.auth.uid;
     }
 
     // A request a member files, edits or withdraws: their own, waiting or withdrawn, and with no decision.
@@ -84,6 +104,18 @@ service cloud.firestore {
         allow update: if fundsRequest() && (owner(company)
           || (member(company) && resource.data.status == 'For Approval' && resource.data.uid == request.auth.uid && ownUndecided(request.resource.data)));
         allow delete: if owner(company);
+      }
+
+      // Issued employee IDs (docs/adr/0025). Created only: there is no update and no delete, for an owner either, so
+      // creating the document of a number that already has one is refused, and the first card stands.
+      match /idreg/{no} {
+        allow read: if member(company);
+        allow create: if member(company) && issuedId(no);
+
+        match /replacements/{at} {
+          allow read: if member(company);
+          allow create: if member(company) && issuedId(no) && request.resource.data.replacement == true;
+        }
       }
 
       match /{list}/{id} {
