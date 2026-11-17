@@ -76,6 +76,15 @@ export async function setMember(uid: string, role: 'owner' | 'staff', name: stri
   });
 }
 
+/** Lists an account as a kiosk's device (keystone/apg/devices/<uid>), as the CEO would in the Firebase console. */
+export async function setDevice(uid: string, name: string) {
+  await call(`${DATABASE}/documents/keystone/apg/devices/${uid}`, {
+    method: 'PATCH',
+    headers: { ...ADMIN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: { name: { stringValue: name } } }),
+  });
+}
+
 /** A document as the Firestore REST API gives it: its full path, and its string fields. */
 interface FirestoreDocument {
   name: string;
@@ -190,6 +199,47 @@ export async function createAsMember(token: string, collection: string, id: stri
   });
 
   return res.status;
+}
+
+/** The interns in the ID register, as the attendance kiosk asks for them (alpha-premier-attendance, services/id_register.rs). */
+const INTERNS = {
+  from: [{ collectionId: 'idreg' }],
+  where: { fieldFilter: { field: { fieldPath: 'kind' }, op: 'EQUAL', value: { stringValue: 'intern' } } },
+};
+
+/** One row of a Firestore REST query's answer: a document, a count, or neither when nothing matched. */
+interface QueryRow {
+  document?: { name: string };
+  result?: { aggregateFields: { n: { integerValue: string } } };
+}
+
+/**
+ * What firestore.rules answer the kiosk's two questions, signed in with `token`: how many interns the register holds,
+ * and which. Gives the HTTP status of each (200 allowed, 403 refused) and, when allowed, the count and the numbers.
+ */
+export async function internsAs(token: string): Promise<{ count: number; counted: number | null; list: number; numbers: string[] }> {
+  const ask = (verb: string, body: string) =>
+    fetch(`${DATABASE}/documents/keystone/apg:${verb}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body,
+    });
+
+  const counting = { structuredAggregationQuery: { structuredQuery: INTERNS, aggregations: [{ alias: 'n', count: {} }] } };
+  const count = await ask('runAggregationQuery', JSON.stringify(counting));
+  const list = await ask('runQuery', JSON.stringify({ structuredQuery: INTERNS }));
+
+  // SAFETY: a successful Firestore REST query answers with a list of rows of this shape; a refused one is not read.
+  const counted = count.ok ? ((await count.json()) as QueryRow[]) : [];
+  // SAFETY: as above.
+  const listed = list.ok ? ((await list.json()) as QueryRow[]) : [];
+
+  return {
+    count: count.status,
+    counted: counted[0]?.result ? Number(counted[0].result.aggregateFields.n.integerValue) : null,
+    list: list.status,
+    numbers: listed.flatMap((row) => (row.document ? [row.document.name.slice(row.document.name.lastIndexOf('/') + 1)] : [])),
+  };
 }
 
 /** The tests' sample records (packages/core/sample/sample.json), with one more log entry saying where these are kept. */
