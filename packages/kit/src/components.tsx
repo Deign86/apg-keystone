@@ -2,7 +2,7 @@ import { Button, CellInput, EmptyState, Panel, SectionLabel, Tag, cn } from '@ke
 import { X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { lineDraft, shortDate, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
-import { useOpenConnector } from './context';
+import { useConnectorUpdate, useOpenConnector } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
@@ -90,30 +90,45 @@ export function FormCard({
 }
 
 /**
- * A connected system's shortcut: its app's logo, which opens the app. Works for any connector. What the app does is
- * the app's business; this only starts it (docs/adr/0007).
+ * A connected system's shortcut: its app's logo, which opens the app, or fetches its installer when the app is not
+ * on this computer. Under it, for an app with no updater of its own, the newer version to install when one is out
+ * (docs/adr/0007, 0029). Works for any connector.
  */
 export function ConnectorShortcut({ connector }: { connector: Connector }) {
   const open = useOpenConnector();
-  const [opening, setOpening] = useState(false);
+  const update = useConnectorUpdate(connector);
+  const [doing, setDoing] = useState<string | null>(null);
+  const busy = doing !== null;
+  const run = (work: (say: (what: string) => void) => Promise<void>) => { setDoing(''); void work(setDoing).finally(() => setDoing(null)); };
 
   return (
-    <button
-      type="button"
-      aria-label={`Open ${connector.name}`}
-      aria-busy={opening}
-      disabled={opening}
-      onClick={() => { setOpening(true); void open(connector).finally(() => setOpening(false)); }}
-      className="group flex aspect-[16/9] w-full flex-col items-center gap-2.5 overflow-hidden rounded-tile border border-line bg-surface px-4 pt-5 pb-3.5 transition-[border-color,background-color,transform] duration-200 ease-out hover:border-gold hover:bg-surface-2 disabled:cursor-progress motion-safe:hover:-translate-y-0.5"
-    >
-      <img
-        src={connector.logo}
-        alt=""
-        draggable={false}
-        className="pointer-events-none min-h-0 w-full flex-1 object-contain transition-transform duration-300 ease-out select-none motion-safe:group-hover:scale-[1.04]"
-      />
-      <span className="font-display text-[13px] font-semibold text-ink">{connector.name}</span>
-    </button>
+    <div className="flex flex-col gap-1.5">
+      <button
+        type="button"
+        aria-label={`Open ${connector.name}`}
+        aria-busy={busy}
+        disabled={busy}
+        onClick={() => run((say) => open(connector, say))}
+        className="group flex aspect-[16/9] w-full flex-col items-center gap-2.5 overflow-hidden rounded-tile border border-line bg-surface px-4 pt-5 pb-3.5 transition-[border-color,background-color,transform] duration-200 ease-out hover:border-gold hover:bg-surface-2 disabled:cursor-progress motion-safe:hover:-translate-y-0.5"
+      >
+        <img
+          src={connector.logo}
+          alt=""
+          draggable={false}
+          className="pointer-events-none min-h-0 w-full flex-1 object-contain transition-transform duration-300 ease-out select-none motion-safe:group-hover:scale-[1.04]"
+        />
+        <span className="font-display text-[13px] font-semibold text-ink" role={doing ? 'status' : undefined}>{doing || connector.name}</span>
+      </button>
+      {update && !busy && (
+        <button
+          type="button"
+          onClick={() => run((say) => update.install(say))}
+          className="self-center rounded-full border border-line bg-surface px-3 py-1 text-[12px] font-medium text-ink-2 transition-colors duration-200 hover:border-gold hover:text-ink"
+        >
+          Update to {update.version}
+        </button>
+      )}
+    </div>
   );
 }
 

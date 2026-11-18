@@ -78,9 +78,12 @@ COMPOSITION (the only place that knows the full list)
    - A screen calls `run((state, ctx) => someRule(state, …, ctx))`.
    - A rule returns `{ state, record, message }` or throws `KeystoneError` with the sentence to show.
    - Rules are pure: no I/O and no `Date.now()` (use `ctx.now()`).
-8. **A connector is a shortcut that opens its app** (docs/adr/0007). It reaches the world only through `env.system`:
-   find an installed app, start it, open a URL. Never import `@tauri-apps/*` outside `apps/keystone/src/platform/`.
-   Opening is time-limited and caught; a failure is a message on screen and nothing else.
+8. **A connector is a shortcut that opens its app** (docs/adr/0007), **and installs it when it is missing**
+   (docs/adr/0029). It reaches the world only through `env.system`: find an installed app, start it, open a URL, read
+   an app's latest release, fetch and open its installer. Never import `@tauri-apps/*` outside
+   `apps/keystone/src/platform/`. Opening is time-limited and caught; a failure is a message on screen and nothing
+   else. An app that updates itself is left to; only one that cannot gets `update`. The native side, not the page,
+   decides which repositories and files are allowed.
 9. **The saved state keeps the prototype's schema.**
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.

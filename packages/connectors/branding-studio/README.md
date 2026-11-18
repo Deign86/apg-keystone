@@ -13,7 +13,9 @@ The listing-photo branding app (`Deign86/Alpha_Branding`), native on both platfo
   - Windows: the Uninstall registry key `Alpha Premier Realty Branding Studio` (`DisplayIcon`, `InstallLocation`).
   - Both are done by `locate_app` in `src-tauri/src/lib.rs`.
 - **Installed:** Keystone starts it (`open -a` on macOS, its `.exe` on Windows).
-- **Not installed:** Keystone opens its latest release page on GitHub to download it.
+- **Not installed:** Keystone downloads its installer from its latest release, checks it against the digest GitHub
+  publishes, and opens it; the person finishes the installer. If that cannot be done, the release page opens.
+- **Updates:** the app updates itself once installed, so Keystone does nothing here (docs/adr/0029).
 - **In the browser preview:** it says the desktop app is needed.
 
 ## Contributes

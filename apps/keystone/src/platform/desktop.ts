@@ -5,7 +5,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check } from '@tauri-apps/plugin-updater';
-import type { InstalledApp } from '@keystone/core';
+import type { AppRelease, InstalledApp } from '@keystone/core';
 import type { AppUpdater, Platform } from '@keystone/kit';
 
 // The desktop app (Tauri). Reading and writing files and finding and starting the other APG apps are small Rust
@@ -53,9 +53,37 @@ async function readText(path: string): Promise<string | null> {
   }
 }
 
-export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => ({
+// An app's latest release, asked of GitHub at most once in ten minutes: Home asks each time it opens, and GitHub
+// answers 60 such questions an hour from one office address. A failed question is not remembered.
+const RELEASE_TTL_MS = 10 * 60_000;
+const releases = new Map<string, { at: number; release: Promise<AppRelease> }>();
+
+function latestRelease(repo: string): Promise<AppRelease> {
+  const known = releases.get(repo);
+
+  if (known && Date.now() - known.at < RELEASE_TTL_MS) return known.release;
+
+  const release = invoke<AppRelease>('latest_release', { repo });
+
+  releases.set(repo, { at: Date.now(), release });
+  release.catch(() => releases.delete(repo));
+
+  return release;
+}
+
+// Which installer a Mac needs. Asked once at start; until it answers, Apple silicon is assumed.
+let arch: 'arm64' | 'x64' | undefined;
+
+export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => {
+  void invoke<string>('cpu_arch').then((a) => { arch = a === 'aarch64' ? 'arm64' : 'x64'; }, () => {});
+
+  return platformFor(os);
+};
+
+const platformFor = (os: 'macos' | 'windows' | 'linux'): Platform => ({
   kind: 'desktop',
   platform: os,
+  get arch() { return arch; },
   loadState: async () => readText(await dataPath('state.json')),
   saveState: async (json) => writeBytes(await dataPath('state.json'), new TextEncoder().encode(json)),
   putPhoto: async (name, bytes) => writeBytes(await dataPath('photos', name), bytes),
@@ -85,6 +113,10 @@ export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => 
   },
   locateApp: (locator) => invoke<InstalledApp | null>('locate_app', { locator }),
   launchApp: (app) => invoke('launch_app', { app }),
+  // Installing the other APG apps (docs/adr/0029). The Rust side accepts only Deign86's repositories and files on
+  // github.com, checks the download against GitHub's digest, and hands the file to the operating system to open.
+  latestRelease,
+  installFrom: (asset) => invoke('install_from', { asset }),
   openUrl: (url) => openUrl(url),
   updater,
 });

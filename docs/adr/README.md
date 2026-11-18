@@ -39,6 +39,7 @@ Consequences**.
 | [0026](0026-a-kiosk-reads-the-id-register-as-a-device.md) | A kiosk reads the ID register as a device, not a member | Accepted |
 | [0027](0027-the-attendance-kiosk-keeps-a-copy-of-its-records-here.md) | The attendance kiosk keeps a copy of its records here | Accepted, changed by 0028 |
 | [0028](0028-the-attendance-records-live-here.md) | The attendance records live here; the kiosk keeps a working copy | Accepted |
+| [0029](0029-keystone-installs-the-connected-apps.md) | Keystone installs the connected apps, and updates the one that cannot update itself | Accepted |
 
 Template:
 

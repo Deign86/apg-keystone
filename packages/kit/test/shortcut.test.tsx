@@ -58,4 +58,78 @@ describe('a connected system’s shortcut', () => {
     expect(screen.getByText('The kiosk did not answer within 15 seconds.')).toBeInTheDocument();
     expect(button).toBeEnabled();
   });
+
+  it('while an installer downloads, says so under the logo and waits the minutes a download takes', async () => {
+    vi.useFakeTimers();
+    let arrived = () => {};
+
+    const { button } = await mount(okConnector('id-maker-app', {
+      name: 'Alpha Premier ID Maker',
+      open: async ({ slow }) => {
+        slow?.('Downloading Alpha Premier ID Maker 2.0.4…');
+        await new Promise<void>((done) => { arrived = done; });
+
+        return 'Its installer is open.';
+      },
+    }));
+
+    fireEvent.click(button);
+    await act(async () => {});
+    expect(screen.getByRole('status')).toHaveTextContent('Downloading Alpha Premier ID Maker 2.0.4…');
+
+    // Well past the 15 seconds an opening gets: still downloading, nothing reported.
+    await act(() => vi.advanceTimersByTimeAsync(5 * 60_000));
+    expect(button).toBeDisabled();
+    expect(screen.queryByText(/did not answer/)).not.toBeInTheDocument();
+
+    await act(async () => { arrived(); });
+    expect(screen.getByText('Its installer is open.')).toBeInTheDocument();
+    expect(button).toBeEnabled();
+    expect(button).toHaveTextContent('Alpha Premier ID Maker');
+  });
+
+  it('gives up on a download that never ends', async () => {
+    vi.useFakeTimers();
+
+    const { button } = await mount(okConnector('id-maker-app', { name: 'The ID Maker', open: ({ slow }) => { slow?.('Downloading…');
+
+ return new Promise(() => {}); } }));
+
+    fireEvent.click(button);
+    await act(() => vi.advanceTimersByTimeAsync(20 * 60_000));
+
+    expect(screen.getByText('The ID Maker did not answer within 20 minutes.')).toBeInTheDocument();
+    expect(button).toBeEnabled();
+  });
+
+  it('offers a newer version of an app that cannot update itself, and installs it when asked', async () => {
+    const installed: string[] = [];
+    await mount(okConnector('id-maker-app', {
+      name: 'Alpha Premier ID Maker',
+      update: async () => ({ version: '2.0.5', install: async () => { installed.push('2.0.5');
+
+ return 'The installer for Alpha Premier ID Maker 2.0.5 is open.'; } }),
+    }));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Update to 2.0.5' }));
+
+    expect(await screen.findByText('The installer for Alpha Premier ID Maker 2.0.5 is open.')).toBeInTheDocument();
+    expect(installed).toEqual(['2.0.5']);
+    expect(screen.queryByRole('button', { name: 'Update to 2.0.5' })).not.toBeInTheDocument();
+  });
+
+  it('offers nothing for an app that updates itself, or when the check fails', async () => {
+    await mount(okConnector('attendance'));
+    await act(async () => {});
+    expect(screen.queryByRole('button', { name: /Update to/ })).not.toBeInTheDocument();
+  });
+
+  it('a failed update check never disturbs the shortcut', async () => {
+    const { button } = await mount(okConnector('id-maker-app', { update: async () => { throw new Error('offline'); } }));
+    await act(async () => {});
+
+    expect(screen.queryByRole('button', { name: /Update to/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(button).toBeEnabled();
+  });
 });
