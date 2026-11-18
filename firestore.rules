@@ -9,7 +9,8 @@ rules_version = '2';
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
 //   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, kind, by } (docs/adr/0025)
 //   keystone/{company}/idreg/{no}/replacements/{at}   a replacement card for that number (docs/adr/0025)
-//   keystone/{company}/devices/{uid}     a kiosk's own account, which reads the ID register and nothing else: { name } (docs/adr/0026)
+//   keystone/{company}/devices/{uid}     a kiosk's own account, which reads the ID register: { name } (docs/adr/0026)
+//   keystone/{company}/att_{table}/{id}  the attendance kiosk's copy of its own records, one per row (docs/adr/0027)
 //
 // The records are only ever what members save here: an owner starts them empty, and Keystone copies nothing in from a
 // computer. Only an owner starts them and changes the company's details, which every document prints (payment
@@ -27,7 +28,8 @@ rules_version = '2';
 //
 // A device is not a member. It is an account an owner lists under devices for a kiosk, such as the attendance tracker
 // (Deign86/alpha-premier-attendance), which takes new interns from the register. It reads issued IDs and its own
-// device document, and writes nothing.
+// device document. The one thing it writes is the copy of its own records under att_…, which it cannot read back;
+// only an owner reads those. The kiosk's own database stays the source of truth, so Keystone never writes them.
 //
 // Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
 // only their own, and only while it waits. Keystone reads a request's status, requester and decision from the fields
@@ -107,6 +109,12 @@ service cloud.firestore {
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80;
         allow delete: if owner(company);
+      }
+
+      // The attendance kiosk's backup (docs/adr/0027): written by a device, read by an owner, and by nobody else.
+      match /{backup}/{id} {
+        allow read: if backup.matches('att_[a-z_]+') && owner(company);
+        allow write: if backup.matches('att_[a-z_]+') && device(company);
       }
 
       match /company/{id} {

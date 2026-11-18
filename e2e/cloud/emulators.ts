@@ -180,11 +180,12 @@ export async function deleteAsMember(token: string, path: string): Promise<numbe
 }
 
 /** A field's value as the Firestore REST API takes it: text, a whole number (which travels as text) or yes/no. */
-export type FirestoreValue = { stringValue: string } | { integerValue: string } | { booleanValue: boolean };
+export type FirestoreValue = { stringValue: string } | { integerValue: string } | { booleanValue: boolean } | { nullValue: null };
 
 export const words = (value: string): FirestoreValue => ({ stringValue: value });
 export const whole = (value: number): FirestoreValue => ({ integerValue: String(value) });
 export const flag = (value: boolean): FirestoreValue => ({ booleanValue: value });
+export const empty: FirestoreValue = { nullValue: null };
 
 /**
  * What firestore.rules answer a member who creates a document under keystone/apg with these fields, signed in with
@@ -240,6 +241,27 @@ export async function internsAs(token: string): Promise<{ count: number; counted
     list: list.status,
     numbers: listed.flatMap((row) => (row.document ? [row.document.name.slice(row.document.name.lastIndexOf('/') + 1)] : [])),
   };
+}
+
+/**
+ * Sends one batch of writes the way the attendance kiosk's backup does (alpha-premier-attendance,
+ * services/cloud_mirror.rs): a `commit` of whole documents under keystone/apg, signed in with `token`. Each entry is a
+ * path under keystone/apg and the fields to write, or `null` to remove the document. Gives the HTTP status.
+ */
+export async function commitAs(token: string, writes: readonly (readonly [string, Record<string, FirestoreValue> | null])[]): Promise<number> {
+  const root = `projects/${PROJECT}/databases/(default)/documents/keystone/apg`;
+
+  const body = {
+    writes: writes.map(([path, fields]) => (fields ? { update: { name: `${root}${path}`, fields } } : { delete: `${root}${path}` })),
+  };
+
+  const response = await fetch(`${DATABASE}/documents:commit`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  return response.status;
 }
 
 /** The tests' sample records (packages/core/sample/sample.json), with one more log entry saying where these are kept. */
