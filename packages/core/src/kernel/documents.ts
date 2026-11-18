@@ -11,7 +11,6 @@ import { isJsonObject, jsonObjects, jsonText, parseState, type JsonObject } from
 /** Keystone's own collections, as firestore.rules names them (CLOUD_LAYOUT). */
 export const COLLECTIONS: readonly string[] = [...CLOUD_LAYOUT.lists, CLOUD_LAYOUT.company.collection];
 
-/** The one document in `company`. */
 const DETAILS = CLOUD_LAYOUT.company.id;
 
 /**

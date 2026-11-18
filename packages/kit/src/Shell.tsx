@@ -170,7 +170,6 @@ export function Shell() {
     return () => window.removeEventListener('keydown', onKey);
   }, [registry, go]);
 
-  // Each screen starts at the top.
   useEffect(() => {
     document.getElementById('main')?.scrollTo({ top: 0 });
   }, [route]);
