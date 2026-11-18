@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
-import { CANNOT_KEEP_GRANT, DASH, SERVICES, type Accounts, type MemberAccount, type MemberGrant } from '@keystone/core';
+import { CANNOT_KEEP_GRANT, DASH, sentenceOf, SERVICES, type Accounts, type MemberAccount, type MemberGrant } from '@keystone/core';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
+import { memberGrants, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
   accountMade, accountRemoved, accountsLine, checkAccount, grantAction, grantQuestion, grantRefusal, grantSet, grantTitle, hasGrant, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
   MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine, TAG, ID,
@@ -27,7 +27,7 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
       run((s, c) => accountMade(s, made, c));
       onDone(made);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(sentenceOf(err));
       setBusy(false);
     }
   };
@@ -73,7 +73,7 @@ function PasswordForm({ accounts, onDone }: { accounts: Accounts; onDone: () => 
       run((s, c) => passwordChanged(s, c));
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(sentenceOf(err));
       setBusy(false);
     }
   };
@@ -105,7 +105,7 @@ function PasswordForm({ accounts, onDone }: { accounts: Accounts; onDone: () => 
 function Members({ accounts }: { accounts: Accounts }) {
   const { ctx, run, notify, registry } = useKeystone();
   // What the installed connected systems let the CEO give a staff member (Connector.memberGrant). None installed: none offered.
-  const grants = registry.connectors.flatMap((c) => c.memberGrant ?? []);
+  const grants = memberGrants(registry.connectors);
   const confirm = useConfirm();
   const [members, setMembers] = useState<MemberAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +118,7 @@ function Members({ accounts }: { accounts: Accounts }) {
       setMembers(await accounts.list());
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(sentenceOf(e));
     }
   }, [accounts]);
 
@@ -131,7 +131,7 @@ function Members({ accounts }: { accounts: Accounts }) {
       run((s, c) => accountRemoved(s, m, c));
       setMembers((ms) => ms && ms.filter((x) => x.uid !== m.uid));
     } catch (e) {
-      notify(e instanceof Error ? e.message : String(e), 'error');
+      notify(sentenceOf(e), 'error');
     }
   };
 
@@ -145,7 +145,7 @@ function Members({ accounts }: { accounts: Accounts }) {
 
       if (changed.ok) setMembers((ms) => ms && ms.map((x) => (x.uid === m.uid ? changed.record : x)));
     } catch (e) {
-      notify(e instanceof Error ? e.message : String(e), 'error');
+      notify(sentenceOf(e), 'error');
     }
   };
 

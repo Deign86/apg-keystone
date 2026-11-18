@@ -1,3 +1,4 @@
+import { sentenceOf } from '@keystone/core';
 import { Button } from '@keystone/ui';
 import { useEffect, useRef, useState } from 'react';
 import { useRuntime } from './context';
@@ -64,7 +65,7 @@ export function UpdateNotice() {
       await update.install((done) => setState({ step: 'installing', update, done }));
     } catch (e) {
       installing.current = false;
-      setState({ step: 'failed', update, error: e instanceof Error ? e.message : String(e) });
+      setState({ step: 'failed', update, error: sentenceOf(e) });
     }
   };
 

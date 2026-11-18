@@ -34,7 +34,7 @@ export function statementTone(status: string): Tone {
 export const VAT_RATE = 12;
 
 /** A statement names its client by directory code; that record is kept. */
-export const refersTo: Reference = { tag: TAG, record: (s, code) => s.bs.some((b) => b.client === code) };
+export const refersTo: Reference = { tag: TAG, codes: (s) => s.bs.map((b) => b.client) };
 export const EWT_RATE = 5;
 
 /** VAT is added and EWT withheld, both on the subtotal. */

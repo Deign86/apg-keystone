@@ -5,7 +5,7 @@ export { App } from './App';
 
 export { KeystoneStore, type Outcome } from './store';
 
-export { buildRegistry, documentLayout, findService, type ModuleApp, type ModuleDef, type Registry } from './registry';
+export { buildRegistry, documentLayout, findService, memberGrants, type ModuleApp, type ModuleDef, type Registry } from './registry';
 
 export { comingSoon } from './ComingSoon';
 

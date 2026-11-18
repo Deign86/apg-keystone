@@ -1,18 +1,15 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SERVICES, type BankAccount, type BankAccounts } from '@keystone/core';
-import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
+import { App, buildRegistry, KeystoneStore, type ModuleDef } from '@keystone/kit';
+import { memoryPlatform } from '@keystone/kit/testing';
 import { billingModule } from '../src';
 import { sampleText } from '@keystone/core/sample';
 
 // The statement form with and without the bank-accounts service (SERVICES.bankAccounts). Billing never imports Bank
 // Accounts: a stand-in module provides the service here, as the real one does in the app.
 
-const platform: Platform = {
-  kind: 'browser', platform: 'web', loadState: async () => sampleText, saveState: async () => {}, putPhoto: async () => {},
-  photoUrl: async () => null, saveFile: async (name) => name, openFile: async () => null, locateApp: async () => null,
-  launchApp: async () => { throw new Error('Not in tests.'); }, openUrl: async () => {},
-};
+const { platform } = memoryPlatform(sampleText);
 
 const bpi: BankAccount = { id: 'B-001', bank: 'BPI', branch: '', name: 'Alpha Premier Group of Companies OPC', number: '4011 0258 68' };
 const bdo: BankAccount = { id: 'B-002', bank: 'BDO', branch: 'Ortigas Center', name: 'APG Holdings OPC', number: '0012 3456 7890' };

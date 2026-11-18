@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SERVICES, type Accounts, type Member } from '@keystone/core';
-import { App, buildRegistry, KeystoneStore, type Platform } from '@keystone/kit';
+import { App, buildRegistry, KeystoneStore } from '@keystone/kit';
+import { memoryPlatform } from '@keystone/kit/testing';
 import { profileModule } from '../src';
 
 // The Profile screen against a stand-in for the sign-in (the platform's `accounts` service), as the cloud build provides it: whoever is
@@ -9,11 +10,7 @@ import { profileModule } from '../src';
 
 const owner: Member = { uid: 'owner-1', name: 'Deign Lazaro', role: 'owner' };
 
-const base: Platform = {
-  kind: 'browser', platform: 'web', loadState: async () => null, saveState: async () => {}, putPhoto: async () => {},
-  photoUrl: async () => null, saveFile: async (name) => name, openFile: async () => null, locateApp: async () => null,
-  launchApp: async () => { throw new Error('Not in tests.'); }, openUrl: async () => {},
-};
+const { platform: base } = memoryPlatform();
 
 const signIn = (): Accounts => ({
   list: vi.fn(async () => []), create: vi.fn(), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}), rename: vi.fn(async () => {}),

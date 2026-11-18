@@ -83,10 +83,10 @@ const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, ID, dat
 /** A pay setup, and every closed cut-off's rows, name their employee by directory code; that record is kept. */
 export const refersTo: Reference = {
   tag: TAG,
-  record: (s, code) => {
+  codes: (s) => {
     const data = dataOf(s);
 
-    return data.setups.some((x) => x.emp === code) || data.runs.some((r) => r.rows.some((x) => x.setup.emp === code));
+    return [...data.setups.map((x) => x.emp), ...data.runs.flatMap((r) => r.rows.map((x) => x.setup.emp))];
   },
 };
 

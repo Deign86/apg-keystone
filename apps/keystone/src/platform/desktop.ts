@@ -5,11 +5,13 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check } from '@tauri-apps/plugin-updater';
-import type { AppRelease, InstalledApp } from '@keystone/core';
+import { DEADLINES, sentenceOf, type AppRelease, type InstalledApp } from '@keystone/core';
 import type { AppUpdater, Platform } from '@keystone/kit';
+import commands from '../../src-tauri/src/commands.json';
 
 // The desktop app (Tauri). Reading and writing files and finding and starting the other APG apps are small Rust
-// commands in src-tauri/src/lib.rs.
+// commands in src-tauri/src/lib.rs, named once in src-tauri/src/commands.json: the page asks for them by that file's
+// names, and a test on each side holds the file to what the native side registers.
 
 // Keystone's own updates, the way the attendance app does it: Tauri's updater reads latest.json from the latest
 // GitHub release (plugins.updater in tauri.conf.json), checks the download against the public key there, installs
@@ -17,7 +19,7 @@ import type { AppUpdater, Platform } from '@keystone/kit';
 const updater: AppUpdater = {
   currentVersion: () => getVersion(),
   async check() {
-    const update = await check({ timeout: 10_000 });
+    const update = await check({ timeout: DEADLINES.updateCheckMs });
 
     if (!update) return null;
 
@@ -41,12 +43,9 @@ const updater: AppUpdater = {
   },
 };
 
-const readBytes = async (path: string) => new Uint8Array(await invoke<ArrayBuffer>('read_file', { path }));
-const writeBytes = (path: string, bytes: Uint8Array) => invoke<void>('write_file', bytes, { headers: { path: encodeURIComponent(path) } });
+const readBytes = async (path: string) => new Uint8Array(await invoke<ArrayBuffer>(commands.readFile, { path }));
+const writeBytes = (path: string, bytes: Uint8Array) => invoke<void>(commands.writeFile, bytes, { headers: { path: encodeURIComponent(path) } });
 const dataPath = async (...parts: string[]) => join(await appDataDir(), ...parts);
-
-/** Why the native side could not do something: it refuses with a plain sentence, not an Error. */
-const reasonOf = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
 
 /**
  * A text file's contents, or null when there is no such file yet. A file that is there and cannot be read (no
@@ -57,9 +56,9 @@ export async function readText(path: string): Promise<string | null> {
   let there: boolean;
 
   try {
-    there = await invoke<boolean>('file_exists', { path });
+    there = await invoke<boolean>(commands.fileExists, { path });
   } catch (e) {
-    throw new Error(`Keystone could not look for its saved records, so it did not open with none in their place. ${reasonOf(e)}`);
+    throw new Error(`Keystone could not look for its saved records, so it did not open with none in their place. ${sentenceOf(e)}`);
   }
 
   if (!there) return null;
@@ -67,7 +66,7 @@ export async function readText(path: string): Promise<string | null> {
   try {
     return new TextDecoder().decode(await readBytes(path));
   } catch (e) {
-    throw new Error(`Keystone could not read its saved records, so it did not open with none in their place. ${reasonOf(e)}`);
+    throw new Error(`Keystone could not read its saved records, so it did not open with none in their place. ${sentenceOf(e)}`);
   }
 }
 
@@ -81,7 +80,7 @@ function latestRelease(repo: string): Promise<AppRelease> {
 
   if (known && Date.now() - known.at < RELEASE_TTL_MS) return known.release;
 
-  const release = invoke<AppRelease>('latest_release', { repo });
+  const release = invoke<AppRelease>(commands.latestRelease, { repo });
 
   releases.set(repo, { at: Date.now(), release });
   release.catch(() => releases.delete(repo));
@@ -93,7 +92,7 @@ function latestRelease(repo: string): Promise<AppRelease> {
 let arch: 'arm64' | 'x64' | undefined;
 
 export const desktopPlatform = (os: 'macos' | 'windows' | 'linux'): Platform => {
-  void invoke<string>('cpu_arch').then((a) => { arch = a === 'aarch64' ? 'arm64' : 'x64'; }, () => {});
+  void invoke<string>(commands.cpuArch).then((a) => { arch = a === 'aarch64' ? 'arm64' : 'x64'; }, () => {});
 
   return platformFor(os);
 };
@@ -129,12 +128,12 @@ const platformFor = (os: 'macos' | 'windows' | 'linux'): Platform => ({
 
     return { name: path.split(/[\\/]/).pop() ?? path, bytes: await readBytes(path) };
   },
-  locateApp: (locator) => invoke<InstalledApp | null>('locate_app', { locator }),
-  launchApp: (app) => invoke('launch_app', { app }),
+  locateApp: (locator) => invoke<InstalledApp | null>(commands.locateApp, { locator }),
+  launchApp: (app) => invoke(commands.launchApp, { app }),
   // Installing the other APG apps (docs/adr/0029). The Rust side accepts only Deign86's repositories and files on
   // github.com, checks the download against GitHub's digest, and hands the file to the operating system to open.
   latestRelease,
-  installFrom: (asset) => invoke('install_from', { asset }),
+  installFrom: (asset) => invoke(commands.installFrom, { asset }),
   openUrl: (url) => openUrl(url),
   updater,
 });

@@ -158,7 +158,7 @@ export const requestOf = (s: TerminalState, no: string) => dataOf(s).requests.fi
  * A request paid by check names its payee by directory code; that record is kept. In the cloud a staff member reads
  * only their own requests, so only the CEO's Keystone knows every request that names a record.
  */
-export const refersTo: Reference = { tag: TAG, record: (s, code) => dataOf(s).requests.some((r) => r.payee === code) };
+export const refersTo: Reference = { tag: TAG, codes: (s) => dataOf(s).requests.map((r) => r.payee) };
 export const requestTotal = (r: Pick<FundsRequest, 'amount'>): Centavos => toCentavos(r.amount);
 
 /** The expenses a request lists; one filed before it listed them is its purpose for its amount. */

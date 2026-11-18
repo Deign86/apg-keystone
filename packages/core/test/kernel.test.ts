@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  laterVersion, openDesktopApp, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
+  KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -187,7 +187,7 @@ describe('directory (the shared kernel)', () => {
     expect(add.record).toMatchObject({ code: 'C-004', vat: true, ewt: false });
     expect(() => saveDirectoryRecord(add.state, { ...newDirectoryDraft('Client'), name: 'ortigas dental clinic' }, ctx)).toThrow(/already has that name/);
     // What a part contributes (ModuleDef.refersTo): its records name V-001.
-    const vouchers: Reference = { tag: 'CV', record: (x, code) => x.cv.some((v) => v.payee === code) };
+    const vouchers: Reference = { tag: 'CV', codes: (x) => x.cv.map((v) => v.payee) };
 
     expect(() => removeDirectoryRecord(s, 'V-001', ctx, [vouchers])).toThrow(/used by CV/);
     expect(removeDirectoryRecord(add.state, 'C-004', ctx, [vouchers]).state.dir).toHaveLength(11);
@@ -196,7 +196,7 @@ describe('directory (the shared kernel)', () => {
 
   it('keeps a record that any installed part says its records name, and names each part once', () => {
     const s = state();
-    const names = (tag: string, code: string): Reference => ({ tag, record: (_, c) => c === code });
+    const names = (tag: string, code: string): Reference => ({ tag, codes: () => [code] });
 
     expect(usedBy(s, 'E-001', [])).toEqual([]);
     expect(usedBy(s, 'E-001', [names('PAY', 'E-001'), names('DTR', 'E-001'), names('PAY', 'E-001'), names('RF', 'V-001')])).toEqual(['PAY', 'DTR']);
@@ -332,5 +332,15 @@ describe('connector contract', () => {
 
     await expect(openDesktopApp(system, studio)).rejects.toThrow('Open Keystone’s desktop app to open Alpha Branding Studio.');
     expect(did).toEqual([]);
+  });
+});
+
+describe('the sentence for whatever was thrown', () => {
+  it('is an error\'s message, and anything else as text', () => {
+    expect(sentenceOf(new KeystoneError('Enter a name for the record.'))).toBe('Enter a name for the record.');
+    expect(sentenceOf(new Error('The file is in use.'))).toBe('The file is in use.');
+    // The native side refuses with a plain sentence.
+    expect(sentenceOf('Cannot read state.json: Permission denied (os error 13)')).toBe('Cannot read state.json: Permission denied (os error 13)');
+    expect(sentenceOf(undefined)).toBe('undefined');
   });
 });

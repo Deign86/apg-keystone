@@ -1,6 +1,6 @@
 import { Button, Field, Panel, ScreenHeader, TextInput } from '@keystone/ui';
 import { useState, type FormEvent } from 'react';
-import { roleLabel, SERVICES, type Accounts, type Member } from '@keystone/core';
+import { roleLabel, sentenceOf, SERVICES, type Accounts, type Member } from '@keystone/core';
 import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG, ID } from './rules';
 
@@ -27,7 +27,7 @@ function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
       run((s, c) => nameChanged(s, who.name, next, c));
       setName(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(sentenceOf(err));
     } finally {
       setBusy(false);
     }

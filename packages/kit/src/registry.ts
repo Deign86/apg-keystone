@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import {
-  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments, type Reference,
+  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type MemberGrant, type RecordDocuments, type Reference,
   type RecordType, type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
@@ -184,6 +184,11 @@ const COLLECTION = /^[a-z]+$/;
 /** The lists the installed modules keep as documents of their own, for the cloud platform (docs/adr/0011). */
 export function documentLayout(modules: ModuleDef[]): DocumentLayout {
   return Object.fromEntries(modules.flatMap((m) => (m.documents ? [[m.id, m.documents]] : [])));
+}
+
+/** What the installed connected systems let the CEO give a member (`Connector.memberGrant`, docs/adr/0033). */
+export function memberGrants(connectors: readonly Connector[]): MemberGrant[] {
+  return connectors.flatMap((c) => c.memberGrant ?? []);
 }
 
 /** The provider of a named service among the installed modules, if any. */

@@ -8,6 +8,7 @@
 
 import { grantProblem, type MemberGrant } from './accounts';
 import deadlines from './deadlines.json';
+import { sentenceOf } from './state';
 
 export type PlatformName = 'macos' | 'windows' | 'linux' | 'web';
 
@@ -20,6 +21,8 @@ export const DEADLINES = {
   answerMs: deadlines.answerSeconds * 1000,
   /** Fetching an installer: they run to 150 MB, on an office line. */
   installMs: deadlines.installMinutes * 60_000,
+  /** Asking whether Keystone itself has a newer version. */
+  updateCheckMs: deadlines.updateCheckSeconds * 1000,
 } as const;
 
 /** How to find another desktop app on this machine. */
@@ -121,7 +124,6 @@ export interface DesktopApp {
 }
 
 /** A failure as the sentence it carries. The native side refuses with a plain sentence, not an Error. */
-const sentenceOf = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause)).trim();
 
 /** An app's latest release page, opened when its installer cannot be fetched. */
 const downloadsPage = (app: DesktopApp) => `https://github.com/${app.repo}/releases/latest`;
@@ -180,7 +182,7 @@ export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: Desk
   let failed: string | null = null;
 
   const version = await fetchInstaller(e, app).catch((cause: unknown) => {
-    failed = sentenceOf(cause);
+    failed = sentenceOf(cause).trim();
 
     return false as const;
   });

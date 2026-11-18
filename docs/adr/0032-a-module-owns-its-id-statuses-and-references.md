@@ -26,8 +26,9 @@ Status: Accepted · Date: 2026-11-18
   gives it. No saved word changes.
 - **`ModuleDef.selects`** says which directory records a person picks on a screen and how a sentence names that
   screen. The Directory builds "It is now selectable in …" from the installed modules.
-- **`ModuleDef.refersTo`** says whether a module's saved records name a directory record, and the tag to show.
-  `usedBy` and `removeDirectoryRecord` take these references from the caller; core lists none. Vouchers, billing, the
+- **`ModuleDef.refersTo`** says which directory records a module's saved records name (`codes`, since untangle
+  round 3: one answer for a state, so the Directory asks each module once and not once per row), and the tag to show.
+  `usedByCode`, `usedBy` and `removeDirectoryRecord` take these references from the caller; core lists none. Vouchers, billing, the
   ID maker, funds, payroll and timekeeping each contribute one.
 
 ## Consequences

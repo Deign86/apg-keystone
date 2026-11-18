@@ -31,7 +31,7 @@ export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
 
 /** A voucher saved before payees were typed names its payee by directory code; that record is kept. */
-export const refersTo: Reference = { tag: TAG, record: (s, code) => s.cv.some((v) => v.payee === code) };
+export const refersTo: Reference = { tag: TAG, codes: (s) => s.cv.map((v) => v.payee) };
 
 /** Voucher numbers run 888-001, 888-002 and on, with no year. */
 const SERIES = '888-';

@@ -49,6 +49,9 @@ export interface MemberGrant {
 /** What a member document already holds; a grant is never kept under one of these. */
 export const MEMBER_FIELDS = ['role', 'name', 'email'] as const;
 
+/** The same names to write by, so the platform spells none of them: `MEMBER_FIELD.role`. */
+export const MEMBER_FIELD = { role: MEMBER_FIELDS[0], name: MEMBER_FIELDS[1], email: MEMBER_FIELDS[2] } as const;
+
 /** Why a grant cannot be contributed, or null when it can. */
 export function grantProblem(g: MemberGrant): string | null {
   if (!/^[a-z][A-Za-z]{1,40}$/.test(g.field)) return `the field "${g.field}" must be letters, starting lowercase`;

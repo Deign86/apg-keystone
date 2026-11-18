@@ -19,7 +19,8 @@
 //     devDependencies;
 //   - another Keystone package is imported by its name only, or by a path that package
 //     exports, never by a path into its files;
-//   - @keystone/core/sample, the tests' sample records, only by a test;
+//   - @keystone/core/sample, the tests' sample records, and @keystone/kit/testing, the tests' stand-in
+//     platform, only by a test;
 //   - no relative import leaves the package's folder.
 //
 // node scripts/check-boundaries.mjs   (exit 1 with every violation listed)
@@ -166,6 +167,9 @@ for (const { dir, manifest, layer } of packages) {
 
         // The sample records are the tests' (docs/adr/0018): Keystone shows only what was saved, never made-up records.
         if (spec === '@keystone/core/sample' && !isTest) flag(rel(file), `imports "${spec}", the tests' sample records; only a test may`);
+
+        // The kit's stand-ins (a platform held in memory) are the tests' too.
+        if (spec === '@keystone/kit/testing' && !isTest) flag(rel(file), `imports "${spec}", the tests' stand-ins; only a test may`);
 
         if (layer === 'app' && !isTest && /^@keystone\/(module|connector)-/.test(pkg)) {
           const list = pkg.startsWith('@keystone/module-') ? 'src/modules.ts' : 'src/connectors.ts';

@@ -1,0 +1,10 @@
+{
+  "readFile": "read_file",
+  "fileExists": "file_exists",
+  "writeFile": "write_file",
+  "locateApp": "locate_app",
+  "launchApp": "launch_app",
+  "cpuArch": "cpu_arch",
+  "latestRelease": "latest_release",
+  "installFrom": "install_from"
+}

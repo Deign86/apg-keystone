@@ -196,8 +196,10 @@ fn matches_digest(hash: &[u8], digest: &str) -> bool {
 }
 
 /// How long a connected app may take, as the page counts it too: packages/core/src/kernel/deadlines.json, the one
-/// definition (core's `DEADLINES`). `answer` is for a question to GitHub; `install` is for a download.
+/// definition (core's `DEADLINES`). `connect` is for reaching GitHub at all; `answer` is for a question to it;
+/// `install` is for a download.
 struct Deadlines {
+    connect: std::time::Duration,
     answer: std::time::Duration,
     install: std::time::Duration,
 }
@@ -212,6 +214,7 @@ fn deadlines() -> Result<Deadlines, String> {
     let number = |key: &str| said.get(key).and_then(|v| v.as_u64()).ok_or(format!("deadlines.json has no {key}."));
     let install = std::time::Duration::from_secs(number("installMinutes")? * 60);
     Ok(Deadlines {
+        connect: std::time::Duration::from_secs(number("connectSeconds")?),
         answer: std::time::Duration::from_secs(number("answerSeconds")?),
         install: install.checked_sub(GIVES_UP_EARLY).filter(|d| !d.is_zero()).ok_or("deadlines.json leaves no time to install.")?,
     })
@@ -220,7 +223,7 @@ fn deadlines() -> Result<Deadlines, String> {
 fn web() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .user_agent(concat!("Keystone/", env!("CARGO_PKG_VERSION")))
-        .connect_timeout(std::time::Duration::from_secs(15))
+        .connect_timeout(deadlines()?.connect)
         .build()
         .map_err(|e| format!("Could not start a download: {e}"))
 }
@@ -246,45 +249,74 @@ async fn latest_release(repo: String) -> Result<AppRelease, String> {
     read_release(&answer.json().await.map_err(|e| format!("GitHub's answer could not be read: {e}"))?)
 }
 
+/// What a download that ran out of time says, whether the time ran out while it was arriving or just as it ended.
+fn took_too_long(name: &str) -> String {
+    format!("{name} took too long to arrive, so it was not opened. Try again.")
+}
+
+/// Writes what arrives to `partial` and answers its SHA-256. The request's own limit stops a download still running
+/// when the time is up; that reads as an error from the next piece, and is told apart from a line that dropped.
+async fn receive(answer: &mut reqwest::Response, partial: &Path, name: &str, late: impl Fn() -> bool) -> Result<Vec<u8>, String> {
+    use sha2::{Digest, Sha256};
+    use std::io::Write;
+    let mut hash = Sha256::new();
+    let mut file = fs::File::create(partial).map_err(|e| format!("Cannot write {}: {e}", partial.display()))?;
+    loop {
+        match answer.chunk().await {
+            Ok(Some(chunk)) => {
+                hash.update(&chunk);
+                file.write_all(&chunk).map_err(|e| format!("Cannot write {}: {e}", partial.display()))?;
+            }
+            Ok(None) => return Ok(hash.finalize().to_vec()),
+            Err(e) if e.is_timeout() || late() => return Err(took_too_long(name)),
+            Err(e) => return Err(format!("The download of {name} stopped: {e}")),
+        }
+    }
+}
+
+/// Fetches a file into the folder under its name and answers where it is, checked against GitHub's digest when there
+/// is one. The whole of it has `limit`. Whatever stops it, no half-written `.part` file is left behind.
+async fn fetch(client: &reqwest::Client, url: &str, name: &str, digest: Option<&str>, folder: &Path, limit: std::time::Duration) -> Result<std::path::PathBuf, String> {
+    let target = folder.join(name);
+    let partial = folder.join(format!("{name}.part"));
+    let started = std::time::Instant::now();
+    let late = || started.elapsed() >= limit;
+    // The limit covers the answer and every byte of the file after it.
+    let mut answer = client.get(url).timeout(limit).send().await.map_err(|e| {
+        if e.is_timeout() && late() { took_too_long(name) } else { "Could not reach GitHub. Check the internet connection.".to_string() }
+    })?;
+    if !answer.status().is_success() {
+        return Err(format!("GitHub answered {} for {name}.", answer.status().as_u16()));
+    }
+    let hash = match receive(&mut answer, &partial, name, late).await {
+        Ok(hash) => hash,
+        Err(why) => {
+            let _ = fs::remove_file(&partial);
+            return Err(why);
+        }
+    };
+    if digest.is_some_and(|digest| !matches_digest(&hash, digest)) {
+        let _ = fs::remove_file(&partial);
+        return Err(format!("{name} did not arrive as GitHub published it, so it was not opened. Try again."));
+    }
+    if late() {
+        let _ = fs::remove_file(&partial);
+        return Err(took_too_long(name));
+    }
+    let _ = fs::remove_file(&target);
+    fs::rename(&partial, &target).map_err(|e| format!("Cannot save {}: {e}", target.display()))?;
+    Ok(target)
+}
+
 /// Downloads an installer into the temporary folder, checks it, and opens it the way a double-click would (so a
 /// setup program can ask for administrator rights, and a disk image mounts). The whole of it has `Deadlines::install`:
 /// a download still running then is stopped, and one that only just made it is not opened late.
 #[tauri::command]
 async fn install_from(asset: ReleaseAsset) -> Result<(), String> {
-    use sha2::{Digest, Sha256};
-    use std::io::Write;
     let name = allowed_installer(&asset)?;
     let folder = std::env::temp_dir().join("keystone-installers");
     fs::create_dir_all(&folder).map_err(|e| format!("Cannot create {}: {e}", folder.display()))?;
-    let target = folder.join(name);
-    let partial = folder.join(format!("{name}.part"));
-    let limit = deadlines()?.install;
-    let started = std::time::Instant::now();
-    // The limit covers the answer and every byte of the file after it.
-    let mut answer = web()?.get(&asset.url).timeout(limit).send().await.map_err(|_| "Could not reach GitHub. Check the internet connection.".to_string())?;
-    if !answer.status().is_success() {
-        return Err(format!("GitHub answered {} for {name}.", answer.status().as_u16()));
-    }
-    let mut hash = Sha256::new();
-    {
-        let mut file = fs::File::create(&partial).map_err(|e| format!("Cannot write {}: {e}", partial.display()))?;
-        while let Some(chunk) = answer.chunk().await.map_err(|e| format!("The download of {name} stopped: {e}"))? {
-            hash.update(&chunk);
-            file.write_all(&chunk).map_err(|e| format!("Cannot write {}: {e}", partial.display()))?;
-        }
-    }
-    if let Some(digest) = &asset.digest {
-        if !matches_digest(&hash.finalize(), digest) {
-            let _ = fs::remove_file(&partial);
-            return Err(format!("{name} did not arrive as GitHub published it, so it was not opened. Try again."));
-        }
-    }
-    if started.elapsed() >= limit {
-        let _ = fs::remove_file(&partial);
-        return Err(format!("{name} took too long to arrive, so it was not opened. Try again."));
-    }
-    let _ = fs::remove_file(&target);
-    fs::rename(&partial, &target).map_err(|e| format!("Cannot save {}: {e}", target.display()))?;
+    let target = fetch(&web()?, &asset.url, name, asset.digest.as_deref(), &folder, deadlines()?.install).await?;
     tauri_plugin_opener::open_path(&target, None::<&str>).map_err(|e| format!("Could not open {name}: {e}"))
 }
 
@@ -294,6 +326,21 @@ mod tests {
 
     fn asset(name: &str, url: &str) -> ReleaseAsset {
         ReleaseAsset { name: name.into(), url: url.into(), digest: None }
+    }
+
+    /// The commands the page may ask for (commands.json, which the page reads its names from and
+    /// apps/keystone/src/test/desktop.test.ts holds to this file too) are the ones `run` hands to Tauri, no more, no fewer.
+    #[test]
+    fn the_commands_the_page_names_are_the_ones_registered() {
+        let named: serde_json::Value = serde_json::from_str(include_str!("commands.json")).unwrap();
+        let mut named: Vec<&str> = named.as_object().unwrap().values().map(|v| v.as_str().unwrap()).collect();
+        let source = include_str!("lib.rs");
+        let opening = concat!(".invoke_handler(tauri::generate_", "handler![");
+        let list = &source[source.find(opening).expect("run registers its commands") + opening.len()..];
+        let mut registered: Vec<&str> = list[..list.find(']').unwrap()].split(',').map(str::trim).collect();
+        named.sort_unstable();
+        registered.sort_unstable();
+        assert_eq!(named, registered);
     }
 
     #[test]
@@ -314,6 +361,8 @@ mod tests {
         let page: serde_json::Value = serde_json::from_str(include_str!("../../../../packages/core/src/kernel/deadlines.json")).unwrap();
         let d = deadlines().unwrap();
         assert_eq!(d.answer.as_secs(), page["answerSeconds"].as_u64().unwrap());
+        assert_eq!(d.connect.as_secs(), page["connectSeconds"].as_u64().unwrap());
+        assert!(d.connect <= d.answer, "reaching GitHub is part of asking it");
         assert!(d.install < std::time::Duration::from_secs(page["installMinutes"].as_u64().unwrap() * 60));
         assert_eq!(d.install + GIVES_UP_EARLY, std::time::Duration::from_secs(page["installMinutes"].as_u64().unwrap() * 60));
     }
@@ -381,6 +430,50 @@ mod tests {
         assert_eq!(release.assets[0].digest.as_deref(), Some("sha256:ab"));
         assert_eq!(release.assets[1].digest, None);
         assert!(read_release(&serde_json::json!({"message": "Not Found"})).is_err());
+    }
+
+    /// A computer that answers one request with the start of a file and then says no more, as a stalled line does.
+    fn stalls_after(sent: &'static [u8], claimed: usize) -> String {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        std::thread::spawn(move || {
+            let (mut line, _) = listener.accept().unwrap();
+            let _ = line.read(&mut [0u8; 2048]);
+            let _ = line.write_all(format!("HTTP/1.1 200 OK\r\nContent-Length: {claimed}\r\n\r\n").as_bytes());
+            let _ = line.write_all(sent);
+            let _ = line.flush();
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        });
+        format!("http://{address}/setup.exe")
+    }
+
+    fn fetched(url: &str, folder: &Path, limit: std::time::Duration) -> Result<std::path::PathBuf, String> {
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        tauri::async_runtime::block_on(fetch(&client, url, "setup.exe", None, folder, limit))
+    }
+
+    /// A download that is still arriving when its time is up says it took too long, and leaves no partial file.
+    #[test]
+    fn a_download_that_runs_out_of_time_says_so_and_leaves_no_partial_file() {
+        let folder = std::env::temp_dir().join(format!("keystone-test-late-{}", std::process::id()));
+        fs::create_dir_all(&folder).unwrap();
+        let said = fetched(&stalls_after(b"half of it", 1000), &folder, std::time::Duration::from_millis(600));
+        assert_eq!(said, Err("setup.exe took too long to arrive, so it was not opened. Try again.".to_string()));
+        assert_eq!(fs::read_dir(&folder).unwrap().count(), 0, "nothing is left in the folder");
+        fs::remove_dir_all(&folder).unwrap();
+    }
+
+    /// The same download with time to spare arrives whole, under its own name.
+    #[test]
+    fn a_download_in_time_is_saved_under_its_name() {
+        let folder = std::env::temp_dir().join(format!("keystone-test-whole-{}", std::process::id()));
+        fs::create_dir_all(&folder).unwrap();
+        let saved = fetched(&stalls_after(b"all of it", 9), &folder, std::time::Duration::from_secs(4)).unwrap();
+        assert_eq!(saved, folder.join("setup.exe"));
+        assert_eq!(fs::read(&saved).unwrap(), b"all of it");
+        assert!(!folder.join("setup.exe.part").exists());
+        fs::remove_dir_all(&folder).unwrap();
     }
 
     #[test]
