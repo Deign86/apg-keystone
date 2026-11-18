@@ -13,6 +13,7 @@
   "dependencies": {
     "@keystone/connector-attendance": "*",
     "@keystone/connector-branding-studio": "*",
+    "@keystone/connector-id-maker-app": "*",
     "@keystone/connector-website": "*",
     "@keystone/core": "*",
     "@keystone/kit": "*",

@@ -5,8 +5,9 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
 
 | Package | System (repo) | Its shortcut on Home | README |
 |---|---|---|---|
-| `attendance/` | RFID attendance tracker (`alpha-premier-attendance`) | Starts the app, or opens its download page | [attendance/README.md](attendance/README.md) |
-| `branding-studio/` | Alpha Branding Studio (`Alpha_Branding`) | Starts the studio, or opens its download page | [branding-studio/README.md](branding-studio/README.md) |
+| `attendance/` | RFID attendance tracker (`alpha-premier-attendance`) | Starts the app, or installs it. It updates itself. | [attendance/README.md](attendance/README.md) |
+| `id-maker-app/` | Alpha Premier ID Maker (`apg-id-creator`) | Starts the app, or installs it, and offers its updates | [id-maker-app/README.md](id-maker-app/README.md) |
+| `branding-studio/` | Alpha Branding Studio (`Alpha_Branding`) | Starts the studio, or installs it. It updates itself. | [branding-studio/README.md](branding-studio/README.md) |
 | `website/` | alphapremiergroup.com (`apg-website`) | Opens the admin portal in the browser | [website/README.md](website/README.md) |
 
 ## Rules
@@ -17,13 +18,19 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
 - **The logo is the app's own,** kept in the package as `src/logo.png` (about 288 px, transparent edges trimmed) and
   imported: `import logo from './logo.png'`.
 - **Reach the outside world only through `env.system`:** find an installed app, start it, open a URL. Never import
-  `@tauri-apps/*`. A desktop app opens with `openDesktopApp(system, { name, locator, downloads })` from core.
+  `@tauri-apps/*`. A desktop app opens with `openDesktopApp(env, app)` from core, where `app` is a `DesktopApp`: its
+  name, how to find it, its repository, which release file is the installer on each computer, and whether it updates
+  itself.
+- **Installing and updating** (docs/adr/0029): not installed, `openDesktopApp` fetches the installer and opens it.
+  An app with its own updater sets `updatesItself: true` and gets nothing more. One without sets it `false` and adds
+  `update: (env) => desktopAppUpdate(env, app)`; "Update to …" then shows under its shortcut. Put the real file names
+  of a release in the package's test.
 - **Dependencies:** `@keystone/core` and `@keystone/kit` (for `ConnectorPlugin`), plus `@keystone/ui` if it ships a
   screen. Never another connector or a module. A connector may ship its own screens through
   `ConnectorPlugin.modules`; to use a module's behaviour, those screens ask for its service
   (`useModuleApp().service`) and work without it.
 - **Don't guard against failure yourself:** throwing, hanging or being unavailable are all fine. The shortcut gives
-  `open` 15 seconds and shows any error as a message. Return a sentence from `open` when it did something other than
+  `open` 15 seconds, or 20 minutes once it calls `env.slow('Downloading …')`, and shows any error as a message. Return a sentence from `open` when it did something other than
   open the app (the download page, say).
 - **Keep it to opening the app.** A change to the other system belongs in its own repo and is the owner's decision.
 - **Test against a fake computer,** in the package's `test/`: which app it looks for, that it starts it, what happens

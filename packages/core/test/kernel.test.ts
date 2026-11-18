@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  openDesktopApp, toCentavos, topFinding, validateConnector, withDeadline, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
+  laterVersion, openDesktopApp, toCentavos, topFinding, validateConnector, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -204,9 +204,6 @@ describe('connector contract', () => {
     expect(validateConnector({ ...base, id: 'Bad Id' }, [])).toMatch(/lowercase/);
     expect(validateConnector({ ...base, logo: '' }, [])).toMatch(/no logo/);
   });
-  it('turns a hang into an error', async () => {
-    await expect(withDeadline(new Promise(() => {}), 20, 'The kiosk')).rejects.toThrow('The kiosk did not answer within 0 seconds.');
-  });
 
   const studio = { name: 'Alpha Branding Studio', locator: { macBundleId: 'com.alphapremier.brandingstudio' }, downloads: 'https://example.test/releases/latest' };
 
@@ -235,6 +232,64 @@ describe('connector contract', () => {
 
     expect(await openDesktopApp(system, studio)).toBe('Alpha Branding Studio is not on this computer, so its download page is open.');
     expect(did).toEqual(['open https://example.test/releases/latest']);
+  });
+
+  it('fetches the installer of an app that is not installed, for this computer, and says what to do next', async () => {
+    const { system, did } = computer('macos', null);
+    const said: string[] = [];
+    const release = { version: '1.4.0', assets: ['Studio-1.4.0-arm.dmg', 'Studio-1.4.0-intel.dmg', 'Studio-1.4.0-setup.exe', 'Studio-1.4.0-setup.exe.sig'].map((name) => ({ name, url: `https://github.com/Deign86/x/releases/download/v1.4.0/${name}` })) };
+    const app = { ...studio, repo: 'Deign86/x', installers: { windows: /-setup\.exe$/, macArm: /-arm\.dmg$/, macIntel: /-intel\.dmg$/ } };
+
+    const fetching = (arch: 'arm64' | 'x64' | undefined, platform = system.platform): SystemBridge => ({
+      ...system, platform, arch,
+      latestRelease: async (repo) => { did.push(`ask ${repo}`);
+
+ return release; },
+      installFrom: async (asset) => { did.push(`install ${asset.name}`); },
+    });
+
+    expect(await openDesktopApp({ system: fetching('x64'), slow: (what) => { said.push(what); } }, app))
+      .toBe('Alpha Branding Studio 1.4.0 was not on this computer. Its installer is open: finish it, then open Alpha Branding Studio here again.');
+    await openDesktopApp(fetching('arm64'), app);
+    await openDesktopApp(fetching(undefined), app);
+    await openDesktopApp(fetching(undefined, 'windows'), app);
+
+    expect(did.filter((d) => d.startsWith('install'))).toEqual(['install Studio-1.4.0-intel.dmg', 'install Studio-1.4.0-arm.dmg', 'install Studio-1.4.0-arm.dmg', 'install Studio-1.4.0-setup.exe']);
+    expect(said).toEqual(['Getting Alpha Branding Studio…', 'Downloading Alpha Branding Studio 1.4.0…']);
+    expect(did.some((d) => d.startsWith('open '))).toBe(false);
+  });
+
+  it('never asks GitHub about an app that is installed', async () => {
+    const { system, did } = computer('windows', { path: 'C:\\Studio.exe' });
+
+    await openDesktopApp({ ...system, latestRelease: async () => { throw new Error('asked'); }, installFrom: async () => { throw new Error('installed'); } }, { ...studio, repo: 'Deign86/x', installers: { windows: /\.exe$/ } });
+    expect(did).toEqual(['launch C:\\Studio.exe']);
+  });
+
+  it('orders versions by their numbers, not as text', () => {
+    expect(laterVersion('2.0.10', '2.0.4')).toBe(true);
+    expect(laterVersion('v2.1.0', '2.0.99')).toBe(true);
+    expect(laterVersion('2.0.4', '2.0.4')).toBe(false);
+    expect(laterVersion('2.0.4', 'v2.0.4.0')).toBe(false);
+    expect(laterVersion('2.0.3', '2.0.4')).toBe(false);
+    expect(laterVersion('', '0.0.1')).toBe(false);
+
+    // Property: over 2,000 generated pairs, exactly one of later(a,b), later(b,a), same-numbers holds.
+    let seed = 20261118;
+    const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648);
+    const version = () => Array.from({ length: 1 + (next() % 4) }, () => next() % 12).join('.');
+
+    const numbers = (v: string) => { const n = v.split('.').map(Number);
+
+ while (n.length > 1 && n.at(-1) === 0) n.pop();
+
+ return n.join('.'); };
+
+    for (let i = 0; i < 2000; i++) {
+      const [a, b] = [version(), version()];
+
+      expect(Number(laterVersion(a, b)) + Number(laterVersion(b, a)) + Number(numbers(a) === numbers(b)), `${a} against ${b}`).toBe(1);
+    }
   });
 
   it('asks for the desktop app in the browser preview', async () => {

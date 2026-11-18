@@ -46,6 +46,30 @@ describe('the attendance app shortcut', () => {
     expect(did.opened).toEqual(['https://github.com/Deign86/alpha-premier-attendance/releases/latest']);
   });
 
+  it('not installed: fetches the installer for this computer from its latest release, and offers no update of its own', async () => {
+    // The file names of a real release, so a renamed asset fails here and not on someone's desk.
+    const assets = ['Alpha.Premier.Attendance_0.2.51_aarch64.dmg', 'Alpha.Premier.Attendance_0.2.51_x64-setup.exe', 'Alpha.Premier.Attendance_0.2.51_x64-setup.exe.sig', 'Alpha.Premier.Attendance_0.2.51_x64.dmg', 'Alpha.Premier.Attendance_aarch64.app.tar.gz', 'Alpha.Premier.Attendance_x64.app.tar.gz', 'latest.json'].map((name) => ({ name, url: `https://github.com/Deign86/alpha-premier-attendance/releases/download/v1/${name}` }));
+
+    for (const [platform, arch, file] of [['windows', undefined, 'Alpha.Premier.Attendance_0.2.51_x64-setup.exe'], ['macos', 'arm64', 'Alpha.Premier.Attendance_0.2.51_aarch64.dmg'], ['macos', 'x64', 'Alpha.Premier.Attendance_0.2.51_x64.dmg']] as const) {
+      const { system } = computer(null);
+      const fetched: string[] = [];
+
+      const said = await attendanceConnector.open({ system: {
+        ...system, platform, arch,
+        latestRelease: async (repo) => { expect(repo).toBe('Deign86/alpha-premier-attendance');
+
+ return { version: '1', assets }; },
+        installFrom: async (asset) => { fetched.push(asset.name); },
+      } });
+
+      expect(fetched).toEqual([file]);
+      expect(said).toMatch(/Its installer is open/);
+    }
+
+    // It updates itself once installed, so Keystone leaves its updates alone.
+    expect(attendanceConnector.update).toBeUndefined();
+  });
+
   it('shows the app’s own logo', () => {
     expect(attendanceConnector.logo).toMatch(/logo\.png$/);
   });

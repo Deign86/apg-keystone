@@ -68,8 +68,9 @@ test('has a shortcut to each connected system', async ({ app, screen }) => {
 
   await expect(screen.getByRole('heading', { name: 'Connected systems', level: 2 })).toBeVisible();
   await expect(screen.getByText('Shortcuts to the other APG apps.')).toBeVisible();
-  await expect(shortcuts.getByRole('listitem')).toHaveCount(3);
+  await expect(shortcuts.getByRole('listitem')).toHaveCount(4);
   await expect(shortcuts.getByRole('button', 'Open Attendance Tracker')).toBeVisible();
+  await expect(shortcuts.getByRole('button', 'Open Alpha Premier ID Maker')).toBeVisible();
   await expect(shortcuts.getByRole('button', 'Open Alpha Branding Studio')).toBeVisible();
   await expect(shortcuts.getByRole('button', 'Open APG Website')).toBeVisible();
 });

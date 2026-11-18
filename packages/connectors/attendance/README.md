@@ -13,7 +13,9 @@ The RFID time-in kiosk at the front desk (`Deign86/alpha-premier-attendance`: Ta
   - Windows: the Uninstall registry key `Alpha Premier Attendance` that its NSIS installer writes, with
     `alpha-premier-attendance.exe`.
 - **Installed:** Keystone starts it.
-- **Not installed:** Keystone opens its latest release page on GitHub to download it.
+- **Not installed:** Keystone downloads its installer from its latest release, checks it against the digest GitHub
+  publishes, and opens it; the person finishes the installer. If that cannot be done, the release page opens.
+- **Updates:** the app updates itself once installed, so Keystone does nothing here (docs/adr/0029).
 - **In the browser preview:** it says the desktop app is needed.
 
 ## Contributes

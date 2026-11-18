@@ -12,7 +12,7 @@ export { buildRegistry, documentLayout, findService, type ConnectorPlugin, type 
 export { comingSoon } from './ComingSoon';
 
 export {
-  KeystoneProvider, useDraft, useKeystone, useModuleApp, useOpenConnector, usePhoto,
+  KeystoneProvider, useDraft, useKeystone, useConnectorUpdate, useModuleApp, useOpenConnector, usePhoto,
 } from './context';
 
 export { ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';

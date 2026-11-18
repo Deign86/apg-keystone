@@ -46,6 +46,30 @@ describe('the Branding Studio shortcut', () => {
     expect(did.opened).toEqual(['https://github.com/Deign86/Alpha_Branding/releases/latest']);
   });
 
+  it('not installed: fetches the installer for this computer from its latest release, and offers no update of its own', async () => {
+    // The file names of a real release, so a renamed asset fails here and not on someone's desk.
+    const assets = ['Alpha.Branding.Setup.exe', 'Alpha.Branding-v1.0.0-win-x64.zip', 'Alpha.Branding-v1.0.0-macos.zip'].map((name) => ({ name, url: `https://github.com/Deign86/Alpha_Branding/releases/download/v1/${name}` }));
+
+    for (const [platform, arch, file] of [['windows', undefined, 'Alpha.Branding.Setup.exe'], ['macos', 'arm64', 'Alpha.Branding-v1.0.0-macos.zip'], ['macos', 'x64', 'Alpha.Branding-v1.0.0-macos.zip']] as const) {
+      const { system } = computer(null);
+      const fetched: string[] = [];
+
+      const said = await brandingStudioConnector.open({ system: {
+        ...system, platform, arch,
+        latestRelease: async (repo) => { expect(repo).toBe('Deign86/Alpha_Branding');
+
+ return { version: '1', assets }; },
+        installFrom: async (asset) => { fetched.push(asset.name); },
+      } });
+
+      expect(fetched).toEqual([file]);
+      expect(said).toMatch(/Its installer is open/);
+    }
+
+    // It updates itself once installed, so Keystone leaves its updates alone.
+    expect(brandingStudioConnector.update).toBeUndefined();
+  });
+
   it('shows the studio’s own logo', () => {
     expect(brandingStudioConnector.logo).toMatch(/logo\.png$/);
   });

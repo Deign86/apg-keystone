@@ -2,7 +2,7 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { withDeadline, type Change, type Connector, type Ctx, type ServiceName, type TerminalState } from '@keystone/core';
+import { type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
@@ -108,20 +108,83 @@ export function useDraft<T>(key: string, make: () => T): [T, (next: T) => void] 
 /** How long opening another app may take (finding it on macOS can take a few seconds) before Keystone says so. */
 const OPEN_MS = 15_000;
 
+/** How long fetching an installer may take: they run to 150 MB, on an office line. */
+const INSTALL_MS = 20 * 60_000;
+
+/**
+ * Runs one connector call. It has a few seconds, unless it says it is doing something slow (`env.slow`): then it has
+ * the time a download needs, and `doing` hears what to show meanwhile.
+ */
+function useConnectorCall() {
+  const { platform } = useCtx();
+
+  return useCallback(async <T,>(name: string, doing: ((what: string) => void) | undefined, work: (env: ConnectorEnv) => Promise<T>): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let late: (e: Error) => void = () => {};
+    const deadline = new Promise<never>((_, reject) => { late = reject; });
+
+    const within = (ms: number) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => late(new Error(`${name} did not answer within ${ms >= 60_000 ? `${Math.round(ms / 60_000)} minutes` : `${Math.round(ms / 1000)} seconds`}.`)), ms);
+    };
+
+    within(OPEN_MS);
+
+    try {
+      return await Promise.race([work({ system: platform, slow: (what) => { within(INSTALL_MS); doing?.(what); } }), deadline]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }, [platform]);
+}
+
 /** Opens a connected system's app, and says what happened when it did something else or could not. */
 export function useOpenConnector() {
-  const { platform } = useCtx();
+  const call = useConnectorCall();
   const notify = useNotify();
 
-  return useCallback(async (c: Connector) => {
+  return useCallback(async (c: Connector, doing?: (what: string) => void) => {
     try {
-      const said = await withDeadline(c.open({ system: platform }), OPEN_MS, c.name);
+      const said = await call(c.name, doing, (env) => c.open(env));
 
       if (said) notify(said);
     } catch (e) {
       notify(e instanceof Error ? e.message : `${c.name} did not open.`, 'error');
     }
-  }, [platform, notify]);
+  }, [call, notify]);
+}
+
+/**
+ * The newer version of a connected app that Keystone can install, for an app with no updater of its own; null when
+ * there is none, the app updates itself, or Keystone cannot tell. `install` fetches and opens its installer.
+ */
+export function useConnectorUpdate(c: Connector) {
+  const call = useConnectorCall();
+  const notify = useNotify();
+  const [update, setUpdate] = useState<ConnectorUpdate | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    if (c.update) void call(c.name, undefined, (env) => c.update?.(env) ?? Promise.resolve(null)).then((u) => { if (alive) setUpdate(u); }, () => {});
+
+    return () => { alive = false; };
+  }, [c, call]);
+
+  const install = useCallback(async (doing?: (what: string) => void) => {
+    if (!update) return;
+
+    try {
+      const said = await call(c.name, doing, (env) => update.install(env));
+
+      if (said) notify(said);
+      setUpdate(null);
+    } catch (e) {
+      notify(e instanceof Error ? e.message : `${c.name} could not be updated.`, 'error');
+    }
+  }, [c, call, notify, update]);
+
+  return update ? { version: update.version, install } : null;
 }
 
 /** A photo from the photo folder as an object URL, or null. */

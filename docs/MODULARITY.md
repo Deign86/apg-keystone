@@ -127,7 +127,8 @@ Prefer a service to `requires`: it keeps the consumer installable without the pr
 
 ### `Connector` (`packages/core/src/kernel/connectors.ts`)
 
-A connector is a shortcut to another APG app (docs/adr/0007).
+A connector is a shortcut to another APG app (docs/adr/0007) that also installs it, and updates it when the app
+cannot update itself (docs/adr/0029).
 
 | Field | Required | What it is for |
 |---|---|---|
