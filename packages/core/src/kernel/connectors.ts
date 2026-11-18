@@ -112,7 +112,7 @@ export function laterVersion(a: string, b: string): boolean {
 }
 
 /** The installer in a release for this computer, or undefined when the release has none. */
-export function installerFor(system: SystemBridge, app: DesktopApp, release: AppRelease): ReleaseAsset | undefined {
+function installerFor(system: SystemBridge, app: DesktopApp, release: AppRelease): ReleaseAsset | undefined {
   const named = system.platform === 'windows' ? app.installers?.windows
     : system.platform === 'macos' ? (system.arch === 'x64' ? app.installers?.macIntel : app.installers?.macArm)
     : undefined;

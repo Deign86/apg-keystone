@@ -4,7 +4,7 @@ import logo from './logo.png';
 // The APG website (Deign86/apg-website). Its shortcut on Home opens the admin portal, where inquiries, payments
 // reported online and job applicants are handled, in the default browser.
 
-export const ADMIN_PORTAL = 'https://alphapremiergroup.com/admin';
+const ADMIN_PORTAL = 'https://alphapremiergroup.com/admin';
 
 export const websiteConnector: Connector = {
   id: 'website',

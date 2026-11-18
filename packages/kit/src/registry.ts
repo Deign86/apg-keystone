@@ -22,7 +22,7 @@ export interface ModuleApp {
 
 /**
  * A screen in Keystone, and everything it contributes to the rest of the app.
- * Overview, Home, Activity and Settings are built from these contributions, so taking a
+ * Overview, Home and Activity are built from these contributions, so taking a
  * module out removes its contributions with it and nothing else changes.
  */
 export interface ModuleDef {
@@ -72,15 +72,15 @@ export interface ModuleDef {
 export interface Registry {
   modules: ModuleDef[];
   connectors: Connector[];
-  /** Definitions that were left out, with the reason, shown in Connections. */
+  /** Definitions that were left out, with the reason, shown on the Data screen. */
   refused: { id: string; reason: string }[];
 }
 
 const ID = /^[a-z][a-z0-9-]*$/;
 
 /**
- * Builds the registry once at start. A broken or incomplete part (duplicate id, a
- * missing requirement, no health check) is left out with its reason instead of taking
+ * Builds the registry once at start. A broken part (a duplicate id, a connector with no
+ * logo, a second provider of a service) is left out with its reason instead of taking
  * the app down.
  */
 export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Registry {

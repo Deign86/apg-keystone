@@ -33,7 +33,7 @@ export interface WaitingItem {
   rank: number;
 }
 
-export const IDLE_FINDING = 'Nothing is waiting on you.';
+const IDLE_FINDING = 'Nothing is waiting on you.';
 
 /** The highest-priority finding, or the idle sentence. */
 export function topFinding(findings: (Finding | null | undefined)[]): string {

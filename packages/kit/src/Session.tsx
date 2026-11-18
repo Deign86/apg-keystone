@@ -7,10 +7,10 @@ import { useKeystone } from './context';
 // unused for the session's idleMs, with a minute's warning first. Nothing shows without a sign-in.
 
 /** How long before signing out by itself Keystone says so, with a way to stay. */
-export const WARN_BEFORE_MS = 60_000;
+const WARN_BEFORE_MS = 60_000;
 
 /** How often it looks at the clock. A timer stops while the computer sleeps, so the time is read, never counted. */
-export const LOOK_EVERY_MS = 1_000;
+const LOOK_EVERY_MS = 1_000;
 
 /** How often it tells the session it is in use, so a restart knows when it was last used. */
 export const NOTE_USE_EVERY_MS = 30_000;

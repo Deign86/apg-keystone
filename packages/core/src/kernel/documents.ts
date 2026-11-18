@@ -12,8 +12,6 @@ export const COLLECTIONS = ['dir', 'cv', 'bs', 'ids', 'log', 'ext', 'company'] a
 /** The one document in `company`. */
 const DETAILS = 'details';
 
-export type Collection = (typeof COLLECTIONS)[number];
-
 /**
  * One list in a module's data kept as a document per record, in a collection of its own, instead of inside the
  * module's one `ext` document (docs/adr/0011). Each record is written alone, so two people adding records never save

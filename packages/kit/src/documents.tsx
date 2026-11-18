@@ -207,15 +207,13 @@ export interface LineColumn {
 }
 
 /** The line's amount before tax, as a column. */
-export const amountColumn = (header = 'Amount'): LineColumn => ({ header, figure: true, cell: (l) => peso(toCentavos(l.amt)) });
+export const amountColumn = (): LineColumn => ({ header: 'Amount', figure: true, cell: (l) => peso(toCentavos(l.amt)) });
 
 /**
  * A document's lines, ruled as the check voucher is: a firm line around the table and above its totals, light ones
- * between columns and rows, the headings on a pale gold band and the grand total on another. `rows` pads the table with
- * blank rows, as a printed form has.
+ * between columns and rows, the headings on a pale gold band and the grand total on another.
  */
-export function Lines({ columns, lines, empty, footer, rows = 0 }: { columns: LineColumn[]; lines: LineItem[]; empty: string; footer: [string, string, boolean?][]; rows?: number }) {
-  const blank = Math.max(0, rows - Math.max(lines.length, 1));
+export function Lines({ columns, lines, empty, footer }: { columns: LineColumn[]; lines: LineItem[]; empty: string; footer: [string, string, boolean?][] }) {
   const cell = (i: number, figure?: boolean) => `px-2.5 py-1.5 ${i ? 'border-l border-paper-line' : ''} ${figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`;
 
   return (
@@ -234,11 +232,6 @@ export function Lines({ columns, lines, empty, footer, rows = 0 }: { columns: Li
             {columns.map((c, j) => <td key={c.header} className={cell(j, c.figure)}>{c.cell(l)}</td>)}
           </tr>
         ))}
-        {Array.from({ length: blank }, (_, i) => (
-          <tr key={`blank-${i}`} aria-hidden="true" className="border-b border-paper-rule">
-            {columns.map((c, j) => <td key={c.header} className={cell(j)}>&nbsp;</td>)}
-          </tr>
-        ))}
       </tbody>
       <tfoot>
         {footer.map(([k, v, grand], i) => (
@@ -253,9 +246,9 @@ export function Lines({ columns, lines, empty, footer, rows = 0 }: { columns: Li
 }
 
 /** Lines to sign on: room above a firm line, then who signs, in bold, and their role. */
-export function Signatures({ names, className = '' }: { names: [string, string][]; className?: string }) {
+export function Signatures({ names }: { names: [string, string][] }) {
   return (
-    <div className={`mt-10 grid gap-8 ${className}`} style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
+    <div className="mt-10 grid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
       {names.map(([who, role]) => (
         <div key={role} className="border-t border-paper-ink pt-1 text-[11px]">
           <p className="m-0 min-h-4 font-bold">{who}</p>

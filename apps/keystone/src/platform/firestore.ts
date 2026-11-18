@@ -54,7 +54,7 @@ export interface CloudSession {
   explain(cause: unknown): string;
 }
 
-export function explainCloudError(cause: unknown): string {
+function explainCloudError(cause: unknown): string {
   const code = cause instanceof FirebaseError ? cause.code : '';
 
   // Firebase spells this one as a sentence ("auth/api-key-not-valid.-please-pass-a-valid-api-key.").

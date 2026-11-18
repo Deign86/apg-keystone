@@ -3,8 +3,6 @@
 
 export { App } from './App';
 
-export { Shell } from './Shell';
-
 export { KeystoneStore, type Outcome } from './store';
 
 export { buildRegistry, documentLayout, findService, type ModuleApp, type ModuleDef, type Registry } from './registry';
@@ -12,7 +10,7 @@ export { buildRegistry, documentLayout, findService, type ModuleApp, type Module
 export { comingSoon } from './ComingSoon';
 
 export {
-  KeystoneProvider, useDraft, useKeystone, useConnectorUpdate, useModuleApp, useOpenConnector, usePhoto,
+  useDraft, useKeystone, useModuleApp, usePhoto,
 } from './context';
 
 export { ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';

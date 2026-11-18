@@ -130,7 +130,7 @@ service cloud.firestore {
         allow delete: if owner(company);
       }
 
-      // An owner may write any request (deciding it, moving the records in, restoring a backup). Anyone else files one as
+      // An owner may write any request (deciding it, restoring a backup). Anyone else files one as
       // themselves, waiting for a decision, and changes it only while it still waits.
       match /rf/{no} {
         allow read: if owner(company) || (member(company) && resource.data.uid == request.auth.uid);

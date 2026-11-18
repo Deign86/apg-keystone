@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
+  addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   laterVersion, openDesktopApp, toCentavos, topFinding, validateConnector, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
@@ -31,10 +31,6 @@ describe('money', () => {
   it('rounds percentages half away from zero', () => {
     expect(percent(toCentavos(548250), 5)).toBe(toCentavos(27412.5));
     expect(percent(10, 5)).toBe(1);
-  });
-  it('keeps editable text short', () => {
-    expect(editText(12500)).toBe('12500');
-    expect(editText(650.5)).toBe('650.50');
   });
 });
 

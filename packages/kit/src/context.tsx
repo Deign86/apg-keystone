@@ -64,12 +64,11 @@ export function useKeystone() {
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const notify = useNotify();
 
-  const run = useCallback(<T,>(rule: (s: TerminalState, ctx: Ctx) => Change<T>, quiet = false): Outcome<T> => {
+  const run = useCallback(<T,>(rule: (s: TerminalState, ctx: Ctx) => Change<T>): Outcome<T> => {
     const r = store.run(rule);
 
-    if (r.ok && !quiet) notify(r.message);
-
-    if (!r.ok) notify(r.error, 'error');
+    if (r.ok) notify(r.message);
+    else notify(r.error, 'error');
 
     return r;
   }, [store, notify]);

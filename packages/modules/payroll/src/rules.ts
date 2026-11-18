@@ -94,7 +94,7 @@ export interface Cutoff {
   assumed: boolean;
 }
 
-export const runFor = (s: TerminalState, p: Period) => dataOf(s).runs.find((r) => r.from === p.from && r.to === p.to);
+const runFor = (s: TerminalState, p: Period) => dataOf(s).runs.find((r) => r.from === p.from && r.to === p.to);
 
 /** The cut-off as it stands: frozen once closed, otherwise priced from the pay setups and attendance now. */
 export function cutoffOf(s: TerminalState, p: Period, attendance: EmployeeAttendance | undefined, ctx: Ctx): Cutoff {
@@ -147,7 +147,7 @@ export function reopenCutoff(s: TerminalState, p: Period, ctx: Ctx): Change<PayR
 
 // ---------- the pay setup HR keeps ----------
 
-export const AMOUNTS = ['daily', 'monthly', 'incentive', 'housing', 'special', 'sss', 'philhealth', 'pagibig', 'advance'] as const;
+const AMOUNTS = ['daily', 'monthly', 'incentive', 'housing', 'special', 'sss', 'philhealth', 'pagibig', 'advance'] as const;
 
 /** The government shares: from the tables unless HR types the employee's own amount. */
 export const SHARES = ['sss', 'philhealth', 'pagibig'] as const;

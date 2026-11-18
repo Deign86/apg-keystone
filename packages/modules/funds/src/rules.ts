@@ -36,7 +36,7 @@ export type Decision = {
 }
 
 /** How an approved request is paid: by a bank transfer to an account, or by a check to a payee in the directory. */
-export const PAY_METHODS = ['transfer', 'check'] as const;
+const PAY_METHODS = ['transfer', 'check'] as const;
 
 export type PayMethod = (typeof PAY_METHODS)[number];
 

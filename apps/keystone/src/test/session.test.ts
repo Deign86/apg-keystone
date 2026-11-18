@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { cloudSession, IDLE_MS, unusedTooLong, type UseLog } from '../platform/session';
+import { cloudSession, IDLE_MS, unusedTooLong } from '../platform/session';
+import type { StoredText } from '../platform/web-storage';
 
 // The cloud build's session (docs/adr/0012): when Keystone was last used on this computer, and whether opening it now
 // asks for the account again.
 
-function memoryLog(value: string | null = null): UseLog & { value: string | null } {
+function memoryLog(value: string | null = null): StoredText & { value: string | null } {
   const log = {
     value,
     get: () => log.value,
