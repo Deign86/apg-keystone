@@ -1,9 +1,10 @@
 import type { FileFilter, Member, ServiceProviders, SystemBridge } from '@keystone/core';
 
 /**
- * Everything Keystone needs from the machine. Modules and connectors talk only to this,
- * never to Tauri directly, so the same code runs in the desktop app and in the browser
- * preview used for development and screenshots.
+ * Everything Keystone needs from the machine, implemented once for Tauri and once for the browser, so the same code
+ * runs in the desktop app and in the browser preview used for development and screenshots. No part is handed it: a
+ * screen gets the capabilities it uses (useKeystone), a connector the operating system alone (ConnectorEnv), and a
+ * part that needs the accounts asks for the service the platform provides.
  */
 export interface Platform extends SystemBridge {
   readonly kind: 'desktop' | 'browser';

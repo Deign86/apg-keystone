@@ -1,15 +1,15 @@
 import { emptyState, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 
-/** What a rule did: its record, its sentence and the state after it; or the sentence that refused it. */
 /** Shown in the rail when the saved state was read but is not a Keystone state. */
 export const DAMAGED = 'Keystone could not open its saved records: they are damaged. It started with none, and keeps the damaged records as they are until you change something.';
 
+/** What a rule did: its record, its sentence and the state after it; or the sentence that refused it. */
 export type Outcome<T> = { ok: true; record: T; message: string; state: TerminalState } | { ok: false; error: string };
 
 /**
  * Holds the one saved state, applies changes through the core rules and writes them to
- * disk shortly after. Screens read it with useKeystone(); nothing else mutates it.
+ * disk shortly after. Screens read it and run rules on it through useKeystone(); they are never handed the store.
  */
 export class KeystoneStore {
   state: TerminalState;
