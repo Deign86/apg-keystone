@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, editText, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
+  addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   laterVersion, openDesktopApp, toCentavos, topFinding, validateConnector, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
@@ -31,10 +31,6 @@ describe('money', () => {
   it('rounds percentages half away from zero', () => {
     expect(percent(toCentavos(548250), 5)).toBe(toCentavos(27412.5));
     expect(percent(10, 5)).toBe(1);
-  });
-  it('keeps editable text short', () => {
-    expect(editText(12500)).toBe('12500');
-    expect(editText(650.5)).toBe('650.50');
   });
 });
 
@@ -205,7 +201,7 @@ describe('connector contract', () => {
     expect(validateConnector({ ...base, logo: '' }, [])).toMatch(/no logo/);
   });
 
-  const studio = { name: 'Alpha Branding Studio', locator: { macBundleId: 'com.alphapremier.brandingstudio' }, downloads: 'https://example.test/releases/latest' };
+  const studio = { name: 'Alpha Branding Studio', locator: { macBundleId: 'com.alphapremier.brandingstudio' }, repo: 'Deign86/x', installers: { windows: /-setup\.exe$/, macArm: /-arm\.dmg$/, macIntel: /-intel\.dmg$/ } };
 
   function computer(platform: PlatformName, installed: InstalledApp | null) {
     const did: string[] = [];
@@ -231,14 +227,14 @@ describe('connector contract', () => {
     const { system, did } = computer('windows', null);
 
     expect(await openDesktopApp(system, studio)).toBe('Alpha Branding Studio is not on this computer, so its download page is open.');
-    expect(did).toEqual(['open https://example.test/releases/latest']);
+    expect(did).toEqual(['open https://github.com/Deign86/x/releases/latest']);
   });
 
   it('fetches the installer of an app that is not installed, for this computer, and says what to do next', async () => {
     const { system, did } = computer('macos', null);
     const said: string[] = [];
     const release = { version: '1.4.0', assets: ['Studio-1.4.0-arm.dmg', 'Studio-1.4.0-intel.dmg', 'Studio-1.4.0-setup.exe', 'Studio-1.4.0-setup.exe.sig'].map((name) => ({ name, url: `https://github.com/Deign86/x/releases/download/v1.4.0/${name}` })) };
-    const app = { ...studio, repo: 'Deign86/x', installers: { windows: /-setup\.exe$/, macArm: /-arm\.dmg$/, macIntel: /-intel\.dmg$/ } };
+    const app = studio;
 
     const fetching = (arch: 'arm64' | 'x64' | undefined, platform = system.platform): SystemBridge => ({
       ...system, platform, arch,
@@ -262,7 +258,7 @@ describe('connector contract', () => {
   it('never asks GitHub about an app that is installed', async () => {
     const { system, did } = computer('windows', { path: 'C:\\Studio.exe' });
 
-    await openDesktopApp({ ...system, latestRelease: async () => { throw new Error('asked'); }, installFrom: async () => { throw new Error('installed'); } }, { ...studio, repo: 'Deign86/x', installers: { windows: /\.exe$/ } });
+    await openDesktopApp({ ...system, latestRelease: async () => { throw new Error('asked'); }, installFrom: async () => { throw new Error('installed'); } }, studio);
     expect(did).toEqual(['launch C:\\Studio.exe']);
   });
 

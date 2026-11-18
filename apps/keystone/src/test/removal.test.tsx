@@ -1,7 +1,8 @@
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { App, buildRegistry, KeystoneStore, type ConnectorPlugin, type ModuleDef, type Platform } from '@keystone/kit';
-import { plugins } from '../connectors';
+import type { Connector } from '@keystone/core';
+import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
+import { connectors } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 
@@ -15,12 +16,12 @@ const platform: Platform = {
   saveState: async () => {},
 };
 
-const scenarios: [string, ModuleDef[], ConnectorPlugin[]][] = [
-  ['everything installed', builtInModules, plugins],
-  ...builtInModules.map((m): [string, ModuleDef[], ConnectorPlugin[]] => [`without the ${m.id} module`, builtInModules.filter((x) => x !== m), plugins]),
-  ...plugins.map((p): [string, ModuleDef[], ConnectorPlugin[]] => [`without the ${p.connector.id} connector`, builtInModules, plugins.filter((x) => x !== p)]),
-  ...builtInModules.map((m): [string, ModuleDef[], ConnectorPlugin[]] => [`the ${m.id} module on its own`, [m], []]),
-  ...plugins.map((p): [string, ModuleDef[], ConnectorPlugin[]] => [`the ${p.connector.id} connector on its own`, [], [p]]),
+const scenarios: [string, ModuleDef[], Connector[]][] = [
+  ['everything installed', builtInModules, connectors],
+  ...builtInModules.map((m): [string, ModuleDef[], Connector[]] => [`without the ${m.id} module`, builtInModules.filter((x) => x !== m), connectors]),
+  ...connectors.map((p): [string, ModuleDef[], Connector[]] => [`without the ${p.id} connector`, builtInModules, connectors.filter((x) => x !== p)]),
+  ...builtInModules.map((m): [string, ModuleDef[], Connector[]] => [`the ${m.id} module on its own`, [m], []]),
+  ...connectors.map((p): [string, ModuleDef[], Connector[]] => [`the ${p.id} connector on its own`, [], [p]]),
   ['nothing but the kernel', [], []],
 ];
 
@@ -66,7 +67,7 @@ describe.each(scenarios)('%s', (_name, modules, connectorPlugins) => {
 });
 
 it('every shipped part has a distinct id and loads without refusal', () => {
-  const r = buildRegistry(builtInModules, plugins);
+  const r = buildRegistry(builtInModules, connectors);
   expect(r.refused).toEqual([]);
   expect(r.modules.map((m) => m.id)).toEqual([...new Set(r.modules.map((m) => m.id))]);
   expect(r.modules.map((m) => m.id)).toEqual(expect.arrayContaining(['home', 'vouchers', 'billing', 'id-maker', 'directory', 'activity', 'data']));

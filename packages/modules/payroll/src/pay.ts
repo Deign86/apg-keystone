@@ -19,16 +19,16 @@ import {
 // - PhilHealth (UHC Act, from 2024): 2.5% of monthly pay, floored at ₱10,000 and capped at ₱100,000.
 // - Pag-IBIG (HDMF Circular 460, from Feb 2024): 2% of monthly pay up to ₱10,000 (1% at ₱1,500 a month or less).
 
-export const OVERTIME_PERCENT = 125;
-export const SPECIAL_HOLIDAY_PERCENT = 30;
-export const REGULAR_HOLIDAY_PERCENT = 100;
+const OVERTIME_PERCENT = 125;
+const SPECIAL_HOLIDAY_PERCENT = 30;
+const REGULAR_HOLIDAY_PERCENT = 100;
 
 /** Working days in a year for a Monday-to-Friday employee: the DOLE factor that turns a daily rate into a monthly one. */
-export const WORKING_DAYS_A_YEAR = 261;
+const WORKING_DAYS_A_YEAR = 261;
 
 export const SSS = { minCredit: toCentavos(5_000), maxCredit: toCentavos(35_000), step: toCentavos(500), employeePerMille: 50 };
-export const PHILHEALTH = { floor: toCentavos(10_000), ceiling: toCentavos(100_000), employeePerMille: 25 };
-export const PAGIBIG = { cap: toCentavos(10_000), lowPay: toCentavos(1_500), lowPerMille: 10, employeePerMille: 20 };
+const PHILHEALTH = { floor: toCentavos(10_000), ceiling: toCentavos(100_000), employeePerMille: 25 };
+const PAGIBIG = { cap: toCentavos(10_000), lowPay: toCentavos(1_500), lowPerMille: 10, employeePerMille: 20 };
 
 /**
  * One employee's pay, as the HR supervisor sets it. Pesos, as everywhere in the saved state. Allowances and

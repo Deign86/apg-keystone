@@ -33,12 +33,5 @@ export function parseAmount(text: string): Centavos | null {
   return Number.isFinite(n) ? toCentavos(n) : null;
 }
 
-/** The number for an editable field: 12500 -> "12500", 650.5 -> "650.50". */
-export function editText(pesos: number): string {
-  const c = toCentavos(pesos);
-
-  return c % 100 === 0 ? String(c / 100) : (c / 100).toFixed(2);
-}
-
 export const sumCentavos = <T>(items: readonly T[], f: (t: T) => Centavos): Centavos =>
   items.reduce((a, t) => a + f(t), 0);

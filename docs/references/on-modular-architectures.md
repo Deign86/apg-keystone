@@ -138,7 +138,7 @@ Keeping Knoernschild's five properties, read with what the field has learned sin
 | 2014 property | What it means now | How Keystone meets it |
 |---|---|---|
 | **Deployable** | **Independently removable and replaceable**, and independently *testable*. Deploying separately is a later option, not a requirement (§2.1). | Delete one line and the part is gone (`removal.test.tsx`). |
-| **Manageable** | It has a **health and a lifecycle** the host can see and contain (§2.3). | Registry validation, `requires`, per-connector health, per-screen error boundaries. |
+| **Manageable** | It has a **health and a lifecycle** the host can see and contain (§2.3). | Registry validation, per-connector health, per-screen error boundaries. |
 | **Natively reusable** | Reusable **through its contract**, not by copying code. | `@keystone/ui` has no Keystone rules in it; core domains are pure functions. |
 | **Composable** | The host knows it only by **what it declares** (§2.3). | `ModuleDef` and `Connector` contributions; Overview and Home name no module. |
 | **Stateless** | It **owns its data behind a contract** and shares none of it by reference (§2.1). | Mostly: see trade-off T1 below. |

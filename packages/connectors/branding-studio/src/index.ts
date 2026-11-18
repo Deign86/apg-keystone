@@ -1,5 +1,4 @@
 import { openDesktopApp, type AppLocator, type Connector, type DesktopApp } from '@keystone/core';
-import type { ConnectorPlugin } from '@keystone/kit';
 import logo from './logo.png';
 
 // Alpha Branding Studio (Deign86/Alpha_Branding): frames listing photos in the official gold template. Native on both
@@ -15,13 +14,11 @@ export const STUDIO_APP: AppLocator = {
   windowsExe: 'Alpha.Branding.exe',
 };
 
-export const STUDIO: DesktopApp = {
+const STUDIO: DesktopApp = {
   name: 'Alpha Branding Studio',
   locator: STUDIO_APP,
-  downloads: 'https://github.com/Deign86/Alpha_Branding/releases/latest',
   repo: 'Deign86/Alpha_Branding',
   installers: { windows: /^Alpha\.Branding\.Setup\.exe$/, macArm: /-macos\.zip$/, macIntel: /-macos\.zip$/ },
-  updatesItself: true,
 };
 
 export const brandingStudioConnector: Connector = {
@@ -30,5 +27,3 @@ export const brandingStudioConnector: Connector = {
   logo,
   open: (env) => openDesktopApp(env, STUDIO),
 };
-
-export const brandingStudioPlugin: ConnectorPlugin = { connector: brandingStudioConnector };

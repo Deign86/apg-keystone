@@ -37,7 +37,7 @@ export function addYears(iso: ISODate, n: number): ISODate {
   return `${pad(y + n, 4)}-${pad(m)}-${pad(Math.min(d, last))}`;
 }
 
-export const monthKey = (iso: ISODate) => iso.slice(0, 7);
+const monthKey = (iso: ISODate) => iso.slice(0, 7);
 
 /** 0 for Sunday to 6 for Saturday. */
 export const weekdayOf = (iso: ISODate) => utc(iso).getUTCDay();

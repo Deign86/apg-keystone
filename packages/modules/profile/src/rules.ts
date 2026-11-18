@@ -1,4 +1,4 @@
-import { KeystoneError, logged, type Change, type Ctx, type Member, type TerminalState } from '@keystone/core';
+import { CLOUD_LAYOUT, KeystoneError, logged, type Change, type Ctx, type Member, type TerminalState } from '@keystone/core';
 
 // Your own profile (docs/adr/0020): the name Keystone shows for whoever is signed in, in the rail, as who prepared a
 // voucher or asked for funds, and in the activity log. The name lives with the sign-in (Platform.accounts); these rules
@@ -6,8 +6,8 @@ import { KeystoneError, logged, type Change, type Ctx, type Member, type Termina
 
 export const TAG = 'PROF';
 
-/** The longest name Keystone keeps; firestore.rules hold the same line. */
-export const MAX_NAME = 80;
+/** The longest name Keystone keeps: the one firestore.rules allows. */
+export const MAX_NAME = CLOUD_LAYOUT.maxName;
 
 export const NO_SIGN_IN = 'This Keystone keeps its records on this computer, where nobody signs in, so there is no profile to change.';
 

@@ -12,11 +12,11 @@ export const MODULE = 'timekeeping';
 export const TAG = 'DTR';
 
 /** The office day: 8:00 AM to 5:00 PM, Monday to Friday, with 12:00 to 1:00 PM unpaid for lunch. In minutes. */
-export const SHIFT = { start: 8 * 60, end: 17 * 60, lunchStart: 12 * 60, lunchEnd: 13 * 60 } as const;
-export const DAY_MINUTES = SHIFT.end - SHIFT.start - (SHIFT.lunchEnd - SHIFT.lunchStart);
+const SHIFT = { start: 8 * 60, end: 17 * 60, lunchStart: 12 * 60, lunchEnd: 13 * 60 } as const;
+const DAY_MINUTES = SHIFT.end - SHIFT.start - (SHIFT.lunchEnd - SHIFT.lunchStart);
 
 /** Each employee may arrive up to 15 minutes late once a week (Monday to Sunday) and still be on time. */
-export const WEEKLY_GRACE = 15;
+const WEEKLY_GRACE = 15;
 
 export const HOLIDAY_KINDS = ['Regular', 'Special'] as const;
 
@@ -53,13 +53,13 @@ const saved = (s: TerminalState, data: TimekeepingData) => withModuleData(s, MOD
 
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-export const isTime = (t: string) => TIME.test(t);
+const isTime = (t: string) => TIME.test(t);
 
 /** "08:15" → 495 minutes after midnight. */
-export const minutesOf = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+const minutesOf = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 
 /** The local clock time of an instant, "08:15". */
-export const timeOf = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; // taste-skill-ignore: a clock time
+const timeOf = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; // taste-skill-ignore: a clock time
 
 /** "08:15" → "8:15 AM"; "" → "—". */
 export function clock12(t: string): string {

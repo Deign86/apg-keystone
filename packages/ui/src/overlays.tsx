@@ -29,7 +29,7 @@ const ConfirmContext = createContext<(r: ConfirmRequest) => void>(() => {});
 /** Ask before anything that cannot be undone: `confirm({ title, body, confirm, onConfirm })`. */
 export const useConfirm = () => useContext(ConfirmContext);
 
-export function ConfirmProvider({ children }: { children: ReactNode }) {
+function ConfirmProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
   const [open, setOpen] = useState(false);
   const ask = useCallback((r: ConfirmRequest) => { setRequest(r); setOpen(true); }, []);

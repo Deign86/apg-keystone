@@ -10,21 +10,18 @@ export const IDLE_MS = 10 * 60 * 1000;
 
 const KEY = 'keystone-last-used';
 
-/** Where the time it was last used is kept. */
-export type UseLog = StoredText;
-
 /** This computer's web storage, which survives a restart. */
-export const webStorageLog: UseLog = webStorage(KEY);
+export const webStorageLog: StoredText = webStorage(KEY);
 
 /** True when Keystone was last used here longer ago than it may sit unused. Never used here yet: false. */
-export function unusedTooLong(log: UseLog, now: number, idleMs = IDLE_MS): boolean {
+export function unusedTooLong(log: StoredText, now: number, idleMs = IDLE_MS): boolean {
   const last = Number(log.get());
 
   return Number.isFinite(last) && last > 0 && now - last >= idleMs;
 }
 
 /** The session the rail and the idle timer use. `signOut` ends the sign-in and reopens Keystone on the sign-in screen. */
-export function cloudSession(signOut: () => Promise<void>, log: UseLog = webStorageLog): AppSession {
+export function cloudSession(signOut: () => Promise<void>, log: StoredText = webStorageLog): AppSession {
   return {
     idleMs: IDLE_MS,
     used: (at) => log.set(String(at)),

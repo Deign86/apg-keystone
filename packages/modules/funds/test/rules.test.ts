@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
+import { CLOUD_LAYOUT, lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
   dataOf, decideRefusal, decideRequest, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
-  nextRequestNo, requestDraftOf, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
+  nextRequestNo, REQUEST_STATUSES, requestDocuments, requestDraftOf, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -51,6 +51,12 @@ function filed(): TerminalState {
 
   return s;
 }
+
+describe('requests in the cloud', () => {
+  it('uses the collection, fields and statuses firestore.rules is checked against', () => {
+    expect(new Map(Object.entries(CLOUD_LAYOUT.own)).get(requestDocuments.collection)).toEqual({ fields: requestDocuments.fields, statuses: [...REQUEST_STATUSES] });
+  });
+});
 
 describe('filing a request', () => {
   it('numbers RF-2026-0001 and on, continuing from the last number given out even when only some requests are read', () => {

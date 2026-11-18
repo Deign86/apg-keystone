@@ -14,7 +14,7 @@ async function mount(connector = okConnector('attendance')) {
 
   render(
     <FeedbackProvider>
-      <KeystoneProvider store={store} registry={buildRegistry([], [{ connector }])}>
+      <KeystoneProvider store={store} registry={buildRegistry([], [connector])}>
         <ConnectorShortcut connector={connector} />
       </KeystoneProvider>
     </FeedbackProvider>,
@@ -36,7 +36,9 @@ describe('a connected system’s shortcut', () => {
     fireEvent.click(button);
     await act(async () => {});
 
-    expect(seen).toEqual([platform]);
+    expect(seen).toHaveLength(1);
+    expect(seen[0].platform).toBe(platform.platform);
+    expect(Object.keys(seen[0]).sort()).toEqual(['arch', 'installFrom', 'latestRelease', 'launchApp', 'locateApp', 'openUrl', 'platform']);
   });
 
   it('says what the app did instead, and why it could not open', async () => {

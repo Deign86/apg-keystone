@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { SERVICES, topFinding, type Ctx } from '@keystone/core';
+import { CLOUD_LAYOUT, SERVICES, topFinding, type Ctx } from '@keystone/core';
 import { buildRegistry } from '@keystone/kit';
-import { plugins } from '../connectors';
+import { connectors } from '../connectors';
 import { builtInModules } from '../modules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -10,7 +10,7 @@ import { sampleState } from '@keystone/core/sample';
 
 const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
 const state = () => sampleState();
-const registry = buildRegistry(builtInModules, plugins);
+const registry = buildRegistry(builtInModules, connectors);
 const published = new Set<string>(Object.values(SERVICES));
 
 describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', (_id, m) => {
@@ -30,6 +30,14 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
     for (const w of m.waiting?.(s, ctx) ?? []) expect(w.no).toEqual(expect.any(String));
   });
 
+  it('keeps records of its own only in a collection firestore.rules names, with the fields the rules check', () => {
+    if (!m.documents) return;
+    const own = new Map(Object.entries(CLOUD_LAYOUT.own)).get(m.documents.collection);
+
+    expect(own, `${m.documents.collection} is not declared in core's cloud-layout.json`).toBeDefined();
+    expect(m.documents.fields).toEqual(own?.fields);
+  });
+
   it('leaves the state it is given alone', () => {
     const s = state();
     const before = JSON.stringify(s);
@@ -39,11 +47,7 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
     expect(JSON.stringify(s)).toBe(before);
   });
 
-  it('names only parts and services that exist', () => {
-    const ids = new Set(registry.modules.map((x) => x.id));
-
-    for (const r of m.requires ?? []) expect(ids).toContain(r);
-
+  it('names only services that exist', () => {
     for (const name of Object.keys(m.provides ?? {})) expect(published).toContain(name);
 
     for (const tag of Object.keys(m.logTags ?? {})) expect(tag).toMatch(/^[A-Z]{2,4}$/);

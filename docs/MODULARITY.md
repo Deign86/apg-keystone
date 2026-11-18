@@ -66,7 +66,6 @@ changes.
 | Field | Required | What it is for |
 |---|---|---|
 | `id`, `title`, `section`, `blurb`, `order`, `Screen` | yes | Identity, rail position (`order`) and the screen itself |
-| `requires` | | Module ids it cannot work without. If one is missing, the module is left out with its reason. |
 | `onHome`, `stat` | | A tile on Home with one live figure. `stat` is given the installed modules too, so a collector such as Overview can count what they contribute (docs/adr/0021). |
 | `figure` | | A cell in Overview's figure strip. Mark the one that answers the screen's question `lead: true`. |
 | `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20, IDs 10. |
@@ -120,10 +119,8 @@ This is the OSGi service-registry pattern, and the "published interface" of Fowl
 interfaces. The rules:
 - the contract (name and types) lives in core, owned by neither side;
 - one provider per service: the registry refuses a second, with a reason;
-- a module that was left out (a missing `requires`) offers nothing;
+- a module the registry left out offers nothing;
 - the consumer gets `undefined` when the provider is not installed, and must still work and say what it cannot do.
-
-Prefer a service to `requires`: it keeps the consumer installable without the provider.
 
 ### `Connector` (`packages/core/src/kernel/connectors.ts`)
 
@@ -137,14 +134,12 @@ cannot update itself (docs/adr/0029).
 | `open(env)` | yes | Opens the app. `env.system` finds and starts installed apps and opens URLs. It may return a sentence to show |
 | `tag` | | Short label for directory records linked to this system |
 
-Desktop apps use `openDesktopApp(system, { name, locator, downloads })` from core: it starts the installed app or
-opens its download page, and in the browser preview says the desktop app is needed.
+Desktop apps use `openDesktopApp(env, { name, locator, repo, installers })` from core: it starts the installed app, or
+fetches its installer, or opens its download page, and in the browser preview says the desktop app is needed.
 
 `buildRegistry` validates every connector; a broken one (no name, no logo) is refused, not loaded. The kit's
 `ConnectorShortcut` runs `open` under a 15-second deadline and shows any failure as a message, so a connector that
 hangs, throws or isn't installed affects nothing else.
-
-A connector may bring its own screens (`ConnectorPlugin.modules`). Those screens follow the module rules.
 
 ### Rules (`packages/modules/<id>/src/rules.ts`)
 

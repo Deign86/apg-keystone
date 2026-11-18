@@ -1,0 +1,28 @@
+{
+  "attendance": {
+    "repo": "Deign86/alpha-premier-attendance",
+    "tag": "v0.2.51",
+    "installers": [
+      "Alpha.Premier.Attendance_0.2.51_x64-setup.exe",
+      "Alpha.Premier.Attendance_0.2.51_aarch64.dmg",
+      "Alpha.Premier.Attendance_0.2.51_x64.dmg"
+    ]
+  },
+  "id-maker-app": {
+    "repo": "Deign86/apg-id-creator",
+    "tag": "v2.0.4",
+    "installers": [
+      "AlphaPremierIdMaker-Setup-v2.0.4.exe",
+      "AlphaPremierIdMaker-Mac-AppleSilicon-v2.0.4.dmg",
+      "AlphaPremierIdMaker-Mac-Intel-v2.0.4.dmg"
+    ]
+  },
+  "branding-studio": {
+    "repo": "Deign86/Alpha_Branding",
+    "tag": "v1.0.0",
+    "installers": [
+      "Alpha.Branding.Setup.exe",
+      "Alpha.Branding-v1.0.0-macos.zip"
+    ]
+  }
+}

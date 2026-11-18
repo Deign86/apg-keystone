@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { withModuleData, type TerminalState } from '@keystone/core';
 import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
-import { plugins } from '../connectors';
+import { connectors } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 import { sampleState } from '@keystone/core/sample';
@@ -40,7 +40,7 @@ async function openPayroll(modules: ModuleDef[]) {
   const store = await KeystoneStore.open(platform);
 
   window.location.hash = '#payroll';
-  render(<App store={store} registry={buildRegistry(modules, plugins)} />);
+  render(<App store={store} registry={buildRegistry(modules, connectors)} />);
   await act(async () => {});
 
   return within(screen.getByRole('table', { name: 'Cut-off' })).getByRole('row', { name: /Juan Miguel P\. Reyes/ });

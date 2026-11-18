@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import {
-  COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
+  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
   type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
@@ -22,11 +22,11 @@ export interface ModuleApp {
 
 /**
  * A screen in Keystone, and everything it contributes to the rest of the app.
- * Overview, Home, Activity and Settings are built from these contributions, so taking a
+ * Overview, Home and Activity are built from these contributions, so taking a
  * module out removes its contributions with it and nothing else changes.
  */
 export interface ModuleDef {
-  /** Stable id: the route (#vouchers), the key in `requires`. Lowercase letters, digits, dashes. */
+  /** Stable id: the route (#vouchers). Lowercase letters, digits, dashes. */
   id: string;
   title: string;
   /** Eyebrow over the screen title. */
@@ -39,8 +39,6 @@ export interface ModuleDef {
   /** Not open to everyone yet: marked "Soon" in the rail, its screen says so (`comingSoon`, docs/adr/0017). */
   soon?: boolean;
 
-  /** Ids of modules this one cannot work without. If one is missing, this module is left out, with the reason shown in Connections. */
-  requires?: string[];
   /** Show as a tile on Home. */
   onHome?: boolean;
   /**
@@ -71,46 +69,38 @@ export interface ModuleDef {
   documents?: RecordDocuments;
 }
 
-/** A connected system plus any screens it brings with it. */
-export interface ConnectorPlugin {
-  connector: Connector;
-  modules?: ModuleDef[];
-}
-
 export interface Registry {
   modules: ModuleDef[];
   connectors: Connector[];
-  /** Definitions that were left out, with the reason, shown in Connections. */
+  /** Definitions that were left out, with the reason, shown on the Data screen. */
   refused: { id: string; reason: string }[];
 }
 
 const ID = /^[a-z][a-z0-9-]*$/;
 
 /**
- * Builds the registry once at start. A broken or incomplete part (duplicate id, a
- * missing requirement, no health check) is left out with its reason instead of taking
+ * Builds the registry once at start. A broken part (a duplicate id, a connector with no
+ * logo, a second provider of a service) is left out with its reason instead of taking
  * the app down.
  */
-export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]): Registry {
+export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Registry {
   const refused: Registry['refused'] = [];
   const connectors: Connector[] = [];
-  const contributed: ModuleDef[] = [];
 
-  for (const p of plugins) {
-    const problem = validateConnector(p.connector, connectors.map((c) => c.id));
+  for (const c of installed) {
+    const problem = validateConnector(c, connectors.map((x) => x.id));
 
     if (problem) {
-      refused.push({ id: p.connector.id, reason: problem });
+      refused.push({ id: c.id, reason: problem });
       continue;
     }
 
-    connectors.push(p.connector);
-    contributed.push(...(p.modules ?? []));
+    connectors.push(c);
   }
 
   const seen = new Set<string>();
 
-  let modules = [...builtIn, ...contributed].sort((a, b) => a.order - b.order).filter((m) => {
+  let modules = [...builtIn].sort((a, b) => a.order - b.order).filter((m) => {
     if (!ID.test(m.id)) {
       refused.push({ id: m.id, reason: `Module id "${m.id}" must be lowercase letters, digits and dashes.` });
 
@@ -127,22 +117,6 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
 
     return true;
   });
-
-  // Leave out modules whose requirements are missing, repeating until nothing changes
-  // (a module that needed one just left out goes too).
-  for (let changed = true; changed;) {
-    changed = false;
-    const present = new Set(modules.map((m) => m.id));
-    modules = modules.filter((m) => {
-      const missing = (m.requires ?? []).filter((r) => !present.has(r));
-
-      if (!missing.length) return true;
-      refused.push({ id: m.id, reason: `${m.title} needs ${missing.join(', ')}, which ${missing.length === 1 ? 'is' : 'are'} not installed.` });
-      changed = true;
-
-      return false;
-    });
-  }
 
   // One provider per service: a second module offering the same one is left out, so a
   // consumer never gets whichever happened to load first.
@@ -161,8 +135,9 @@ export function buildRegistry(builtIn: ModuleDef[], plugins: ConnectorPlugin[]):
     return true;
   });
 
-  // A collection of its own must be one firestore.rules can name, and nobody else's.
-  const collections = new Map<string, string>(COLLECTIONS.map((c) => [c, 'Keystone']));
+  // A collection of its own must be one firestore.rules can name, and nobody else's: not one of Keystone's lists, and
+  // not one the rules keep for members, devices or the ID register.
+  const collections = new Map<string, string>([...COLLECTIONS, ...CLOUD_LAYOUT.reserved].map((c) => [c, 'Keystone']));
   modules = modules.filter((m) => {
     const c = m.documents?.collection;
 

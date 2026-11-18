@@ -12,7 +12,7 @@ export const BLOOD_TYPES = ['O+', 'O−', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB
 export const idsNewestFirst = (s: TerminalState) => newestFirst(s.ids);
 export const nextIDNo = (s: TerminalState, ctx: Ctx) => nextNumber(s.ids.map((i) => i.no), `APG-${thisYear(ctx)}-`);
 export const queuedForPrinting = (s: TerminalState) => s.ids.filter((i) => i.status === 'For printing');
-export const issuedThisMonth = (s: TerminalState, ctx: Ctx) => s.ids.filter((i) => i.issued.startsWith(today(ctx).slice(0, 7)));
+const issuedThisMonth = (s: TerminalState, ctx: Ctx) => s.ids.filter((i) => i.issued.startsWith(today(ctx).slice(0, 7)));
 
 export interface IDDraft extends Editing {
   no: string; emp: string; name: string; pos: string; dept: string; issued: string; valid: string;

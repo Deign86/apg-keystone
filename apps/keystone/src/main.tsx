@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { App, buildRegistry, documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
-import { plugins } from './connectors';
+import { connectors } from './connectors';
 import { SignIn, StartFailed } from './Gate';
 import { shippedModules } from './modules';
 import { detectPlatform } from './platform';
@@ -13,7 +13,7 @@ import './styles.css';
 async function start() {
   const root = createRoot(document.getElementById('root')!);
   // A screen not released yet says "Coming soon" outside a beta build (docs/adr/0017).
-  const registry = buildRegistry(shippedModules(isBeta(import.meta.env)), plugins);
+  const registry = buildRegistry(shippedModules(isBeta(import.meta.env)), connectors);
 
   for (const r of registry.refused) console.warn(`Keystone left out ${r.id}: ${r.reason}`);
   let platform: Platform = await detectPlatform();

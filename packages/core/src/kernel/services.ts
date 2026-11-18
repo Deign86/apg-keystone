@@ -7,7 +7,7 @@ import type { Change, Ctx } from './state';
 // provider offers it under a name (ModuleDef.provides) and the consumer asks for it by
 // that name (ModuleApp.service). Neither imports the other: both see only the contract
 // here, the way an OSGi API bundle sits between provider and consumer. If the provider
-// is not installed, the consumer gets `undefined` and says so, or declares `requires`.
+// is not installed, the consumer gets `undefined` and says so.
 
 export const SERVICES = {
   /** Offered by the billing module, for settling statements from outside it. */

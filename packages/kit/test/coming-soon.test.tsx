@@ -21,7 +21,6 @@ const ledger: ModuleDef = {
   blurb: 'Every peso in and out.',
   order: 1,
   Screen: () => <h1>The real ledger</h1>,
-  requires: ['home'],
   onHome: true,
   stat: () => ['Entries', '3'],
   figure: () => ({ label: 'Ledger', value: '3', caption: '' }),
@@ -47,7 +46,7 @@ describe('a screen coming soon', () => {
 
     expect(soon).toMatchObject({ id: 'ledger', title: 'Ledger', section: 'Books', blurb: 'Every peso in and out.', order: 1, soon: true });
 
-    for (const kept of ['requires', 'onOpen', 'provides', 'documents', 'onHome', 'stat', 'figure', 'waiting', 'openWaiting', 'create', 'logTags'] as const) {
+    for (const kept of ['onOpen', 'provides', 'documents', 'onHome', 'stat', 'figure', 'waiting', 'openWaiting', 'create', 'logTags'] as const) {
       expect(soon[kept]).toBe(ledger[kept]);
     }
 

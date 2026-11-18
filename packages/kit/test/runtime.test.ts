@@ -23,10 +23,12 @@ describe('store', () => {
   });
 
   it('keeps a damaged file untouched until the person changes something', async () => {
+    vi.useFakeTimers();
     const { platform, files } = memoryPlatform('{ not json');
     const store = await KeystoneStore.open(platform);
     expect(store.state).toEqual(emptyState());
-    await new Promise((r) => setTimeout(r, 300));
+    // Long after any save would have run.
+    await vi.advanceTimersByTimeAsync(60_000);
     expect(files.state).toBe('{ not json');
     expect(files.writes).toBe(0);
   });
