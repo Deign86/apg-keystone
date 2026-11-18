@@ -1,15 +1,37 @@
 import {
   addDays, addYears, companyOf, count, KeystoneError, logged, newestFirst, nextNumber, recordOf, thisYear, today,
-  toneOf, type Change, type Ctx, type Editing, type Figure, type Finding, type IDRecord, type IDStatus,
-  type TerminalState, type WaitingItem
+  type Change, type Ctx, type Editing, type Figure, type Finding, type IDRecord,
+  type Reference, type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
 // Employee ID cards. Reads the directory to fill a card from an employee record.
 
 /** The blood types a card can print. */
+/** This module's id, written once: its route, its ModuleDef.id and its draft key. */
+export const ID = 'id-maker';
+
+/** The tag its activity-log lines carry. */
+export const TAG = 'ID';
+
+export const ID_STATUSES = ['For printing', 'Active', 'Expired', 'Revoked'] as const;
+
+export type IDStatus = (typeof ID_STATUSES)[number];
+
+const TONES: Record<IDStatus, Tone> = { 'For printing': 'warn', Active: 'good', Expired: 'bad', Revoked: 'bad' };
+
+/** How an ID's status reads at a glance. One saved with a status this build does not know reads as neutral. */
+export function idTone(status: string): Tone {
+  const known = ID_STATUSES.find((s) => s === status);
+
+  return known ? TONES[known] : 'neutral';
+}
+
 export const BLOOD_TYPES = ['O+', 'O−', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−'];
 
 export const idsNewestFirst = (s: TerminalState) => newestFirst(s.ids);
+
+/** An ID issued from the directory names its employee by code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => s.ids.some((i) => i.emp === code) };
 export const nextIDNo = (s: TerminalState, ctx: Ctx) => nextNumber(s.ids.map((i) => i.no), `APG-${thisYear(ctx)}-`);
 export const queuedForPrinting = (s: TerminalState) => s.ids.filter((i) => i.status === 'For printing');
 const issuedThisMonth = (s: TerminalState, ctx: Ctx) => s.ids.filter((i) => i.issued.startsWith(today(ctx).slice(0, 7)));
@@ -75,7 +97,7 @@ export function issueID(s: TerminalState, d: IDDraft, ctx: Ctx, asNew = false): 
     const updated = { ...i, no: original.no };
 
     return {
-      state: logged({ ...s, ids: s.ids.map((x) => (x.no === original.no ? updated : x)) }, 'ID', `${updated.no} for ${updated.name} edited before printing.`, ctx),
+      state: logged({ ...s, ids: s.ids.map((x) => (x.no === original.no ? updated : x)) }, TAG, `${updated.no} for ${updated.name} edited before printing.`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
@@ -83,7 +105,7 @@ export function issueID(s: TerminalState, d: IDDraft, ctx: Ctx, asNew = false): 
   const saved = { ...i, no: nextIDNo(s, ctx) };
 
   return {
-    state: logged({ ...s, ids: [...s.ids, saved] }, 'ID', `${saved.no} issued to ${saved.name}; queued for printing.`, ctx),
+    state: logged({ ...s, ids: [...s.ids, saved] }, TAG, `${saved.no} issued to ${saved.name}; queued for printing.`, ctx),
     record: saved, message: `${saved.no} issued and queued for printing.`,
   };
 }
@@ -98,7 +120,7 @@ export function setIDStatus(s: TerminalState, no: string, status: IDStatus, ctx:
   const text = status === 'Active' ? `${no} printed and handed to ${i.name}.` : `${no} for ${i.name} marked ${status.toLowerCase()}.`;
 
   return {
-    state: logged({ ...s, ids: s.ids.map((x) => (x.no === no ? updated : x)) }, 'ID', text, ctx),
+    state: logged({ ...s, ids: s.ids.map((x) => (x.no === no ? updated : x)) }, TAG, text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }
@@ -125,5 +147,5 @@ export function idFinding(s: TerminalState): Finding | null {
 }
 
 export function idWaiting(s: TerminalState): WaitingItem[] {
-  return queuedForPrinting(s).map((i) => ({ no: i.no, who: `${i.name} · ID card`, amount: null, status: i.status, tone: toneOf(i.status), rank: 20 }));
+  return queuedForPrinting(s).map((i) => ({ no: i.no, who: `${i.name} · ID card`, amount: null, status: i.status, tone: idTone(i.status), rank: 20 }));
 }

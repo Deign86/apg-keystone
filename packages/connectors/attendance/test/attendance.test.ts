@@ -74,3 +74,21 @@ describe('the attendance app shortcut', () => {
     expect(attendanceConnector.logo).toMatch(/logo\.png$/);
   });
 });
+
+// docs/adr/0030: the attendance tracker reads `attendanceAdmin` from a member's own document, and firestore.rules and
+// the kiosk both name that field. These are the words User Accounts shows for it, pinned where they are written.
+describe('what the attendance tracker lets the CEO give a staff member', () => {
+  const grant = attendanceConnector.memberGrant;
+
+  it('is kept under the field the kiosk reads, which is never renamed here alone', () => {
+    expect(grant?.field).toBe('attendanceAdmin');
+  });
+
+  it('is worded as User Accounts has always shown it', () => {
+    expect(grant).toMatchObject({ label: 'Attendance admin', as: 'an attendance admin', opens: 'the attendance tracker\'s admin screens' });
+    expect(grant?.asks.give('Ana Cruz (ana.cruz@alphapremiergroup.com)'))
+      .toBe('Ana Cruz (ana.cruz@alphapremiergroup.com) will open the attendance tracker\'s admin screens with their own email and password: interns, attendance, payroll and its settings.');
+    expect(grant?.asks.take('Ana Cruz'))
+      .toBe('Ana Cruz will no longer open the attendance tracker\'s admin screens with this account. An admin card they hold still works there.');
+  });
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { usedBy, type Ctx } from '@keystone/core';
-import { idFigure, idFinding, issueID, markExpired, newID, nextIDNo, withEmployee } from '../src/rules';
+import { ID_STATUSES, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, refersTo, withEmployee } from '../src/rules';
 import { verificationCells } from '../src/verification';
 import { sampleState } from '@keystone/core/sample';
 
@@ -9,6 +9,11 @@ const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
 const state = () => sampleState();
 
 describe('ID maker', () => {
+  it('keeps the statuses and tones an ID has always had, and reads one it does not know as neutral', () => {
+    expect(ID_STATUSES.map((s) => [s, idTone(s)])).toEqual([['For printing', 'warn'], ['Active', 'good'], ['Expired', 'bad'], ['Revoked', 'bad']]);
+    expect(idTone('Lost')).toBe('neutral');
+  });
+
   it('issues an ID from the directory', () => {
     const s = state();
     expect(nextIDNo(s, ctx)).toBe('APG-2026-0031');
@@ -17,7 +22,8 @@ describe('ID maker', () => {
     expect(d.pos).toBe('Admin Assistant');
     const r = issueID(s, d, ctx);
     expect(r.message).toBe('APG-2026-0031 issued and queued for printing.');
-    expect(usedBy(r.state, 'E-004')).toEqual(['ID']);
+    expect(usedBy(s, 'E-004', [refersTo])).toEqual([]);
+    expect(usedBy(r.state, 'E-004', [refersTo])).toEqual(['ID']);
   });
 
   it('expires cards on open', () => {

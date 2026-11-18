@@ -1,11 +1,15 @@
 import { emptyState, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 
-export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false; error: string };
+/** Shown in the rail when the saved state was read but is not a Keystone state. */
+export const DAMAGED = 'Keystone could not open its saved records: they are damaged. It started with none, and keeps the damaged records as they are until you change something.';
+
+/** What a rule did: its record, its sentence and the state after it; or the sentence that refused it. */
+export type Outcome<T> = { ok: true; record: T; message: string; state: TerminalState } | { ok: false; error: string };
 
 /**
  * Holds the one saved state, applies changes through the core rules and writes them to
- * disk shortly after. Screens read it with useKeystone(); nothing else mutates it.
+ * disk shortly after. Screens read it and run rules on it through useKeystone(); they are never handed the store.
  */
 export class KeystoneStore {
   state: TerminalState;
@@ -16,6 +20,8 @@ export class KeystoneStore {
   /** Form drafts by key, so a half-filled form survives switching screens. */
   private drafts = new Map<string, unknown>();
   saveError: string | null = null;
+  /** Why Keystone opened with no records although something was saved: the saved state is damaged. Null otherwise. */
+  loadError: string | null = null;
 
   constructor(readonly platform: Platform, initial: TerminalState) {
     this.state = initial;
@@ -25,22 +31,28 @@ export class KeystoneStore {
   /**
    * Loads the saved state, then runs each installed module's housekeeping (overdue, expired). Nothing saved yet: no
    * records, never made-up ones (docs/adr/0018). When the platform cannot read it (the cloud is unreachable and nothing
-   * is cached), this throws: starting empty instead would show no records as if the company had none, and the first save
-   * would be written beside the real records without them.
+   * is cached, or the file is there and will not open), this throws: starting empty instead would show no records as if
+   * the company had none, and the first save would be written over or beside the real records without them. A saved state
+   * that was read but is damaged opens with no records and says so (`loadError`).
    */
   static async open(platform: Platform, housekeeping: ((s: TerminalState, ctx: Ctx) => TerminalState)[] = []): Promise<KeystoneStore> {
     let state = emptyState();
+    let damaged = false;
     const saved = await platform.loadState();
 
     if (saved) {
       try {
         state = parseState(saved);
-      } catch {
+      } catch (e) {
         // A damaged file: start with no records, but never overwrite the old file until the person changes something.
+        console.error('The saved state is damaged; Keystone opened with no records.', e);
+        damaged = true;
       }
     }
 
     const store = new KeystoneStore(platform, state);
+
+    if (damaged) store.loadError = DAMAGED;
     let tidied = state;
 
     for (const step of housekeeping) {
@@ -54,14 +66,6 @@ export class KeystoneStore {
     if (tidied !== state) store.commit(tidied);
 
     return store;
-  }
-
-  /**
-   * The member signed in, under the name they just changed to (docs/adr/0020). The rail and the rules see it from the
-   * next change on, so commit one after: the log line saying so.
-   */
-  renamed(name: string) {
-    if (this.ctx.who) this.ctx = { ...this.ctx, who: { ...this.ctx.who, name } };
   }
 
   subscribe = (fn: () => void) => {
@@ -89,7 +93,15 @@ export class KeystoneStore {
     this.saveTimer = undefined;
 
     return this.platform.saveState(JSON.stringify(this.state, null, 2)).then(
-      () => { this.saveError = null; },
+      // The damaged file, if there was one, is the new records from here on.
+      () => {
+        const said = this.saveError ?? this.loadError;
+
+        this.saveError = null;
+        this.loadError = null;
+
+        if (said) this.listeners.forEach((fn) => fn());
+      },
       (e) => { this.saveError = `Could not save: ${String(e)}`; this.listeners.forEach((fn) => fn()); },
     );
   }
@@ -101,7 +113,7 @@ export class KeystoneStore {
 
       if (r.state !== this.state) this.commit(r.state);
 
-      return { ok: true, record: r.record, message: r.message };
+      return { ok: true, record: r.record, message: r.message, state: r.state };
     } catch (e) {
       if (e instanceof KeystoneError) return { ok: false, error: e.message };
       console.error(e);
@@ -122,6 +134,7 @@ export class KeystoneStore {
     this.drafts.set(key, value);
   }
 
+  /** Everything replaced at once (a restored backup): the half-filled forms belonged to the old records, so they go. */
   replaceAll(next: TerminalState) {
     this.drafts.clear();
     this.commit(next);

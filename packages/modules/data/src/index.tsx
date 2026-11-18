@@ -3,17 +3,17 @@ import { count, localDate, parseBackup } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 
 function DataPanel() {
-  const { state, store, platform, notify } = useKeystone();
+  const { state, files, backup, kind, notify } = useKeystone();
   const confirm = useConfirm();
 
-  const backup = async () => {
-    const name = await platform.saveFile(`keystone-backup-${localDate(new Date())}.json`, new TextEncoder().encode(JSON.stringify(state, null, 2)), [{ name: 'Keystone backup', extensions: ['json'] }]);
+  const backUp = async () => {
+    const name = await files.save(`keystone-backup-${localDate(new Date())}.json`, new TextEncoder().encode(JSON.stringify(state, null, 2)), [{ name: 'Keystone backup', extensions: ['json'] }]);
 
     if (name) notify(`Saved ${name}.`);
   };
 
   const restore = async () => {
-    const file = await platform.openFile([{ name: 'Keystone backup', extensions: ['json'] }]);
+    const file = await files.open([{ name: 'Keystone backup', extensions: ['json'] }]);
 
     if (!file) return;
 
@@ -24,7 +24,7 @@ function DataPanel() {
         body: `It holds ${count(next.cv.length, 'voucher')}, ${count(next.bs.length, 'statement')}, ${count(next.ids.length, 'ID')} and ${count(next.dir.length, 'directory record')}. Everything Keystone holds now is replaced.`,
         confirm: 'Replace with backup',
         danger: true,
-        onConfirm: () => { store.replaceAll(next); notify(`Restored ${file.name}.`); },
+        onConfirm: () => { backup.restore(next); notify(`Restored ${file.name}.`); },
       });
     } catch (e) {
       notify(e instanceof Error ? e.message : 'That file is not a Keystone backup.', 'error');
@@ -35,11 +35,11 @@ function DataPanel() {
     <Panel aria-labelledby="data" className="flex flex-col gap-3">
       <SectionLabel id="data">Data</SectionLabel>
       <p className="m-0 text-[13px] text-ink-2">
-        {platform.kind === 'desktop' ? 'Saved on this computer in Keystone’s data folder, with card photos beside it.' : 'This browser preview keeps data in this browser only.'}
+        {kind === 'desktop' ? 'Saved on this computer in Keystone’s data folder, with card photos beside it.' : 'This browser preview keeps data in this browser only.'}
         {' '}A backup is one JSON file in the same format as the prototype, so it opens in any Keystone.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button onClick={backup}>Back up data…</Button>
+        <Button onClick={backUp}>Back up data…</Button>
         <Button onClick={restore}>Restore from backup…</Button>
       </div>
     </Panel>
@@ -75,7 +75,6 @@ function Data() {
 export const dataModule: ModuleDef = {
   id: 'data',
   title: 'Data',
-  section: 'Settings',
   blurb: 'Back up or restore the data, and see any part that was left out.',
   order: 90,
   Screen: Data,

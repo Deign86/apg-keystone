@@ -59,7 +59,7 @@ COMPOSITION (the only place that knows the full list)
    Only `apps/keystone/src/modules.ts` and `src/connectors.ts` import module and connector packages.
 3. **Parts talk through contributions, not references.**
    - A module that wants to appear on Overview, Home or in the Activity filters declares it on its `ModuleDef` (`figure`,
-     `finding`, `waiting`, `openWaiting`, `create`, `stat`, `logTags`, `onOpen`).
+     `finding`, `waiting`, `openWaiting`, `create`, `stat`, `selects`, `refersTo`, `logTags`, `onOpen`).
    - A screen that collects these (Overview, Home, Activity) reads them from the registry. It never names another
      module.
 4. **When a part needs another part's behaviour, it asks for a service.**
@@ -138,14 +138,15 @@ regression suites that guard the architecture live in the composition root:
 |---|---|---|
 | Rules | `packages/modules/<id>/test/`, `packages/core/test/` | Numbering, tax math, amount in words, statuses, findings, the prototype's results kept exactly |
 | Connectors | `packages/connectors/<id>/test/` | Each shortcut against a fake computer (never a real one): which app it looks for, that it starts it, the download page when it is missing, the website's admin portal |
-| Kit | `packages/kit/test/` | Registry refusals, one provider per service, store saves and damaged files, a connector shortcut that says what happened or gives up on a hang |
+| Kit | `packages/kit/test/` | Registry refusals, one provider per service, what a screen is given, store saves and damaged files and what the rail says of them, a connector shortcut that says what happened or gives up on a hang |
+| Desktop platform | `apps/keystone/src/test/desktop.test.ts` | The desktop platform against a stand-in for the native side: no saved state yet opens empty, one that cannot be read stops with a sentence |
 | Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
 | Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
 | Payroll | `apps/keystone/src/test/payroll.test.tsx` | One cut-off with every kind of day, from saved days through Timekeeping, its service and Payroll's engine to the screen, sheet and payslip, to the centavo; and without Timekeeping |
 | Services | `apps/keystone/src/test/services.test.tsx` | Billing provides the statement-payments service, timekeeping the employee-attendance service, banks the bank-accounts service and vouchers the voucher-drafts service as shipped, and each one's absence refuses nothing |
 | End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or shortcut and what it shows after, including what it contributes to Home, Overview and the Activity Log |
 | Released | `apps/keystone/src/test/released.test.tsx`, and `e2e/stable/` (`npm run test:e2e:stable`, part of `npm run test:e2e`) in Chromium against a stable dev server | A release opens only the screens in `RELEASED` and the connected systems; the others are marked in the rail and on Home and show behind "Coming soon", and keep the same record layout and services as a beta |
-| Cloud end to end | `e2e/cloud/` (`npm run test:e2e:cloud`, part of `npm run test:e2e`), the cloud build against the Firebase Auth and Firestore emulators | Signing in and its refusals, the first computer moving its records in, each change written to Firestore under `firestore.rules`, even one made just before a reload, and another computer opening the same records; requests for funds that only the CEO decides and only their requester reads; accounts that only the CEO makes and removes; changing your password, and resetting a forgotten one by its emailed link; never a real project or account |
+| Cloud end to end | `e2e/cloud/` (`npm run test:e2e:cloud`, part of `npm run test:e2e`), the cloud build against the Firebase Auth and Firestore emulators | Signing in and its refusals, the CEO's first sign-in starting the records empty with nothing copied in from the computer, each change written to Firestore under `firestore.rules`, even one made just before a reload, and another computer opening the same records; requests for funds that only the CEO decides and only their requester reads; accounts that only the CEO makes and removes; changing your password, and resetting a forgotten one by its emailed link; never a real project or account |
 
 A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's
 `e2e/` file. A bug fix gets the test that would have caught it.
@@ -251,6 +252,6 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
 - `docs/adr/`: why things are the way they are, one decision per file.
 - `REVIEW.md`: what a review checks, by what the diff touches.
 - `docs/MODULARITY.md`: the contracts in full, and why the kernel and parts are split this way.
-- `docs/ARCHITECTURE.md`: how a change flows, where data lives, the three connectors.
+- `docs/ARCHITECTURE.md`: how a change flows, where data lives, the four connectors.
 - `docs/DESIGN.md`: the look and where it comes from.
 - `README.md` in each package: what that part owns and what removing it does.

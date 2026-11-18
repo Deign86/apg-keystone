@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLOUD_LAYOUT, SERVICES, topFinding, type Ctx } from '@keystone/core';
+import { CLOUD_LAYOUT, removeDirectoryRecord, SERVICES, topFinding, usedBy, type Ctx, type TerminalState } from '@keystone/core';
 import { buildRegistry } from '@keystone/kit';
 import { connectors } from '../connectors';
 import { builtInModules } from '../modules';
@@ -43,6 +43,8 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
     const before = JSON.stringify(s);
     m.stat?.(s, ctx, registry.modules); m.figure?.(s, ctx); m.finding?.(s, ctx); m.waiting?.(s, ctx);
 
+    for (const d of s.dir) m.refersTo?.record(s, d.code);
+
     if (m.onOpen) m.onOpen(s, ctx);
     expect(JSON.stringify(s)).toBe(before);
   });
@@ -52,6 +54,10 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
 
     for (const tag of Object.keys(m.logTags ?? {})) expect(tag).toMatch(/^[A-Z]{2,4}$/);
   });
+
+  it('marks the directory records it refers to with a log tag of its own', () => {
+    if (m.refersTo) expect(Object.keys(m.logTags ?? {})).toContain(m.refersTo.tag);
+  });
 });
 
 describe('across the installed modules', () => {
@@ -60,8 +66,71 @@ describe('across the installed modules', () => {
     expect(tags).toEqual([...new Set(tags)]);
   });
 
-  it('every published service has a provider', () => {
-    for (const name of published) expect(registry.modules.some((m) => m.provides && name in m.provides)).toBe(true);
+  // Written out as a file saved by an earlier build holds it, never through the modules' own rules: the keys under
+  // `ext` (funds, payroll, timekeeping) are what every Keystone so far wrote, and a module renaming its id must not
+  // lose sight of them.
+  const saved = (): TerminalState => ({
+    ...state(),
+    ext: {
+      ...state().ext,
+      funds: { requests: [{ no: 'RF-2026-0001', date: '2026-10-30', purpose: 'Venue deposit', lines: [], amount: 100, pay: 'check', payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', status: 'For Approval' }], last: 'RF-2026-0001' },
+      payroll: {
+        setups: [{ emp: 'E-002', empNo: 'APGCO-0002', daily: 800 }],
+        runs: [{ from: '2026-10-01', to: '2026-10-15', closed: '2026-10-16 09:00', rows: [{ setup: { emp: 'E-003', empNo: 'APGCO-0003', daily: 800 }, name: 'As paid', position: '', dept: '', tin: '' }] }],
+      },
+      timekeeping: { days: [{ emp: 'E-004', date: '2026-10-29', in: '08:00', out: '17:00', ot: 0, note: '' }], holidays: [] },
+    },
+  });
+
+  const referencesOf = (without: string[] = []) => registry.modules.filter((m) => !without.includes(m.id)).flatMap((m) => m.refersTo ?? []);
+
+  it('a directory record that a voucher, statement or ID names is kept, as it always was', () => {
+    const s = state();
+    const used = Object.fromEntries(s.dir.map((d) => [d.code, usedBy(s, d.code, referencesOf())]));
+
+    // What core's own list answered before the modules said it themselves.
+    const before = Object.fromEntries(s.dir.map((d) => [d.code, [
+      ...(s.cv.some((v) => v.payee === d.code) ? ['CV'] : []), ...(s.bs.some((b) => b.client === d.code) ? ['BS'] : []), ...(s.ids.some((i) => i.emp === d.code) ? ['ID'] : []),
+    ]]));
+
+    expect(used).toEqual(before);
+    expect(used['V-001']).toEqual(['CV']);
+    expect(used['V-002']).toEqual([]);
+    expect(() => removeDirectoryRecord(s, 'V-001', ctx, referencesOf())).toThrow('V-001 is used by CV records and cannot be removed.');
+  });
+
+  it('a directory record that a request for funds, a pay setup, a closed cut-off or a recorded day names is now kept too', () => {
+    const s = saved();
+    const own = (code: string) => usedBy(s, code, referencesOf()).filter((t) => ['RF', 'PAY', 'DTR'].includes(t));
+
+    expect(own('V-002')).toEqual(['RF']);
+    expect(own('E-002')).toEqual(['PAY']);
+    expect(own('E-003')).toEqual(['PAY']);
+    expect(own('E-004')).toEqual(['DTR']);
+    expect(own('V-003')).toEqual([]);
+    expect(() => removeDirectoryRecord(s, 'V-002', ctx, referencesOf())).toThrow('V-002 is used by RF records and cannot be removed.');
+    expect(() => removeDirectoryRecord(s, 'E-004', ctx, referencesOf())).toThrow(/used by .*DTR records and cannot be removed\./);
+
+    // Only an installed part can say so: without Requests for Funds, nothing names V-002.
+    expect(removeDirectoryRecord(s, 'V-002', ctx, referencesOf(['funds'])).message).toBe('V-002 removed.');
+  });
+
+  it('the Directory is told where a new record can be picked, in the words it has always used', () => {
+    const where = (type: 'Vendor' | 'Client' | 'Employee') => registry.modules.flatMap((m) => m.selects?.[type] ?? []);
+
+    // "V-005 added. It is now selectable in Requests for Funds." and its two siblings (e2e/modules/directory.e2e.ts).
+    expect(where('Vendor')).toEqual(['Requests for Funds']);
+    expect(where('Client')).toEqual(['Billing Statements']);
+    expect(where('Employee')).toEqual(['the ID Maker']);
+  });
+
+  it('every published service has a provider: a module, or for the accounts the platform of a build that signs in', () => {
+    const platforms: string[] = [SERVICES.accounts];
+
+    for (const name of published) expect(registry.modules.some((m) => m.provides && name in m.provides) || platforms.includes(name), name).toBe(true);
+
+    // And no module offers what is the platform's.
+    for (const name of platforms) expect(registry.modules.some((m) => m.provides && name in m.provides), name).toBe(false);
   });
 
   it('the finding is the most urgent thing any installed module reports', () => {

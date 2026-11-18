@@ -1,11 +1,13 @@
 import {
-  COMPANY, companyOf, KeystoneError, logged, type Change, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
+  COMPANY, companyOf, isOwner, KeystoneError, logged, type Change, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
 } from '@keystone/core';
 
 // What the company's documents start from (docs/adr/0018). Core keeps them with the records (`state.company`, in the
 // cloud an owner-only document) and every part reads them with `companyOf`; this module is the one place they are
 // changed. The company itself (name, address, contacts) is built in, core's `COMPANY` (docs/adr/0023), not typed here.
 
+/** This module's id, written once: its route, its ModuleDef.id. */
+export const ID = 'company';
 export const TAG = 'CO';
 
 /** The form: what documents start from, every field as typed, days and years too. */
@@ -22,7 +24,7 @@ export const companyDraftOf = (s: TerminalState): CompanyDraft => {
 };
 
 /** Signed in, only an owner changes them, as firestore.rules hold. On a computer where nobody signs in, whoever uses it. */
-export const canChange = (ctx: Ctx) => !ctx.who || ctx.who.role === 'owner';
+export const canChange = (ctx: Ctx) => !ctx.who || isOwner(ctx.who);
 
 /** One line with single spaces. */
 const line = (x: string) => x.trim().replace(/\s+/g, ' ');

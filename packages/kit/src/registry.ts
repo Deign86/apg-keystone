@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import {
-  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
-  type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
+  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments, type Reference,
+  type RecordType, type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
 /**
@@ -14,7 +14,7 @@ export interface ModuleApp {
   has(moduleId: string): boolean;
   /** Puts a draft where a module's form will pick it up next time it opens. */
   setDraft<T>(key: string, draft: T): void;
-  /** A service another module provides (see SERVICES in @keystone/core), or undefined if none is installed. */
+  /** A service another module or the platform provides (see SERVICES in @keystone/core), or undefined if nobody does. */
   service<N extends ServiceName>(name: N): ServiceContracts[N] | undefined;
   state: TerminalState;
   ctx: Ctx;
@@ -29,8 +29,6 @@ export interface ModuleDef {
   /** Stable id: the route (#vouchers). Lowercase letters, digits, dashes. */
   id: string;
   title: string;
-  /** Eyebrow over the screen title. */
-  section: string;
   /** The line on its home-screen tile. */
   blurb: string;
   /** Rail position; the rail numbers modules 0, 1, 2… in this order for ⌘/Ctrl+number. */
@@ -56,6 +54,16 @@ export interface ModuleDef {
   openWaiting?: (no: string, app: ModuleApp) => void;
   /** A "New …" action shown on Overview. */
   create?: { label: string; run: (app: ModuleApp) => void };
+  /**
+   * The directory records a person picks from on this screen, by type, as a sentence names the screen:
+   * { Vendor: 'Requests for Funds' }. The Directory says so when a record of that type is added.
+   */
+  selects?: Partial<Record<RecordType, string>>;
+  /**
+   * Whether its saved records name a directory record, by code. A record it names cannot be removed from the
+   * directory, and the Directory marks it with this tag.
+   */
+  refersTo?: Reference;
   /** The activity-log tags this module writes, with their filter label: { CV: 'Vouchers' }. */
   logTags?: Record<string, string>;
   /** Housekeeping when Keystone opens (statements past due become Overdue). */
@@ -92,6 +100,14 @@ export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Reg
 
     if (problem) {
       refused.push({ id: c.id, reason: problem });
+      continue;
+    }
+
+    // One field on a member, one connector: a second would read and write the first one's.
+    const taken = connectors.find((x) => c.memberGrant && x.memberGrant?.field === c.memberGrant.field);
+
+    if (taken) {
+      refused.push({ id: c.id, reason: `${c.name} keeps "${taken.memberGrant?.field}" on a member, which ${taken.name} already does.` });
       continue;
     }
 

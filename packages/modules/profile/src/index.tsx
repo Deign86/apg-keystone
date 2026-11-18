@@ -1,14 +1,14 @@
 import { Button, Field, Panel, ScreenHeader, TextInput } from '@keystone/ui';
 import { useState, type FormEvent } from 'react';
-import { roleLabel, type Member } from '@keystone/core';
-import { useKeystone, useModuleApp, type AppAccounts, type ModuleDef } from '@keystone/kit';
-import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG } from './rules';
+import { roleLabel, SERVICES, type Accounts, type Member } from '@keystone/core';
+import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
+import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG, ID } from './rules';
 
 const LINE = 'How Keystone shows you to everyone: in the rail, on what you prepare and file, and in the activity log.';
 
 /** Whoever is signed in changing the name Keystone shows for them. */
-function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) {
-  const { run, store } = useKeystone();
+function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
+  const { run, ctx } = useKeystone();
   const app = useModuleApp();
   const [name, setName] = useState(who.name);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +20,10 @@ function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) 
     setBusy(true);
 
     try {
-      const next = checkName(name, store.ctx);
+      const next = checkName(name, ctx);
 
-      await accounts.rename(next);
       // The rail shows the new name with the log line that says so.
-      store.renamed(next);
+      await accounts.rename(next);
       run((s, c) => nameChanged(s, who.name, next, c));
       setName(next);
     } catch (err) {
@@ -62,9 +61,10 @@ function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) 
 }
 
 function Profile() {
-  const { platform, ctx } = useKeystone();
+  const { ctx } = useKeystone();
+  const accounts = useModuleApp().service(SERVICES.accounts);
 
-  if (platform.accounts && ctx.who) return <YourProfile accounts={platform.accounts} who={ctx.who} />;
+  if (accounts && ctx.who) return <YourProfile accounts={accounts} who={ctx.who} />;
 
   return (
     <>
@@ -77,9 +77,8 @@ function Profile() {
 }
 
 export const profileModule: ModuleDef = {
-  id: 'profile',
+  id: ID,
   title: 'Profile',
-  section: 'Settings',
   blurb: 'Your name as Keystone shows it to everyone.',
   // First under Settings, before User Accounts.
   order: 88,

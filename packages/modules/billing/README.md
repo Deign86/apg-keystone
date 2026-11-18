@@ -27,6 +27,8 @@ neither is entered or printed any more.
 - **Home:** a tile.
 - **Activity:** log tag `BS`.
 - **Draft key:** `billing.draft`.
+- **Directory:** a client a statement names is kept (`refersTo`), marked `BS`; a new client is said to be selectable in
+  Billing Statements (`selects`).
 
 ## Provides
 `billing.statement-payments` (`SERVICES.statementPayments`, typed `StatementPayments` in core): the open statements,

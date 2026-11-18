@@ -1,6 +1,6 @@
 import { Button } from '@keystone/ui';
 import { useEffect, useRef, useState } from 'react';
-import { useKeystone } from './context';
+import { useRuntime } from './context';
 import type { AppUpdate } from './platform';
 
 /** As the attendance app does: the first check soon after start, then every 8 hours. */
@@ -19,7 +19,7 @@ type UpdateState =
  * Shows nothing where the platform cannot update (the browser preview).
  */
 export function UpdateNotice() {
-  const { platform, store } = useKeystone();
+  const { platform, store } = useRuntime();
   const updater = platform.updater;
   const [current, setCurrent] = useState<string | null>(null);
   const [state, setState] = useState<UpdateState>({ step: 'idle' });

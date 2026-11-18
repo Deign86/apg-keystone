@@ -39,8 +39,12 @@ Consequences**.
 | [0026](0026-a-kiosk-reads-the-id-register-as-a-device.md) | A kiosk reads the ID register as a device, not a member | Accepted |
 | [0027](0027-the-attendance-kiosk-keeps-a-copy-of-its-records-here.md) | The attendance kiosk keeps a copy of its records here | Accepted, changed by 0028 |
 | [0028](0028-the-attendance-records-live-here.md) | The attendance records live here; the kiosk keeps a working copy | Accepted |
-| [0029](0029-keystone-installs-the-connected-apps.md) | Keystone installs the connected apps, and updates the one that cannot update itself | Accepted |
+| [0029](0029-keystone-installs-the-connected-apps.md) | Keystone installs the connected apps, and updates the one that cannot update itself | Accepted, changed by 0031 |
 | [0030](0030-the-ceo-names-attendance-admins.md) | The CEO names who opens the attendance tracker's admin screens | Accepted |
+| [0031](0031-a-start-that-cannot-read-the-records-stops.md) | A start that cannot read the saved records stops and says why | Accepted |
+| [0032](0032-a-module-owns-its-id-statuses-and-references.md) | A module owns its id, its statuses and what it refers to | Accepted |
+| [0033](0033-accounts-are-a-service-the-platform-provides.md) | Accounts are a service the platform provides, and a connector says what the CEO may give a member | Accepted |
+| [0034](0034-a-sheets-layout-is-defined-once.md) | A sheet's layout is defined once, and a paper composes its own letterhead | Accepted |
 
 Template:
 

@@ -1,11 +1,16 @@
-import { count, KeystoneError, logged, roleLabel, type Change, type Ctx, type Member, type TerminalState } from '@keystone/core';
-import type { MemberAccount, NewAccount } from '@keystone/kit';
+import {
+  count, isOwner, KeystoneError, logged, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, ONLY_OWNER_REMOVES, onlyOwnerGrants, roleLabel,
+  type Change, type Ctx, type Member, type MemberAccount, type MemberGrant, type NewAccount, type TerminalState,
+} from '@keystone/core';
 
 // Who may open APG's records in the cloud, the CEO making an account for each staff member (docs/adr/0014) and
 // removing one (docs/adr/0015), and anyone signed in changing their own password (docs/adr/0016). The accounts
-// themselves live with the sign-in (Platform.accounts); these rules check what is asked for, word what the screen says,
-// and log each account made or removed and each password changed.
+// themselves live with the sign-in, behind core's `accounts` service; these rules check what is asked for, word what
+// the screen says, and log each account made or removed and each password changed. The refusals the platform repeats
+// when asked anyway are core's, so the two never drift.
 
+/** This module's id, written once: its route, its ModuleDef.id. */
+export const ID = 'accounts';
 export const TAG = 'ACCT';
 
 /** The shortest password a new account may start with. Firebase itself takes 6. */
@@ -13,22 +18,20 @@ export const MIN_PASSWORD = 8;
 
 export const NO_SIGN_IN = 'This Keystone keeps its records on this computer, where nobody signs in, so there are no accounts to make.';
 export const CLOUD_ONLY = 'Accounts come with APG\'s records in the cloud: there, the CEO makes one here for each staff member, and they sign in with it on any computer or phone.';
-export const ONLY_OWNER = 'Only the CEO makes accounts.';
-export const ONLY_OWNER_REMOVES = 'Only the CEO removes accounts.';
 
 /** Whether this person makes accounts: the CEO, signed in to the cloud. */
-export const makesAccounts = (ctx: Ctx) => ctx.who?.role === 'owner';
+export const makesAccounts = (ctx: Ctx) => isOwner(ctx.who);
 
 /** The CEO first, then everyone by name. */
 export const membersInOrder = (members: MemberAccount[]) =>
-  [...members].sort((a, b) => Number(b.role === 'owner') - Number(a.role === 'owner') || a.name.localeCompare(b.name));
+  [...members].sort((a, b) => Number(isOwner(b)) - Number(isOwner(a)) || a.name.localeCompare(b.name));
 
 /** The line under the screen's title. `members` is null until they have been read. */
 export function accountsLine(members: MemberAccount[] | null, ctx: Ctx): string {
   if (!ctx.who) return NO_SIGN_IN;
   const who = members ? `${count(members.length, 'person', 'people')} can open APG's records.` : 'Who can open APG\'s records.';
 
-  return makesAccounts(ctx) ? `${who} Make an account for each new staff member.` : `${who} ${ONLY_OWNER}`;
+  return makesAccounts(ctx) ? `${who} Make an account for each new staff member.` : `${who} ${ONLY_OWNER_MAKES}`;
 }
 
 // ---------- making an account ----------
@@ -49,7 +52,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** The account to make from the CEO's form, or the sentence saying what to fix. The password is kept as typed. */
 export function checkAccount(d: AccountDraft, members: MemberAccount[], ctx: Ctx): NewAccount {
-  if (!makesAccounts(ctx)) throw new KeystoneError(ONLY_OWNER);
+  if (!makesAccounts(ctx)) throw new KeystoneError(ONLY_OWNER_MAKES);
   const name = clean(d.name);
   const email = d.email.trim().toLowerCase();
 
@@ -83,9 +86,9 @@ const named = (m: MemberAccount) => (m.email ? `${m.name} (${m.email})` : m.name
 export function removeRefusal(m: MemberAccount, ctx: Ctx): string | null {
   if (!makesAccounts(ctx)) return ONLY_OWNER_REMOVES;
 
-  if (m.uid === ctx.who?.uid) return 'You cannot remove your own account.';
+  if (m.uid === ctx.who?.uid) return NOT_YOUR_OWN_ACCOUNT;
 
-  if (m.role === 'owner') return `${m.name} is the CEO. A CEO's account is removed in the Firebase console (docs/FIREBASE.md).`;
+  if (isOwner(m)) return `${m.name} is the CEO. A CEO's account is removed in the Firebase console (docs/FIREBASE.md).`;
 
   return null;
 }
@@ -111,41 +114,48 @@ export function accountRemoved(s: TerminalState, m: MemberAccount, ctx: Ctx): Ch
   };
 }
 
-// ---------- the attendance tracker's admin screens ----------
+// ---------- what a connected system lets the CEO give a member ----------
 
-export const ONLY_OWNER_ATTENDANCE = 'Only the CEO decides who opens the attendance tracker\'s admin screens.';
+/** Whether the member has what this grant gives. */
+export const hasGrant = (m: MemberAccount, g: MemberGrant) => m.grants?.includes(g.field) ?? false;
 
-/** What the role column says: the role, and for staff the CEO has let in, that they are an attendance admin. */
-export const roleLine = (m: MemberAccount) => (m.role === 'staff' && m.attendanceAdmin ? `${roleLabel(m)} · Attendance admin` : roleLabel(m));
+/** What the role column says: the role and, for staff, the label of each thing the CEO has given them, joined with " · ". */
+export const roleLine = (m: MemberAccount, grants: readonly MemberGrant[] = []) =>
+  [roleLabel(m), ...(isOwner(m) ? [] : grants.flatMap((g) => (hasGrant(m, g) ? [g.label] : [])))].join(' · ');
 
 /**
- * Why the CEO may not change this here, or null when they may. A CEO opens the attendance tracker's admin screens
- * already, so there is nothing to give or take.
+ * Why the CEO may not change this here, or null when they may. A CEO opens everything a grant opens already, so there
+ * is nothing to give or take.
  */
-export function attendanceAdminRefusal(m: MemberAccount, ctx: Ctx): string | null {
-  if (!makesAccounts(ctx)) return ONLY_OWNER_ATTENDANCE;
+export function grantRefusal(m: MemberAccount, g: MemberGrant, ctx: Ctx): string | null {
+  if (!makesAccounts(ctx)) return onlyOwnerGrants(g);
 
-  if (m.role === 'owner') return `${m.name} is the CEO, who opens the attendance tracker's admin screens already.`;
+  if (isOwner(m)) return `${m.name} is the CEO, who opens ${g.opens} already.`;
 
   return null;
 }
 
-/** What the CEO is asked before letting someone in, or stopping it. */
-export const attendanceAdminQuestion = (m: MemberAccount) => (m.attendanceAdmin
-  ? `${named(m)} will no longer open the attendance tracker's admin screens with this account. An admin card they hold still works there.`
-  : `${named(m)} will open the attendance tracker's admin screens with their own email and password: interns, attendance, payroll and its settings.`);
+/** The row menu's item and the question's button, giving it or taking it back: "Make <label>", "Remove as <label>". */
+export const grantAction = (m: MemberAccount, g: MemberGrant) => (hasGrant(m, g) ? `Remove as ${g.label.toLowerCase()}` : `Make ${g.label.toLowerCase()}`);
 
-/** Logs who the CEO let into the attendance tracker's admin screens, or stopped. */
-export function attendanceAdminSet(s: TerminalState, m: MemberAccount, on: boolean, ctx: Ctx): Change<MemberAccount> {
-  const refusal = attendanceAdminRefusal(m, ctx);
+/** The question's title, with the person's name: "Make <name> <as>?", "Remove <name> as <label>?". */
+export const grantTitle = (m: MemberAccount, g: MemberGrant) => (hasGrant(m, g) ? `Remove ${m.name} as ${g.label.toLowerCase()}?` : `Make ${m.name} ${g.as}?`);
+
+/** What the CEO is asked before giving it, or taking it back, in the connected system's own words. */
+export const grantQuestion = (m: MemberAccount, g: MemberGrant) => (hasGrant(m, g) ? g.asks.take(named(m)) : g.asks.give(named(m)));
+
+/** Logs what the CEO gave a member, or took back. */
+export function grantSet(s: TerminalState, m: MemberAccount, g: MemberGrant, on: boolean, ctx: Ctx): Change<MemberAccount> {
+  const refusal = grantRefusal(m, g, ctx);
 
   if (refusal) throw new KeystoneError(refusal);
-  const record = { ...m, attendanceAdmin: on };
+  const others = (m.grants ?? []).filter((f) => f !== g.field);
+  const record: MemberAccount = { ...m, grants: on ? [...others, g.field] : others };
 
   return {
-    state: logged(s, TAG, on ? `${named(m)} made an attendance admin.` : `${named(m)} is no longer an attendance admin.`, ctx),
+    state: logged(s, TAG, on ? `${named(m)} made ${g.as}.` : `${named(m)} is no longer ${g.as}.`, ctx),
     record,
-    message: on ? `${m.name} can now open the attendance tracker's admin screens.` : `${m.name} no longer opens the attendance tracker's admin screens.`,
+    message: on ? `${m.name} can now open ${g.opens}.` : `${m.name} no longer opens ${g.opens}.`,
   };
 }
 

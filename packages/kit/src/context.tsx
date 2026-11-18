@@ -2,17 +2,82 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type SystemBridge, type TerminalState } from '@keystone/core';
+import { DEADLINES, SERVICES, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
+
+/** Asking the person where to save a file, or for one to open. */
+export interface Files {
+  /** Asks where to save, then writes. Returns the file's name, or null if cancelled. */
+  save: Platform['saveFile'];
+  /** Asks for one file and reads it. Null if cancelled. */
+  open: Platform['openFile'];
+}
+
+/** The card photos kept beside the records. Read one with `usePhoto`. */
+export interface Photos {
+  put: Platform['putPhoto'];
+}
+
+/** Everything Keystone holds, replaced at once from a backup. Half-filled forms are dropped with it. */
+export interface Backup {
+  restore(next: TerminalState): void;
+}
+
+/** What a screen may do to the machine: each capability by name, never the store or the platform themselves. */
+interface Capabilities {
+  files: Files;
+  photos: Photos;
+  backup: Backup;
+  /** Where the records are kept when nobody signs in: this computer's data folder, or this browser. */
+  kind: Platform['kind'];
+}
 
 interface KeystoneContextValue {
   store: KeystoneStore;
   registry: Registry;
   platform: Platform;
+  capabilities: Capabilities;
+  /** The services the platform offers beside the modules' (`Platform.provides`). */
+  offered: ServiceProviders;
   route: string;
   go: (id: string) => void;
+}
+
+function capabilitiesOf(store: KeystoneStore): Capabilities {
+  const p = store.platform;
+
+  return {
+    files: { save: (name, bytes, filters) => p.saveFile(name, bytes, filters), open: (filters) => p.openFile(filters) },
+    photos: { put: (name, bytes) => p.putPhoto(name, bytes) },
+    backup: { restore: (next) => store.replaceAll(next) },
+    kind: p.kind,
+  };
+}
+
+/**
+ * What the platform offers, as a part is handed it. The accounts service is the platform's own, with one thing added:
+ * when the member signed in changes their name, the rules' context follows, so the rail and the caller's log line
+ * (docs/adr/0020) carry the new one.
+ */
+function offeredBy(store: KeystoneStore): ServiceProviders {
+  const offered = store.platform.provides ?? {};
+  const accounts = offered[SERVICES.accounts];
+
+  if (!accounts) return offered;
+
+  return {
+    ...offered,
+    [SERVICES.accounts]: {
+      ...accounts,
+      rename: async (name) => {
+        await accounts.rename(name);
+
+        if (store.ctx.who) store.ctx = { ...store.ctx, who: { ...store.ctx.who, name } };
+      },
+    },
+  };
 }
 
 const KeystoneContext = createContext<KeystoneContextValue | null>(null);
@@ -45,7 +110,9 @@ export function KeystoneProvider({ store, registry, children }: { store: Keyston
 
     return () => window.removeEventListener('hashchange', onHash);
   }, [known]);
-  const value = useMemo(() => ({ store, registry, platform: store.platform, route, go }), [store, registry, route, go]);
+  const capabilities = useMemo(() => capabilitiesOf(store), [store]);
+  const offered = useMemo(() => offeredBy(store), [store]);
+  const value = useMemo(() => ({ store, registry, platform: store.platform, capabilities, offered, route, go }), [store, registry, capabilities, offered, route, go]);
 
   return <KeystoneContext.Provider value={value}>{children}</KeystoneContext.Provider>;
 }
@@ -58,9 +125,19 @@ function useCtx() {
   return v;
 }
 
-/** The state, the rules' context, and `run`, which applies a rule and shows its result. */
+/** The store and the platform themselves, for the kit's own shell (saving, signing out, updating). Never for a screen. */
+export function useRuntime() {
+  const { store, platform } = useCtx();
+
+  return { store, platform };
+}
+
+/**
+ * The state, the rules' context, `run`, which applies a rule, shows its result and returns the state after it, and the
+ * capabilities a screen may use: files, photos, the backup.
+ */
 export function useKeystone() {
-  const { store, registry, platform, route, go } = useCtx();
+  const { store, registry, capabilities, route, go } = useCtx();
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const notify = useNotify();
 
@@ -73,22 +150,23 @@ export function useKeystone() {
     return r;
   }, [store, notify]);
 
-  return { state, ctx: store.ctx, run, store, registry, platform, route, go, notify };
+  return { state, ctx: store.ctx, run, registry, route, go, notify, ...capabilities };
 }
 
 /** The app as a module sees it: navigation, drafts, and whether another module is installed. */
 export function useModuleApp(): ModuleApp {
-  const { store, registry, go } = useCtx();
+  const { store, registry, offered, go } = useCtx();
   const state = useSyncExternalStore(store.subscribe, store.getState);
 
   return useMemo(() => ({
     go,
     has: (id: string) => registry.modules.some((m) => m.id === id),
     setDraft: <T,>(key: string, draft: T) => store.setDraft(key, draft),
-    service: <N extends ServiceName>(name: N) => findService(registry.modules, name),
+    // A module's first; then the platform's own (the accounts, with a sign-in).
+    service: <N extends ServiceName>(name: N) => findService(registry.modules, name) ?? offered[name],
     state,
     ctx: store.ctx,
-  }), [go, registry, store, state]);
+  }), [go, registry, offered, store, state]);
 }
 
 /** A form draft that survives switching screens. */
@@ -103,12 +181,6 @@ export function useDraft<T>(key: string, make: () => T): [T, (next: T) => void] 
 
   return [value, set];
 }
-
-/** How long opening another app may take (finding it on macOS can take a few seconds) before Keystone says so. */
-const OPEN_MS = 15_000;
-
-/** How long fetching an installer may take: they run to 150 MB, on an office line. */
-const INSTALL_MS = 20 * 60_000;
 
 /** What a connector is handed: the operating system and nothing else of the platform (no records, accounts or session). */
 function systemOf(p: Platform): SystemBridge {
@@ -125,8 +197,9 @@ function systemOf(p: Platform): SystemBridge {
 }
 
 /**
- * Runs one connector call. It has a few seconds, unless it says it is doing something slow (`env.slow`): then it has
- * the time a download needs, and `doing` hears what to show meanwhile.
+ * Runs one connector call. It has a few seconds (`DEADLINES.answerMs`), unless it says it is doing something slow
+ * (`env.slow`): then it has the time a download needs (`DEADLINES.installMs`), and `doing` hears what to show meanwhile.
+ * Work that answers after its deadline is ignored; the native download has given up by then (core's `DEADLINES`).
  */
 function useConnectorCall() {
   const { platform } = useCtx();
@@ -141,10 +214,10 @@ function useConnectorCall() {
       timer = setTimeout(() => late(new Error(`${name} did not answer within ${ms >= 60_000 ? `${Math.round(ms / 60_000)} minutes` : `${Math.round(ms / 1000)} seconds`}.`)), ms);
     };
 
-    within(OPEN_MS);
+    within(DEADLINES.answerMs);
 
     try {
-      return await Promise.race([work({ system: systemOf(platform), slow: (what) => { within(INSTALL_MS); doing?.(what); } }), deadline]);
+      return await Promise.race([work({ system: systemOf(platform), slow: (what) => { within(DEADLINES.installMs); doing?.(what); } }), deadline]);
     } finally {
       clearTimeout(timer);
     }
@@ -179,7 +252,13 @@ export function useConnectorUpdate(c: Connector) {
   useEffect(() => {
     let alive = true;
 
-    if (c.update) void call(c.name, undefined, (env) => c.update?.(env) ?? Promise.resolve(null)).then((u) => { if (alive) setUpdate(u); }, () => {});
+    if (c.update) {
+      void call(c.name, undefined, (env) => c.update?.(env) ?? Promise.resolve(null)).then(
+        (u) => { if (alive) setUpdate(u); },
+        // Never a reason the shortcut fails, but never dropped without a word either.
+        (cause: unknown) => console.warn(`Keystone could not check ${c.name} for an update; it tries again when Home next opens.`, cause),
+      );
+    }
 
     return () => { alive = false; };
   }, [c, call]);

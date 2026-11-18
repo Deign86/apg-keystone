@@ -1,15 +1,37 @@
 import {
-  companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
-  peso, recordOf, shortDate, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
-  type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher, type VoucherDrafts,
-  type VoucherStatus, type WaitingItem
+  companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
+  peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
+  type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
+  type WaitingItem
 } from '@keystone/core';
 
 // Check vouchers: disbursements routed for signatures, printed as the company's
 // Check Voucher. The payee is typed on each voucher; an older voucher's directory code is read through the directory.
 
+/** This module's id, written once: its route, its ModuleDef.id and its draft key. */
+export const ID = 'vouchers';
+
+/** The tag its activity-log lines carry. */
+export const TAG = 'CV';
+
+export const VOUCHER_STATUSES = ['For Approval', 'Approved', 'Released', 'Void'] as const;
+
+export type VoucherStatus = (typeof VOUCHER_STATUSES)[number];
+
+const TONES: Record<VoucherStatus, Tone> = { 'For Approval': 'warn', Approved: 'good', Released: 'neutral', Void: 'neutral' };
+
+/** How a voucher's status reads at a glance. One saved with a status this build does not know reads as neutral. */
+export function voucherTone(status: string): Tone {
+  const known = VOUCHER_STATUSES.find((s) => s === status);
+
+  return known ? TONES[known] : 'neutral';
+}
+
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
+
+/** A voucher saved before payees were typed names its payee by directory code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => s.cv.some((v) => v.payee === code) };
 
 /** Voucher numbers run 888-001, 888-002 and on, with no year. */
 const SERIES = '888-';
@@ -98,7 +120,7 @@ export function withCheck(v: Voucher, d: Pick<VoucherDraft, 'check' | 'checkDate
 }
 
 /** Whether a voucher saved by whoever is signed in is approved as it is saved: the CEO's are; everyone else's wait for approval. */
-export const approvesOnSave = (ctx: Ctx) => ctx.who?.role === 'owner';
+export const approvesOnSave = (ctx: Ctx) => isOwner(ctx.who);
 
 /** A new voucher drafted from another: its payee, particulars and signatories, under the next number, dated today, with no check yet. */
 export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraft {
@@ -148,7 +170,7 @@ function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string)
   const routed = approvedBy ? `saved and approved by ${approvedBy}` : 'saved and routed for approval';
 
   return {
-    state: logged({ ...s, cv: [...s.cv, saved] }, 'CV', `${saved.no} for ${nameOf(s, v.payee)} ${routed} (${peso(voucherTotal(saved))}).`, ctx),
+    state: logged({ ...s, cv: [...s.cv, saved] }, TAG, `${saved.no} for ${nameOf(s, v.payee)} ${routed} (${peso(voucherTotal(saved))}).`, ctx),
     record: saved, message: `${saved.no} ${approvedBy ? 'saved and approved' : 'saved and routed for approval'}.`,
   };
 }
@@ -170,7 +192,7 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     if (updated.check === original.check && updated.checkDate === original.checkDate) return { state: s, record: original, message: `${original.no} is unchanged.` };
 
     return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
@@ -183,7 +205,7 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     const updated = { ...v, no: original.no, status: original.status };
 
     return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(voucherTotal(v))}).`, ctx),
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(voucherTotal(v))}).`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
@@ -218,7 +240,7 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
     : `${no} returned for approval.`;
 
   return {
-    state: logged({ ...s, cv: s.cv.map((x) => (x.no === no ? updated : x)) }, 'CV', text, ctx),
+    state: logged({ ...s, cv: s.cv.map((x) => (x.no === no ? updated : x)) }, TAG, text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }
@@ -259,6 +281,6 @@ export function voucherFinding(s: TerminalState): Finding | null {
 
 export function voucherWaiting(s: TerminalState): WaitingItem[] {
   return awaitingApproval(s).map((v) => ({
-    no: v.no, who: `${nameOf(s, v.payee)} · voucher`, amount: voucherTotal(v), status: v.status, tone: toneOf(v.status), rank: 0,
+    no: v.no, who: `${nameOf(s, v.payee)} · voucher`, amount: voucherTotal(v), status: v.status, tone: voucherTone(v.status), rank: 0,
   }));
 }

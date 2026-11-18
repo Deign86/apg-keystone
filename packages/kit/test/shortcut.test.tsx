@@ -24,7 +24,10 @@ async function mount(connector = okConnector('attendance')) {
 }
 
 describe('a connected system’s shortcut', () => {
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it('is the app’s logo, named for the app, and hands the app only the operating system', async () => {
     const seen: SystemBridge[] = [];
@@ -126,9 +129,12 @@ describe('a connected system’s shortcut', () => {
     expect(screen.queryByRole('button', { name: /Update to/ })).not.toBeInTheDocument();
   });
 
-  it('a failed update check never disturbs the shortcut', async () => {
+  it('a failed update check never disturbs the shortcut, and is noted for whoever looks', async () => {
+    const warned = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { button } = await mount(okConnector('id-maker-app', { update: async () => { throw new Error('offline'); } }));
     await act(async () => {});
+
+    expect(warned).toHaveBeenCalledWith('Keystone could not check id-maker-app for an update; it tries again when Home next opens.', new Error('offline'));
 
     expect(screen.queryByRole('button', { name: /Update to/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

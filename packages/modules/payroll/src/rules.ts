@@ -2,7 +2,7 @@ import {
   DASH, addDays, count, halfMonthOf, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
   moduleData, parseAmount, periodLabel, peso, recordOf, shortDate, stamp, sumCentavos, toCentavos, toPesos, today,
   withModuleData, type AttendanceTally, type Centavos, type Change, type Ctx, type EmployeeAttendance, type Figure,
-  type Finding, type JsonObject, type JsonValue, type Period, type TerminalState,
+  type Finding, type JsonObject, type JsonValue, type Period, type Reference, type TerminalState,
 } from '@keystone/core';
 import { basisOf, fullAttendance, price, sharesFor, tableShares, type Pay, type PaySetup, type Shares } from './pay';
 
@@ -11,7 +11,8 @@ import { basisOf, fullAttendance, price, sharesFor, tableShares, type Pay, type 
 // in ./pay.ts. Attendance comes from the timekeeping service when it is installed. Kept under state.ext.payroll;
 // nothing leaves Keystone.
 
-export const MODULE = 'payroll';
+/** This module's id, written once: its route, its ModuleDef.id and its key under state.ext. */
+export const ID = 'payroll';
 export const TAG = 'PAY';
 
 /** A closed cut-off keeps who was paid and on what, as it was, so later corrections never reprice it. */
@@ -54,7 +55,7 @@ function tallyOf(o: JsonValue | undefined): AttendanceTally {
 
 /** What payroll has saved, checked field by field; anything unreadable is left out. */
 export function dataOf(s: TerminalState): PayrollData {
-  const raw = moduleData(s, MODULE);
+  const raw = moduleData(s, ID);
 
   if (!isJsonObject(raw)) return { setups: [], runs: [] };
 
@@ -77,7 +78,17 @@ export function dataOf(s: TerminalState): PayrollData {
   };
 }
 
-const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, MODULE, data);
+const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, ID, data);
+
+/** A pay setup, and every closed cut-off's rows, name their employee by directory code; that record is kept. */
+export const refersTo: Reference = {
+  tag: TAG,
+  record: (s, code) => {
+    const data = dataOf(s);
+
+    return data.setups.some((x) => x.emp === code) || data.runs.some((r) => r.rows.some((x) => x.setup.emp === code));
+  },
+};
 
 export const setupFor = (s: TerminalState, emp: string) => dataOf(s).setups.find((x) => x.emp === emp);
 

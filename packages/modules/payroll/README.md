@@ -80,6 +80,7 @@ Pay proved fragile in the intern attendance app, so it is tested from four sides
 - **Overview:** the "Last payroll" figure (net of the latest closed cut-off).
 - **Finding:** the last cut-off is ready to close (priority 7).
 - **Activity:** log tag `PAY`.
+- **Directory:** an employee with a pay setup, or on a closed cut-off, is kept (`refersTo`), marked `PAY`.
 
 ## Needs
 Employees in the directory (data). Uses `timekeeping.employee-attendance` (`SERVICES.employeeAttendance`) when it is

@@ -1,0 +1,651 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the payroll sheet on paper > is laid out on its side, and prints on one landscape page, exactly as it has > at the printer 1`] = `
+{
+  "page": [
+    "@page { size: A4 landscape; }",
+  ],
+  "paper": "<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" data-print-fit="page" data-print-orientation="landscape" aria-label="Payroll sheet, Oct 1–15, 2026" style="width: 1032px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Payroll</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Oct 1–15, 2026</p>
+<p class="m-0 text-xs font-medium tabular-nums">Open</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<div>
+<div class="w-min min-w-full origin-top-left">
+<table class="w-full border-collapse text-[11px] leading-tight">
+<thead>
+<tr class="border-y border-paper-ink bg-paper-tint align-bottom text-paper-gold">
+<th class="px-1 py-1 font-semibold uppercase text-left">Employee no.</th>
+<th class="px-1 py-1 font-semibold uppercase text-left">Employee name</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Cut-off rate</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Daily rate</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Standard days</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Days worked</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Basic</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Special holiday (30%)</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Regular holiday (100%)</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Total compensation</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Incentives allowance</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">HRA</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Special allowance</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Total allowance</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Late / undertime</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Half day</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Absent</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Overtime</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Gross compensation</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Deductions</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Net pay</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Signature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td class="px-1 py-1.5 whitespace-nowrap  ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap  ">Angelica S. Bautista</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,700.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">700.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">11</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">10</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,000.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">210.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,210.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">1,000.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">1,000.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">80.21</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">350.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">700.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">273.44</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">8,053.23</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">665.32</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,387.91</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums min-w-20">
+</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-1 py-1.5 whitespace-nowrap  ">APGCO-0013</td>
+<td class="px-1 py-1.5 whitespace-nowrap  ">Juan Miguel P. Reyes</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">8,360.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">760.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">11</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">10</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,600.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">228.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,828.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">87.08</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">380.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">760.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">296.88</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,657.80</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">719.13</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">6,938.67</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums min-w-20">
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-y border-paper-ink bg-paper-tint font-bold">
+<td class="px-1 py-1.5  text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="px-1 py-1.5  ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">16,060.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">14,600.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">438.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">—</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">15,038.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,000.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">—</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">—</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,000.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">167.29</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">730.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,460.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">570.32</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">15,711.03</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,384.45</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">14,326.58</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+</div>
+</div>
+</article>
+</div>
+</div>",
+}
+`;
+
+exports[`the payroll sheet on paper > is laid out on its side, and prints on one landscape page, exactly as it has > on screen 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" data-print-fit="page" data-print-orientation="landscape" aria-label="Payroll sheet, Oct 1–15, 2026" style="width: 1032px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Payroll</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Oct 1–15, 2026</p>
+<p class="m-0 text-xs font-medium tabular-nums">Open</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<div>
+<div class="w-min min-w-full origin-top-left">
+<table class="w-full border-collapse text-[11px] leading-tight">
+<thead>
+<tr class="border-y border-paper-ink bg-paper-tint align-bottom text-paper-gold">
+<th class="px-1 py-1 font-semibold uppercase text-left">Employee no.</th>
+<th class="px-1 py-1 font-semibold uppercase text-left">Employee name</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Cut-off rate</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Daily rate</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Standard days</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Days worked</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Basic</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Special holiday (30%)</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Regular holiday (100%)</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Total compensation</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Incentives allowance</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">HRA</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Special allowance</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Total allowance</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Late / undertime</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Half day</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Absent</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Overtime</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Gross compensation</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Deductions</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Net pay</th>
+<th class="px-1 py-1 font-semibold uppercase text-right">Signature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td class="px-1 py-1.5 whitespace-nowrap  ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap  ">Angelica S. Bautista</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,700.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">700.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">11</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">10</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,000.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">210.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,210.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">1,000.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">1,000.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">80.21</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">350.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">700.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">273.44</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">8,053.23</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">665.32</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,387.91</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums min-w-20">
+</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-1 py-1.5 whitespace-nowrap  ">APGCO-0013</td>
+<td class="px-1 py-1.5 whitespace-nowrap  ">Juan Miguel P. Reyes</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">8,360.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">760.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">11</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">10</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,600.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">228.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,828.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">—</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">87.08</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">380.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">760.00</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">296.88</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,657.80</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">719.13</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">6,938.67</td>
+<td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums min-w-20">
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-y border-paper-ink bg-paper-tint font-bold">
+<td class="px-1 py-1.5  text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="px-1 py-1.5  ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">16,060.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">14,600.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">438.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">—</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">15,038.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,000.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">—</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">—</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,000.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">167.29</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">730.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,460.00</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">570.32</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">15,711.03</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">1,384.45</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">14,326.58</td>
+<td class="px-1 py-1.5 text-right tabular-nums whitespace-nowrap ">
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+</div>
+</div>
+</article>
+</div>
+</div>"
+`;
+
+exports[`the payroll sheet on paper > is scaled down by its height to one page when it runs longer, and put back after > a long sheet at the printer 1`] = `
+{
+  "page": [
+    "@page { size: A4 landscape; }",
+  ],
+  "width": "1032px",
+  "zoom": "0.4920944881889764",
+}
+`;
+
+exports[`the payslip on paper > is laid out, and prints, exactly as it has > at the printer 1`] = `
+{
+  "page": [],
+  "paper": "<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Payslip, Angelica S. Bautista, Oct 1–15, 2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Payslip</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Oct 1–15, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee ID</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Bank</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Cash</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee name</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Angelica S. Bautista</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Account no.</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Designation</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Accounting Supervisor</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Standard working days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">11</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Department</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Finance</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Paid days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">10</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">TIN</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">LWOP days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">1</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Rate per day</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">₱700.00</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Half days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">1</dd>
+</dl>
+<div class="mt-2 grid grid-cols-2 gap-4">
+<table class="w-full self-start border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5 text-left font-semibold">Earnings</th>
+<th class="border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Basic</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">7,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">HRA</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Incentives allowance</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">1,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Special allowance</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Regular holiday</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Special holiday</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">210.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Overtime pay</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">273.44</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td class="px-2.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total earnings</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right font-bold tabular-nums">₱8,483.44</td>
+</tr>
+</tfoot>
+</table>
+<table class="w-full self-start border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5 text-left font-semibold">Deductions</th>
+<th class="border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">SSS employee share</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">375.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">PhilHealth employee share</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">190.32</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Pag-IBIG employee share</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">100.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Salary advance</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Late / undertime</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">80.21</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Half day</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">350.00</td>
+</tr>
+<tr aria-hidden="true" class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">&nbsp;</td>
+<td class="border-l border-paper-line px-2.5 py-1.5">
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td class="px-2.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total deductions</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right font-bold tabular-nums">₱1,095.53</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div class="mt-4 flex items-baseline justify-between border border-paper-ink bg-paper-tint px-2.5 py-2.5">
+<span class="font-display text-[13px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Net pay</span>
+<span class="text-base font-bold tabular-nums">₱7,387.91</span>
+</div>
+<p class="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Angelica S. Bautista</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Employee signature</p>
+</div>
+</div>
+</article>
+</div>
+</div>",
+}
+`;
+
+exports[`the payslip on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Payslip, Angelica S. Bautista, Oct 1–15, 2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Payslip</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Oct 1–15, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee ID</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Bank</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Cash</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee name</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Angelica S. Bautista</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Account no.</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Designation</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Accounting Supervisor</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Standard working days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">11</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Department</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Finance</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Paid days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">10</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">TIN</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">LWOP days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">1</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Rate per day</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">₱700.00</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Half days</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">1</dd>
+</dl>
+<div class="mt-2 grid grid-cols-2 gap-4">
+<table class="w-full self-start border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5 text-left font-semibold">Earnings</th>
+<th class="border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Basic</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">7,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">HRA</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Incentives allowance</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">1,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Special allowance</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Regular holiday</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Special holiday</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">210.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Overtime pay</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">273.44</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td class="px-2.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total earnings</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right font-bold tabular-nums">₱8,483.44</td>
+</tr>
+</tfoot>
+</table>
+<table class="w-full self-start border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5 text-left font-semibold">Deductions</th>
+<th class="border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">SSS employee share</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">375.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">PhilHealth employee share</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">190.32</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Pag-IBIG employee share</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">100.00</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Salary advance</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">—</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Late / undertime</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">80.21</td>
+</tr>
+<tr class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">Half day</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right tabular-nums">350.00</td>
+</tr>
+<tr aria-hidden="true" class="border-b border-paper-rule">
+<td class="px-2.5 py-1.5">&nbsp;</td>
+<td class="border-l border-paper-line px-2.5 py-1.5">
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td class="px-2.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total deductions</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right font-bold tabular-nums">₱1,095.53</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div class="mt-4 flex items-baseline justify-between border border-paper-ink bg-paper-tint px-2.5 py-2.5">
+<span class="font-display text-[13px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Net pay</span>
+<span class="text-base font-bold tabular-nums">₱7,387.91</span>
+</div>
+<p class="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Angelica S. Bautista</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Employee signature</p>
+</div>
+</div>
+</article>
+</div>
+</div>"
+`;

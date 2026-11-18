@@ -13,7 +13,7 @@ import { Payslip, PayrollSheet } from './PayrollPapers';
 import {
   AMOUNT_LABEL, closeCutoff, cutoffOf, lastCutoff, payrollFigure, payrollFinding, payrollStat, removeSetup,
   reopenCutoff, saveSetup, setupDraftOf, setupFor, SHARES, TAG, totalOf, workedOut, type AmountField, type PayLine,
-  type SetupDraft,
+  type SetupDraft, ID, refersTo,
 } from './rules';
 
 function Amount({ field, d, set, placeholder = '0.00' }: { field: AmountField; d: SetupDraft; set: (d: SetupDraft) => void; placeholder?: string }) {
@@ -83,7 +83,7 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
 }
 
 function Payroll() {
-  const { state, ctx, run, platform, notify } = useKeystone();
+  const { state, ctx, run, files, notify } = useKeystone();
   const app = useModuleApp();
   const attendance = app.service(SERVICES.employeeAttendance);
   const confirm = useConfirm();
@@ -236,7 +236,7 @@ function Payroll() {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, file, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, file, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
             </div>
           </div>
           <div className="overflow-hidden rounded-card border border-line">
@@ -265,15 +265,15 @@ function Payroll() {
 }
 
 export const payrollModule: ModuleDef = {
-  id: 'payroll',
+  id: ID,
   title: 'Payroll',
-  section: 'People',
   blurb: 'Each employee\'s own pay, the cut-off sheet and payslips, priced from Timekeeping.',
   order: 8,
   onHome: true,
   stat: payrollStat,
   figure: payrollFigure,
   finding: payrollFinding,
+  refersTo,
   logTags: { [TAG]: 'Payroll' },
   Screen: Payroll,
 };

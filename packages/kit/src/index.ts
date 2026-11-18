@@ -10,13 +10,13 @@ export { buildRegistry, documentLayout, findService, type ModuleApp, type Module
 export { comingSoon } from './ComingSoon';
 
 export {
-  useDraft, useKeystone, useModuleApp, usePhoto,
+  useDraft, useKeystone, useModuleApp, usePhoto, type Backup, type Files, type Photos,
 } from './context';
 
 export { ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';
 
-export { amountColumn, FitWidth, Letterhead, Lines, Meta, orDash, paperHeading, paperLabel, Sheet, Signatures, type LineColumn } from './documents';
+export { amountColumn, FitWidth, LandscapePage, Letterhead, Lines, Masthead, Meta, orDash, paperHeading, paperLabel, paperLogo, Sheet, Signatures, TwoUp, type LineColumn } from './documents';
 
 export { printElement, savePdf } from './output';
 
-export type { AppAccounts, AppSession, AppUpdate, AppUpdater, MemberAccount, NewAccount, Platform } from './platform';
+export type { AppSession, AppUpdate, AppUpdater, Platform } from './platform';

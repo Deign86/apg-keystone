@@ -11,15 +11,17 @@ packages/core              @keystone/core   schema, money, dates, formats, log, 
 packages/ui                @keystone/ui     APG design system on Base UI; theme from shared/design/tokens.json (kernel)
 packages/kit               @keystone/kit    registries, services, store, connector shortcuts, shell,
                                             screen and document building blocks, Platform interface    (kernel)
-packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · billing · id-maker ·
-                                                      directory · activity · timekeeping · payroll ·
-                                                      data · banks                                     (parts)
-packages/connectors/<id>   @keystone/connector-<id>   attendance · branding-studio · website           (parts)
+packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · funds · billing ·
+                                                      id-maker · directory · activity · timekeeping ·
+                                                      payroll · profile · accounts · data · banks ·
+                                                      company                                          (parts)
+packages/connectors/<id>   @keystone/connector-<id>   attendance · id-maker-app · branding-studio ·
+                                                      website                                          (parts)
 apps/keystone              @keystone/app    the composition root
   src/modules.ts, src/connectors.ts           the only files that list the parts
   src/main.tsx                                builds the registry and starts the app
   src/platform/                               desktop (Tauri), browser and the cloud records behind one interface
-  src-tauri/                                  native side: files, OS keychain, finding and launching other apps
+  src-tauri/                                  native side: files, and finding, starting and installing other apps
 shared/                    tokens, fonts, logo, the tests' sample records (generated into ui and core by `npm run sync`)
 ```
 
@@ -65,8 +67,9 @@ or any failure, is a message on screen (docs/adr/0007).
 
 | System | How Keystone finds it | What its shortcut does |
 |---|---|---|
-| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app, or opens its latest release page when it is not installed |
-| Alpha Branding Studio | Bundle id `com.alphapremier.brandingstudio` (macOS) or its Uninstall registry key (Windows) | Starts the studio, or opens its latest release page |
+| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app. Not installed: fetches its installer from its latest release and opens it, or opens the release page when it cannot (docs/adr/0029) |
+| Alpha Premier ID Maker | Bundle id `com.alphapremiergroup.idmaker` (macOS) or its Uninstall registry key (Windows) | The same, and offers a newer version when one is out, since the ID Maker cannot update itself |
+| Alpha Branding Studio | Bundle id `com.alphapremier.brandingstudio` (macOS) or its Uninstall registry key (Windows) | The same as the attendance tracker |
 | Website | Nothing to find | Opens `alphapremiergroup.com/admin` in the browser |
 
 Keystone reads nothing from these systems and keeps no password for any of them.
@@ -86,11 +89,11 @@ Keystone reads nothing from these systems and keeps no password for any of them.
   records and reaches the rules as `ctx.who`. A module may keep one list as cloud documents of its own
   (`ModuleDef.documents`): Requests for Funds keeps each request in `keystone/apg/rf/{no}`, where `firestore.rules`
   lets only the owner decide and lets staff read only their own. Without a sign-in there is no `ctx.who`.
-- **Accounts (docs/adr/0014, 0015):** the owner makes and removes staff accounts on the User Accounts screen, through
-  `Platform.accounts`. `platform/firestore.ts` makes the sign-in in a second Firebase app kept in memory, so the owner
+- **Accounts (docs/adr/0014, 0015, 0033):** the owner makes and removes staff accounts on the User Accounts screen, through
+  the `accounts` service the cloud platform provides (`Platform.provides`). `platform/firestore.ts` makes the sign-in in a second Firebase app kept in memory, so the owner
   stays signed in, then writes the member document; removing deletes that document and leaves the sign-in, which then
   opens nothing. `firestore.rules` let only an owner write or delete a member.
-- **Passwords (docs/adr/0016):** anyone signed in changes theirs on User Accounts (`Platform.accounts.changePassword`,
+- **Passwords (docs/adr/0016):** anyone signed in changes theirs on User Accounts (the `accounts` service's `changePassword`,
   which signs in again with the current one first). The sign-in screen's Forgot password? has Firebase email a link to
   choose a new one (`CloudSession.sendPasswordReset`), answering the same whether or not the email has an account.
 - **On a phone:** the same web build, hosted on Firebase Hosting (`firebase.json › hosting`, `npm run build:web`),

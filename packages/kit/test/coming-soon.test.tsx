@@ -17,7 +17,6 @@ declare module '@keystone/core' {
 const ledger: ModuleDef = {
   id: 'ledger',
   title: 'Ledger',
-  section: 'Books',
   blurb: 'Every peso in and out.',
   order: 1,
   Screen: () => <h1>The real ledger</h1>,
@@ -34,7 +33,7 @@ const ledger: ModuleDef = {
   documents: { list: 'entries', collection: 'ledger', key: 'no', fields: [] },
 };
 
-const home: ModuleDef = { id: 'home', title: 'Home', section: '', blurb: '', order: 0, Screen: () => <h1>Home</h1> };
+const home: ModuleDef = { id: 'home', title: 'Home', blurb: '', order: 0, Screen: () => <h1>Home</h1> };
 
 afterEach(() => {
   window.location.hash = '';
@@ -44,7 +43,7 @@ describe('a screen coming soon', () => {
   it('keeps what it does for other parts and what it shows, all but its finding', () => {
     const soon = comingSoon(ledger);
 
-    expect(soon).toMatchObject({ id: 'ledger', title: 'Ledger', section: 'Books', blurb: 'Every peso in and out.', order: 1, soon: true });
+    expect(soon).toMatchObject({ id: 'ledger', title: 'Ledger', blurb: 'Every peso in and out.', order: 1, soon: true });
 
     for (const kept of ['onOpen', 'provides', 'documents', 'onHome', 'stat', 'figure', 'waiting', 'openWaiting', 'create', 'logTags'] as const) {
       expect(soon[kept]).toBe(ledger[kept]);

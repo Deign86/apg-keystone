@@ -1,3 +1,4 @@
+import type { MemberAccount, NewAccount } from './accounts';
 import type { ISODate } from './dates';
 import type { Centavos } from './money';
 import type { BankAccount, Statement, TerminalState, Voucher } from './schema';
@@ -7,7 +8,9 @@ import type { Change, Ctx } from './state';
 // provider offers it under a name (ModuleDef.provides) and the consumer asks for it by
 // that name (ModuleApp.service). Neither imports the other: both see only the contract
 // here, the way an OSGi API bundle sits between provider and consumer. If the provider
-// is not installed, the consumer gets `undefined` and says so.
+// is not installed, the consumer gets `undefined` and says so. One service is offered by
+// the platform instead of a module (`Platform.provides`): the accounts, which only a
+// build that signs in has.
 
 export const SERVICES = {
   /** Offered by the billing module, for settling statements from outside it. */
@@ -18,6 +21,8 @@ export const SERVICES = {
   bankAccounts: 'banks.bank-accounts',
   /** Offered by the vouchers module: a check voucher drafted for spending approved elsewhere (a request for funds). */
   voucherDrafts: 'vouchers.drafts',
+  /** Offered by the platform of a build that signs in: who may open the records in the cloud (docs/adr/0014, 0033). */
+  accounts: 'platform.accounts',
 } as const;
 
 /**
@@ -29,6 +34,7 @@ export interface ServiceContracts {
   [SERVICES.employeeAttendance]: EmployeeAttendance;
   [SERVICES.bankAccounts]: BankAccounts;
   [SERVICES.voucherDrafts]: VoucherDrafts;
+  [SERVICES.accounts]: Accounts;
 }
 
 export type ServiceName = keyof ServiceContracts;
@@ -124,4 +130,38 @@ export interface VoucherDrafts {
    * check yet, for accounting to complete. Refuses a payee missing from the directory, or no amount.
    */
   draft(state: TerminalState, request: VoucherRequest, ctx: Ctx): Change<Voucher>;
+}
+
+/**
+ * Who may open the records in the cloud, and the sign-in of whoever is using Keystone now. Every method throws the
+ * sentence to show when it is refused or cannot be done.
+ */
+export interface Accounts {
+  /** Everyone who may open the records. */
+  list(): Promise<MemberAccount[]>;
+  /**
+   * Makes a sign-in with this email and password and makes it a staff member, leaving the CEO signed in. Only an
+   * owner may; when refused, no sign-in is left behind.
+   */
+  create(account: NewAccount): Promise<MemberAccount>;
+  /**
+   * Takes a member's access away: their member document goes, so they open nothing from then on (docs/adr/0015). Their
+   * sign-in itself stays, since only a server can delete someone else's. Only an owner may, and never their own.
+   */
+  remove(uid: string): Promise<void>;
+  /**
+   * Changes the password of the member signed in, after checking their current one (docs/adr/0016). They stay signed
+   * in here.
+   */
+  changePassword(current: string, next: string): Promise<void>;
+  /**
+   * Changes the name of the member signed in, as Keystone shows them to everyone (docs/adr/0020). Their role and email
+   * stay. The rail and the rules see the new name from the next change on, so log one after.
+   */
+  rename(name: string): Promise<void>;
+  /**
+   * Gives a staff member something a connected system lets the CEO give (`MemberGrant.field`), or takes it back
+   * (docs/adr/0030). Only an owner may, and only a field a connector contributed. Absent where it cannot be kept.
+   */
+  setGrant?(uid: string, field: string, on: boolean): Promise<void>;
 }

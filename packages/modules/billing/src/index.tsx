@@ -1,11 +1,11 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { companyOf, count, peso, recordOf, recordsOf, shortDate, STATEMENT_STATUSES, toneOf, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft } from './rules';
+import { companyOf, count, peso, recordOf, recordsOf, shortDate, type Statement, SERVICES } from '@keystone/core';
+import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
-const DRAFT = 'billing.draft';
+const DRAFT = `${ID}.draft`;
 
 /**
  * "Pay into", when Bank Accounts is installed: picking an account writes it into the payment instructions. Without
@@ -44,7 +44,7 @@ function PayInto({ draft, setDraft }: { draft: StatementDraft; setDraft: (d: Sta
 }
 
 function Billing() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
+  const { state, ctx, run, files, notify } = useKeystone();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newStatement(state, ctx));
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +58,8 @@ function Billing() {
     const r = run((s, c) => saveStatement(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newStatement(store.getState(), ctx));
-  }, [run, draft, ctx, setDraft, store]);
+    if (r.ok) setDraft(newStatement(r.state, ctx));
+  }, [run, draft, ctx, setDraft]);
 
   const columns: Column<Statement>[] = [
     { key: 'no', header: 'Invoice No.', width: 128, cell: (b) => <span className="font-semibold text-gold-bright tabular-nums">{b.no}</span> },
@@ -67,7 +67,7 @@ function Billing() {
     { key: 'invoiced', header: 'Invoice date', width: 120, cell: (b) => <span className="text-ink-2 tabular-nums">{shortDate(b.invoiceDate ?? b.date)}</span> },
     { key: 'due', header: 'Due', width: 104, cell: (b) => <span className="text-ink-2 tabular-nums">{shortDate(b.due)}</span> },
     { key: 'amount', header: 'Amount due', width: 132, align: 'right', cell: (b) => <span className="font-semibold">{peso(statementTotals(b).due)}</span> },
-    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (b) => <StatusPill status={b.status} tone={toneOf(b.status)} /> },
+    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (b) => <StatusPill status={b.status} tone={statementTone(b.status)} /> },
   ];
 
   return (
@@ -110,7 +110,7 @@ function Billing() {
             error={error}
             actions={<>
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {editing && <Button onClick={() => save(true)}>Save as new</Button>}
               <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and mark as sent'}</Button>
             </>}
@@ -152,9 +152,8 @@ function Billing() {
 }
 
 export const billingModule: ModuleDef = {
-  id: 'billing',
+  id: ID,
   title: 'Billing Statements',
-  section: 'Receivables',
   blurb: 'Issue statements of account, with VAT and withholding from each client’s setup.',
   order: 3,
   onHome: true,
@@ -166,10 +165,12 @@ export const billingModule: ModuleDef = {
     const b = app.state.bs.find((x) => x.no === no);
 
     if (b) app.setDraft(DRAFT, statementDraftOf(b, app.state));
-    app.go('billing');
+    app.go(ID);
   },
-  create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go('billing'); } },
-  logTags: { BS: 'Billing' },
+  create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go(ID); } },
+  refersTo,
+  selects: { Client: 'Billing Statements' },
+  logTags: { [TAG]: 'Billing' },
   onOpen: markOverdue,
   provides: { [SERVICES.statementPayments]: statementPayments },
   Screen: Billing,

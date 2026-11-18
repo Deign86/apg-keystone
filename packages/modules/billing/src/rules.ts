@@ -1,9 +1,9 @@
 import {
   addDays, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
   percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
-  toneOf, type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
-  type LineItem, type Payment, type Statement, type StatementPayments, type StatementStatus,
-  type TerminalState, type WaitingItem
+  type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
+  type LineItem, type Payment, type Statement, type StatementPayments,
+  type Reference, type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
 // Billing statements: receivables from clients, printed as the company's Billing
@@ -12,7 +12,29 @@ import {
 
 export interface StatementTotals { subtotal: Centavos; vat: Centavos; ewt: Centavos; due: Centavos }
 
+/** This module's id, written once: its route, its ModuleDef.id and its draft key. */
+export const ID = 'billing';
+
+/** The tag its activity-log lines carry. */
+export const TAG = 'BS';
+
+export const STATEMENT_STATUSES = ['Sent', 'Paid', 'Overdue', 'Void'] as const;
+
+export type StatementStatus = (typeof STATEMENT_STATUSES)[number];
+
+const TONES: Record<StatementStatus, Tone> = { Sent: 'neutral', Paid: 'good', Overdue: 'bad', Void: 'neutral' };
+
+/** How a statement's status reads at a glance. One saved with a status this build does not know reads as neutral. */
+export function statementTone(status: string): Tone {
+  const known = STATEMENT_STATUSES.find((s) => s === status);
+
+  return known ? TONES[known] : 'neutral';
+}
+
 export const VAT_RATE = 12;
+
+/** A statement names its client by directory code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => s.bs.some((b) => b.client === code) };
 export const EWT_RATE = 5;
 
 /** VAT is added and EWT withheld, both on the subtotal. */
@@ -151,7 +173,7 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
     const updated = { ...b, no: original.no, status: original.status };
 
     return {
-      state: logged({ ...s, bs: s.bs.map((x) => (x.no === original.no ? updated : x)) }, 'BS',
+      state: logged({ ...s, bs: s.bs.map((x) => (x.no === original.no ? updated : x)) }, TAG,
         `${updated.no} for ${nameOf(s, b.client)} edited (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
@@ -165,7 +187,7 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
   const saved = { ...b, no };
 
   return {
-    state: logged({ ...s, bs: [...s.bs, saved] }, 'BS', `${saved.no} sent to ${nameOf(s, b.client)} (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
+    state: logged({ ...s, bs: [...s.bs, saved] }, TAG, `${saved.no} sent to ${nameOf(s, b.client)} (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
     record: saved, message: `${saved.no} saved and marked as sent.`,
   };
 }
@@ -184,7 +206,7 @@ export function setStatementStatus(s: TerminalState, no: string, status: Stateme
     : `${no} marked ${status.toLowerCase()}.`;
 
   return {
-    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, 'BS', text, ctx),
+    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, TAG, text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }
@@ -204,7 +226,7 @@ export function recordPayment(s: TerminalState, no: string, p: Payment, ctx: Ctx
   const how = [p.method, p.reference && `ref ${p.reference}`].filter(Boolean).join(' ');
 
   return {
-    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, 'BS',
+    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, TAG,
       `${no} from ${nameOf(s, b.client)} paid: ${peso(paid)}${how ? ` by ${how}` : ''}, reported on ${p.source}.`, ctx),
     record: updated, message: `${no} marked paid.`,
   };
@@ -237,7 +259,7 @@ export function billingFinding(s: TerminalState): Finding | null {
 
 export function billingWaiting(s: TerminalState): WaitingItem[] {
   return [...outstanding(s)].sort((a, b) => a.due.localeCompare(b.due)).map((b, i) => ({
-    no: b.no, who: `${nameOf(s, b.client)} · due ${shortDate(b.due)}`, amount: statementTotals(b).due, status: b.status, tone: toneOf(b.status), rank: 10 + i,
+    no: b.no, who: `${nameOf(s, b.client)} · due ${shortDate(b.due)}`, amount: statementTotals(b).due, status: b.status, tone: statementTone(b.status), rank: 10 + i,
   }));
 }
 

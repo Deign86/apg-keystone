@@ -65,12 +65,14 @@ changes.
 
 | Field | Required | What it is for |
 |---|---|---|
-| `id`, `title`, `section`, `blurb`, `order`, `Screen` | yes | Identity, rail position (`order`) and the screen itself |
+| `id`, `title`, `blurb`, `order`, `Screen` | yes | Identity, rail position (`order`) and the screen itself. The id is written once in the module (`ID` in its `rules.ts`) and used for its `ext` key, draft key and own `go` calls |
 | `onHome`, `stat` | | A tile on Home with one live figure. `stat` is given the installed modules too, so a collector such as Overview can count what they contribute (docs/adr/0021). |
 | `figure` | | A cell in Overview's figure strip. Mark the one that answers the screen's question `lead: true`. |
 | `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20, IDs 10. |
 | `waiting`, `openWaiting` | | Records waiting on someone, listed on Overview, and how to open one |
 | `create` | | A "New …" button on Overview |
+| `selects` | | The directory records a person picks from on its screen, by type, as a sentence names the screen (`{ Vendor: 'Requests for Funds' }`). The Directory says so when a record of that type is added |
+| `refersTo` | | Whether its saved records name a directory record, by code, and the tag to mark it with. The Directory keeps a record any installed module names |
 | `logTags` | | The activity-log tags it writes, with their filter label |
 | `onOpen` | | Housekeeping when Keystone opens (marking overdue or expired records) |
 | `provides` | | Services it offers other parts, by published name (see below) |
@@ -133,6 +135,7 @@ cannot update itself (docs/adr/0029).
 | `logo` | yes | The app's own logo, imported from the package (`import logo from './logo.png'`) |
 | `open(env)` | yes | Opens the app. `env.system` finds and starts installed apps and opens URLs. It may return a sentence to show |
 | `tag` | | Short label for directory records linked to this system |
+| `memberGrant` | | Something of this system's that the CEO gives a staff member's account: the yes-or-no field kept on the member, and the words User Accounts shows for it (docs/adr/0030, 0033) |
 
 Desktop apps use `openDesktopApp(env, { name, locator, repo, installers })` from core: it starts the installed app, or
 fetches its installer, or opens its download page, and in the browser preview says the desktop app is needed.
@@ -152,8 +155,11 @@ removes its rules with it; nothing else could have been using them.
 holders). So its records and rules are shared kernel (`core/kernel/directory.ts`);
 only its screen is a module.
 
-**Integrity is data-level.** `usedBy` reads the saved records, not the installed modules. A vendor that a voucher
-points to stays protected from deletion even in a build without the vouchers screen.
+**Integrity follows the installed parts (docs/adr/0032).** `usedBy` asks each installed module whether its records
+name a directory record (`ModuleDef.refersTo`); core lists nobody's. A vendor that a voucher, a request for funds, a
+pay setup or a recorded day points to is protected from deletion while the module that keeps those records is
+installed. A screen shown as "Coming soon" is still installed. A build with a module taken out no longer protects the
+records only that module's data names.
 
 ## The saved state
 

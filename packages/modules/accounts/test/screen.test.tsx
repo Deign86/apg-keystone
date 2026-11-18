@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Member } from '@keystone/core';
-import { App, buildRegistry, KeystoneStore, type AppAccounts, type MemberAccount, type NewAccount, type Platform } from '@keystone/kit';
+import { SERVICES, type Accounts, type Connector, type Member, type MemberAccount, type MemberGrant, type NewAccount } from '@keystone/core';
+import { App, buildRegistry, KeystoneStore, type Platform } from '@keystone/kit';
 import { accountsModule } from '../src';
 
-// The User Accounts screen against a stand-in for the sign-in (Platform.accounts), as the cloud build provides it:
+// The User Accounts screen against a stand-in for the sign-in (the platform's `accounts` service), as the cloud build provides it:
 // the CEO makes and removes staff accounts, staff only see who has one, anyone signed in changes their own
 // password, and a computer with nobody signed in has none of it.
 
@@ -17,23 +17,42 @@ const base: Platform = {
   launchApp: async () => { throw new Error('Not in tests.'); }, openUrl: async () => {},
 };
 
+/**
+ * What a connected system lets the CEO give a staff member, worded as the attendance connector contributes it
+ * (packages/connectors/attendance, which a module cannot import): the sentences below are the ones the screen has
+ * always shown.
+ */
+const admin: MemberGrant = {
+  field: 'attendanceAdmin',
+  label: 'Attendance admin',
+  as: 'an attendance admin',
+  opens: 'the attendance tracker\'s admin screens',
+  asks: {
+    give: (who) => `${who} will open the attendance tracker's admin screens with their own email and password: interns, attendance, payroll and its settings.`,
+    take: (who) => `${who} will no longer open the attendance tracker's admin screens with this account. An admin card they hold still works there.`,
+  },
+};
+
+/** A connected system that contributes it, as the attendance tracker's connector does. */
+const tracker: Connector = { id: 'tracker', name: 'Tracker', logo: 'tracker.png', open: async () => {}, memberGrant: admin };
+
 /** The sign-in's members, with `create` recording what it was asked and answering as `made` says. */
 function signIn(made: (a: NewAccount) => Promise<MemberAccount> = async (a) => ({ uid: 'new-1', name: a.name, email: a.email, role: 'staff' })) {
   const members: MemberAccount[] = [{ ...owner, email: 'mark@alphapremiergroup.com' }, { ...hr, email: 'ana.cruz@alphapremiergroup.com' }];
 
-  const accounts: AppAccounts = {
+  const accounts: Accounts = {
     list: vi.fn(async () => members), create: vi.fn(made), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}),
-    rename: vi.fn(async () => {}), setAttendanceAdmin: vi.fn(async () => {}),
+    rename: vi.fn(async () => {}), setGrant: vi.fn(async () => {}),
   };
 
   return accounts;
 }
 
-async function open(who?: Member, accounts?: AppAccounts) {
-  const store = await KeystoneStore.open({ ...base, ...(who && { who }), ...(accounts && { accounts }) });
+async function open(who?: Member, accounts?: Accounts, connectors: Connector[] = [tracker]) {
+  const store = await KeystoneStore.open({ ...base, ...(who && { who }), ...(accounts && { provides: { [SERVICES.accounts]: accounts } }) });
 
   window.location.hash = '#accounts';
-  render(<App store={store} registry={buildRegistry([accountsModule], [])} />);
+  render(<App store={store} registry={buildRegistry([accountsModule], connectors)} />);
   await act(async () => {});
 
   return store;
@@ -224,29 +243,29 @@ describe('User Accounts', () => {
     const question = await screen.findByRole('alertdialog', { name: 'Make Ana Cruz an attendance admin?' });
 
     expect(question).toHaveTextContent('will open the attendance tracker\'s admin screens with their own email and password');
-    expect(accounts.setAttendanceAdmin).not.toHaveBeenCalled();
+    expect(accounts.setGrant).not.toHaveBeenCalled();
     fireEvent.click(within(question).getByRole('button', { name: 'Make attendance admin' }));
     await act(async () => {});
 
-    expect(accounts.setAttendanceAdmin).toHaveBeenCalledWith('hr-1', true);
+    expect(accounts.setGrant).toHaveBeenCalledWith('hr-1', 'attendanceAdmin', true);
     expect(within(table).getByRole('row', { name: /^Ana Cruz ana\.cruz@alphapremiergroup\.com Staff · Attendance admin$/ })).toBeInTheDocument();
-    expect(store.getState().log[0].text).toBe('Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.');
+    expect(store.state.log[0].text).toBe('Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Actions for Ana Cruz' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove as attendance admin…' }));
     fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'Remove Ana Cruz as attendance admin?' })).getByRole('button', { name: 'Remove as attendance admin' }));
     await act(async () => {});
 
-    expect(accounts.setAttendanceAdmin).toHaveBeenLastCalledWith('hr-1', false);
+    expect(accounts.setGrant).toHaveBeenLastCalledWith('hr-1', 'attendanceAdmin', false);
     expect(within(table).getByRole('row', { name: /^Ana Cruz ana\.cruz@alphapremiergroup\.com Staff$/ })).toBeInTheDocument();
   });
 
   it('a refusal from the cloud changes nothing on screen', async () => {
     const accounts = signIn();
 
-    accounts.setAttendanceAdmin = vi.fn(async () => { throw new Error('Only the CEO decides who opens the attendance tracker\'s admin screens.'); });
+    accounts.setGrant = vi.fn(async () => { throw new Error('Only the CEO decides who opens the attendance tracker\'s admin screens.'); });
     const store = await open(owner, accounts);
-    const logged = store.getState().log.length;
+    const logged = store.state.log.length;
 
     fireEvent.click(screen.getByRole('button', { name: 'Actions for Ana Cruz' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Make attendance admin…' }));
@@ -255,7 +274,18 @@ describe('User Accounts', () => {
 
     expect(await screen.findByText('Only the CEO decides who opens the attendance tracker\'s admin screens.')).toBeInTheDocument();
     expect(within(screen.getByRole('table', { name: 'User accounts' })).queryByText(/Attendance admin/)).toBeNull();
-    expect(store.getState().log).toHaveLength(logged);
+    expect(store.state.log).toHaveLength(logged);
+  });
+
+  it('offers nothing of a connected system that is not installed, and still removes accounts', async () => {
+    const accounts = signIn();
+
+    vi.mocked(accounts.list).mockResolvedValue([{ ...owner, email: 'mark@alphapremiergroup.com' }, { ...hr, email: 'ana.cruz@alphapremiergroup.com', grants: ['attendanceAdmin'] }]);
+    await open(owner, accounts, []);
+
+    expect(within(screen.getByRole('table', { name: 'User accounts' })).getByRole('row', { name: /^Ana Cruz ana\.cruz@alphapremiergroup\.com Staff$/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for Ana Cruz' }));
+    expect((await screen.findAllByRole('menuitem')).map((i) => i.textContent)).toEqual(['Remove…']);
   });
 
   it('staff are offered none of it', async () => {

@@ -1,15 +1,15 @@
 import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
-import { DASH } from '@keystone/core';
+import { CANNOT_KEEP_GRANT, DASH, SERVICES, type Accounts, type MemberAccount, type MemberGrant } from '@keystone/core';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
+import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
-  accountMade, accountRemoved, accountsLine, attendanceAdminQuestion, attendanceAdminRefusal, attendanceAdminSet, checkAccount, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
-  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine, TAG,
+  accountMade, accountRemoved, accountsLine, checkAccount, grantAction, grantQuestion, grantRefusal, grantSet, grantTitle, hasGrant, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
+  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine, TAG, ID,
 } from './rules';
 
 /** The CEO's form for a new staff account: name, email and the password they first sign in with. */
 function AccountForm({ accounts, members, onDone, onCancel }: {
-  accounts: AppAccounts; members: MemberAccount[]; onDone: (made: MemberAccount) => void; onCancel: () => void;
+  accounts: Accounts; members: MemberAccount[]; onDone: (made: MemberAccount) => void; onCancel: () => void;
 }) {
   const { ctx, run } = useKeystone();
   const [d, setD] = useState(newAccountDraft);
@@ -55,7 +55,7 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
 }
 
 /** Anyone signed in changing their own password: the current one, then the new one twice. */
-function PasswordForm({ accounts, onDone }: { accounts: AppAccounts; onDone: () => void }) {
+function PasswordForm({ accounts, onDone }: { accounts: Accounts; onDone: () => void }) {
   const { ctx, run } = useKeystone();
   const [d, setD] = useState(newPasswordDraft);
   const [error, setError] = useState<string | null>(null);
@@ -102,8 +102,10 @@ function PasswordForm({ accounts, onDone }: { accounts: AppAccounts; onDone: () 
 }
 
 /** Who can open the records in the cloud; for the CEO, making and removing staff accounts; for anyone, their password. */
-function Members({ accounts }: { accounts: AppAccounts }) {
-  const { ctx, run, notify } = useKeystone();
+function Members({ accounts }: { accounts: Accounts }) {
+  const { ctx, run, notify, registry } = useKeystone();
+  // What the installed connected systems let the CEO give a staff member (Connector.memberGrant). None installed: none offered.
+  const grants = registry.connectors.flatMap((c) => c.memberGrant ?? []);
   const confirm = useConfirm();
   const [members, setMembers] = useState<MemberAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -133,13 +135,13 @@ function Members({ accounts }: { accounts: AppAccounts }) {
     }
   };
 
-  const setAttendanceAdmin = async (m: MemberAccount, on: boolean) => {
+  const setGrant = async (m: MemberAccount, g: MemberGrant, on: boolean) => {
     try {
-      const refusal = attendanceAdminRefusal(m, ctx);
+      const refusal = grantRefusal(m, g, ctx);
 
-      if (refusal || !accounts.setAttendanceAdmin) throw new Error(refusal ?? 'This Keystone cannot keep that.');
-      await accounts.setAttendanceAdmin(m.uid, on);
-      const changed = run((s, c) => attendanceAdminSet(s, m, on, c));
+      if (refusal || !accounts.setGrant) throw new Error(refusal ?? CANNOT_KEEP_GRANT);
+      await accounts.setGrant(m.uid, g.field, on);
+      const changed = run((s, c) => grantSet(s, m, g, on, c));
 
       if (changed.ok) setMembers((ms) => ms && ms.map((x) => (x.uid === m.uid ? changed.record : x)));
     } catch (e) {
@@ -153,7 +155,7 @@ function Members({ accounts }: { accounts: AppAccounts }) {
       cell: (m) => <span title={m.name}>{m.name}{m.uid === ctx.who?.uid && <span className="text-ink-2"> (you)</span>}</span>,
     },
     { key: 'email', header: 'Email', cell: (m) => (m.email ? <span title={m.email}>{m.email}</span> : <span className="text-ink-3">{DASH}</span>) },
-    { key: 'role', header: 'Role', width: 200, cell: (m) => roleLine(m) },
+    { key: 'role', header: 'Role', width: 200, cell: (m) => roleLine(m, grants) },
   ];
 
   return (
@@ -181,14 +183,13 @@ function Members({ accounts }: { accounts: AppAccounts }) {
           rowKey={(m) => m.uid}
           rowLabel={(m) => m.name}
           // The CEO removes staff accounts from a row's menu; owners and their own account have none.
-          actions={owner ? (m) => (removeRefusal(m, ctx) ? [] : [...(accounts.setAttendanceAdmin && !attendanceAdminRefusal(m, ctx) ? [{
-            label: m.attendanceAdmin ? 'Remove as attendance admin…' : 'Make attendance admin…',
+          actions={owner ? (m) => (removeRefusal(m, ctx) ? [] : [...grants.flatMap((g) => (accounts.setGrant && !grantRefusal(m, g, ctx) ? [{
+            label: `${grantAction(m, g)}…`,
             onSelect: () => confirm({
-              title: m.attendanceAdmin ? `Remove ${m.name} as attendance admin?` : `Make ${m.name} an attendance admin?`,
-              body: attendanceAdminQuestion(m), confirm: m.attendanceAdmin ? 'Remove as attendance admin' : 'Make attendance admin',
-              onConfirm: () => void setAttendanceAdmin(m, !m.attendanceAdmin),
+              title: grantTitle(m, g), body: grantQuestion(m, g), confirm: grantAction(m, g),
+              onConfirm: () => void setGrant(m, g, !hasGrant(m, g)),
             }),
-          }] : []), {
+          }] : [])), {
             label: 'Remove…', danger: true,
             onSelect: () => confirm({
               title: `Remove ${m.name}?`, body: removalQuestion(m), confirm: 'Remove account', danger: true, onConfirm: () => void remove(m),
@@ -225,9 +226,9 @@ function Members({ accounts }: { accounts: AppAccounts }) {
 }
 
 function Accounts() {
-  const { platform } = useKeystone();
+  const accounts = useModuleApp().service(SERVICES.accounts);
 
-  if (platform.accounts) return <Members accounts={platform.accounts} />;
+  if (accounts) return <Members accounts={accounts} />;
 
   return (
     <>
@@ -240,9 +241,8 @@ function Accounts() {
 }
 
 export const accountsModule: ModuleDef = {
-  id: 'accounts',
+  id: ID,
   title: 'User Accounts',
-  section: 'Settings',
   blurb: 'Who can open APG’s records, and the CEO making an account for each staff member.',
   // Under Settings after Profile, before Data and Bank Accounts.
   order: 89,

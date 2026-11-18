@@ -6,7 +6,8 @@ import {
 // The company's bank accounts: where its checks are drawn and where clients are asked to pay. Kept under
 // state.ext.banks; another part reads them only through the bank-accounts service (SERVICES.bankAccounts).
 
-export const MODULE = 'banks';
+/** This module's id, written once: its route, its ModuleDef.id and its key under state.ext. */
+export const ID = 'banks';
 export const TAG = 'BANK';
 
 export type BanksData = { accounts: BankAccount[] };
@@ -18,7 +19,7 @@ export const accountLabel = (a: BankAccount) => [a.bank, a.number].filter(Boolea
 
 /** The accounts in the order they were added, as saved and checked field by field. None saved: none (docs/adr/0018). */
 export function accountsOf(s: TerminalState): BankAccount[] {
-  const raw = moduleData(s, MODULE);
+  const raw = moduleData(s, ID);
 
   if (!isJsonObject(raw)) return [];
 
@@ -27,7 +28,7 @@ export function accountsOf(s: TerminalState): BankAccount[] {
     .filter((a) => a.id);
 }
 
-const saved = (s: TerminalState, accounts: BankAccount[]) => withModuleData(s, MODULE, { accounts } satisfies BanksData);
+const saved = (s: TerminalState, accounts: BankAccount[]) => withModuleData(s, ID, { accounts } satisfies BanksData);
 
 // ---------- adding, editing and removing ----------
 

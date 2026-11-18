@@ -1,15 +1,15 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
+import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, type Voucher } from '@keystone/core';
 import {
   approvesOnSave, awaitingApproval, copyVoucher, newVoucher, payeeOf, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting, withCheck,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, VOUCHER_STATUSES, vouchersNewestFirst, voucherTone, voucherTotal, voucherWaiting, withCheck, ID, TAG, refersTo,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
-const DRAFT = 'vouchers.draft';
+const DRAFT = `${ID}.draft`;
 
 /** A group of the form's fields, turned off together while the voucher is locked. */
 const FIELDS = 'm-0 flex min-w-0 flex-col gap-3.5 border-0 p-0';
@@ -34,7 +34,7 @@ type NewAccount = { bank: string; branch: string; name: string; number: string }
  * picked can be removed from there. Nothing needs adding on the Bank Accounts screen first.
  */
 function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) => void }) {
-  const { state, run, store } = useKeystone();
+  const { state, run } = useKeystone();
   const app = useModuleApp();
   const confirm = useConfirm();
   const banks = app.service(SERVICES.bankAccounts);
@@ -69,10 +69,12 @@ function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) 
 
   const remove = (id: string) => {
     const r = run((s, c) => banks.remove(s, id, c));
-    const next = banks.accounts(store.getState())[0];
 
+    if (!r.ok) return;
     // The check is then drawn on the first account still kept, if any.
-    if (r.ok) onChange(next ? banks.label(next) : '');
+    const next = banks.accounts(r.state)[0];
+
+    onChange(next ? banks.label(next) : '');
   };
 
   const field = (key: keyof NewAccount) => ({ value: adding?.[key] ?? '', onChange: (v: string) => adding && setAdding({ ...adding, [key]: v }) });
@@ -133,7 +135,7 @@ function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) 
 }
 
 function Vouchers() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
+  const { state, ctx, run, files, notify } = useKeystone();
   const app = useModuleApp();
   const bank = firstBank(app);
   const confirm = useConfirm();
@@ -160,8 +162,8 @@ function Vouchers() {
     setError(r.ok ? null : r.error);
 
     // Number the next blank voucher from the state after the save.
-    if (r.ok) setDraft(newVoucher(store.getState(), ctx, bank));
-  }, [run, draft, ctx, setDraft, store, bank]);
+    if (r.ok) setDraft(newVoucher(r.state, ctx, bank));
+  }, [run, draft, ctx, setDraft, bank]);
 
   const columns: Column<Voucher>[] = [
     { key: 'no', header: 'CV No.', width: 120, cell: (v) => <span className="font-semibold text-gold-bright tabular-nums">{v.no}</span> },
@@ -170,7 +172,7 @@ function Vouchers() {
     // The check number over its date, so the payee keeps the width at the narrowest window.
     { key: 'check', header: 'Check', width: 112, cell: (v) => <><span className="block truncate tabular-nums">{v.check || DASH}</span> {v.checkDate && <span className="block truncate text-xs text-ink-2 tabular-nums">{shortDate(v.checkDate)}</span>}</> },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (v) => <span className="font-semibold">{peso(voucherTotal(v))}</span> },
-    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (v) => <StatusPill status={v.status} tone={toneOf(v.status)} /> },
+    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (v) => <StatusPill status={v.status} tone={voucherTone(v.status)} /> },
   ];
 
   return (
@@ -211,7 +213,7 @@ function Vouchers() {
             error={error}
             actions={<>
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
               {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
               {(!locked || checkOpen) && <Button kind="primary" type="submit">{checkOpen ? 'Save check' : editing ? 'Save changes' : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
@@ -267,9 +269,8 @@ function Vouchers() {
 }
 
 export const vouchersModule: ModuleDef = {
-  id: 'vouchers',
+  id: ID,
   title: 'Check Vouchers',
-  section: 'Disbursements',
   blurb: 'Prepare check vouchers, print each twice on one A4 sheet to cut in half, and route them for signatures.',
   order: 2,
   onHome: true,
@@ -281,10 +282,11 @@ export const vouchersModule: ModuleDef = {
     const v = app.state.cv.find((x) => x.no === no);
 
     if (v) app.setDraft(DRAFT, voucherDraftOf(app.state, v));
-    app.go('vouchers');
+    app.go(ID);
   },
-  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go('vouchers'); } },
-  logTags: { CV: 'Vouchers' },
+  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go(ID); } },
+  refersTo,
+  logTags: { [TAG]: 'Vouchers' },
   provides: { [SERVICES.voucherDrafts]: voucherDrafts },
   Screen: Vouchers,
 };

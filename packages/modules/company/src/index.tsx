@@ -1,11 +1,11 @@
 import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput } from '@keystone/ui';
 import { useCallback, useState } from 'react';
 import { FormCard, useKeystone, type ModuleDef } from '@keystone/kit';
-import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft } from './rules';
+import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft, ID } from './rules';
 
 /** The company's details, in one form. Staff see them; only an owner changes them. */
 function CompanyDetailsScreen() {
-  const { state, ctx, run, store } = useKeystone();
+  const { state, ctx, run } = useKeystone();
   const [d, setD] = useState<CompanyDraft>(() => companyDraftOf(state));
   const [error, setError] = useState<string | null>(null);
   const editable = canChange(ctx);
@@ -17,8 +17,8 @@ function CompanyDetailsScreen() {
     setError(r.ok ? null : r.error);
 
     // The form shows what was saved: single spaces, and days and years as numbers.
-    if (r.ok) setD(companyDraftOf(store.getState()));
-  }, [editable, run, d, store]);
+    if (r.ok) setD(companyDraftOf(r.state));
+  }, [editable, run, d]);
 
   const text = (field: keyof CompanyDraft, label: string, hint?: string) => (
     <Field label={label} hint={hint}><TextInput readOnly={!editable} value={d[field]} onChange={(v) => set({ [field]: v })} /></Field>
@@ -70,9 +70,8 @@ function CompanyDetailsScreen() {
 }
 
 export const companyModule: ModuleDef = {
-  id: 'company',
+  id: ID,
   title: 'Company Details',
-  section: 'Settings',
   blurb: 'What each new voucher, statement and ID starts from: signatories, payment instructions and terms.',
   // Last under Settings, after Bank Accounts.
   order: 92,

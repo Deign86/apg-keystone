@@ -1,17 +1,17 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos } from '@keystone/core';
+import { companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
 import { FormCard, LineEditor, printElement, savePdf, useDraft, useKeystone, useModuleApp, Workspace, type ModuleDef } from '@keystone/kit';
 import {
   accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
   fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftOf, requestLock, requestOf, requestPreview, requestsNewestFirst,
   requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
-  type Verdict,
+  type Verdict, ID, TAG, refersTo,
 } from './rules';
 import { TransferPaper } from './TransferPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
-const DRAFT = 'funds.draft';
+const DRAFT = `${ID}.draft`;
 
 const WHEN = [{ value: ASAP, label: 'As soon as possible' }, { value: 'date', label: 'By a date' }];
 
@@ -24,7 +24,7 @@ const pdfName = (r: FundsRequest) => `${r.no} fund transfer request.pdf`;
  * One request waiting for the CEO: how much, what for, each expense, where the money goes, who asked and by when,
  * and the two answers. Fits a phone. `onApproved` opens a transfer once it is approved, to print or save its paper.
  */
-function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved: (no: string) => void }) {
+function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved: (no: string, after: TerminalState) => void }) {
   const { state, run } = useKeystone();
   const app = useModuleApp();
   const confirm = useConfirm();
@@ -41,7 +41,7 @@ function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved
   const decide = (verdict: Verdict) => {
     const out = run((s, c) => decideRequest(s, r.no, verdict, note, c, vouchers));
 
-    if (out.ok && verdict === 'Approved' && r.pay === 'transfer') onApproved(r.no);
+    if (out.ok && verdict === 'Approved' && r.pay === 'transfer') onApproved(r.no, out.state);
   };
 
   return (
@@ -91,7 +91,7 @@ function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved
 }
 
 function Funds() {
-  const { state, ctx, run, notify, store, platform } = useKeystone();
+  const { state, ctx, run, notify, files } = useKeystone();
   const app = useModuleApp();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newRequest(state, ctx));
@@ -109,28 +109,30 @@ function Funds() {
   const staff = !!ctx.who && !decides(ctx);
   const setAccount = (patch: Partial<TransferAccount>) => setDraft({ ...draft, account: { ...draft.account, ...patch } });
 
-  /** Opens a request in the form, and brings the form into view. */
-  const open = useCallback((no: string) => {
-    const r = requestOf(store.getState(), no);
+  /** Opens a request in the form, as the state after its approval holds it, and brings the form into view. */
+  const open = useCallback((no: string, after: TerminalState) => {
+    const r = requestOf(after, no);
 
     if (!r) return;
     setDraft(requestDraftOf(r));
     setError(null);
     requestAnimationFrame(() => document.getElementById('rf-form')?.scrollIntoView({ block: 'start' }));
-  }, [store, setDraft]);
+  }, [setDraft]);
 
   const save = useCallback(() => {
     const r = run((s, c) => fileRequest(s, draft, c));
     setError(r.ok ? null : r.error);
 
     // Number the next blank request from the state after the save.
-    if (r.ok) setDraft(newRequest(store.getState(), ctx));
-  }, [run, draft, ctx, setDraft, store]);
+    if (r.ok) setDraft(newRequest(r.state, ctx));
+  }, [run, draft, ctx, setDraft]);
 
   const withdraw = (r: FundsRequest) => confirm({
     title: `Withdraw ${r.no}?`, body: `${peso(requestTotal(r))} to ${nameOf(state, r.payee)}. It stays on record as withdrawn; to ask again, file a new request.`, confirm: 'Withdraw', danger: true,
     onConfirm: () => {
-      if (run((s, c) => withdrawRequest(s, r.no, c)).ok) setDraft(newRequest(store.getState(), ctx));
+      const out = run((s, c) => withdrawRequest(s, r.no, c));
+
+      if (out.ok) setDraft(newRequest(out.state, ctx));
     },
   });
 
@@ -153,7 +155,7 @@ function Funds() {
       error={error}
       actions={<>
         {ready && <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>}
-        {ready && <Button onClick={() => paper.current && savePdf(paper.current, pdfName(ready), platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>}
+        {ready && <Button onClick={() => paper.current && savePdf(paper.current, pdfName(ready), files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>}
         {editing?.voucher && app.has('vouchers') && <Button onClick={() => app.go('vouchers')}>Open Check Vouchers</Button>}
         {editing && !locked && <Button kind="danger" onClick={() => withdraw(editing)}>Withdraw…</Button>}
         {locked
@@ -253,9 +255,8 @@ function Funds() {
 }
 
 export const fundsModule: ModuleDef = {
-  id: 'funds',
+  id: ID,
   title: 'Requests for Funds',
-  section: 'Disbursements',
   blurb: 'List the expenses you need money for. The CEO decides; an approval drafts the fund transfer or check voucher.',
   // Right after Check Vouchers, which its approvals feed.
   order: 2.5,
@@ -268,10 +269,12 @@ export const fundsModule: ModuleDef = {
     const r = requestOf(app.state, no);
 
     if (r) app.setDraft(DRAFT, requestDraftOf(r));
-    app.go('funds');
+    app.go(ID);
   },
-  create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go('funds'); } },
-  logTags: { RF: 'Requests for funds' },
+  create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go(ID); } },
+  refersTo,
+  selects: { Vendor: 'Requests for Funds' },
+  logTags: { [TAG]: 'Requests for funds' },
   documents: requestDocuments,
   Screen: Funds,
 };

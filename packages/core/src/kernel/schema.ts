@@ -11,7 +11,6 @@ export type JsonValue = string | number | boolean | null | JsonValue[] | { [key:
 
 export const RECORD_TYPES: RecordType[] = ['Vendor', 'Client', 'Employee'];
 export const CODE_PREFIX: Record<RecordType, string> = { Vendor: 'V-', Client: 'C-', Employee: 'E-' };
-export const USED_IN: Record<RecordType, string> = { Vendor: 'Requests for Funds', Client: 'Billing Statements', Employee: 'the ID Maker' };
 
 export interface DirectoryRecord {
   code: string;
@@ -48,29 +47,8 @@ export interface LineItem {
   amt: number;
 }
 
+/** How a status reads at a glance. Which status has which tone is its module's to say. */
 export type Tone = 'good' | 'warn' | 'bad' | 'neutral';
-
-export const VOUCHER_STATUSES = ['For Approval', 'Approved', 'Released', 'Void'] as const;
-
-export type VoucherStatus = (typeof VOUCHER_STATUSES)[number];
-
-export const STATEMENT_STATUSES = ['Sent', 'Paid', 'Overdue', 'Void'] as const;
-
-export type StatementStatus = (typeof STATEMENT_STATUSES)[number];
-
-export const ID_STATUSES = ['For printing', 'Active', 'Expired', 'Revoked'] as const;
-
-export type IDStatus = (typeof ID_STATUSES)[number];
-
-export type Status = VoucherStatus | StatementStatus | IDStatus;
-
-const TONES: Record<Status, Tone> = {
-  'For Approval': 'warn', Approved: 'good', Released: 'neutral', Void: 'neutral',
-  Sent: 'neutral', Paid: 'good', Overdue: 'bad',
-  'For printing': 'warn', Active: 'good', Expired: 'bad', Revoked: 'bad',
-};
-
-export const toneOf = (s: Status): Tone => TONES[s] ?? 'neutral';
 
 export interface Voucher {
   no: string;
@@ -92,7 +70,8 @@ export interface Voucher {
   /** The date written on the check. */
   checkDate?: ISODate;
   lines: LineItem[];
-  status: VoucherStatus;
+  /** As saved. The statuses a voucher goes through, and their tones, belong to the module that keeps vouchers. */
+  status: string;
   prepared: string;
   /** Printed as "Audited by" (the key is the prototype's). */
   checked: string;
@@ -126,7 +105,8 @@ export interface Statement {
   notes?: string;
   /** The closing note under the payment instructions. */
   note?: string;
-  status: StatementStatus;
+  /** As saved. The statuses a statement goes through belong to the module that keeps statements. */
+  status: string;
 }
 
 export interface IDRecord {
@@ -142,7 +122,8 @@ export interface IDRecord {
   iceName: string;
   iceNo: string;
   signatory: string;
-  status: IDStatus;
+  /** As saved. The statuses an ID goes through belong to the module that keeps IDs. */
+  status: string;
   /** The card photo: a file name in the app's photo folder. */
   photo?: string;
 }

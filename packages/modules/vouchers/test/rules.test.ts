@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
   copyVoucher, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
-  voucherLine, voucherLock, voucherWaiting,
+  voucherLine, voucherLock, voucherTone, voucherWaiting, VOUCHER_STATUSES,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -14,6 +14,12 @@ const state = () => sampleState();
 const water = { payee: 'Manila Water Company', address: 'MWSS Compound, Quezon City' };
 
 describe('check vouchers', () => {
+  it('keeps the statuses and tones a voucher has always had, and reads one it does not know as neutral', () => {
+    // Core held these until the module took them; saved vouchers carry the words.
+    expect(VOUCHER_STATUSES.map((s) => [s, voucherTone(s)])).toEqual([['For Approval', 'warn'], ['Approved', 'good'], ['Released', 'neutral'], ['Void', 'neutral']]);
+    expect(voucherTone('Cancelled')).toBe('neutral');
+  });
+
   it('numbers 888-001 and on, with no year, after the highest in that series', () => {
     const s = state();
     expect(nextVoucherNo(s)).toBe('888-001');

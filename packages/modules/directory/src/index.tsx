@@ -1,18 +1,20 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column } from '@keystone/ui';
 import { useState } from 'react';
 import {
-  DASH, count, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
+  DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
   type DirectoryDraft, type DirectoryRecord, type RecordType, type Figure, type TerminalState,
 } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 
 function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => void }) {
-  const { state, run } = useKeystone();
+  const { state, run, registry } = useKeystone();
   const [d, setD] = useState(draft);
   const [error, setError] = useState<string | null>(null);
 
   const save = () => {
-    const r = run((s, c) => saveDirectoryRecord(s, d, c));
+    // The screens a new record of this type can be picked on, as the installed modules say.
+    const selectableIn = registry.modules.flatMap((m) => m.selects?.[d.type] ?? []);
+    const r = run((s, c) => saveDirectoryRecord(s, d, c, selectableIn));
 
     if (r.ok) onDone(); else setError(r.error);
   };
@@ -72,6 +74,8 @@ function Directory() {
   const rows = state.dir.filter((d) => (filter === 'All' || d.type === filter)
     && (!q || [d.code, d.name, d.tin, d.detail, d.dept, d.email].some((x) => x?.toLowerCase().includes(q))));
 
+  // What the installed modules say their records refer to: a record one of them names is kept.
+  const references = registry.modules.flatMap((m) => m.refersTo ?? []);
   const connector = (id: string) => registry.connectors.find((c) => c.id === id);
   const sourceName = (id: string) => connector(id)?.name ?? id;
 
@@ -89,7 +93,7 @@ function Directory() {
     },
     {
       key: 'used', header: 'Used by', width: 100, cell: (d) => {
-        const used = usedBy(state, d.code);
+        const used = usedBy(state, d.code, references);
         const linked = Object.keys(d.links ?? {});
 
         return used.length || linked.length ? (
@@ -147,8 +151,8 @@ function Directory() {
             { label: 'Edit…', onSelect: () => setEditing(directoryDraftOf(d)) },
             { label: 'Copy code', onSelect: () => void navigator.clipboard?.writeText(d.code) },
             {
-              label: 'Remove…', danger: true, disabled: usedBy(state, d.code).length > 0,
-              onSelect: () => confirm({ title: `Remove ${d.code}?`, body: `${d.name} is removed from the directory. Nothing refers to it yet, so no document changes.`, confirm: 'Remove record', danger: true, onConfirm: () => run((s, c) => removeDirectoryRecord(s, d.code, c)) }),
+              label: 'Remove…', danger: true, disabled: usedBy(state, d.code, references).length > 0,
+              onSelect: () => confirm({ title: `Remove ${d.code}?`, body: `${d.name} is removed from the directory. Nothing refers to it yet, so no document changes.`, confirm: 'Remove record', danger: true, onConfirm: () => run((s, c) => removeDirectoryRecord(s, d.code, c, references)) }),
             },
           ]}
           empty={<EmptyState text={q ? `Nothing matches “${query}”.` : 'No records of this type yet.'} action={q ? <Button size="sm" onClick={() => setQuery('')}>Clear search</Button> : <Button size="sm" kind="primary" onClick={() => setEditing(newDirectoryDraft(filter === 'All' ? 'Vendor' : filter))}>Add one</Button>} />}
@@ -172,12 +176,11 @@ function directoryFigure(s: TerminalState): Figure {
 export const directoryModule: ModuleDef = {
   id: 'directory',
   title: 'Directory',
-  section: 'Master data',
   blurb: 'One master list of vendors, clients, and employees shared by every system.',
   order: 5,
   onHome: true,
   stat: (s) => ['Records', String(s.dir.length)],
   figure: directoryFigure,
-  logTags: { DIR: 'Directory' },
+  logTags: { [DIRECTORY_TAG]: 'Directory' },
   Screen: Directory,
 };

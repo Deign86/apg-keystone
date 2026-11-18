@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import { SERVICES } from '@keystone/core';
 import { App, buildRegistry, documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { connectors } from './connectors';
 import { SignIn, StartFailed } from './Gate';
@@ -28,7 +29,9 @@ async function start() {
   if (options) {
     const { openFirebase } = await import('./platform/firestore');
     const layout = documentLayout(registry.modules);
-    const cloud = openFirebase(options, firebaseEmulators(import.meta.env), layout);
+    // What the installed connected systems let the CEO give a member (the attendance tracker's admins, docs/adr/0030).
+    const grants = registry.connectors.flatMap((c) => c.memberGrant ?? []);
+    const cloud = openFirebase(options, firebaseEmulators(import.meta.env), layout, grants);
     const local = platform;
     const session = cloudSession(() => cloud.signOut().then(() => location.reload()));
 
@@ -48,8 +51,13 @@ async function start() {
     }
 
     // Who is signed in decides what they read and may do (docs/adr/0011), so it is read before the records. The owner
-    // makes everyone else's account from Keystone (docs/adr/0014).
-    signedInAs = async () => ({ ...cloudPlatform(local, cloud.remote, layout, await cloud.member()), session, accounts: cloud.accounts });
+    // makes everyone else's account from Keystone (docs/adr/0014): the platform offers that as the accounts service.
+    signedInAs = async () => {
+      const who = await cloud.member();
+
+      return { ...cloudPlatform(local, cloud.remote, layout, who), session, provides: { [SERVICES.accounts]: cloud.accounts(who) } };
+    };
+
     explain = cloud.explain;
     signOut = () => void session.signOut();
   }

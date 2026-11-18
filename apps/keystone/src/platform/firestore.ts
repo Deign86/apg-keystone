@@ -1,5 +1,8 @@
-import { COLLECTIONS, jsonText, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type StateDocument } from '@keystone/core';
-import type { AppAccounts, MemberAccount } from '@keystone/kit';
+import {
+  COLLECTIONS, isOwner, jsonText, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, ONLY_OWNER_REMOVES, onlyOwnerGrants,
+  type Accounts, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type MemberAccount, type MemberGrant,
+  type StateDocument,
+} from '@keystone/core';
 import { deleteApp, FirebaseError, initializeApp, type FirebaseOptions } from 'firebase/app';
 import {
   browserLocalPersistence, connectAuthEmulator, createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, indexedDBLocalPersistence,
@@ -12,12 +15,14 @@ import {
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
 import type { FirebaseEmulators } from './config';
+import { grantsHeld, grantToWrite } from './grants';
 
 // The company's records in Firestore, behind the RemoteDocs interface (docs/adr/0009). Loaded only when the build
 // has a Firebase project (VITE_FIREBASE_*), so the SDK never reaches a build without one.
 //
 //   keystone/apg                  { status: 'ready', by, at }: the records have been started, by an owner (docs/adr/0018)
-//   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name, email }: who may open them (firestore.rules)
+//   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name, email, …a yes-or-no field per grant }: who may open
+//                                 them (firestore.rules), and what a connected system lets the CEO give them (docs/adr/0030)
 //   keystone/apg/{dir|cv|bs|ids|log|ext}/{id}   { pos, body }: one record each (StateDocument)
 //   keystone/apg/company/details  { pos, body }: the company's details, which only an owner writes (docs/adr/0018)
 //   keystone/apg/{a module's own}/{id}          { pos, body, ...its checked fields }: one record each (docs/adr/0011)
@@ -28,9 +33,6 @@ const COMPANY = 'apg';
 const BATCH = 500;
 
 const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the CEO to add it in the Firebase console (keystone/apg/members).';
-const ONLY_OWNER = 'Only the CEO makes accounts.';
-const ONLY_OWNER_REMOVES = 'Only the CEO removes accounts.';
-const ONLY_OWNER_ATTENDANCE = 'Only the CEO decides who opens the attendance tracker\'s admin screens.';
 const WRONG_CURRENT = 'That is not your current password.';
 const ENTER_EMAIL = 'Enter the email you sign in with, like ana.cruz@alphapremiergroup.com.';
 
@@ -48,8 +50,11 @@ export interface CloudSession {
   signOut(): Promise<void>;
   /** Who is signed in, from their member document. Throws when the account is not a member. */
   member(): Promise<Member>;
-  /** Who may open the records, the CEO making and removing accounts, and changing your password (docs/adr/0014–0016). */
-  accounts: AppAccounts;
+  /**
+   * Who may open the records, the CEO making and removing accounts, and changing your password (docs/adr/0014–0016),
+   * for the member `member()` answered: what they may do is decided from who they are, not from the order of calls.
+   */
+  accounts(who: Member): Accounts;
   /** A cloud failure as a sentence for the person. */
   explain(cause: unknown): string;
 }
@@ -92,9 +97,13 @@ function explainCloudError(cause: unknown): string {
 
 /**
  * The emulators, when given (config.ts › firebaseEmulators), stand in for Google's servers: the end-to-end tests'.
- * `layout` names the lists modules keep as documents of their own, so they are read and written too.
+ * `layout` names the lists modules keep as documents of their own, so they are read and written too. `grants` are what
+ * the installed connected systems let the CEO give a member (Connector.memberGrant): the only fields beside a member's
+ * own that are read from and written to a member document.
  */
-export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulators | null = null, layout: DocumentLayout = {}): CloudSession {
+export function openFirebase(
+  options: FirebaseOptions, emulators: FirebaseEmulators | null = null, layout: DocumentLayout = {}, grants: readonly MemberGrant[] = [],
+): CloudSession {
   const app = initializeApp(options);
   // Signed in until signing out, on this computer only. No popup or redirect sign-in, so no Google frames.
   const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
@@ -205,7 +214,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
     }
   }
 
-  const accounts: AppAccounts = {
+  const accounts = (who: Member): Accounts => ({
     async list() {
       try {
         const found = await getDocs(members);
@@ -215,7 +224,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
           return {
             uid: d.id, name: jsonText(d.get('name')) || email || 'A member', role: d.get('role') === 'owner' ? 'owner' : 'staff', email,
-            attendanceAdmin: d.get('attendanceAdmin') === true,
+            grants: grantsHeld(grants, (field) => d.get(field) === true),
           };
         });
       } catch (e) {
@@ -225,7 +234,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
     async create({ name, email, password }) {
       // firestore.rules hold the same line: only an owner writes a member.
-      if (!owner) throw new Error(ONLY_OWNER);
+      if (!isOwner(who)) throw new Error(ONLY_OWNER_MAKES);
 
       try {
         return await withHelper(async (helper) => {
@@ -237,7 +246,7 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
           } catch (e) {
             // A sign-in that is not a member opens nothing; take it back, so the email can be used again.
             await deleteUser(user).catch(() => {});
-            throw e instanceof FirebaseError && e.code === 'permission-denied' ? new Error(ONLY_OWNER) : e;
+            throw e instanceof FirebaseError && e.code === 'permission-denied' ? new Error(ONLY_OWNER_MAKES) : e;
           }
 
           return made;
@@ -249,9 +258,9 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
 
     async remove(uid) {
       // firestore.rules refuse anyone but an owner too. An owner removing themselves would be locked out, so never that.
-      if (!owner) throw new Error(ONLY_OWNER_REMOVES);
+      if (!isOwner(who)) throw new Error(ONLY_OWNER_REMOVES);
 
-      if (uid === me()) throw new Error('You cannot remove your own account.');
+      if (uid === me()) throw new Error(NOT_YOUR_OWN_ACCOUNT);
 
       try {
         await deleteDoc(doc(members, uid));
@@ -295,17 +304,18 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
     },
 
     // firestore.rules hold the same line: only an owner writes another member's document, and a member changes only
-    // their own name, so nobody gives themselves this.
-    async setAttendanceAdmin(uid, on) {
-      if (!owner) throw new Error(ONLY_OWNER_ATTENDANCE);
+    // their own name, so nobody gives themselves this. Only a field a connector contributed is ever written: never
+    // `role`, and nothing a part made up.
+    async setGrant(uid, field, on) {
+      const grant = grantToWrite(grants, field, who);
 
       try {
-        await updateDoc(doc(members, uid), { attendanceAdmin: on });
+        await updateDoc(doc(members, uid), { [grant.field]: on });
       } catch (e) {
-        throw new Error(e instanceof FirebaseError && e.code === 'permission-denied' ? ONLY_OWNER_ATTENDANCE : explainCloudError(e));
+        throw new Error(e instanceof FirebaseError && e.code === 'permission-denied' ? onlyOwnerGrants(grant) : explainCloudError(e));
       }
     },
-  };
+  });
 
   return {
     remote,
@@ -340,9 +350,11 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
       const found = uid ? await getDoc(doc(members, uid)) : null;
 
       if (!uid || !found?.exists()) throw new Error(NOT_A_MEMBER);
-      owner = found.get('role') === 'owner';
+      const who: Member = { uid, name: jsonText(found.get('name')) || auth.currentUser?.email || 'A member', role: found.get('role') === 'owner' ? 'owner' : 'staff' };
 
-      return { uid, name: jsonText(found.get('name')) || auth.currentUser?.email || 'A member', role: owner ? 'owner' : 'staff' };
+      owner = isOwner(who);
+
+      return who;
     },
     explain: explainCloudError,
   };

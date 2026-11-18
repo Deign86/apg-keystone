@@ -76,7 +76,7 @@ it('every shipped part has a distinct id and loads without refusal', () => {
 
 it('a module that crashes shows its own error and leaves the rest working', async () => {
   const Broken = () => { throw new Error('Kaput'); };
-  const registry = buildRegistry([...builtInModules, { id: 'broken', title: 'Broken', section: '', blurb: '', order: 50, Screen: Broken }], []);
+  const registry = buildRegistry([...builtInModules, { id: 'broken', title: 'Broken', blurb: '', order: 50, Screen: Broken }], []);
   const store = await KeystoneStore.open(platform);
   const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
   window.location.hash = '#broken';

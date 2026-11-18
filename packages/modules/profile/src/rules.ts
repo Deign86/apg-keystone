@@ -1,9 +1,11 @@
 import { CLOUD_LAYOUT, KeystoneError, logged, type Change, type Ctx, type Member, type TerminalState } from '@keystone/core';
 
 // Your own profile (docs/adr/0020): the name Keystone shows for whoever is signed in, in the rail, as who prepared a
-// voucher or asked for funds, and in the activity log. The name lives with the sign-in (Platform.accounts); these rules
+// voucher or asked for funds, and in the activity log. The name lives with the sign-in (core's `accounts` service); these rules
 // check the new one and log the change.
 
+/** This module's id, written once: its route, its ModuleDef.id. */
+export const ID = 'profile';
 export const TAG = 'PROF';
 
 /** The longest name Keystone keeps: the one firestore.rules allows. */

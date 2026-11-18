@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { companyOf, count, ID_STATUSES, recordsOf, shortDate, toneOf, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee } from './rules';
+import { companyOf, count, recordsOf, shortDate, type IDRecord } from '@keystone/core';
+import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
@@ -20,10 +20,10 @@ async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-const DRAFT = 'id-maker.draft';
+const DRAFT = `${ID}.draft`;
 
 function IDMaker() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
+  const { state, ctx, run, files, photos, notify } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -35,16 +35,16 @@ function IDMaker() {
     const r = run((s, c) => issueID(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newID(store.getState(), ctx));
-  }, [run, draft, ctx, setDraft, store]);
+    if (r.ok) setDraft(newID(r.state, ctx));
+  }, [run, draft, ctx, setDraft]);
 
   const choosePhoto = async () => {
     try {
-      const file = await platform.openFile([{ name: 'Photo', extensions: ['jpg', 'jpeg', 'png', 'webp', 'heic'] }]);
+      const file = await files.open([{ name: 'Photo', extensions: ['jpg', 'jpeg', 'png', 'webp', 'heic'] }]);
 
       if (!file) return;
       const name = `card-${Date.now()}.jpg`;
-      await platform.putPhoto(name, await squareJpeg(file.bytes));
+      await photos.put(name, await squareJpeg(file.bytes));
       setDraft({ ...draft, photo: name });
     } catch (e) {
       notify(`That file could not be used as a photo: ${e instanceof Error ? e.message : String(e)}`, 'error');
@@ -57,7 +57,7 @@ function IDMaker() {
     { key: 'pos', header: 'Position', width: 188, cell: (i) => <span className="text-ink-2">{i.pos}</span> },
     { key: 'issued', header: 'Issued', width: 104, cell: (i) => <span className="text-ink-2 tabular-nums">{shortDate(i.issued)}</span> },
     { key: 'valid', header: 'Valid until', width: 104, cell: (i) => <span className="text-ink-2 tabular-nums">{shortDate(i.valid)}</span> },
-    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (i) => <StatusPill status={i.status} tone={toneOf(i.status)} /> },
+    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (i) => <StatusPill status={i.status} tone={idTone(i.status)} /> },
   ];
 
   const employees = recordsOf(state, 'Employee');
@@ -100,7 +100,7 @@ function IDMaker() {
             error={error}
             actions={<>
               <Button onClick={() => sheet.current && printElement(sheet.current)}>Print</Button>
-              <Button onClick={() => sheet.current && savePdf(sheet.current, `${draft.editing ?? draft.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export print file</Button>
+              <Button onClick={() => sheet.current && savePdf(sheet.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export print file</Button>
               {editing && <Button onClick={() => save(true)}>Issue as new</Button>}
               <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and issue'}</Button>
             </>}
@@ -143,9 +143,8 @@ function IDMaker() {
 }
 
 export const idMakerModule: ModuleDef = {
-  id: 'id-maker',
+  id: ID,
   title: 'ID Maker',
-  section: 'Employee IDs',
   blurb: 'Pick a person, add a photo, and print the card front and back.',
   order: 4,
   onHome: true,
@@ -157,10 +156,12 @@ export const idMakerModule: ModuleDef = {
     const i = app.state.ids.find((x) => x.no === no);
 
     if (i) app.setDraft(DRAFT, idDraftOf(i));
-    app.go('id-maker');
+    app.go(ID);
   },
-  create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go('id-maker'); } },
-  logTags: { ID: 'IDs' },
+  create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go(ID); } },
+  refersTo,
+  selects: { Employee: 'the ID Maker' },
+  logTags: { [TAG]: 'IDs' },
   onOpen: markExpired,
   Screen: IDMaker,
 };

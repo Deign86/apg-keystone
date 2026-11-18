@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { type Ctx, type Member } from '@keystone/core';
-import type { MemberAccount } from '@keystone/kit';
+import { ONLY_OWNER_MAKES, ONLY_OWNER_REMOVES, type Ctx, type Member, type MemberAccount, type MemberGrant } from '@keystone/core';
 import {
-  accountMade, accountRemoved, accountsLine, attendanceAdminQuestion, attendanceAdminRefusal, attendanceAdminSet, checkAccount, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
-  newAccountDraft, newPasswordDraft, NO_SIGN_IN, ONLY_OWNER, ONLY_OWNER_REMOVES, passwordChanged, removalQuestion, removeRefusal, roleLine,
+  accountMade, accountRemoved, accountsLine, checkAccount, grantAction, grantQuestion, grantRefusal, grantSet, grantTitle, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
+  newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -21,6 +20,22 @@ const members: MemberAccount[] = [
   // Added by hand in the Firebase console, before Keystone kept emails.
   { uid: 'it-1', name: 'Paolo Santos', role: 'staff', email: '' },
 ];
+
+/**
+ * What a connected system lets the CEO give a staff member, worded as the attendance connector contributes it
+ * (packages/connectors/attendance, which a module cannot import): the sentences below are the ones the screen has
+ * always shown.
+ */
+const admin: MemberGrant = {
+  field: 'attendanceAdmin',
+  label: 'Attendance admin',
+  as: 'an attendance admin',
+  opens: 'the attendance tracker\'s admin screens',
+  asks: {
+    give: (who) => `${who} will open the attendance tracker's admin screens with their own email and password: interns, attendance, payroll and its settings.`,
+    take: (who) => `${who} will no longer open the attendance tracker's admin screens with this account. An admin card they hold still works there.`,
+  },
+};
 
 const draft = { name: '  Liza   Bautista ', email: ' Liza.Bautista@AlphaPremierGroup.com ', password: 'correct horse' };
 
@@ -51,8 +66,8 @@ describe('making an account', () => {
   });
 
   it('is refused to staff and with nobody signed in, whatever they typed', () => {
-    expect(() => checkAccount(draft, members, asStaff)).toThrow(ONLY_OWNER);
-    expect(() => checkAccount(draft, members, local)).toThrow(ONLY_OWNER);
+    expect(() => checkAccount(draft, members, asStaff)).toThrow(ONLY_OWNER_MAKES);
+    expect(() => checkAccount(draft, members, local)).toThrow(ONLY_OWNER_MAKES);
   });
 
   it('needs a name, an email and a password of at least 8 characters', () => {
@@ -158,37 +173,44 @@ describe('who opens the attendance tracker\'s admin screens', () => {
   const ceo: MemberAccount = { ...owner, email: 'mark@alphapremiergroup.com' };
 
   it('only the CEO decides, and never for a CEO, who opens them already', () => {
-    expect(attendanceAdminRefusal(ana, asOwner)).toBeNull();
-    expect(attendanceAdminRefusal(ana, asStaff)).toBe('Only the CEO decides who opens the attendance tracker\'s admin screens.');
-    expect(attendanceAdminRefusal(ana, local)).toBe('Only the CEO decides who opens the attendance tracker\'s admin screens.');
-    expect(attendanceAdminRefusal(ceo, asOwner)).toBe('Mark Reyes is the CEO, who opens the attendance tracker\'s admin screens already.');
-    expect(() => attendanceAdminSet(sampleState(), ana, true, asStaff)).toThrow('Only the CEO decides');
-    expect(() => attendanceAdminSet(sampleState(), ceo, true, asOwner)).toThrow('is the CEO');
+    expect(grantRefusal(ana, admin, asOwner)).toBeNull();
+    expect(grantRefusal(ana, admin, asStaff)).toBe('Only the CEO decides who opens the attendance tracker\'s admin screens.');
+    expect(grantRefusal(ana, admin, local)).toBe('Only the CEO decides who opens the attendance tracker\'s admin screens.');
+    expect(grantRefusal(ceo, admin, asOwner)).toBe('Mark Reyes is the CEO, who opens the attendance tracker\'s admin screens already.');
+    expect(() => grantSet(sampleState(), ana, admin, true, asStaff)).toThrow('Only the CEO decides');
+    expect(() => grantSet(sampleState(), ceo, admin, true, asOwner)).toThrow('is the CEO');
   });
 
   it('logs who was let in and who was stopped, and says so beside their role', () => {
     const s = sampleState();
-    const made = attendanceAdminSet(s, ana, true, asOwner);
+    const made = grantSet(s, ana, admin, true, asOwner);
 
-    expect(made.record).toEqual({ ...ana, attendanceAdmin: true });
+    expect(made.record).toEqual({ ...ana, grants: ['attendanceAdmin'] });
     expect(made.message).toBe('Ana Cruz can now open the attendance tracker\'s admin screens.');
     expect(made.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.' });
     expect(made.state.log.slice(1)).toEqual(s.log);
-    expect(roleLine(made.record)).toBe('Staff · Attendance admin');
+    expect(roleLine(made.record, [admin])).toBe('Staff · Attendance admin');
+    // Without the connected system installed, nothing is said of it.
+    expect(roleLine(made.record)).toBe('Staff');
 
-    const stopped = attendanceAdminSet(s, made.record, false, asOwner);
+    const stopped = grantSet(s, made.record, admin, false, asOwner);
 
-    expect(stopped.record.attendanceAdmin).toBe(false);
+    expect(stopped.record.grants).toEqual([]);
     expect(stopped.message).toBe('Ana Cruz no longer opens the attendance tracker\'s admin screens.');
     expect(stopped.state.log[0].text).toBe('Ana Cruz (ana.cruz@alphapremiergroup.com) is no longer an attendance admin.');
-    expect(roleLine(stopped.record)).toBe('Staff');
-    expect(roleLine(ana)).toBe('Staff');
+    expect(roleLine(stopped.record, [admin])).toBe('Staff');
+    expect(roleLine(ana, [admin])).toBe('Staff');
     // A CEO's line never changes, whatever the document holds.
-    expect(roleLine({ ...ceo, attendanceAdmin: true })).toBe('CEO');
+    expect(roleLine({ ...ceo, grants: ['attendanceAdmin'] }, [admin])).toBe('CEO');
   });
 
+  const made = (): MemberAccount => ({ ...ana, grants: ['attendanceAdmin'] });
+
   it('asks in words that say what the person will be able to open', () => {
-    expect(attendanceAdminQuestion(ana)).toMatch(/^Ana Cruz \(ana\.cruz@alphapremiergroup\.com\) will open the attendance tracker's admin screens with their own email and password/);
-    expect(attendanceAdminQuestion({ ...ana, attendanceAdmin: true })).toMatch(/will no longer open .* An admin card they hold still works there\.$/);
+    expect(grantQuestion(ana, admin)).toMatch(/^Ana Cruz \(ana\.cruz@alphapremiergroup\.com\) will open the attendance tracker's admin screens with their own email and password/);
+    expect(grantQuestion({ ...ana, grants: ['attendanceAdmin'] }, admin)).toMatch(/will no longer open .* An admin card they hold still works there\.$/);
+    // The menu item, the question's title and its button, for giving it and for taking it back.
+    expect([grantAction(ana, admin), grantTitle(ana, admin)]).toEqual(['Make attendance admin', 'Make Ana Cruz an attendance admin?']);
+    expect([grantAction(made(), admin), grantTitle(made(), admin)]).toEqual(['Remove as attendance admin', 'Remove Ana Cruz as attendance admin?']);
   });
 });

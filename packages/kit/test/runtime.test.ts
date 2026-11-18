@@ -1,6 +1,6 @@
 import { companyOf, emptyState, KeystoneError, type TerminalState } from '@keystone/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { KeystoneStore } from '../src/store';
+import { DAMAGED, KeystoneStore } from '../src/store';
 import { memoryPlatform } from './fakes';
 import { sampleState, sampleText } from '@keystone/core/sample';
 
@@ -24,6 +24,7 @@ describe('store', () => {
 
   it('keeps a damaged file untouched until the person changes something', async () => {
     vi.useFakeTimers();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const { platform, files } = memoryPlatform('{ not json');
     const store = await KeystoneStore.open(platform);
     expect(store.state).toEqual(emptyState());
@@ -31,6 +32,28 @@ describe('store', () => {
     await vi.advanceTimersByTimeAsync(60_000);
     expect(files.state).toBe('{ not json');
     expect(files.writes).toBe(0);
+  });
+
+  it('says that the saved state is damaged, until the first save replaces it', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { platform, files } = memoryPlatform('{ not json');
+    const store = await KeystoneStore.open(platform);
+    const heard = vi.fn();
+
+    expect(store.loadError).toBe(DAMAGED);
+    store.commit({ ...store.state, ext: { a: 1 } });
+    store.subscribe(heard);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(files.writes).toBe(1);
+    expect(store.loadError).toBeNull();
+    // The rail hears that the sentence is gone.
+    expect(heard).toHaveBeenCalledOnce();
+  });
+
+  it('says nothing of the kind for records that opened, or for none saved yet', async () => {
+    expect((await KeystoneStore.open(memoryPlatform().platform)).loadError).toBeNull();
+    expect((await KeystoneStore.open(memoryPlatform(sampleText).platform)).loadError).toBeNull();
   });
 
   it('stops when the saved state cannot be read, rather than showing no records as if there were none', async () => {
@@ -110,7 +133,9 @@ describe('store', () => {
     store.subscribe(heard);
     store.setDraft('vouchers', { payee: 'Meralco' });
     const r = store.run((s) => ({ state: { ...s, ext: { a: 1 } }, record: 'done', message: 'Saved.' }));
-    expect(r).toEqual({ ok: true, record: 'done', message: 'Saved.' });
+    // The state after the rule comes back with it, so a screen never reaches into the store for it.
+    expect(r).toEqual({ ok: true, record: 'done', message: 'Saved.', state: store.state });
+    expect(store.state.ext).toEqual({ a: 1 });
     expect(heard).toHaveBeenCalledOnce();
     expect(store.draft('vouchers', () => ({ payee: '' }))).toEqual({ payee: 'Meralco' });
     store.replaceAll(sampleState());

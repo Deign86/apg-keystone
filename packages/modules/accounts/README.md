@@ -11,9 +11,9 @@ rail, after Profile (where anyone signed in changes their own name) and before D
   - **The CEO** also gets **Make account**, a dialog with Name, Email and Password. The password is the one the
     person first signs in with: the CEO hands it over, and Keystone sends nothing. A refusal stays on the form with
     its reason.
-  - **The CEO** makes a staff member an **attendance admin** from the same menu, and takes it back: that person
-    then opens the attendance tracker's admin screens with their own account (docs/adr/0030). It shows beside their
-    role. A CEO needs none.
+  - **The CEO** gives a staff member what an installed connected system lets a member be given, from the same menu,
+    and takes it back (`Connector.memberGrant`; today the attendance connector's, docs/adr/0030). It shows beside
+    their role. A CEO needs none. The wording is the connector's; this module names no connected system.
   - **The CEO** removes a staff account from the ⋯ menu on its row: **Remove…** asks first, then the person can no
     longer open the records. The CEO's own row, and any CEO's, has no menu.
   - **Staff** see the register only, with no menus.
@@ -21,7 +21,8 @@ rail, after Profile (where anyone signed in changes their own name) and before D
     signed in. (A forgotten password is reset from the sign-in screen, which is the app's, not this module's.)
   - **Records kept on this computer:** nobody signs in, so the screen says there are no accounts to make.
 - `src/rules.ts`: its rules, tested in `test/rules.test.ts`:
-  - only the CEO signed in to the cloud makes accounts (`ctx.who.role === 'owner'`);
+  - only the CEO signed in to the cloud makes accounts (core's `isOwner(ctx.who)`); the refusals the platform repeats
+    when asked anyway are core's sentences, written once;
   - a new account needs a name (kept on one line), an email (kept in lower case, and refused when a member already
     has it, naming who) and a password of at least 8 characters (kept exactly as typed);
   - the log line names the person and their email, never the password;
@@ -31,9 +32,9 @@ rail, after Profile (where anyone signed in changes their own name) and before D
     (`checkPasswordChange`); the log line says who changed their password, never the password.
 - The screen against a stand-in sign-in is tested in `test/screen.test.tsx`.
 
-The accounts themselves are not in the saved state. They live with the sign-in, which the kit offers as
-`Platform.accounts` (`list`, `create`, `remove`, `changePassword`; `rename` is Profile's) when the build keeps its
-records in the cloud; the app's `platform/firestore.ts` makes the sign-in and the member document
+The accounts themselves are not in the saved state. They live with the sign-in, which the platform offers as core's
+`accounts` service (`SERVICES.accounts`: `list`, `create`, `remove`, `changePassword`, `setGrant`; `rename` is
+Profile's) when the build keeps its records in the cloud (docs/adr/0033); the app's `platform/firestore.ts` makes the sign-in and the member document
 (`keystone/apg/members/{uid}`: `role`, `name`, `email`), and removing deletes that document (the sign-in stays,
 opening nothing). `firestore.rules` let only a CEO write or delete a member; a member changes only their own name.
 
@@ -41,7 +42,7 @@ opening nothing). `firestore.rules` let only a CEO write or delete a member; a m
 - **Activity:** log tag `ACCT` (filter "User Accounts"): each account made or removed, and each password changed.
 
 ## Needs
-Nothing from another part. Accounts to list and make need a cloud build (`Platform.accounts`); without one, the screen
+The `accounts` service, which only the platform of a cloud build provides; without it, the screen
 says there are none.
 
 ## Removing it

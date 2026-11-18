@@ -1,0 +1,268 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the fund transfer request on paper > is laid out, and prints, exactly as it has > at the printer 1`] = `
+{
+  "page": [],
+  "paper": "<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Fund Transfer Request</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">RF-2026-0007</p>
+<p class="m-0 text-xs font-medium tabular-nums">November 3, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Requested by</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Ana Cruz</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Date filed</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Settle by</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Nov 15, 2026</dd>
+</dl>
+<p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bank</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">BDO</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Branch</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Ortigas</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Account name</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Casa Milagros Events Inc.</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Account no.</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">0012 3456 7890</dd>
+</dl>
+<div class="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
+<span class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Amount</span>
+<span class="text-right">
+<span class="block text-sm font-bold tabular-nums">₱48,230.55</span>
+<span class="block text-[11px] font-medium text-pretty">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</span>
+</span>
+</div>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5   font-semibold">Expense</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  ">Venue deposit</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱30,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  ">Catering, 60 persons</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱18,230.55</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="1" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱48,230.55</td>
+</tr>
+</tfoot>
+</table>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Ana Cruz</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Mark Reyes</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+</div>
+</div>
+<p class="m-0 mt-3 text-[11px] font-medium text-pretty">Approved in Keystone by Mark Reyes on November 3, 2026 at 14:02.</p>
+</article>
+</div>
+</div>",
+}
+`;
+
+exports[`the fund transfer request on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Fund Transfer Request</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">RF-2026-0007</p>
+<p class="m-0 text-xs font-medium tabular-nums">November 3, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Requested by</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Ana Cruz</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Date filed</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Settle by</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Nov 15, 2026</dd>
+</dl>
+<p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bank</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">BDO</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Branch</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Ortigas</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Account name</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Casa Milagros Events Inc.</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Account no.</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">0012 3456 7890</dd>
+</dl>
+<div class="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
+<span class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Amount</span>
+<span class="text-right">
+<span class="block text-sm font-bold tabular-nums">₱48,230.55</span>
+<span class="block text-[11px] font-medium text-pretty">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</span>
+</span>
+</div>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5   font-semibold">Expense</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  ">Venue deposit</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱30,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  ">Catering, 60 persons</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱18,230.55</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="1" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱48,230.55</td>
+</tr>
+</tfoot>
+</table>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Ana Cruz</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Mark Reyes</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+</div>
+</div>
+<p class="m-0 mt-3 text-[11px] font-medium text-pretty">Approved in Keystone by Mark Reyes on November 3, 2026 at 14:02.</p>
+</article>
+</div>
+</div>"
+`;
+
+exports[`the fund transfer request on paper > lays out one still waiting, with no account and no expenses listed, the same way > waiting 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Fund transfer request RF-2026-0008" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Fund Transfer Request</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">RF-2026-0008</p>
+<p class="m-0 text-xs font-medium tabular-nums">November 2, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Requested by</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Ana Cruz</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Date filed</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Settle by</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">ASAP</dd>
+</dl>
+<p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bank</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Branch</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Account name</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Account no.</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">—</dd>
+</dl>
+<div class="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
+<span class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Amount</span>
+<span class="text-right">
+<span class="block text-sm font-bold tabular-nums">₱48,230.55</span>
+<span class="block text-[11px] font-medium text-pretty">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</span>
+</span>
+</div>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5   font-semibold">Expense</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  ">Christmas party venue and catering</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="1" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱48,230.55</td>
+</tr>
+</tfoot>
+</table>
+<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">Ana Cruz</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
+</div>
+<div class="border-t border-paper-ink pt-1 text-[11px]">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+</div>
+</div>
+<p class="m-0 mt-3 text-[11px] font-medium text-pretty">Not approved yet: this request waits for the CEO's decision.</p>
+</article>
+</div>
+</div>"
+`;
