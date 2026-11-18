@@ -159,6 +159,28 @@ the emulators. Each test empties them and makes throwaway accounts (`e2e/cloud/e
 test at a time. Run one file with `npx e2e run <file>` (or, for the cloud suite, the `test:e2e:cloud` command with the
 file after the config).
 
+## Verification
+
+A change is not done because it was written. It is done when it was run and seen to work.
+
+- **Run the change, not only its tests.** For a screen, that is its end-to-end test or the app itself. For
+  `firestore.rules`, that is an emulator test of what is allowed and what is refused, and after the merge the live
+  rules published and compared with `main`.
+- **Three kinds of test are worth the most here.** End to end: `e2e/`, one per thing a person does. Property: a
+  statement that must hold for any input, tried against many (money, numbering, amount in words). Differential: the
+  prototype's results, kept exactly.
+- **Cheap checks first.** `npm run check` before a push; the end-to-end suites and the installer builds run in CI.
+- **Three rounds, then a person.** If a check still fails after three attempts at a fix, stop and say what is failing
+  and what was tried.
+- **A flaky test is a bug.** Never skip it, add a fixed wait, or run it again until it passes. Find the cause. If it
+  cannot be found, delete the test and write down why.
+- **A change does not edit its own judge.** `REVIEW.md` is read from `main`. A pull request that changes a check and
+  the code it checks says so at the top.
+- **Every commit says how it was verified**, in its last lines: `Verified: npm run check exit 0 (417 tests)` or
+  `Verified: none (documents only)`. Say what was not run. Never claim a run that did not happen.
+- **A miss becomes a rule.** A bug that got past review is added to `REVIEW.md` with what in a diff would have shown
+  it. Rules nobody has needed are pruned.
+
 ## Before you commit
 
 ```bash
@@ -222,6 +244,7 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
 - `docs/references/on-modular-architectures.md`: the reference (Rengaiah 2014, updated with what came after), the ten
   principles, the trade-offs, and the sources.
 - `docs/adr/`: why things are the way they are, one decision per file.
+- `REVIEW.md`: what a review checks, by what the diff touches.
 - `docs/MODULARITY.md`: the contracts in full, and why the kernel and parts are split this way.
 - `docs/ARCHITECTURE.md`: how a change flows, where data lives, the three connectors.
 - `docs/DESIGN.md`: the look and where it comes from.
