@@ -6,7 +6,7 @@ no module and no connector (`npm run check:boundaries`). Parts import it by name
 
 | File | What it does |
 |---|---|
-| `src/registry.ts` | `ModuleDef`, `ConnectorPlugin`, `ModuleApp`, and `buildRegistry`, which validates parts, applies `requires`, keeps one provider per service, and leaves out anything broken, with a reason. `findService` looks a service up by its published name |
+| `src/registry.ts` | `ModuleDef`, `ModuleApp`, and `buildRegistry`, which validates parts, keeps one provider per service, and leaves out anything broken, with a reason. `findService` looks a service up by its published name |
 | `src/store.ts` | Holds the saved state, runs rules (`run`), writes `state.json` about 250ms after a burst of changes, never overwrites a damaged file until something changes, and runs modules' `onOpen` housekeeping |
 | `src/context.tsx` | Hooks: `useKeystone`, `useModuleApp` (`go`, `has`, `setDraft`, `service`), `useDraft`, `useOpenConnector` (opens a connected system's app under a 15-second deadline and says what happened), `usePhoto` |
 | `src/Shell.tsx` | The rail, ⌘/Ctrl+number navigation, and one error boundary per screen |

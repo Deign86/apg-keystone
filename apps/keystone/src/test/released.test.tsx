@@ -2,7 +2,7 @@ import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SERVICES } from '@keystone/core';
 import { App, buildRegistry, documentLayout, findService, KeystoneStore, type Platform } from '@keystone/kit';
-import { plugins } from '../connectors';
+import { connectors } from '../connectors';
 import { builtInModules, RELEASED, shippedModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 import { isBeta } from '../platform/config';
@@ -31,18 +31,18 @@ describe('which build is a beta', () => {
 });
 
 describe('a build that is not a beta', () => {
-  const stable = buildRegistry(shippedModules(false), plugins);
+  const stable = buildRegistry(shippedModules(false), connectors);
 
   it('opens Home, with the connected systems, Check Vouchers, Requests for Funds, Profile, User Accounts, Bank Accounts and Company Details, and nothing else', () => {
     expect(stable.refused).toEqual([]);
     expect(stable.modules.filter((m) => !m.soon).map((m) => m.id)).toEqual(['home', 'vouchers', 'funds', 'profile', 'accounts', 'banks', 'company']);
-    expect(stable.modules.map((m) => m.id)).toEqual(buildRegistry(builtInModules, plugins).modules.map((m) => m.id));
-    expect(stable.connectors.length).toBe(plugins.length);
+    expect(stable.modules.map((m) => m.id)).toEqual(buildRegistry(builtInModules, connectors).modules.map((m) => m.id));
+    expect(stable.connectors.length).toBe(connectors.length);
     expect(RELEASED.every((id) => builtInModules.some((m) => m.id === id))).toBe(true);
   });
 
   it('keeps every record where it is kept, and the services the open screens use', () => {
-    const everything = buildRegistry(builtInModules, plugins);
+    const everything = buildRegistry(builtInModules, connectors);
 
     expect(documentLayout(stable.modules)).toEqual(documentLayout(everything.modules));
 

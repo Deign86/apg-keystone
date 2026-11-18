@@ -1,5 +1,4 @@
 import { openDesktopApp, type AppLocator, type Connector, type DesktopApp } from '@keystone/core';
-import type { ConnectorPlugin } from '@keystone/kit';
 import logo from './logo.png';
 
 // Alpha Premier Attendance (Deign86/alpha-premier-attendance): the RFID time-in kiosk at the front desk. Its shortcut
@@ -31,5 +30,3 @@ export const attendanceConnector: Connector = {
   logo,
   open: (env) => openDesktopApp(env, ATTENDANCE),
 };
-
-export const attendancePlugin: ConnectorPlugin = { connector: attendanceConnector };

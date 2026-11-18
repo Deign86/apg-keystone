@@ -1,5 +1,4 @@
 import { desktopAppUpdate, openDesktopApp, type AppLocator, type Connector, type DesktopApp } from '@keystone/core';
-import type { ConnectorPlugin } from '@keystone/kit';
 import logo from './logo.png';
 
 // Alpha Premier ID Maker (Deign86/apg-id-creator): the native program HR issues employee ID cards with (WPF on
@@ -32,5 +31,3 @@ export const idMakerAppConnector: Connector = {
   open: (env) => openDesktopApp(env, ID_MAKER),
   update: (env) => desktopAppUpdate(env, ID_MAKER),
 };
-
-export const idMakerAppPlugin: ConnectorPlugin = { connector: idMakerAppConnector };

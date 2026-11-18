@@ -1,5 +1,4 @@
 import type { Connector } from '@keystone/core';
-import type { ConnectorPlugin } from '@keystone/kit';
 import logo from './logo.png';
 
 // The APG website (Deign86/apg-website). Its shortcut on Home opens the admin portal, where inquiries, payments
@@ -14,5 +13,3 @@ export const websiteConnector: Connector = {
   logo,
   open: ({ system }) => system.openUrl(ADMIN_PORTAL),
 };
-
-export const websitePlugin: ConnectorPlugin = { connector: websiteConnector };

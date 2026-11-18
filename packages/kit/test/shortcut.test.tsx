@@ -14,7 +14,7 @@ async function mount(connector = okConnector('attendance')) {
 
   render(
     <FeedbackProvider>
-      <KeystoneProvider store={store} registry={buildRegistry([], [{ connector }])}>
+      <KeystoneProvider store={store} registry={buildRegistry([], [connector])}>
         <ConnectorShortcut connector={connector} />
       </KeystoneProvider>
     </FeedbackProvider>,

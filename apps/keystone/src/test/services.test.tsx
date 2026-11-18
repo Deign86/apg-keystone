@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SERVICES } from '@keystone/core';
 import { buildRegistry, findService, KeystoneStore } from '@keystone/kit';
-import { plugins } from '../connectors';
+import { connectors } from '../connectors';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
 import { sampleState, sampleText } from '@keystone/core/sample';
@@ -11,7 +11,7 @@ import { sampleState, sampleText } from '@keystone/core/sample';
 
 describe('the statement-payments service, as shipped', () => {
   it('is provided by billing under its published name, and lists the statements still open', async () => {
-    const desk = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.statementPayments);
+    const desk = findService(buildRegistry(builtInModules, connectors).modules, SERVICES.statementPayments);
     const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => sampleText, saveState: async () => {} });
 
     expect(desk).toBeDefined();
@@ -19,7 +19,7 @@ describe('the statement-payments service, as shipped', () => {
   });
 
   it('is absent, not broken, without billing', () => {
-    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'billing'), plugins);
+    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'billing'), connectors);
 
     expect(r.refused).toEqual([]);
     expect(findService(r.modules, SERVICES.statementPayments)).toBeUndefined();
@@ -31,7 +31,7 @@ describe('the statement-payments service, as shipped', () => {
 
 describe('the employee-attendance service, as shipped', () => {
   it('is provided by timekeeping under its published name, and counts a cut-off', async () => {
-    const attendance = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.employeeAttendance);
+    const attendance = findService(buildRegistry(builtInModules, connectors).modules, SERVICES.employeeAttendance);
     const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => sampleText, saveState: async () => {} });
 
     expect(attendance).toBeDefined();
@@ -39,7 +39,7 @@ describe('the employee-attendance service, as shipped', () => {
   });
 
   it('is absent, not broken, without timekeeping, and payroll stays installed', () => {
-    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'timekeeping'), plugins);
+    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'timekeeping'), connectors);
 
     expect(r.refused).toEqual([]);
     expect(findService(r.modules, SERVICES.employeeAttendance)).toBeUndefined();
@@ -52,7 +52,7 @@ describe('the employee-attendance service, as shipped', () => {
 
 describe('the bank-accounts service, as shipped', () => {
   it('is provided by banks under its published name, and lists the saved accounts, none until one is saved', async () => {
-    const banks = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.bankAccounts);
+    const banks = findService(buildRegistry(builtInModules, connectors).modules, SERVICES.bankAccounts);
     const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => null, saveState: async () => {} });
 
     expect(banks).toBeDefined();
@@ -61,7 +61,7 @@ describe('the bank-accounts service, as shipped', () => {
   });
 
   it('is absent, not broken, without banks, and billing stays installed', () => {
-    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'banks'), plugins);
+    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'banks'), connectors);
 
     expect(r.refused).toEqual([]);
     expect(findService(r.modules, SERVICES.bankAccounts)).toBeUndefined();
@@ -74,7 +74,7 @@ describe('the bank-accounts service, as shipped', () => {
 
 describe('the voucher-drafts service, as shipped', () => {
   it('is provided by vouchers under its published name, and drafts a voucher For Approval', async () => {
-    const drafts = findService(buildRegistry(builtInModules, plugins).modules, SERVICES.voucherDrafts);
+    const drafts = findService(buildRegistry(builtInModules, connectors).modules, SERVICES.voucherDrafts);
     const store = await KeystoneStore.open({ ...browserPlatform, loadState: async () => sampleText, saveState: async () => {} });
 
     expect(drafts).toBeDefined();
@@ -83,7 +83,7 @@ describe('the voucher-drafts service, as shipped', () => {
   });
 
   it('is absent, not broken, without vouchers, and funds stays installed', () => {
-    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'vouchers'), plugins);
+    const r = buildRegistry(builtInModules.filter((m) => m.id !== 'vouchers'), connectors);
 
     expect(r.refused).toEqual([]);
     expect(findService(r.modules, SERVICES.voucherDrafts)).toBeUndefined();

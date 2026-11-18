@@ -38,7 +38,7 @@ KERNEL (always present; anything may depend on it)
 
 PARTS (removable; nothing may depend on them)
   packages/modules/<id>      @keystone/module-<id>      one screen, its rules, its tests, what it contributes and provides.
-  packages/connectors/<id>   @keystone/connector-<id>   one connected system, its client, its tests, any screens it brings.
+  packages/connectors/<id>   @keystone/connector-<id>   one connected system, its client, its tests.
 
 COMPOSITION (the only place that knows the full list)
   apps/keystone     @keystone/app    src/modules.ts lists the modules, src/connectors.ts the connectors, src/main.tsx
@@ -71,8 +71,8 @@ COMPOSITION (the only place that knows the full list)
      provider per service; the registry refuses a second.
 5. **Jumping to another screen is always guarded.** Use `useModuleApp()`: `app.has('directory') && app.go('directory')`.
    Never assume a module is installed.
-6. **A hard dependency is declared, not assumed.** Prefer a service and degrade. If a module truly cannot work without
-   another, set `requires: ['billing']`; the registry then leaves it out with a reason (shown on the Data screen).
+6. **No part has a hard dependency on another.** Ask for a service and degrade: say what cannot be done without the
+   provider, and do the rest.
 7. **Rules live in the part that owns them, in plain functions, never in a screen.**
    - A module's rules are in its `src/rules.ts`; rules every part shares (money, numbering, the directory) are in core.
    - A screen calls `run((state, ctx) => someRule(state, …, ctx))`.
@@ -98,7 +98,7 @@ COMPOSITION (the only place that knows the full list)
 | To remove | Do this | What disappears | Nothing else changes because |
 |---|---|---|---|
 | A module | Delete its line in `apps/keystone/src/modules.ts`, its entry in `apps/keystone/package.json` and its `e2e/modules/<id>.e2e.ts` (then, if you like, its folder) and run `npm install` | Its rail entry, Home tile, Overview figure, finding, waiting items, "New …" button, log filter, the services it provides | Overview, Home and Activity read contributions from the registry; links are guarded by `app.has`; consumers of its services work without them |
-| A connector | Delete its line in `apps/keystone/src/connectors.ts`, its entry in `apps/keystone/package.json` and its `e2e/connectors/<id>.e2e.ts`, then `npm install` | Its shortcut on Home, any screens it brought | The runtime only knows connectors through the registry |
+| A connector | Delete its line in `apps/keystone/src/connectors.ts`, its entry in `apps/keystone/package.json` and its `e2e/connectors/<id>.e2e.ts`, then `npm install` | Its shortcut on Home | The runtime only knows connectors through the registry |
 
 `apps/keystone/src/test/removal.test.tsx` proves this. It removes each module and each connector in turn, installs
 each one alone, and renders every screen that is left. **A module or connector you add joins that test

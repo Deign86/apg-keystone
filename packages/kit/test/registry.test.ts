@@ -15,33 +15,26 @@ const Screen = () => null;
 const mod = (id: string, extra: Partial<ModuleDef> = {}): ModuleDef => ({ id, title: id[0].toUpperCase() + id.slice(1), section: '', blurb: '', order: 0, Screen, ...extra });
 
 describe('registry', () => {
-  it('orders modules and takes the ones connectors bring', () => {
-    const r = buildRegistry([mod('home', { order: 0 }), mod('billing', { order: 3 })], [
-      { connector: okConnector('payroll'), modules: [mod('payroll', { order: 1 })] },
-    ]);
+  it('orders modules and keeps the connectors as listed', () => {
+    const r = buildRegistry([mod('billing', { order: 3 }), mod('home', { order: 0 }), mod('payroll', { order: 1 })], [okConnector('payroll'), okConnector('lease')]);
 
     expect(r.modules.map((m) => m.id)).toEqual(['home', 'payroll', 'billing']);
-    expect(r.connectors.map((c) => c.id)).toEqual(['payroll']);
+    expect(r.connectors.map((c) => c.id)).toEqual(['payroll', 'lease']);
     expect(r.refused).toEqual([]);
   });
 
-  it('refuses a broken plugin and keeps the rest', () => {
-    const r = buildRegistry([mod('home')], [
-      { connector: okConnector('payroll'), modules: [mod('payroll', { order: 8 })] },
-      { connector: okConnector('payroll') },
-      { connector: okConnector('Bad Id') },
-      { connector: okConnector('lease'), modules: [mod('home', { title: 'Duplicate', order: 9 })] },
+  it('refuses a broken connector or a second module of one id, and keeps the rest', () => {
+    const r = buildRegistry([mod('home'), mod('home', { title: 'Duplicate', order: 9 })], [
+      okConnector('payroll'),
+      okConnector('payroll'),
+      okConnector('Bad Id'),
+      okConnector('ghost', { logo: '' }),
+      okConnector('lease'),
     ]);
 
     expect(r.connectors.map((c) => c.id)).toEqual(['payroll', 'lease']);
-    expect(r.modules.map((m) => m.id)).toEqual(['home', 'payroll']);
-    expect(r.refused.map((x) => x.id)).toEqual(['payroll', 'Bad Id', 'home']);
-  });
-
-  it('a refused connector takes its screens with it', () => {
-    const r = buildRegistry([], [{ connector: okConnector('lease', { logo: '' }), modules: [mod('lease')] }]);
-    expect(r.modules).toEqual([]);
-    expect(r.refused.map((x) => x.id)).toEqual(['lease']);
+    expect(r.modules.map((m) => m.title)).toEqual(['Home']);
+    expect(r.refused.map((x) => x.id)).toEqual(['payroll', 'Bad Id', 'ghost', 'home']);
   });
 
   it('refuses a module id that cannot be a route', () => {
@@ -69,15 +62,6 @@ describe('registry', () => {
     expect(documentLayout(r.modules)).toEqual({ funds: own('rf') });
     expect(documentLayout([mod('home')])).toEqual({});
   });
-
-  it('leaves out a module whose requirement is missing, and anything that needed it', () => {
-    const r = buildRegistry([mod('home'), mod('reports', { requires: ['ledger'] }), mod('audit', { requires: ['reports'] })], []);
-    expect(r.modules.map((m) => m.id)).toEqual(['home']);
-    expect(r.refused).toEqual([
-      { id: 'reports', reason: 'Reports needs ledger, which is not installed.' },
-      { id: 'audit', reason: 'Audit needs reports, which is not installed.' },
-    ]);
-  });
 });
 
 describe('services', () => {
@@ -102,7 +86,8 @@ describe('services', () => {
   });
 
   it('does not offer the services of a module that was left out', () => {
-    const r = buildRegistry([mod('ledger', { requires: ['bank'], provides: { 'ledger.totals': ledger } })], []);
+    const r = buildRegistry([mod('Ledger Book', { provides: { 'ledger.totals': ledger } })], []);
+    expect(r.modules).toEqual([]);
     expect(findService(r.modules, 'ledger.totals')).toBeUndefined();
   });
 

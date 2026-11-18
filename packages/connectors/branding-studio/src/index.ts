@@ -1,5 +1,4 @@
 import { openDesktopApp, type AppLocator, type Connector, type DesktopApp } from '@keystone/core';
-import type { ConnectorPlugin } from '@keystone/kit';
 import logo from './logo.png';
 
 // Alpha Branding Studio (Deign86/Alpha_Branding): frames listing photos in the official gold template. Native on both
@@ -30,5 +29,3 @@ export const brandingStudioConnector: Connector = {
   logo,
   open: (env) => openDesktopApp(env, STUDIO),
 };
-
-export const brandingStudioPlugin: ConnectorPlugin = { connector: brandingStudioConnector };
