@@ -30,6 +30,7 @@ against this change).
 | When the diff touches | Check | From |
 | --- | --- | --- |
 | `firestore.rules` | An emulator test in `e2e/cloud/` shows what is now allowed and what is still refused. The live rules are published after the merge and compared with `main`; the pull request says so | Rules merged on 17 Nov 2026 were live only the next day |
+| The `att_…` block | Only a device writes it and only an owner reads it; a batch that reaches outside it writes nothing (`e2e/cloud/kiosk-backup.e2e.ts`). It holds pay: widening who reads it is an **Important** change that names the screen that needs it | docs/adr/0027 |
 | The `idreg` or `devices` blocks, `issuedId()`, `device()` | The ID Maker (`Deign86/apg-id-creator`, `register/README.md`) and the attendance kiosk (`Deign86/alpha-premier-attendance`, `docs/id-register.md`) still work against them. A new field is accepted here before the app that sends it is released | docs/adr/0025, 0026 |
 | `members`, roles, sign-in, User Accounts | Only an owner adds, changes or removes a member; a member changes only their own name; nobody raises their own role | docs/adr/0014, 0015, 0020 |
 | `firebase/*` or `@tauri-apps/*` imports | They are only under `apps/keystone/src/platform/` | AGENTS.md rules 8 and 9 |

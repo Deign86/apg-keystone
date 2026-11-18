@@ -101,7 +101,10 @@ up Auth and Firestore, and deploy `firestore.rules`.
   register with its own account, which is not a member (docs/adr/0026). To give a kiosk one: Authentication → Add
   user (an email and a password for that kiosk), copy its UID, then in Firestore add the document
   `keystone/apg/devices/<UID>` with one field, `name` (text, for example `Attendance kiosk`). That account reads issued
-  IDs and nothing else. To stop a kiosk, delete its `devices` document or disable the account.
+  IDs, and writes the kiosk's backup. To stop a kiosk, delete its `devices` document or disable the account.
+- **The attendance kiosk's backup:** while signed in, the kiosk keeps a copy of its records under
+  `keystone/apg/att_…` (docs/adr/0027). Only an owner can read it, in the console or in Keystone. It is a copy: the
+  kiosk's own database is the original, and nothing edited here goes back to it.
 - **Tests never touch the project.** The end-to-end cloud suite (`npm run test:e2e:cloud`, `e2e/cloud/`) runs the
   cloud build against the Firebase Auth and Firestore emulators with `firestore.rules`, as the demo project
   `demo-keystone`, which exists only in the emulators. A build connects to emulators only for a `demo-` project

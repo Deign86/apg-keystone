@@ -37,6 +37,7 @@ Consequences**.
 | [0024](0024-a-voucher-payee-is-typed.md) | A voucher's payee is typed | Accepted |
 | [0025](0025-the-id-register-is-kept-in-keystones-project.md) | The register of issued employee IDs is kept in Keystone's Firebase project | Accepted |
 | [0026](0026-a-kiosk-reads-the-id-register-as-a-device.md) | A kiosk reads the ID register as a device, not a member | Accepted |
+| [0027](0027-the-attendance-kiosk-keeps-a-copy-of-its-records-here.md) | The attendance kiosk keeps a copy of its records here | Accepted |
 
 Template:
 
