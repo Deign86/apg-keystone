@@ -1,0 +1,773 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the check voucher on paper > is laid out, and prints, exactly as it has > at the printer 1`] = `
+{
+  "page": [
+    "@page { size: A4; margin: 0; }",
+  ],
+  "paper": "<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0" data-print-root="">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col ">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+</div>
+</div>
+</header>
+<div class="flex flex-1 flex-col">
+<dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Manila Electric Company (Meralco)</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+</dl>
+<div class="flex flex-1 flex-col border-t border-paper-ink">
+<table class="w-full border-separate border-spacing-0">
+<thead>
+<tr class="bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="border-b border-paper-line px-2.5 py-1.5 text-left font-semibold">Particulars</th>
+<th class="w-[15rem] border-b border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="align-top font-bold">
+<td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
+<td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+<div aria-hidden="true" class="grid flex-1 grid-cols-[1fr_15rem]">
+<span>
+</span>
+<span class="border-l border-paper-line">
+</span>
+</div>
+<table class="w-full border-separate border-spacing-0">
+<tbody>
+<tr class="bg-paper-tint">
+<td class="border-t border-paper-ink px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="w-[15rem] border-t border-l border-t-paper-ink border-l-paper-line px-2.5 py-1.5 text-right text-sm font-bold whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="m-0 border-t border-paper-line">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+</div>
+</dl>
+<div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">D. Lazaro</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">A. Bautista</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">CEO</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+</div>
+</div>
+</header>
+<div class="flex flex-1 flex-col">
+<dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Manila Electric Company (Meralco)</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+</dl>
+<div class="flex flex-1 flex-col border-t border-paper-ink">
+<table class="w-full border-separate border-spacing-0">
+<thead>
+<tr class="bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="border-b border-paper-line px-2.5 py-1.5 text-left font-semibold">Particulars</th>
+<th class="w-[15rem] border-b border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="align-top font-bold">
+<td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
+<td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+<div aria-hidden="true" class="grid flex-1 grid-cols-[1fr_15rem]">
+<span>
+</span>
+<span class="border-l border-paper-line">
+</span>
+</div>
+<table class="w-full border-separate border-spacing-0">
+<tbody>
+<tr class="bg-paper-tint">
+<td class="border-t border-paper-ink px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="w-[15rem] border-t border-l border-t-paper-ink border-l-paper-line px-2.5 py-1.5 text-right text-sm font-bold whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="m-0 border-t border-paper-line">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+</div>
+</dl>
+<div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">D. Lazaro</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">A. Bautista</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">CEO</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>",
+}
+`;
+
+exports[`the check voucher on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+</div>
+</div>
+</header>
+<div class="flex flex-1 flex-col">
+<dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Manila Electric Company (Meralco)</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+</dl>
+<div class="flex flex-1 flex-col border-t border-paper-ink">
+<table class="w-full border-separate border-spacing-0">
+<thead>
+<tr class="bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="border-b border-paper-line px-2.5 py-1.5 text-left font-semibold">Particulars</th>
+<th class="w-[15rem] border-b border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="align-top font-bold">
+<td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
+<td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+<div aria-hidden="true" class="grid flex-1 grid-cols-[1fr_15rem]">
+<span>
+</span>
+<span class="border-l border-paper-line">
+</span>
+</div>
+<table class="w-full border-separate border-spacing-0">
+<tbody>
+<tr class="bg-paper-tint">
+<td class="border-t border-paper-ink px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="w-[15rem] border-t border-l border-t-paper-ink border-l-paper-line px-2.5 py-1.5 text-right text-sm font-bold whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="m-0 border-t border-paper-line">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+</div>
+</dl>
+<div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">D. Lazaro</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">A. Bautista</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">CEO</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+</div>
+</div>
+</header>
+<div class="flex flex-1 flex-col">
+<dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Manila Electric Company (Meralco)</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+</dl>
+<div class="flex flex-1 flex-col border-t border-paper-ink">
+<table class="w-full border-separate border-spacing-0">
+<thead>
+<tr class="bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="border-b border-paper-line px-2.5 py-1.5 text-left font-semibold">Particulars</th>
+<th class="w-[15rem] border-b border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="align-top font-bold">
+<td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
+<td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+<div aria-hidden="true" class="grid flex-1 grid-cols-[1fr_15rem]">
+<span>
+</span>
+<span class="border-l border-paper-line">
+</span>
+</div>
+<table class="w-full border-separate border-spacing-0">
+<tbody>
+<tr class="bg-paper-tint">
+<td class="border-t border-paper-ink px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="w-[15rem] border-t border-l border-t-paper-ink border-l-paper-line px-2.5 py-1.5 text-right text-sm font-bold whitespace-nowrap tabular-nums">₱48,230.55</td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="m-0 border-t border-paper-line">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+</div>
+</dl>
+<div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">D. Lazaro</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">A. Bautista</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">CEO</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>"
+`;
+
+exports[`the check voucher on paper > prints a voucher with nothing filled in yet the same way > blank 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+</div>
+</div>
+</header>
+<div class="flex flex-1 flex-col">
+<dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+</dl>
+<div class="flex flex-1 flex-col border-t border-paper-ink">
+<table class="w-full border-separate border-spacing-0">
+<thead>
+<tr class="bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="border-b border-paper-line px-2.5 py-1.5 text-left font-semibold">Particulars</th>
+<th class="w-[15rem] border-b border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<div aria-hidden="true" class="grid flex-1 grid-cols-[1fr_15rem]">
+<span>
+</span>
+<span class="border-l border-paper-line">
+</span>
+</div>
+<table class="w-full border-separate border-spacing-0">
+<tbody>
+<tr class="bg-paper-tint">
+<td class="border-t border-paper-ink px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="w-[15rem] border-t border-l border-t-paper-ink border-l-paper-line px-2.5 py-1.5 text-right text-sm font-bold whitespace-nowrap tabular-nums">₱0.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="m-0 border-t border-paper-line">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+</dl>
+<div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+</div>
+</div>
+</header>
+<div class="flex flex-1 flex-col">
+<dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+</dl>
+<div class="flex flex-1 flex-col border-t border-paper-ink">
+<table class="w-full border-separate border-spacing-0">
+<thead>
+<tr class="bg-paper-tint text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="border-b border-paper-line px-2.5 py-1.5 text-left font-semibold">Particulars</th>
+<th class="w-[15rem] border-b border-l border-paper-line px-2.5 py-1.5 text-right font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<div aria-hidden="true" class="grid flex-1 grid-cols-[1fr_15rem]">
+<span>
+</span>
+<span class="border-l border-paper-line">
+</span>
+</div>
+<table class="w-full border-separate border-spacing-0">
+<tbody>
+<tr class="bg-paper-tint">
+<td class="border-t border-paper-ink px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total</td>
+<td class="w-[15rem] border-t border-l border-t-paper-ink border-l-paper-line px-2.5 py-1.5 text-right text-sm font-bold whitespace-nowrap tabular-nums">₱0.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="m-0 border-t border-paper-line">
+<div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
+<dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
+<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+</div>
+</dl>
+<div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
+<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<p class="m-0 min-h-4 font-bold">
+</p>
+<p class="m-0 min-h-4 font-semibold">
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>"
+`;
+
+exports[`the check voucher on paper > shrinks a copy that runs past half the page, so the cut still falls at the middle, and puts it back after > long copies at the printer 1`] = `
+{
+  "copies": [
+    {
+      "height": "700px",
+      "zoom": "0.8014285714285714",
+    },
+    {
+      "height": "700px",
+      "zoom": "0.8014285714285714",
+    },
+  ],
+  "page": [
+    "@page { size: A4; margin: 0; }",
+  ],
+}
+`;
