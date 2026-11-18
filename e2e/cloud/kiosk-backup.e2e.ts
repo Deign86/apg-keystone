@@ -4,9 +4,9 @@ import { asMember, commitAs, deleteAsMember, empty, emptyCloud, idToken, makeAcc
 
 // The attendance kiosk's backup (docs/adr/0027). Keystone does not write it: the kiosk
 // (Deign86/alpha-premier-attendance) does, in batches over Firestore's REST API, signed in as a device. Its own
-// database stays the source of truth. These tests ask firestore.rules what that is allowed: a device writes and
-// removes documents under att_…, and cannot read them back; only an owner reads them; nobody else touches them; and
-// a batch that reaches outside att_… writes nothing at all.
+// documents here are the attendance records (docs/adr/0028). These tests ask firestore.rules what that is allowed: a
+// device writes, removes and reads back documents under att_… and attprivate_…; besides it only an owner reads them;
+// nobody else touches them; and a batch that reaches outside them writes nothing at all.
 
 test.beforeEach(async () => {
   await emptyCloud();
@@ -36,11 +36,20 @@ test('a kiosk device writes its backup in batches, and only an owner reads it', 
   expect(await commitAs(kioskToken, twenty)).toBe(200);
   expect(await asMember(ownerToken, '/att_audit_logs/log-19')).toBe(200);
 
-  // Only an owner reads it. The kiosk cannot read back what it wrote.
+  // An owner reads it, and the kiosk reads back what it wrote, to rebuild itself on a new computer.
   expect(await asMember(ownerToken, '/att_users/APG-2026-101')).toBe(200);
   expect(await asMember(ownerToken, '/att_attendance')).toBe(200);
-  expect(await asMember(kioskToken, '/att_users/APG-2026-101')).toBe(403);
-  expect(await asMember(kioskToken, '/att_users')).toBe(403);
+  expect(await asMember(kioskToken, '/att_users/APG-2026-101')).toBe(200);
+  expect(await asMember(kioskToken, '/att_users')).toBe(200);
+
+  // TINs and bank account numbers are kept apart, under the same lock.
+  expect(await commitAs(kioskToken, [['/attprivate_users/APG-2026-101', { tin: words('123-456-789') }]])).toBe(200);
+  expect(await asMember(kioskToken, '/attprivate_users/APG-2026-101')).toBe(200);
+  expect(await asMember(ownerToken, '/attprivate_users/APG-2026-101')).toBe(200);
+  expect(await asMember(staffToken, '/attprivate_users/APG-2026-101')).toBe(403);
+  expect(await asMember(strangerToken, '/attprivate_users')).toBe(403);
+  expect(await commitAs(staffToken, [['/attprivate_users/APG-2026-101', { tin: words('0') }]])).toBe(403);
+  expect(await commitAs(ownerToken, [['/attprivate_users/APG-2026-101', { tin: words('0') }]])).toBe(403);
   expect(await asMember(staffToken, '/att_users/APG-2026-101')).toBe(403);
   expect(await asMember(staffToken, '/att_attendance')).toBe(403);
   expect(await asMember(strangerToken, '/att_users/APG-2026-101')).toBe(403);
@@ -66,7 +75,7 @@ test('a backup batch that reaches outside the backup writes nothing', async () =
   const kioskToken = await idToken(kiosk);
 
   // Keystone's own records, its members, the register, another device, and a name that only looks like the backup.
-  const outside: readonly string[] = ['/dir/0', `/members/${kiosk.uid}`, '/idreg/APG-2026-900', '/devices/another', '/att_/x', '/attendance/x', '/att_Users/x', '/att_users/x/deeper/y'];
+  const outside: readonly string[] = ['/dir/0', `/members/${kiosk.uid}`, '/idreg/APG-2026-900', '/devices/another', '/att_/x', '/attendance/x', '/att_Users/x', '/att_users/x/deeper/y', '/attprivate_/x', '/attprivateusers/x'];
 
   for (const path of outside) {
     expect(await commitAs(kioskToken, [['/att_users/APG-2026-101', intern], [path, intern]])).toBe(403);
@@ -82,4 +91,5 @@ test('a backup batch that reaches outside the backup writes nothing', async () =
   expect(await commitAs(kioskToken, [['/att_users/APG-2026-101', intern]])).toBe(200);
   expect(await deleteAsMember(ownerToken, `/devices/${kiosk.uid}`)).toBe(200);
   expect(await commitAs(kioskToken, [['/att_users/APG-2026-102', intern]])).toBe(403);
+  expect(await asMember(kioskToken, '/att_users/APG-2026-101')).toBe(403);
 });
