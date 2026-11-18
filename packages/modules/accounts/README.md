@@ -11,6 +11,9 @@ rail, after Profile (where anyone signed in changes their own name) and before D
   - **The CEO** also gets **Make account**, a dialog with Name, Email and Password. The password is the one the
     person first signs in with: the CEO hands it over, and Keystone sends nothing. A refusal stays on the form with
     its reason.
+  - **The CEO** makes a staff member an **attendance admin** from the same menu, and takes it back: that person
+    then opens the attendance tracker's admin screens with their own account (docs/adr/0030). It shows beside their
+    role. A CEO needs none.
   - **The CEO** removes a staff account from the ⋯ menu on its row: **Remove…** asks first, then the person can no
     longer open the records. The CEO's own row, and any CEO's, has no menu.
   - **Staff** see the register only, with no menus.

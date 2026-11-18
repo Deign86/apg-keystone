@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
 import {
-  asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, makeAccount, recordsInCloud, setMember, setMemberFieldAs, signIn,
+  asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, flagField, idToken, makeAccount, recordsInCloud, setMember, setMemberFieldAs, signIn,
 } from './emulators';
 
 // The CEO making and removing accounts, and anyone changing their own password (docs/adr/0014–0016,
@@ -136,6 +136,39 @@ test('an owner no longer one by the time they make an account is refused, and le
   expect(await documentIds('members')).toHaveLength(2);
 });
 
+test('the CEO makes a staff member an attendance admin, and takes it back', async ({ app, screen }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+
+  await recordsInCloud();
+  await app.open('/');
+  await signIn(screen, owner);
+  await expectHome(screen);
+  await app.open('/#accounts');
+  const table = screen.getByRole('table', 'User accounts');
+
+  expect(await flagField('members', hr.uid, 'attendanceAdmin')).toBeNull();
+  await table.getByRole('button', 'Actions for Ana Cruz').tap();
+  await screen.getByRole('menuitem', 'Make attendance admin…').tap();
+  const question = screen.getByRole('alertdialog', 'Make Ana Cruz an attendance admin?');
+
+  await expect(question.getByText(/will open the attendance tracker's admin screens with their own email and password/)).toBeVisible();
+  await question.getByRole('button', 'Make attendance admin').tap();
+
+  await expect(table.getByRole('row', /^Ana Cruz — Staff · Attendance admin Actions for Ana Cruz$/)).toBeVisible();
+  expect(await flagField('members', hr.uid, 'attendanceAdmin')).toBe(true);
+  // Their role and name are as they were: only the one field was written.
+  expect(await field('members', hr.uid, 'role')).toBe('staff');
+  expect(await field('members', hr.uid, 'name')).toBe('Ana Cruz');
+
+  await table.getByRole('button', 'Actions for Ana Cruz').tap();
+  await screen.getByRole('menuitem', 'Remove as attendance admin…').tap();
+  await screen.getByRole('alertdialog', 'Remove Ana Cruz as attendance admin?').getByRole('button', 'Remove as attendance admin').tap();
+
+  await expect(table.getByRole('row', /^Ana Cruz — Staff Actions for Ana Cruz$/)).toBeVisible();
+  expect(await flagField('members', hr.uid, 'attendanceAdmin')).toBe(false);
+});
+
 test('the CEO removes a staff account after asking, and that person can no longer open the records', async ({ app, screen }) => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
@@ -258,12 +291,16 @@ test('firestore.rules let a member change their own name, and nothing else of th
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
   const hrToken = await idToken(hr);
+  const ownerToken = await idToken(owner);
 
   expect(await setMemberFieldAs(hrToken, hr.uid, 'name', 'Ana Cruz-Reyes')).toBe(200);
   expect(await field('members', hr.uid, 'name')).toBe('Ana Cruz-Reyes');
 
   // Never their role, never a blank name, never someone else's name.
   expect(await setMemberFieldAs(hrToken, hr.uid, 'role', 'owner')).toBe(403);
+  // Nor make themselves an attendance admin (docs/adr/0030); the CEO does that, for them.
+  expect(await setMemberFieldAs(hrToken, hr.uid, 'attendanceAdmin', 'true')).toBe(403);
+  expect(await setMemberFieldAs(ownerToken, hr.uid, 'attendanceAdmin', 'true')).toBe(200);
   expect(await setMemberFieldAs(hrToken, hr.uid, 'name', '')).toBe(403);
   expect(await setMemberFieldAs(hrToken, owner.uid, 'name', 'Someone else')).toBe(403);
   expect(await field('members', hr.uid, 'role')).toBe('staff');

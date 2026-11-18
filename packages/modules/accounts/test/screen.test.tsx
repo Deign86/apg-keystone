@@ -23,7 +23,7 @@ function signIn(made: (a: NewAccount) => Promise<MemberAccount> = async (a) => (
 
   const accounts: AppAccounts = {
     list: vi.fn(async () => members), create: vi.fn(made), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}),
-    rename: vi.fn(async () => {}),
+    rename: vi.fn(async () => {}), setAttendanceAdmin: vi.fn(async () => {}),
   };
 
   return accounts;
@@ -209,5 +209,57 @@ describe('User Accounts', () => {
     expect(within(dialog).getByRole('alert')).toHaveTextContent('That is not your current password.');
     expect(within(dialog).getByRole('button', { name: 'Change password' })).toBeEnabled();
     expect(store.state.log).toHaveLength(log);
+  });
+
+  it('the CEO makes a staff member an attendance admin, and takes it back', async () => {
+    const accounts = signIn();
+    const store = await open(owner, accounts);
+    const table = screen.getByRole('table', { name: 'User accounts' });
+
+    // The CEO's own row offers nothing: a CEO opens the attendance tracker's admin screens already.
+    expect(screen.queryByRole('button', { name: 'Actions for Mark Reyes' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for Ana Cruz' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Make attendance admin…' }));
+    const question = await screen.findByRole('alertdialog', { name: 'Make Ana Cruz an attendance admin?' });
+
+    expect(question).toHaveTextContent('will open the attendance tracker\'s admin screens with their own email and password');
+    expect(accounts.setAttendanceAdmin).not.toHaveBeenCalled();
+    fireEvent.click(within(question).getByRole('button', { name: 'Make attendance admin' }));
+    await act(async () => {});
+
+    expect(accounts.setAttendanceAdmin).toHaveBeenCalledWith('hr-1', true);
+    expect(within(table).getByRole('row', { name: /^Ana Cruz ana\.cruz@alphapremiergroup\.com Staff · Attendance admin$/ })).toBeInTheDocument();
+    expect(store.getState().log[0].text).toBe('Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for Ana Cruz' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove as attendance admin…' }));
+    fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'Remove Ana Cruz as attendance admin?' })).getByRole('button', { name: 'Remove as attendance admin' }));
+    await act(async () => {});
+
+    expect(accounts.setAttendanceAdmin).toHaveBeenLastCalledWith('hr-1', false);
+    expect(within(table).getByRole('row', { name: /^Ana Cruz ana\.cruz@alphapremiergroup\.com Staff$/ })).toBeInTheDocument();
+  });
+
+  it('a refusal from the cloud changes nothing on screen', async () => {
+    const accounts = signIn();
+
+    accounts.setAttendanceAdmin = vi.fn(async () => { throw new Error('Only the CEO decides who opens the attendance tracker\'s admin screens.'); });
+    const store = await open(owner, accounts);
+    const logged = store.getState().log.length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for Ana Cruz' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Make attendance admin…' }));
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Make attendance admin' }));
+    await act(async () => {});
+
+    expect(await screen.findByText('Only the CEO decides who opens the attendance tracker\'s admin screens.')).toBeInTheDocument();
+    expect(within(screen.getByRole('table', { name: 'User accounts' })).queryByText(/Attendance admin/)).toBeNull();
+    expect(store.getState().log).toHaveLength(logged);
+  });
+
+  it('staff are offered none of it', async () => {
+    await open(hr, signIn());
+    expect(screen.queryByRole('button', { name: /^Actions for/ })).toBeNull();
   });
 });

@@ -1,10 +1,10 @@
 import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
-import { DASH, roleLabel } from '@keystone/core';
+import { DASH } from '@keystone/core';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
 import {
-  accountMade, accountRemoved, accountsLine, checkAccount, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
-  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, TAG,
+  accountMade, accountRemoved, accountsLine, attendanceAdminQuestion, attendanceAdminRefusal, attendanceAdminSet, checkAccount, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
+  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine, TAG,
 } from './rules';
 
 /** The CEO's form for a new staff account: name, email and the password they first sign in with. */
@@ -133,13 +133,27 @@ function Members({ accounts }: { accounts: AppAccounts }) {
     }
   };
 
+  const setAttendanceAdmin = async (m: MemberAccount, on: boolean) => {
+    try {
+      const refusal = attendanceAdminRefusal(m, ctx);
+
+      if (refusal || !accounts.setAttendanceAdmin) throw new Error(refusal ?? 'This Keystone cannot keep that.');
+      await accounts.setAttendanceAdmin(m.uid, on);
+      const changed = run((s, c) => attendanceAdminSet(s, m, on, c));
+
+      if (changed.ok) setMembers((ms) => ms && ms.map((x) => (x.uid === m.uid ? changed.record : x)));
+    } catch (e) {
+      notify(e instanceof Error ? e.message : String(e), 'error');
+    }
+  };
+
   const columns: Column<MemberAccount>[] = [
     {
       key: 'name', header: 'Name',
       cell: (m) => <span title={m.name}>{m.name}{m.uid === ctx.who?.uid && <span className="text-ink-2"> (you)</span>}</span>,
     },
     { key: 'email', header: 'Email', cell: (m) => (m.email ? <span title={m.email}>{m.email}</span> : <span className="text-ink-3">{DASH}</span>) },
-    { key: 'role', header: 'Role', width: 96, cell: (m) => roleLabel(m) },
+    { key: 'role', header: 'Role', width: 200, cell: (m) => roleLine(m) },
   ];
 
   return (
@@ -167,7 +181,14 @@ function Members({ accounts }: { accounts: AppAccounts }) {
           rowKey={(m) => m.uid}
           rowLabel={(m) => m.name}
           // The CEO removes staff accounts from a row's menu; owners and their own account have none.
-          actions={owner ? (m) => (removeRefusal(m, ctx) ? [] : [{
+          actions={owner ? (m) => (removeRefusal(m, ctx) ? [] : [...(accounts.setAttendanceAdmin && !attendanceAdminRefusal(m, ctx) ? [{
+            label: m.attendanceAdmin ? 'Remove as attendance admin…' : 'Make attendance admin…',
+            onSelect: () => confirm({
+              title: m.attendanceAdmin ? `Remove ${m.name} as attendance admin?` : `Make ${m.name} an attendance admin?`,
+              body: attendanceAdminQuestion(m), confirm: m.attendanceAdmin ? 'Remove as attendance admin' : 'Make attendance admin',
+              onConfirm: () => void setAttendanceAdmin(m, !m.attendanceAdmin),
+            }),
+          }] : []), {
             label: 'Remove…', danger: true,
             onSelect: () => confirm({
               title: `Remove ${m.name}?`, body: removalQuestion(m), confirm: 'Remove account', danger: true, onConfirm: () => void remove(m),

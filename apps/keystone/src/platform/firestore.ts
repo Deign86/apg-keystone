@@ -30,6 +30,7 @@ const BATCH = 500;
 const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the CEO to add it in the Firebase console (keystone/apg/members).';
 const ONLY_OWNER = 'Only the CEO makes accounts.';
 const ONLY_OWNER_REMOVES = 'Only the CEO removes accounts.';
+const ONLY_OWNER_ATTENDANCE = 'Only the CEO decides who opens the attendance tracker\'s admin screens.';
 const WRONG_CURRENT = 'That is not your current password.';
 const ENTER_EMAIL = 'Enter the email you sign in with, like ana.cruz@alphapremiergroup.com.';
 
@@ -212,7 +213,10 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
         return found.docs.map((d): MemberAccount => {
           const email = jsonText(d.get('email'));
 
-          return { uid: d.id, name: jsonText(d.get('name')) || email || 'A member', role: d.get('role') === 'owner' ? 'owner' : 'staff', email };
+          return {
+            uid: d.id, name: jsonText(d.get('name')) || email || 'A member', role: d.get('role') === 'owner' ? 'owner' : 'staff', email,
+            attendanceAdmin: d.get('attendanceAdmin') === true,
+          };
         });
       } catch (e) {
         throw new Error(explainCloudError(e));
@@ -287,6 +291,18 @@ export function openFirebase(options: FirebaseOptions, emulators: FirebaseEmulat
         await updateDoc(doc(members, uid), { name });
       } catch (e) {
         throw new Error(explainCloudError(e));
+      }
+    },
+
+    // firestore.rules hold the same line: only an owner writes another member's document, and a member changes only
+    // their own name, so nobody gives themselves this.
+    async setAttendanceAdmin(uid, on) {
+      if (!owner) throw new Error(ONLY_OWNER_ATTENDANCE);
+
+      try {
+        await updateDoc(doc(members, uid), { attendanceAdmin: on });
+      } catch (e) {
+        throw new Error(e instanceof FirebaseError && e.code === 'permission-denied' ? ONLY_OWNER_ATTENDANCE : explainCloudError(e));
       }
     },
   };

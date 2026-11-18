@@ -129,6 +129,11 @@ export async function field(collection: string, id: string, name: string): Promi
   return (await readDocument(`/${collection}/${id}`))?.fields?.[name]?.stringValue ?? null;
 }
 
+/** A yes-or-no field beside a document's body (a member's `attendanceAdmin`), or null while it is not set. */
+export async function flagField(collection: string, id: string, name: string): Promise<boolean | null> {
+  return (await readDocument(`/${collection}/${id}`))?.fields?.[name]?.booleanValue ?? null;
+}
+
 /** Signs in through the Auth emulator's REST API, as Keystone's Firebase SDK does, and gives the account's ID token. */
 export async function idToken(account: Account): Promise<string> {
   const res = await call(`http://${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`, {

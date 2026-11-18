@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { type Ctx, type Member } from '@keystone/core';
 import type { MemberAccount } from '@keystone/kit';
 import {
-  accountMade, accountRemoved, accountsLine, checkAccount, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
-  newAccountDraft, newPasswordDraft, NO_SIGN_IN, ONLY_OWNER, ONLY_OWNER_REMOVES, passwordChanged, removalQuestion, removeRefusal,
+  accountMade, accountRemoved, accountsLine, attendanceAdminQuestion, attendanceAdminRefusal, attendanceAdminSet, checkAccount, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
+  newAccountDraft, newPasswordDraft, NO_SIGN_IN, ONLY_OWNER, ONLY_OWNER_REMOVES, passwordChanged, removalQuestion, removeRefusal, roleLine,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -150,5 +150,45 @@ describe('changing your own password', () => {
     expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz changed their password.' });
     expect(r.state.log.slice(1)).toEqual(s.log);
     expect(() => passwordChanged(s, local)).toThrow(NO_SIGN_IN);
+  });
+});
+
+describe('who opens the attendance tracker\'s admin screens', () => {
+  const ana: MemberAccount = { ...hr, email: 'ana.cruz@alphapremiergroup.com' };
+  const ceo: MemberAccount = { ...owner, email: 'mark@alphapremiergroup.com' };
+
+  it('only the CEO decides, and never for a CEO, who opens them already', () => {
+    expect(attendanceAdminRefusal(ana, asOwner)).toBeNull();
+    expect(attendanceAdminRefusal(ana, asStaff)).toBe('Only the CEO decides who opens the attendance tracker\'s admin screens.');
+    expect(attendanceAdminRefusal(ana, local)).toBe('Only the CEO decides who opens the attendance tracker\'s admin screens.');
+    expect(attendanceAdminRefusal(ceo, asOwner)).toBe('Mark Reyes is the CEO, who opens the attendance tracker\'s admin screens already.');
+    expect(() => attendanceAdminSet(sampleState(), ana, true, asStaff)).toThrow('Only the CEO decides');
+    expect(() => attendanceAdminSet(sampleState(), ceo, true, asOwner)).toThrow('is the CEO');
+  });
+
+  it('logs who was let in and who was stopped, and says so beside their role', () => {
+    const s = sampleState();
+    const made = attendanceAdminSet(s, ana, true, asOwner);
+
+    expect(made.record).toEqual({ ...ana, attendanceAdmin: true });
+    expect(made.message).toBe('Ana Cruz can now open the attendance tracker\'s admin screens.');
+    expect(made.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.' });
+    expect(made.state.log.slice(1)).toEqual(s.log);
+    expect(roleLine(made.record)).toBe('Staff · Attendance admin');
+
+    const stopped = attendanceAdminSet(s, made.record, false, asOwner);
+
+    expect(stopped.record.attendanceAdmin).toBe(false);
+    expect(stopped.message).toBe('Ana Cruz no longer opens the attendance tracker\'s admin screens.');
+    expect(stopped.state.log[0].text).toBe('Ana Cruz (ana.cruz@alphapremiergroup.com) is no longer an attendance admin.');
+    expect(roleLine(stopped.record)).toBe('Staff');
+    expect(roleLine(ana)).toBe('Staff');
+    // A CEO's line never changes, whatever the document holds.
+    expect(roleLine({ ...ceo, attendanceAdmin: true })).toBe('CEO');
+  });
+
+  it('asks in words that say what the person will be able to open', () => {
+    expect(attendanceAdminQuestion(ana)).toMatch(/^Ana Cruz \(ana\.cruz@alphapremiergroup\.com\) will open the attendance tracker's admin screens with their own email and password/);
+    expect(attendanceAdminQuestion({ ...ana, attendanceAdmin: true })).toMatch(/will no longer open .* An admin card they hold still works there\.$/);
   });
 });
