@@ -72,7 +72,7 @@ changes.
 | `waiting`, `openWaiting` | | Records waiting on someone, listed on Overview, and how to open one |
 | `create` | | A "New …" button on Overview |
 | `selects` | | The directory records a person picks from on its screen, by type, as a sentence names the screen (`{ Vendor: 'Requests for Funds' }`). The Directory says so when a record of that type is added |
-| `refersTo` | | Whether its saved records name a directory record, by code, and the tag to mark it with. The Directory keeps a record any installed module names |
+| `refersTo` | | The codes of the directory records its saved records name, and the tag to mark them with. The Directory asks each module once for a state and keeps a record any installed module names |
 | `logTags` | | The activity-log tags it writes, with their filter label |
 | `onOpen` | | Housekeeping when Keystone opens (marking overdue or expired records) |
 | `provides` | | Services it offers other parts, by published name (see below) |
@@ -155,8 +155,8 @@ removes its rules with it; nothing else could have been using them.
 holders). So its records and rules are shared kernel (`core/kernel/directory.ts`);
 only its screen is a module.
 
-**Integrity follows the installed parts (docs/adr/0032).** `usedBy` asks each installed module whether its records
-name a directory record (`ModuleDef.refersTo`); core lists nobody's. A vendor that a voucher, a request for funds, a
+**Integrity follows the installed parts (docs/adr/0032).** `usedByCode` asks each installed module which directory records its records
+name (`ModuleDef.refersTo`); core lists nobody's. A vendor that a voucher, a request for funds, a
 pay setup or a recorded day points to is protected from deletion while the module that keeps those records is
 installed. A screen shown as "Coming soon" is still installed. A build with a module taken out no longer protects the
 records only that module's data names.

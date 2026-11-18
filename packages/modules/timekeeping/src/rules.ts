@@ -51,7 +51,7 @@ export function dataOf(s: TerminalState): TimekeepingData {
 const saved = (s: TerminalState, data: TimekeepingData) => withModuleData(s, ID, data);
 
 /** A recorded day names its employee by directory code; that record is kept. */
-export const refersTo: Reference = { tag: TAG, record: (s, code) => dataOf(s).days.some((d) => d.emp === code) };
+export const refersTo: Reference = { tag: TAG, codes: (s) => dataOf(s).days.map((d) => d.emp) };
 
 // ---------- clock times ----------
 

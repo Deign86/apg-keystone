@@ -43,7 +43,7 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
     const before = JSON.stringify(s);
     m.stat?.(s, ctx, registry.modules); m.figure?.(s, ctx); m.finding?.(s, ctx); m.waiting?.(s, ctx);
 
-    for (const d of s.dir) m.refersTo?.record(s, d.code);
+    if (m.refersTo) Array.from(m.refersTo.codes(s));
 
     if (m.onOpen) m.onOpen(s, ctx);
     expect(JSON.stringify(s)).toBe(before);

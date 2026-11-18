@@ -187,7 +187,7 @@ describe('directory (the shared kernel)', () => {
     expect(add.record).toMatchObject({ code: 'C-004', vat: true, ewt: false });
     expect(() => saveDirectoryRecord(add.state, { ...newDirectoryDraft('Client'), name: 'ortigas dental clinic' }, ctx)).toThrow(/already has that name/);
     // What a part contributes (ModuleDef.refersTo): its records name V-001.
-    const vouchers: Reference = { tag: 'CV', record: (x, code) => x.cv.some((v) => v.payee === code) };
+    const vouchers: Reference = { tag: 'CV', codes: (x) => x.cv.map((v) => v.payee) };
 
     expect(() => removeDirectoryRecord(s, 'V-001', ctx, [vouchers])).toThrow(/used by CV/);
     expect(removeDirectoryRecord(add.state, 'C-004', ctx, [vouchers]).state.dir).toHaveLength(11);
@@ -196,7 +196,7 @@ describe('directory (the shared kernel)', () => {
 
   it('keeps a record that any installed part says its records name, and names each part once', () => {
     const s = state();
-    const names = (tag: string, code: string): Reference => ({ tag, record: (_, c) => c === code });
+    const names = (tag: string, code: string): Reference => ({ tag, codes: () => [code] });
 
     expect(usedBy(s, 'E-001', [])).toEqual([]);
     expect(usedBy(s, 'E-001', [names('PAY', 'E-001'), names('DTR', 'E-001'), names('PAY', 'E-001'), names('RF', 'V-001')])).toEqual(['PAY', 'DTR']);

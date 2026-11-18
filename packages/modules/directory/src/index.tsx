@@ -1,7 +1,7 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column } from '@keystone/ui';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
+  DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedByCode,
   type DirectoryDraft, type DirectoryRecord, type RecordType, type Figure, type TerminalState,
 } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
@@ -75,7 +75,10 @@ function Directory() {
     && (!q || [d.code, d.name, d.tin, d.detail, d.dept, d.email].some((x) => x?.toLowerCase().includes(q))));
 
   // What the installed modules say their records refer to: a record one of them names is kept.
-  const references = registry.modules.flatMap((m) => m.refersTo ?? []);
+  const references = useMemo(() => registry.modules.flatMap((m) => m.refersTo ?? []), [registry]);
+  // Each module reads everything it has saved to answer, so they are asked once for a state and the rows look here.
+  const used = useMemo(() => usedByCode(state, references), [state, references]);
+  const usedBy = (code: string) => used.get(code) ?? [];
   const connector = (id: string) => registry.connectors.find((c) => c.id === id);
   const sourceName = (id: string) => connector(id)?.name ?? id;
 
@@ -93,12 +96,12 @@ function Directory() {
     },
     {
       key: 'used', header: 'Used by', width: 100, cell: (d) => {
-        const used = usedBy(state, d.code, references);
+        const tags = usedBy(d.code);
         const linked = Object.keys(d.links ?? {});
 
-        return used.length || linked.length ? (
+        return tags.length || linked.length ? (
           <span className="flex flex-wrap gap-1" title={linked.length ? `Linked to ${linked.map(sourceName).join(', ')}` : undefined}>
-            {used.map((u) => <Tag key={u}>{u}</Tag>)}
+            {tags.map((u) => <Tag key={u}>{u}</Tag>)}
             {linked.map((l) => <Tag key={l}>{connector(l)?.tag ?? l.slice(0, 3).toUpperCase()}</Tag>)}
           </span>
         ) : <span className="text-ink-3">{DASH}</span>;
@@ -151,7 +154,7 @@ function Directory() {
             { label: 'Edit…', onSelect: () => setEditing(directoryDraftOf(d)) },
             { label: 'Copy code', onSelect: () => void navigator.clipboard?.writeText(d.code) },
             {
-              label: 'Remove…', danger: true, disabled: usedBy(state, d.code, references).length > 0,
+              label: 'Remove…', danger: true, disabled: usedBy(d.code).length > 0,
               onSelect: () => confirm({ title: `Remove ${d.code}?`, body: `${d.name} is removed from the directory. Nothing refers to it yet, so no document changes.`, confirm: 'Remove record', danger: true, onConfirm: () => run((s, c) => removeDirectoryRecord(s, d.code, c, references)) }),
             },
           ]}

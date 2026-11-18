@@ -21,16 +21,36 @@ export const payees = (s: TerminalState) => [...recordsOf(s, 'Vendor'), ...recor
 export interface Reference {
   /** The part's log tag, shown beside a record it names: "CV". */
   tag: ModuleTag;
-  /** True when one of the part's saved records names the directory record with this code. Pure. */
-  record(s: TerminalState, code: string): boolean;
+  /**
+   * The codes of the directory records its saved records name. Pure. A part answers by reading everything it has
+   * saved, so whoever asks does so once for a state, never once for each directory record.
+   */
+  codes(s: TerminalState): Iterable<string>;
 }
 
 /**
- * Which parts' saved records refer to a directory record, as their tags, in the order given. Only an installed part
- * can say so: a record that a part's data names is protected while that part is installed.
+ * Which parts' saved records refer to each directory record: code to tags, in the order given, each tag once. A code
+ * nobody names is absent. Each part is asked once. Only an installed part can say so: a record that a part's data
+ * names is protected while that part is installed.
  */
+export function usedByCode(s: TerminalState, references: readonly Reference[]): Map<string, ModuleTag[]> {
+  const used = new Map<string, ModuleTag[]>();
+
+  for (const r of references) {
+    for (const code of new Set(r.codes(s))) {
+      const tags = used.get(code);
+
+      if (!tags) used.set(code, [r.tag]);
+      else if (!tags.includes(r.tag)) tags.push(r.tag);
+    }
+  }
+
+  return used;
+}
+
+/** The tags of the parts whose saved records refer to one directory record. For a whole list, use `usedByCode`. */
 export function usedBy(s: TerminalState, code: string, references: readonly Reference[]): ModuleTag[] {
-  return [...new Set(references.flatMap((r) => (r.record(s, code) ? [r.tag] : [])))];
+  return usedByCode(s, references).get(code) ?? [];
 }
 
 export const nextCode = (s: TerminalState, type: RecordType) =>
