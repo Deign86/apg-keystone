@@ -13,6 +13,12 @@ export class KeystoneError extends Error {
   }
 }
 
+/**
+ * The sentence to show for whatever was thrown: an Error's message, and anything else as text (the native side and
+ * some libraries refuse with a plain sentence, not an Error).
+ */
+export const sentenceOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
+
 /** Who is signed in to the company's records in the cloud: their member document (docs/adr/0009, 0010). */
 export interface Member {
   uid: string;

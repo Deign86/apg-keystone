@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  laterVersion, openDesktopApp, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
+  KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -332,5 +332,15 @@ describe('connector contract', () => {
 
     await expect(openDesktopApp(system, studio)).rejects.toThrow('Open Keystone’s desktop app to open Alpha Branding Studio.');
     expect(did).toEqual([]);
+  });
+});
+
+describe('the sentence for whatever was thrown', () => {
+  it('is an error\'s message, and anything else as text', () => {
+    expect(sentenceOf(new KeystoneError('Enter a name for the record.'))).toBe('Enter a name for the record.');
+    expect(sentenceOf(new Error('The file is in use.'))).toBe('The file is in use.');
+    // The native side refuses with a plain sentence.
+    expect(sentenceOf('Cannot read state.json: Permission denied (os error 13)')).toBe('Cannot read state.json: Permission denied (os error 13)');
+    expect(sentenceOf(undefined)).toBe('undefined');
   });
 });

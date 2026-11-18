@@ -1,3 +1,4 @@
+import { sentenceOf } from '@keystone/core';
 import { Button, Field, FeedbackProvider, Panel, TextInput } from '@keystone/ui';
 import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { StrictMode, useState, type FormEvent, type ReactNode } from 'react';
@@ -44,7 +45,7 @@ export function SignIn({ signIn, sendReset }: { signIn: (email: string, password
     try {
       await signIn(email.trim(), password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(sentenceOf(err));
       setBusy(false);
     }
   };
@@ -61,7 +62,7 @@ export function SignIn({ signIn, sendReset }: { signIn: (email: string, password
       setSentTo(email.trim());
       setStep('sent');
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(sentenceOf(err));
     }
 
     setBusy(false);

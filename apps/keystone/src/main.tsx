@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
-import { SERVICES } from '@keystone/core';
-import { App, buildRegistry, documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
+import { sentenceOf, SERVICES } from '@keystone/core';
+import { App, buildRegistry, documentLayout, KeystoneStore, memberGrants, type Platform } from '@keystone/kit';
 import { connectors } from './connectors';
 import { SignIn, StartFailed } from './Gate';
 import { shippedModules } from './modules';
@@ -18,7 +18,7 @@ async function start() {
 
   for (const r of registry.refused) console.warn(`Keystone left out ${r.id}: ${r.reason}`);
   let platform: Platform = await detectPlatform();
-  let explain = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
+  let explain: (cause: unknown) => string = sentenceOf;
   let signOut: (() => void) | undefined;
   let signedInAs: (() => Promise<Platform>) | undefined;
 
@@ -30,7 +30,7 @@ async function start() {
     const { openFirebase } = await import('./platform/firestore');
     const layout = documentLayout(registry.modules);
     // What the installed connected systems let the CEO give a member (the attendance tracker's admins, docs/adr/0030).
-    const grants = registry.connectors.flatMap((c) => c.memberGrant ?? []);
+    const grants = memberGrants(registry.connectors);
     const cloud = openFirebase(options, firebaseEmulators(import.meta.env), layout, grants);
     const local = platform;
     const session = cloudSession(() => cloud.signOut().then(() => location.reload()));

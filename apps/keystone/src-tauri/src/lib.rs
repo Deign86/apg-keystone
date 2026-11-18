@@ -196,8 +196,10 @@ fn matches_digest(hash: &[u8], digest: &str) -> bool {
 }
 
 /// How long a connected app may take, as the page counts it too: packages/core/src/kernel/deadlines.json, the one
-/// definition (core's `DEADLINES`). `answer` is for a question to GitHub; `install` is for a download.
+/// definition (core's `DEADLINES`). `connect` is for reaching GitHub at all; `answer` is for a question to it;
+/// `install` is for a download.
 struct Deadlines {
+    connect: std::time::Duration,
     answer: std::time::Duration,
     install: std::time::Duration,
 }
@@ -212,6 +214,7 @@ fn deadlines() -> Result<Deadlines, String> {
     let number = |key: &str| said.get(key).and_then(|v| v.as_u64()).ok_or(format!("deadlines.json has no {key}."));
     let install = std::time::Duration::from_secs(number("installMinutes")? * 60);
     Ok(Deadlines {
+        connect: std::time::Duration::from_secs(number("connectSeconds")?),
         answer: std::time::Duration::from_secs(number("answerSeconds")?),
         install: install.checked_sub(GIVES_UP_EARLY).filter(|d| !d.is_zero()).ok_or("deadlines.json leaves no time to install.")?,
     })
@@ -220,7 +223,7 @@ fn deadlines() -> Result<Deadlines, String> {
 fn web() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .user_agent(concat!("Keystone/", env!("CARGO_PKG_VERSION")))
-        .connect_timeout(std::time::Duration::from_secs(15))
+        .connect_timeout(deadlines()?.connect)
         .build()
         .map_err(|e| format!("Could not start a download: {e}"))
 }
@@ -325,6 +328,21 @@ mod tests {
         ReleaseAsset { name: name.into(), url: url.into(), digest: None }
     }
 
+    /// The commands the page may ask for (commands.json, which the page reads its names from and
+    /// apps/keystone/src/test/desktop.test.ts holds to this file too) are the ones `run` hands to Tauri, no more, no fewer.
+    #[test]
+    fn the_commands_the_page_names_are_the_ones_registered() {
+        let named: serde_json::Value = serde_json::from_str(include_str!("commands.json")).unwrap();
+        let mut named: Vec<&str> = named.as_object().unwrap().values().map(|v| v.as_str().unwrap()).collect();
+        let source = include_str!("lib.rs");
+        let opening = concat!(".invoke_handler(tauri::generate_", "handler![");
+        let list = &source[source.find(opening).expect("run registers its commands") + opening.len()..];
+        let mut registered: Vec<&str> = list[..list.find(']').unwrap()].split(',').map(str::trim).collect();
+        named.sort_unstable();
+        registered.sort_unstable();
+        assert_eq!(named, registered);
+    }
+
     #[test]
     fn a_missing_file_is_told_from_one_that_is_there() {
         let folder = std::env::temp_dir().join(format!("keystone-test-{}", std::process::id()));
@@ -343,6 +361,8 @@ mod tests {
         let page: serde_json::Value = serde_json::from_str(include_str!("../../../../packages/core/src/kernel/deadlines.json")).unwrap();
         let d = deadlines().unwrap();
         assert_eq!(d.answer.as_secs(), page["answerSeconds"].as_u64().unwrap());
+        assert_eq!(d.connect.as_secs(), page["connectSeconds"].as_u64().unwrap());
+        assert!(d.connect <= d.answer, "reaching GitHub is part of asking it");
         assert!(d.install < std::time::Duration::from_secs(page["installMinutes"].as_u64().unwrap() * 60));
         assert_eq!(d.install + GIVES_UP_EARLY, std::time::Duration::from_secs(page["installMinutes"].as_u64().unwrap() * 60));
     }

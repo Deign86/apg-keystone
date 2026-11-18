@@ -1,4 +1,4 @@
-import { emptyState, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
+import { emptyState, KeystoneError, parseState, sentenceOf, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 
 /** Shown in the rail when the saved state was read but is not a Keystone state. */
@@ -118,7 +118,7 @@ export class KeystoneStore {
       if (e instanceof KeystoneError) return { ok: false, error: e.message };
       console.error(e);
 
-      return { ok: false, error: `Something went wrong: ${e instanceof Error ? e.message : String(e)}` };
+      return { ok: false, error: `Something went wrong: ${sentenceOf(e)}` };
     }
   }
 

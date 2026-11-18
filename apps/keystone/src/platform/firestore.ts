@@ -1,5 +1,5 @@
 import {
-  COLLECTIONS, isOwner, jsonText, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, ONLY_OWNER_REMOVES, onlyOwnerGrants,
+  COLLECTIONS, isOwner, jsonText, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, MEMBER_FIELD, ONLY_OWNER_REMOVES, onlyOwnerGrants, sentenceOf,
   type Accounts, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type MemberAccount, type MemberGrant,
   type StateDocument,
 } from '@keystone/core';
@@ -91,7 +91,7 @@ function explainCloudError(cause: unknown): string {
     case 'auth/admin-restricted-operation':
       return 'The Firebase project does not let Keystone make accounts. Ask IT to allow email sign-up (docs/FIREBASE.md).';
     default:
-      return cause instanceof Error ? cause.message : String(cause);
+      return sentenceOf(cause);
   }
 }
 
@@ -220,10 +220,10 @@ export function openFirebase(
         const found = await getDocs(members);
 
         return found.docs.map((d): MemberAccount => {
-          const email = jsonText(d.get('email'));
+          const email = jsonText(d.get(MEMBER_FIELD.email));
 
           return {
-            uid: d.id, name: jsonText(d.get('name')) || email || 'A member', role: d.get('role') === 'owner' ? 'owner' : 'staff', email,
+            uid: d.id, name: jsonText(d.get(MEMBER_FIELD.name)) || email || 'A member', role: d.get(MEMBER_FIELD.role) === 'owner' ? 'owner' : 'staff', email,
             grants: grantsHeld(grants, (field) => d.get(field) === true),
           };
         });
@@ -242,7 +242,7 @@ export function openFirebase(
           const made: MemberAccount = { uid: user.uid, name, role: 'staff', email };
 
           try {
-            await setDoc(doc(members, user.uid), { role: made.role, name, email });
+            await setDoc(doc(members, user.uid), { [MEMBER_FIELD.role]: made.role, [MEMBER_FIELD.name]: name, [MEMBER_FIELD.email]: email });
           } catch (e) {
             // A sign-in that is not a member opens nothing; take it back, so the email can be used again.
             await deleteUser(user).catch(() => {});
@@ -297,7 +297,7 @@ export function openFirebase(
       if (!uid) throw new Error('Sign out and in again, then change your name.');
 
       try {
-        await updateDoc(doc(members, uid), { name });
+        await updateDoc(doc(members, uid), { [MEMBER_FIELD.name]: name });
       } catch (e) {
         throw new Error(explainCloudError(e));
       }
@@ -350,7 +350,7 @@ export function openFirebase(
       const found = uid ? await getDoc(doc(members, uid)) : null;
 
       if (!uid || !found?.exists()) throw new Error(NOT_A_MEMBER);
-      const who: Member = { uid, name: jsonText(found.get('name')) || auth.currentUser?.email || 'A member', role: found.get('role') === 'owner' ? 'owner' : 'staff' };
+      const who: Member = { uid, name: jsonText(found.get(MEMBER_FIELD.name)) || auth.currentUser?.email || 'A member', role: found.get(MEMBER_FIELD.role) === 'owner' ? 'owner' : 'staff' };
 
       owner = isOwner(who);
 

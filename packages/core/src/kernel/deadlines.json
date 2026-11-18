@@ -1,4 +1,6 @@
 {
+  "connectSeconds": 15,
   "answerSeconds": 15,
-  "installMinutes": 20
+  "installMinutes": 20,
+  "updateCheckSeconds": 10
 }

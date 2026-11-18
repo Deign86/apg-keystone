@@ -2,6 +2,9 @@ import { clearMocks, mockIPC } from '@tauri-apps/api/mocks';
 import { afterEach, describe, expect, it } from 'vitest';
 import { isJsonObject, jsonText, type JsonValue } from '@keystone/core';
 import { desktopPlatform, readText } from '../platform/desktop';
+import page from '../platform/desktop.ts?raw';
+import commands from '../../src-tauri/src/commands.json';
+import native from '../../src-tauri/src/lib.rs?raw';
 
 // The desktop platform against a stand-in for the native side (src-tauri/src/lib.rs), which answers Tauri's own calls
 // by command name: what Keystone does when there is no saved state yet, and when there is one it cannot read.
@@ -90,5 +93,26 @@ describe('the desktop platform reading the saved state', () => {
 
     expect(await desktopPlatform('macos').photoUrl('card.jpg')).toBeNull();
     expect(await desktopPlatform('macos').photoUrl('none.jpg')).toBeNull();
+  });
+});
+
+// The page asks the native side for a command by name, and a name the native side does not know fails only on
+// someone's desk. The names are written once, in src-tauri/src/commands.json; `cargo test` holds the same file to
+// what `run` registers (the_commands_the_page_names_are_the_ones_registered).
+describe('the native commands', () => {
+  const named = Object.values(commands);
+  const registered = /\.invoke_handler\(tauri::generate_handler!\[([^\]]+)\]/.exec(native)?.[1].split(',').map((x) => x.trim()) ?? [];
+
+  it('are the ones the native side registers, each a command there', () => {
+    expect([...named].sort()).toEqual([...registered].sort());
+    expect(new Set(named).size).toBe(named.length);
+
+    for (const name of named) expect(native, name).toMatch(new RegExp(`#\\[tauri::command\\]\\n(async )?fn ${name}\\(`));
+  });
+
+  it('are asked for by the names in that file, never spelled in the page', () => {
+    for (const name of named) expect(page, name).not.toContain(`'${name}'`);
+
+    expect(page).not.toMatch(/invoke(<[^>]+>)?\(['"`]/);
   });
 });

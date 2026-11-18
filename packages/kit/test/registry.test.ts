@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRegistry, documentLayout, findService, type ModuleDef } from '../src/registry';
+import { buildRegistry, documentLayout, findService, memberGrants, type ModuleDef } from '../src/registry';
 import { okConnector } from './fakes';
 
 // Made-up services for these tests, published the way a real one is.
@@ -47,6 +47,9 @@ describe('registry', () => {
       { id: 'rogue', reason: 'Connector "rogue" offers something for members that cannot be kept: the field "role" is the member\'s own.' },
       { id: 'odd', reason: 'Connector "odd" offers something for members that cannot be kept: the field "site admin" must be letters, starting lowercase.' },
     ]);
+    // What the accounts screen offers and the cloud platform may write: the installed connectors' grants, and no other.
+    expect(memberGrants(r.connectors).map((g) => g.field)).toEqual(['siteAdmin']);
+    expect(memberGrants([okConnector('plain')])).toEqual([]);
   });
 
   it('refuses a module id that cannot be a route', () => {

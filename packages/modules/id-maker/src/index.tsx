@@ -1,6 +1,6 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { companyOf, count, recordsOf, shortDate, type IDRecord } from '@keystone/core';
+import { companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
 import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
@@ -47,7 +47,7 @@ function IDMaker() {
       await photos.put(name, await squareJpeg(file.bytes));
       setDraft({ ...draft, photo: name });
     } catch (e) {
-      notify(`That file could not be used as a photo: ${e instanceof Error ? e.message : String(e)}`, 'error');
+      notify(`That file could not be used as a photo: ${sentenceOf(e)}`, 'error');
     }
   };
 
