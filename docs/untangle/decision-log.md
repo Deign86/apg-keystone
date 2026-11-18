@@ -64,14 +64,15 @@ The end-to-end suites could not run here; CI runs them.
 
 # Keystone untangle, round 2: decision log
 
-Branch `refactor/untangle-2`, local commits on top of `main` (fcc9641). Nothing pushed. The owner was away and said to
-finish without him, so every choice that was his is listed under "Calls made without the owner".
-Baseline `npm run check`: 458 tests in 37 files. `cargo test`: 5 passed. The end-to-end suites could not run here; CI
-runs them.
+Branch `refactor/untangle-2`, fourteen local commits on top of `main` (fcc9641). Nothing pushed. The owner was away
+and said to finish without him, so every choice that was his is listed under "Calls made without the owner".
+Baseline `npm run check`: 458 tests in 37 files. End: 519 tests in 45 files and 17 snapshots, exit 0. `cargo test`:
+7 passed (was 5). `firestore.rules` and everything under `e2e/` are byte-identical to `main`; no dependency was added.
+The end-to-end suites could not run here; CI runs them.
 
 ## Fixes
 
-- **Root fix 7, the rest: a screen gets capabilities, not the store** (step 1)
+- **Root fix 7, the rest: a screen gets capabilities, not the store** (420f8ce)
   - `packages/kit/src/context.tsx:67-75`: `run` returned no state; `Outcome` now carries the state after the rule.
   - `packages/kit/src/context.tsx:62-78`: `useKeystone()` handed out `store` and `platform`; it now gives `files`, `photos`, `backup`, `kind` and (signed in) `accounts`. The kit's own shell reads the store through `useRuntime`, which the package index does not export.
   - `vouchers/src/index.tsx:72,163`, `billing/src/index.tsx:61`, `funds/src/index.tsx:114,127,133`, `id-maker/src/index.tsx:38`, `company/src/index.tsx:20`: the eight `store.getState()` call sites read the returned state.
@@ -79,7 +80,7 @@ runs them.
   - `packages/kit/src/output.ts:17`: `savePdf` took the whole `Platform`; it takes `files`.
   - Tests added: `packages/kit/test/capabilities.test.tsx` (what a screen is given, `run`'s state, restore drops drafts, a refused rename leaves the name).
   - Test edited: `packages/kit/test/runtime.test.ts` "tells listeners about a change…" expects the state in the outcome.
-- **Root fix 6: stop swallowing at the platform edge** (step 2; docs/adr/0031)
+- **Root fix 6: stop swallowing at the platform edge** (b2fc1d2; docs/adr/0031)
   - `apps/keystone/src/platform/desktop.ts:48-54`: `readText` turned every failure into null. It asks the new native `file_exists` first: no file is null, a file that cannot be read throws the sentence the start screen shows.
   - `packages/kit/src/store.ts:36-40`: a damaged saved state opened empty without a word; `store.loadError` now holds a sentence the rail shows until the first save replaces the file.
   - `packages/core/src/kernel/connectors.ts:152`: a failed installer fetch was dropped; its reason is now in the sentence that says the download page is open.
@@ -89,7 +90,7 @@ runs them.
   - `packages/kit/src/Shell.tsx:77`: the rail read `store.saveError` only when something else re-rendered it, so a failed save showed at the next change. It now subscribes to both notices.
   - Tests added: `apps/keystone/src/test/desktop.test.ts` (6), `packages/kit/test/rail-notices.test.tsx` (3), two store tests, two core tests, two cargo tests (`a_missing_file_is_told_from_one_that_is_there`, `the_native_limits_are_the_pages_and_a_download_gives_up_first`).
   - Tests edited: `packages/connectors/id-maker-app/test/id-maker-app.test.ts` "opens the download page when the installer cannot be fetched" now expects the reason; `packages/kit/test/shortcut.test.tsx` "a failed update check…" expects the console line.
-- **Root fix 4: a module owns its identity and its references** (step 3; docs/adr/0032)
+- **Root fix 4: a module owns its identity and its references** (1d1756e, d1ad800, 2b1c7b8; docs/adr/0032)
   - `funds/src/rules.ts:14` vs `funds/src/index.tsx:256` (and `banks`, `timekeeping`, `payroll`): `MODULE` and `id` were two literals. One `ID` per module now feeds `ModuleDef.id`, the `ext` key, the draft key and its own `go` calls. Values unchanged.
   - `vouchers/src/index.tsx:12,272,284,286`, `billing/src/index.tsx:8,155,169,171`, `funds/src/index.tsx:256,271,273`, `id-maker/src/index.tsx:146,160,162`: draft key, id and `go` repeated one id.
   - `vouchers/src/rules.ts:151` (and `billing`, `id-maker`): the log tag as a literal in every `logged(...)` and again in `logTags`; one `TAG`. `funds/src/index.tsx:274` uses the `TAG` it already exported. Core exports `DIRECTORY_TAG`.
@@ -100,7 +101,7 @@ runs them.
   - `packages/core/src/kernel/directory.ts:19-29`: `usedBy` hardcoded `cv`, `bs`, `ids`: replaced by `ModuleDef.refersTo`, contributed by six modules.
   - Tests added: statuses and tones in three modules; the directory message and references in core; in `contract.test.ts`, references against data written as earlier builds saved it (which also pins the `ext` keys), the old answers for the sample, the `selects` words, and that a module's reference tag is one of its log tags.
   - Tests edited: `packages/core/test/kernel.test.ts` and `packages/modules/id-maker/test/rules.test.ts` pass the references `usedBy` and `removeDirectoryRecord` now take; four `ModuleDef` literals lost `section`.
-- **Root fix 2: accounts leave `Platform`; attendance admin is a contribution** (step 4; docs/adr/0033)
+- **Root fix 2: accounts leave `Platform`; attendance admin is a contribution** (c1b120f; docs/adr/0033)
   - `packages/kit/src/platform.ts:16,45-49,58-87`: `Platform` carried `AppAccounts`, `MemberAccount`, `NewAccount`. They are core's now (`kernel/accounts.ts`, `Accounts` in `services.ts`); the platform offers the service under `Platform.provides`.
   - `packages/kit/src/platform.ts:47-48,82-86`: `attendanceAdmin` and `setAttendanceAdmin` in the kernel contract: replaced by `MemberAccount.grants` and `Accounts.setGrant(uid, field, on)`.
   - `packages/modules/accounts/src/rules.ts:114-150`, `index.tsx:184-190`: the module held the attendance tracker's wording and menu. The attendance connector contributes them (`Connector.memberGrant`); removing the connector removes the menu item.
@@ -111,7 +112,7 @@ runs them.
   - The Firestore field `attendanceAdmin`, the member path and `firestore.rules` are unchanged (`git diff main -- firestore.rules` is empty).
   - Tests added: `apps/keystone/src/test/accounts.test.tsx` (the shipped module, connector and grant guard together, in the e2e's words), the attendance connector's grant, registry refusals for a grant field, the platform service lookup in the kit.
   - Tests edited: `packages/modules/accounts/test/rules.test.ts` and `screen.test.tsx` (same sentences, through a stand-in grant; `setGrant('hr-1', 'attendanceAdmin', true)` where it was `setAttendanceAdmin('hr-1', true)`; `grants: ['attendanceAdmin']` where it was `attendanceAdmin: true`), `packages/modules/profile/test/screen.test.tsx` and `packages/kit/test/capabilities.test.tsx` (the service instead of `Platform.accounts`), `apps/keystone/src/test/contract.test.ts` "every published service has a provider" (the platform's one is named).
-- **Root fix 5: the kit's document blocks, one paper at a time** (step 5)
+- **Root fix 5: the kit's document blocks, one paper at a time** (6c032a3, d33bd77, cbb5d51, c2e2410; docs/adr/0034)
   - Baseline first: `packages/modules/{vouchers,billing,funds,payroll}/test/paper.test.tsx` snapshot each paper's markup (class names, inline styles, data attributes) and what printing does to it (the `@page` rule, the print root, the copies' sizes, a long sheet's zoom). Every later commit of this step leaves all 17 snapshots identical.
   - `packages/kit/src/documents.tsx:13,16` vs `output.ts:7,41` vs `packages/ui/src/styles.css:160`: 12, 186, 273, 210 and 148.5 mm typed three times. One constant (`packages/kit/src/paper.ts`), and a kit test that holds the stylesheet's `@page` rule to it.
   - `packages/kit/src/documents.tsx:99-100` vs `output.ts:10,18,62,84,89` vs `styles.css:136-155`: the data-attribute strings. Named once (`MARKS`); a kit test holds the stylesheet to the three it uses.
@@ -119,6 +120,16 @@ runs them.
   - **Payroll sheet.** `documents.tsx:86,100` and `output.ts:40-59,91-96` (`fit="page"`, landscape, `fitToPage`): a `LandscapePage` sheet and one `LANDSCAPE_PAGE` layout definition. `output.ts:79-81` no longer names "the payroll sheet" or "a check voucher".
   - **Billing statement, fund transfer request, payslip.** They use the plain `Sheet`, which lost its `fit` and `orientation` props; their files did not change and their snapshots are identical.
   - Tests edited: `packages/kit/test/documents.test.tsx` renders `TwoUp` and `LandscapePage` where it passed `fit` and `orientation` to `Sheet`; "keeps a two-up sheet upright" deleted (it passed an orientation a two-up sheet can no longer be given; its claim moved into the test above it); the plain sheet is now expected to carry no print mark.
+- **Stale documents** (41c0812)
+  - `AGENTS.md` cloud end-to-end row: "the first computer moving its records in" (removed by docs/adr/0018); and "the three connectors".
+  - `README.md:18`, `docs/ARCHITECTURE.md:17,68-69`: three connectors listed, four installed; a missing app said to get only its download page; ARCHITECTURE's module list short by four and its native side credited with an OS keychain.
+  - `packages/modules/README.md:23`: a `website` screen that settles statements; no such screen exists. Profile missing from its table.
+  - `README.md:25`: `ATTENDANCE-INTEGRATION.md` called "one open decision"; its own first lines say withdrawn.
+- **Comments** (ae344ab)
+  - `packages/kit/src/platform.ts:3-7`: said modules and connectors talk only to the `Platform`. `packages/kit/src/store.ts`: the `Outcome` comment had been parted from `Outcome`, and the class comment said screens read the store. The other comments in files this round touched were read and kept.
+- **Tests** (1282ed8)
+  - `packages/core/test/kernel.test.ts`: deleted "gives an app 15 seconds to answer and a download 20 minutes", added in b2fc1d2; it compared `DEADLINES` with a copy of its own file.
+  - `packages/kit/test/documents.test.tsx`: the page and pixel sizes typed again beside the stylesheet check, added in d33bd77; the sheet tests already expect them.
 
 ## Not done this round
 
@@ -134,6 +145,8 @@ runs them.
 - **The voucher's own ruling** (`vouchers/src/VoucherPaper.tsx:13-21,56-100` draws its boxes, line table, total band and signature blocks instead of the kit's `Meta`, `Lines`, `Signatures`): left. Moving it onto the kit's blocks changes the voucher's markup, and this round's rule for papers was an identical snapshot.
 - **`savePdf`** (`packages/kit/src/output.ts`): reads the layout like `printElement`, but no test draws a PDF here (it needs a real canvas); the cloud and module end-to-end suites export one.
 - **The ID card sheet** (`id-maker/src/IDCard.tsx`): it does not use the kit's `Sheet`; untouched.
+- **Kept, as round 1 left them, decided conservatively** (step 6): the `billing.statement-payments` service (docs/adr/0007 keeps it); reading and showing `DirectoryRecord.links` and `Connector.tag`; the mobile icons and `mobile_entry_point`; `docs/ATTENDANCE-INTEGRATION.md`; `scripts/brand/derive-companies-logo.py`.
+- **Root fix 1, the rest; root fix 3, the rest** (the company id `apg`, the marker, member field names in `e2e/cloud`; command names, struct twins, `aarch64`/`arm64`, the user-agent guess): not in this round's list. One more command name (`file_exists`) now exists on both sides.
 
 ## Calls made without the owner
 
@@ -153,3 +166,7 @@ runs them.
 - **The service is named `platform.accounts`** (step 4). The name is only a key in memory; nothing saved holds it.
 - **The Group of Companies logo is imported by the vouchers module** (step 5). It was the kit's import for a `Letterhead` variant only the voucher used. Same file, same `<img>`.
 - **`Sheet fit="page"` upright is gone** (step 5). No paper used it without `orientation="landscape"`; the one-page fit now comes only with `LandscapePage`.
+- **The five leftovers stay** (step 6): the unused `billing.statement-payments` service, `links` and `tag`, the mobile icons and entry point, the withdrawn attendance document and the brand script. Deleting any of them is still the owner's to say.
+- **`KeystoneStore.replaceAll` stays a store method** (step 1). The instruction was to remove the one-caller store methods; `renamed` is gone, but `replaceAll` clears the drafts, which only the store holds. No screen can reach it now.
+- **Three new ADRs and one more were written without review**: 0031 (the start stops), 0032 (ids, statuses, references), 0033 (accounts as a service), 0034 (sheet layouts). Each is marked Accepted because the code is as it says; the owner may want any of them reworded or reversed.
+- **Every commit is `refactor:`, `test:`, `docs:` or `chore:`**, so merging this branch publishes no release, although b2fc1d2 and 2b1c7b8 change what a person sees. If the owner wants those in the release notes, the merge needs a `fix:` or `feat:` subject of his choosing.
