@@ -1,6 +1,6 @@
 # Keystone untangle, round 1: decision log
 
-Branch `refactor/untangle` in `/home/claude/apg-keystone`, seven local commits on top of `main` (5ebdfdc). Nothing pushed.
+Branch `refactor/untangle` in `/home/claude/apg-keystone`, seven commits on top of `main` (5ebdfdc), merged as pull request #65 (fcc9641).
 Baseline `npm run check`: 441 tests in 36 files. End: 458 tests in 37 files, exit 0. `cargo test`: 5 passed (was 4).
 The end-to-end suites could not run here; CI runs them.
 
@@ -64,7 +64,7 @@ The end-to-end suites could not run here; CI runs them.
 
 # Keystone untangle, round 2: decision log
 
-Branch `refactor/untangle-2`, fourteen local commits on top of `main` (fcc9641). Nothing pushed. The owner was away
+Branch `refactor/untangle-2`, fourteen commits on top of `main` (fcc9641), merged as pull request #66 (76a1fd6). The owner was away
 and said to finish without him, so every choice that was his is listed under "Calls made without the owner".
 Baseline `npm run check`: 458 tests in 37 files. End: 519 tests in 45 files and 17 snapshots, exit 0. `cargo test`:
 7 passed (was 5). `firestore.rules` and everything under `e2e/` are byte-identical to `main`; no dependency was added.
@@ -153,10 +153,12 @@ The end-to-end suites could not run here; CI runs them.
 - **A start that cannot read `state.json` now stops** (step 2, docs/adr/0031). Before: it opened with no records and the first save replaced the unreadable file. Now: the "could not open" screen with the reason and Try again. This is the one intended change of behaviour this round. A computer in that state does not open Keystone until the file can be read, moved or removed by hand. To undo: revert the step 2 commit.
 - **A damaged saved state says so in the rail** (step 2). It still opens with no records and still leaves the file alone until the first change; only the sentence is new: "Keystone could not open its saved records: they are damaged. It started with none, and keeps the damaged records as they are until you change something." The wording is mine.
 - **A failed installer fetch says why** (step 2). New sentence: "<App> is not on this computer and its installer could not be fetched (<reason>), so its download page is open." The plain sentence stays when there was nothing to fetch.
-- **The native question to GitHub has 15 seconds, not 20; a native download stops at 19 min 30 s** (step 2). The page already gave up at 15 s and 20 min; the native side now reads the same file and gives up first.
+- **The native question to GitHub has 15 seconds, not 20; a native download stops at 19 min 30 s** (step 2). The page already gave up at 15 s and 20 min; the native side now reads the same file. Only the download gives up first (30 s sooner). For the question to GitHub both sides have 15 s and the page's clock starts earlier, so the page's "did not answer within 15 seconds" still wins, as it did when the native side had 20 (review item m4; this line said "and gives up first" of both).
 - **A new native command, `file_exists`** (step 2). The alternative was reading the operating system's error text in TypeScript.
 - **The rail shows a failed save when it fails** (step 2). Strictly a bug fix riding in a `refactor:` commit so that no release is cut while the owner is away; the release notes will not mention it.
 - **Directory records named by funds, payroll or timekeeping can no longer be removed** (step 3, docs/adr/0032). Before: only vouchers, statements and IDs protected a record. Now a request for funds paid by check protects its payee, and a pay setup, a closed cut-off or a recorded day protects its employee; the row shows `RF`, `PAY` or `DTR` under "Used by" and Remove is disabled. Tested in `apps/keystone/src/test/contract.test.ts`. To undo for one module: delete its `refersTo` line.
+- **In the cloud, that protection differs with who is looking** (step 3; review item m1). A staff member reads only their own requests for funds (`firestore.rules`), so their Directory shows no `RF` on a vendor that only someone else's request names, and their Remove goes through, while the CEO's Keystone, which reads every request, keeps the same record. Nothing breaks when that happens: approving the request then says the payee is "no longer in the directory, so no voucher was drafted" (`funds/src/rules.ts`). Closing it means a rule in `firestore.rules` or a count kept outside the requests, both the owner's to decide.
+- **A request for funds protects its payee whatever became of it** (step 3; review item m2). A declined or withdrawn check request still keeps its payee, and requests are never deleted, so there is no way to release one. That is the rule vouchers and statements already had: a void voucher and a void statement keep their payee and client too (`s.cv`, `s.bs` are read whatever the status), as core's own list did before round 2. Round 3 left funds the same so the three agree; releasing a record on Void or Declined would be one change to all three, and the owner's.
 - **Protection follows the installed modules, not the saved data alone** (step 3). A build with a module taken out would no longer protect records only that module's data names. No shipped build takes one out; "Coming soon" screens stay installed.
 - **`ModuleDef.section` dropped, not rendered** (step 3). Rendering the eyebrow from it would have moved fifteen screens' headers; dropping it leaves the eyebrow in one place, the screen. No pixel changes.
 - **`Voucher.status`, `Statement.status`, `IDRecord.status` are plain text in core's types** (step 3). The words saved are the same; the lists and tones are in the vouchers, billing and ID maker modules.
@@ -170,3 +172,52 @@ The end-to-end suites could not run here; CI runs them.
 - **`KeystoneStore.replaceAll` stays a store method** (step 1). The instruction was to remove the one-caller store methods; `renamed` is gone, but `replaceAll` clears the drafts, which only the store holds. No screen can reach it now.
 - **Three new ADRs and one more were written without review**: 0031 (the start stops), 0032 (ids, statuses, references), 0033 (accounts as a service), 0034 (sheet layouts). Each is marked Accepted because the code is as it says; the owner may want any of them reworded or reversed.
 - **Every commit is `refactor:`, `test:`, `docs:` or `chore:`**, so merging this branch publishes no release, although b2fc1d2 and 2b1c7b8 change what a person sees. If the owner wants those in the release notes, the merge needs a `fix:` or `feat:` subject of his choosing.
+
+# Keystone untangle, round 3: decision log
+
+Branch `refactor/untangle-3`, local commits on top of `main` (76a1fd6). Not pushed when this was written. It answers
+the independent review of round 2 (one MAJOR, seven MINOR, and its list of structural items safe without the owner).
+Baseline `npm run check`: 519 tests in 45 files. End: 526 tests in 47 files and 20 snapshots, exit 0. `cargo test`:
+10 passed (was 7), run once. `firestore.rules`, everything under `e2e/` and `package-lock.json` are byte-identical to
+`main`; no dependency was added. The end-to-end suites could not run here; CI runs them.
+
+## Fixes
+
+- **The Directory asks each module once which records it names** (f286994; review M1, Part 2 item 1)
+  - `packages/core/src/kernel/directory.ts`: `Reference.record(state, code)` was asked for every row, three times a render, and funds, payroll and timekeeping each decoded all they had saved to answer. A reference now answers `codes(state)`; `usedByCode` builds code to tags from one call per module, and `usedBy` and `removeDirectoryRecord` read it. Same tags, same order, same Remove rule.
+  - `packages/modules/directory/src/index.tsx`: the map is kept for a state (`useMemo`); rows and the Remove action read it.
+  - The six `refersTo` contributions (vouchers, billing, id-maker, funds, payroll, timekeeping) return the codes they compared before.
+  - Test added: `packages/modules/directory/test/screen.test.tsx` counts the calls (at most StrictMode's two on the first render of 71 rows, none on a search keystroke or a filter; with rows asking again it fails at 428), and holds the tags and the Remove rule on screen.
+  - Tests edited: `packages/core/test/kernel.test.ts`, `apps/keystone/src/test/contract.test.ts` build stand-in references with `codes`; expectations unchanged.
+- **A timed-out native download says "took too long" and leaves no `.part` file** (2ab4d7d; review m3, Part 2 item 12)
+  - `apps/keystone/src-tauri/src/lib.rs`: the download is `fetch`, apart from opening the file. A timeout from the request reads as the sentence the late check already used; every way out of the loop removes the partial file. A dropped line still says "stopped".
+  - Cargo tests added: `a_download_that_runs_out_of_time_says_so_and_leaves_no_partial_file`, `a_download_in_time_is_saved_under_its_name`, against a local listener.
+- **Five things said once** (d42c657; Part 2 items 2, 7, 8, 9, 10)
+  - Item 2: `memberGrants(connectors)` in the kit; `main.tsx:33` and `accounts/src/index.tsx:108` call it.
+  - Item 7: core's `sentenceOf`; fifteen copies of `e instanceof Error ? e.message : String(e)` call it (the commit message counts fourteen). The three with their own fallback sentence (`data/src/index.tsx:30`, `kit/src/context.tsx:238,275`) are left, and so is `id-maker/src/index.tsx:103` (`String(e)`).
+  - Item 8: `deadlines.json` gains `connectSeconds` and `updateCheckSeconds`; `lib.rs` and `desktop.ts` read them. Same 15 s and 10 s. `GIVES_UP_EARLY` (30 s) stays in `lib.rs`: only the native side uses it.
+  - Item 9: `apps/keystone/src-tauri/src/commands.json`; `desktop.ts` asks by its names; `desktop.test.ts` and the cargo test `the_commands_the_page_names_are_the_ones_registered` hold it to `generate_handler!`.
+  - Item 10: core's `MEMBER_FIELD` in `platform/firestore.ts`. `e2e/cloud` still spells the three names, by instruction.
+- **The ID card sheet has a snapshot** (ade7e58; Part 2 item 4, the first half)
+  - `packages/modules/id-maker/test/paper.test.tsx`: its markup on screen, at the printer, and blank, recorded from what it does today. `IDCard.tsx` is untouched.
+- **One fake `Platform` for the parts' tests** (235484e; Part 2 item 3)
+  - `packages/kit/testing/index.ts`, exported as `@keystone/kit/testing`; billing, profile, accounts and directory tests use it. `check:boundaries` lets only a test import it. No new edge between parts.
+- **This log** (review m1, m2, m4, m7): the two headers that said "Nothing pushed"; under "Calls made without the owner", the protection that differs per viewer, the request that protects for good, and the corrected sentence about who gives up first.
+
+## Not done this round
+
+- **m2, a declined or withdrawn request releasing its payee**: left on purpose. Vouchers and statements protect whatever the status, void included, so funds already follows the existing rule (see "Calls made without the owner").
+- **Part 2 item 5, a test for `savePdf`**: not added. As asked it stubs `html-to-image` and `jspdf`, and the repo's lint refuses module mocking (`anti-slop/no-module-mocking`, an error; AGENTS.md: fix a finding, do not silence it). The lint's own answer is to hand `savePdf` its two drawing tools as an optional parameter, a change to `packages/kit/src/output.ts`; this item was to be tests only. A test written that way (margin, orientation and style for the three layouts) passed and is not committed. Owner decides: the parameter, or an exception to the rule for this one test.
+- **Part 2 item 4, the second half** (the ID card reading its sizes from `paper.ts`): not done; the geometry was not to change.
+- **Part 2 items 6 and 11** (rail order from the list; the two overlapping contexts): out of scope by instruction.
+- **m5** (five tags in a 100 px column) and **m6** (an unknown status reads neutral): seen, not changed; neither was in this round's list.
+- **`firestore.ts` `read()` and the `owner` flag**, the five leftovers, `firestore.rules`, `e2e/`: untouched.
+
+## Calls made in round 3
+
+- **`Reference.record` became `Reference.codes`** (f286994). A change to a kernel contract that six modules implement, made to fix M1 at its cause, not only memoised over. docs/adr/0032 and docs/MODULARITY.md say so. To undo: revert the commit.
+- **Any error from the download loop now removes the partial file**, not only a timeout (2ab4d7d). Before, a dropped line left it too.
+- **A timeout while waiting for GitHub's first answer** also reads "took too long", but only when the whole limit has passed; a connect timeout still reads "Could not reach GitHub" (2ab4d7d).
+- **The kit's `package.json` has an `exports` field** (235484e): `.` and `./testing`. Nothing imported any other path into the kit. The app's production build was not run here.
+- **`cargo test` ran once**, on `lib.rs` as d42c657 has it; 2ab4d7d on its own was not compiled.
+
