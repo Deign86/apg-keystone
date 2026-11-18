@@ -2,17 +2,12 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Reference, type TerminalState } from '@keystone/core';
 import { sampleState } from '@keystone/core/sample';
-import { App, buildRegistry, KeystoneStore, type ModuleDef, type Platform } from '@keystone/kit';
+import { App, buildRegistry, KeystoneStore, type ModuleDef } from '@keystone/kit';
+import { memoryPlatform } from '@keystone/kit/testing';
 import { directoryModule } from '../src';
 
 // The Directory asks each installed module which records its saved data names. A module answers by decoding
 // everything it has saved, so the screen asks each one once for a state, never once per row.
-
-const platform = (saved: TerminalState): Platform => ({
-  kind: 'browser', platform: 'web', loadState: async () => JSON.stringify(saved), saveState: async () => {}, putPhoto: async () => {},
-  photoUrl: async () => null, saveFile: async (name) => name, openFile: async () => null, locateApp: async () => null,
-  launchApp: async () => { throw new Error('Not in tests.'); }, openUrl: async () => {},
-});
 
 /** A module whose records name these codes, counting how often it is asked. */
 function naming(id: string, tag: string, codes: string[]) {
@@ -24,7 +19,7 @@ function naming(id: string, tag: string, codes: string[]) {
 }
 
 async function open(saved: TerminalState, others: ModuleDef[]) {
-  const store = await KeystoneStore.open(platform(saved));
+  const store = await KeystoneStore.open(memoryPlatform(JSON.stringify(saved)).platform);
 
   window.location.hash = '#directory';
   render(<App store={store} registry={buildRegistry([directoryModule, ...others], [])} />);
