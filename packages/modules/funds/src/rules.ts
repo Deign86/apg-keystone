@@ -2,7 +2,7 @@ import {
   addDays, count, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, logged,
   moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
   toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
-  type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type TerminalState, type Tone,
+  type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type Reference, type TerminalState, type Tone,
   type VoucherDrafts, type WaitingItem,
 } from '@keystone/core';
 
@@ -153,6 +153,12 @@ const saved = (s: TerminalState, data: FundsData) => withModuleData(s, ID, {
 
 export const requestsNewestFirst = (s: TerminalState) => newestFirst(dataOf(s).requests);
 export const requestOf = (s: TerminalState, no: string) => dataOf(s).requests.find((r) => r.no === no);
+
+/**
+ * A request paid by check names its payee by directory code; that record is kept. In the cloud a staff member reads
+ * only their own requests, so only the CEO's Keystone knows every request that names a record.
+ */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => dataOf(s).requests.some((r) => r.payee === code) };
 export const requestTotal = (r: Pick<FundsRequest, 'amount'>): Centavos => toCentavos(r.amount);
 
 /** The expenses a request lists; one filed before it listed them is its purpose for its amount. */

@@ -6,7 +6,7 @@ import {
   accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
   fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftOf, requestLock, requestOf, requestPreview, requestsNewestFirst,
   requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
-  type Verdict, ID, TAG,
+  type Verdict, ID, TAG, refersTo,
 } from './rules';
 import { TransferPaper } from './TransferPaper';
 
@@ -272,6 +272,7 @@ export const fundsModule: ModuleDef = {
     app.go(ID);
   },
   create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go(ID); } },
+  refersTo,
   selects: { Vendor: 'Requests for Funds' },
   logTags: { [TAG]: 'Requests for funds' },
   documents: requestDocuments,

@@ -39,6 +39,7 @@ everything that app is built around:
 - **Overview:** the "Employees in today" figure.
 - **Finding:** a past day with no time-out (priority 8), so it is corrected before payroll.
 - **Activity:** log tag `DTR`.
+- **Directory:** an employee with a recorded day is kept (`refersTo`), marked `DTR`.
 
 ## Provides
 `timekeeping.employee-attendance` (`SERVICES.employeeAttendance`, typed `EmployeeAttendance` in core): an employee's

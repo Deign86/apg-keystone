@@ -11,6 +11,9 @@ while a document uses the record), filter by type, and search.
 - **Activity:** log tag `DIR`.
 - **Tags:** linked records show each connector's `tag` (RFID, WEB).
 
+It collects two contributions from the other modules: `refersTo` (a record one of them names shows that module's tag
+under "Used by" and cannot be removed) and `selects` (the sentence after adding a record says where it can now be picked).
+
 ## Needs
 Nothing.
 

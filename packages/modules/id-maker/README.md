@@ -16,6 +16,8 @@
 - **Home:** a tile.
 - **Activity:** log tag `ID`.
 - **Draft key:** `id-maker.draft`.
+- **Directory:** an employee an ID names is kept (`refersTo`), marked `ID`; a new employee is said to be selectable in
+  the ID Maker (`selects`).
 
 ## Needs
 Nothing. Employees come from the directory when present.

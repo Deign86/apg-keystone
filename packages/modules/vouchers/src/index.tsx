@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, type Voucher } from '@keystone/core';
 import {
   approvesOnSave, awaitingApproval, copyVoucher, newVoucher, payeeOf, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, VOUCHER_STATUSES, vouchersNewestFirst, voucherTone, voucherTotal, voucherWaiting, withCheck, ID, TAG,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, VOUCHER_STATUSES, vouchersNewestFirst, voucherTone, voucherTotal, voucherWaiting, withCheck, ID, TAG, refersTo,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -285,6 +285,7 @@ export const vouchersModule: ModuleDef = {
     app.go(ID);
   },
   create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go(ID); } },
+  refersTo,
   logTags: { [TAG]: 'Vouchers' },
   provides: { [SERVICES.voucherDrafts]: voucherDrafts },
   Screen: Vouchers,

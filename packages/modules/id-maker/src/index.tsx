@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, recordsOf, shortDate, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG } from './rules';
+import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
@@ -159,6 +159,7 @@ export const idMakerModule: ModuleDef = {
     app.go(ID);
   },
   create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go(ID); } },
+  refersTo,
   selects: { Employee: 'the ID Maker' },
   logTags: { [TAG]: 'IDs' },
   onOpen: markExpired,

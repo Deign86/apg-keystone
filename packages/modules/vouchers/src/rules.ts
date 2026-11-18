@@ -1,7 +1,7 @@
 import {
   companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
   peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
-  type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
+  type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
   type WaitingItem
 } from '@keystone/core';
 
@@ -29,6 +29,9 @@ export function voucherTone(status: string): Tone {
 
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
+
+/** A voucher saved before payees were typed names its payee by directory code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => s.cv.some((v) => v.payee === code) };
 
 /** Voucher numbers run 888-001, 888-002 and on, with no year. */
 const SERIES = '888-';

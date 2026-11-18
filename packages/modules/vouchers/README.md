@@ -40,6 +40,7 @@ Older vouchers keep the account code they were saved with; it is no longer enter
 - **Home:** a tile.
 - **Activity:** log tag `CV`.
 - **Draft key:** `vouchers.draft`.
+- **Directory:** a record that an older voucher names by code is kept (`refersTo`), marked `CV`.
 
 ## Needs
 Directory records (data, not the Directory module), only for vouchers saved with a directory code, and for one drafted

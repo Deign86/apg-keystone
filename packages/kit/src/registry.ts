@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import {
-  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
+  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments, type Reference,
   type RecordType, type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
@@ -59,6 +59,11 @@ export interface ModuleDef {
    * { Vendor: 'Requests for Funds' }. The Directory says so when a record of that type is added.
    */
   selects?: Partial<Record<RecordType, string>>;
+  /**
+   * Whether its saved records name a directory record, by code. A record it names cannot be removed from the
+   * directory, and the Directory marks it with this tag.
+   */
+  refersTo?: Reference;
   /** The activity-log tags this module writes, with their filter label: { CV: 'Vouchers' }. */
   logTags?: Record<string, string>;
   /** Housekeeping when Keystone opens (statements past due become Overdue). */

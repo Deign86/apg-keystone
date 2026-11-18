@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  DEADLINES, laterVersion, openDesktopApp, toCentavos, topFinding, validateConnector, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
+  DEADLINES, laterVersion, openDesktopApp, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -186,9 +186,23 @@ describe('directory (the shared kernel)', () => {
     const add = saveDirectoryRecord(s, { ...newDirectoryDraft('Client'), name: 'Ortigas Dental Clinic' }, ctx);
     expect(add.record).toMatchObject({ code: 'C-004', vat: true, ewt: false });
     expect(() => saveDirectoryRecord(add.state, { ...newDirectoryDraft('Client'), name: 'ortigas dental clinic' }, ctx)).toThrow(/already has that name/);
-    expect(() => removeDirectoryRecord(s, 'V-001', ctx)).toThrow(/used by CV/);
-    expect(removeDirectoryRecord(add.state, 'C-004', ctx).state.dir).toHaveLength(11);
+    // What a part contributes (ModuleDef.refersTo): its records name V-001.
+    const vouchers: Reference = { tag: 'CV', record: (x, code) => x.cv.some((v) => v.payee === code) };
+
+    expect(() => removeDirectoryRecord(s, 'V-001', ctx, [vouchers])).toThrow(/used by CV/);
+    expect(removeDirectoryRecord(add.state, 'C-004', ctx, [vouchers]).state.dir).toHaveLength(11);
     expect(payees(s).slice(0, 4).map((d) => d.code)).toEqual(['V-001', 'V-002', 'V-003', 'V-004']);
+  });
+
+  it('keeps a record that any installed part says its records name, and names each part once', () => {
+    const s = state();
+    const names = (tag: string, code: string): Reference => ({ tag, record: (_, c) => c === code });
+
+    expect(usedBy(s, 'E-001', [])).toEqual([]);
+    expect(usedBy(s, 'E-001', [names('PAY', 'E-001'), names('DTR', 'E-001'), names('PAY', 'E-001'), names('RF', 'V-001')])).toEqual(['PAY', 'DTR']);
+    expect(() => removeDirectoryRecord(s, 'E-001', ctx, [names('PAY', 'E-001'), names('DTR', 'E-001')])).toThrow('E-001 is used by PAY, DTR records and cannot be removed.');
+    // No part installed that names it: nothing protects it.
+    expect(removeDirectoryRecord(s, 'E-001', ctx, []).message).toBe('E-001 removed.');
   });
 
   it('says where a new record can now be picked, as the installed screens name themselves, and nothing when none does', () => {

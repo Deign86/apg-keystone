@@ -2,7 +2,7 @@ import {
   DASH, addDays, count, halfMonthOf, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
   moduleData, parseAmount, periodLabel, peso, recordOf, shortDate, stamp, sumCentavos, toCentavos, toPesos, today,
   withModuleData, type AttendanceTally, type Centavos, type Change, type Ctx, type EmployeeAttendance, type Figure,
-  type Finding, type JsonObject, type JsonValue, type Period, type TerminalState,
+  type Finding, type JsonObject, type JsonValue, type Period, type Reference, type TerminalState,
 } from '@keystone/core';
 import { basisOf, fullAttendance, price, sharesFor, tableShares, type Pay, type PaySetup, type Shares } from './pay';
 
@@ -79,6 +79,16 @@ export function dataOf(s: TerminalState): PayrollData {
 }
 
 const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, ID, data);
+
+/** A pay setup, and every closed cut-off's rows, name their employee by directory code; that record is kept. */
+export const refersTo: Reference = {
+  tag: TAG,
+  record: (s, code) => {
+    const data = dataOf(s);
+
+    return data.setups.some((x) => x.emp === code) || data.runs.some((r) => r.rows.some((x) => x.setup.emp === code));
+  },
+};
 
 export const setupFor = (s: TerminalState, emp: string) => dataOf(s).setups.find((x) => x.emp === emp);
 

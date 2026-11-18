@@ -89,12 +89,26 @@ runs them.
   - `packages/kit/src/Shell.tsx:77`: the rail read `store.saveError` only when something else re-rendered it, so a failed save showed at the next change. It now subscribes to both notices.
   - Tests added: `apps/keystone/src/test/desktop.test.ts` (6), `packages/kit/test/rail-notices.test.tsx` (3), two store tests, two core tests, two cargo tests (`a_missing_file_is_told_from_one_that_is_there`, `the_native_limits_are_the_pages_and_a_download_gives_up_first`).
   - Tests edited: `packages/connectors/id-maker-app/test/id-maker-app.test.ts` "opens the download page when the installer cannot be fetched" now expects the reason; `packages/kit/test/shortcut.test.tsx` "a failed update check…" expects the console line.
+- **Root fix 4: a module owns its identity and its references** (step 3; docs/adr/0032)
+  - `funds/src/rules.ts:14` vs `funds/src/index.tsx:256` (and `banks`, `timekeeping`, `payroll`): `MODULE` and `id` were two literals. One `ID` per module now feeds `ModuleDef.id`, the `ext` key, the draft key and its own `go` calls. Values unchanged.
+  - `vouchers/src/index.tsx:12,272,284,286`, `billing/src/index.tsx:8,155,169,171`, `funds/src/index.tsx:256,271,273`, `id-maker/src/index.tsx:146,160,162`: draft key, id and `go` repeated one id.
+  - `vouchers/src/rules.ts:151` (and `billing`, `id-maker`): the log tag as a literal in every `logged(...)` and again in `logTags`; one `TAG`. `funds/src/index.tsx:274` uses the `TAG` it already exported. Core exports `DIRECTORY_TAG`.
+  - `packages/kit/src/registry.ts:33`: `ModuleDef.section`, required and read by nothing: dropped.
+  - `packages/core/src/kernel/schema.ts:53-73`: the status lists and tone table of three modules: moved to vouchers, billing and id-maker (`voucherTone`, `statementTone`, `idTone`).
+  - `packages/core/src/kernel/insight.ts:30`: `WaitingItem.status` typed as core's `Status`: now text.
+  - `packages/core/src/kernel/schema.ts:14`, `directory.ts:99`: `USED_IN` held three screens' titles: replaced by `ModuleDef.selects`, collected by the Directory. Same sentences with the same modules installed.
+  - `packages/core/src/kernel/directory.ts:19-29`: `usedBy` hardcoded `cv`, `bs`, `ids`: replaced by `ModuleDef.refersTo`, contributed by six modules.
+  - Tests added: statuses and tones in three modules; the directory message and references in core; in `contract.test.ts`, references against data written as earlier builds saved it (which also pins the `ext` keys), the old answers for the sample, the `selects` words, and that a module's reference tag is one of its log tags.
+  - Tests edited: `packages/core/test/kernel.test.ts` and `packages/modules/id-maker/test/rules.test.ts` pass the references `usedBy` and `removeDirectoryRecord` now take; four `ModuleDef` literals lost `section`.
 
 ## Not done this round
 
 - **`KeystoneStore.replaceAll`** (`packages/kit/src/store.ts`): kept as a store method. It resets the drafts, which are private to the store; no screen reaches it any more (Data calls `backup.restore`).
 - **Two overlapping contexts** (`useKeystone` and `useModuleApp` both return `state`, `ctx`, `go`): left. `ModuleApp` is also what contributions outside React receive (`create.run`, `openWaiting`), so it cannot simply lose them.
 - **Other swallowed errors** (photos that cannot be read, a full `localStorage`, `deleteUser` after a refused member write, an unreadable pending note, `cpu_arch`): left as they were; root fix 6 named the state, the installer and the deadlines.
+- **Other modules' ids as literals** (`funds/src/index.tsx:157` vouchers, `billing/src/index.tsx:26` banks, `overview` activity, `payroll` and `timekeeping` directory, `profile` accounts): left. A module cannot import another's `ID`; each jump is guarded by `app.has`.
+- **`Voucher`, `Statement`, `IDRecord` in core** (trade-off T1): still there, with `status` as text. Moving the types out is ADR 0003's format bump.
+- **Priorities, ranks and rail order as bare numbers**: untouched.
 
 ## Calls made without the owner
 
@@ -104,3 +118,7 @@ runs them.
 - **The native question to GitHub has 15 seconds, not 20; a native download stops at 19 min 30 s** (step 2). The page already gave up at 15 s and 20 min; the native side now reads the same file and gives up first.
 - **A new native command, `file_exists`** (step 2). The alternative was reading the operating system's error text in TypeScript.
 - **The rail shows a failed save when it fails** (step 2). Strictly a bug fix riding in a `refactor:` commit so that no release is cut while the owner is away; the release notes will not mention it.
+- **Directory records named by funds, payroll or timekeeping can no longer be removed** (step 3, docs/adr/0032). Before: only vouchers, statements and IDs protected a record. Now a request for funds paid by check protects its payee, and a pay setup, a closed cut-off or a recorded day protects its employee; the row shows `RF`, `PAY` or `DTR` under "Used by" and Remove is disabled. Tested in `apps/keystone/src/test/contract.test.ts`. To undo for one module: delete its `refersTo` line.
+- **Protection follows the installed modules, not the saved data alone** (step 3). A build with a module taken out would no longer protect records only that module's data names. No shipped build takes one out; "Coming soon" screens stay installed.
+- **`ModuleDef.section` dropped, not rendered** (step 3). Rendering the eyebrow from it would have moved fifteen screens' headers; dropping it leaves the eyebrow in one place, the screen. No pixel changes.
+- **`Voucher.status`, `Statement.status`, `IDRecord.status` are plain text in core's types** (step 3). The words saved are the same; the lists and tones are in the vouchers, billing and ID maker modules.

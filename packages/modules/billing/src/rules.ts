@@ -3,7 +3,7 @@ import {
   percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type LineItem, type Payment, type Statement, type StatementPayments,
-  type TerminalState, type Tone, type WaitingItem
+  type Reference, type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
 // Billing statements: receivables from clients, printed as the company's Billing
@@ -32,6 +32,9 @@ export function statementTone(status: string): Tone {
 }
 
 export const VAT_RATE = 12;
+
+/** A statement names its client by directory code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => s.bs.some((b) => b.client === code) };
 export const EWT_RATE = 5;
 
 /** VAT is added and EWT withheld, both on the subtotal. */

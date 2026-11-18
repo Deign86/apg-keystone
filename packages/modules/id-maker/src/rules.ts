@@ -1,7 +1,7 @@
 import {
   addDays, addYears, companyOf, count, KeystoneError, logged, newestFirst, nextNumber, recordOf, thisYear, today,
   type Change, type Ctx, type Editing, type Figure, type Finding, type IDRecord,
-  type TerminalState, type Tone, type WaitingItem
+  type Reference, type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
 // Employee ID cards. Reads the directory to fill a card from an employee record.
@@ -29,6 +29,9 @@ export function idTone(status: string): Tone {
 export const BLOOD_TYPES = ['O+', 'O−', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−'];
 
 export const idsNewestFirst = (s: TerminalState) => newestFirst(s.ids);
+
+/** An ID issued from the directory names its employee by code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => s.ids.some((i) => i.emp === code) };
 export const nextIDNo = (s: TerminalState, ctx: Ctx) => nextNumber(s.ids.map((i) => i.no), `APG-${thisYear(ctx)}-`);
 export const queuedForPrinting = (s: TerminalState) => s.ids.filter((i) => i.status === 'For printing');
 const issuedThisMonth = (s: TerminalState, ctx: Ctx) => s.ids.filter((i) => i.issued.startsWith(today(ctx).slice(0, 7)));

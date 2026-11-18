@@ -1,7 +1,7 @@
 import {
   DASH, count, datesBetween, isISODate, isJsonObject, isWeekday, jsonNumber, jsonObjects, jsonText, KeystoneError, logged,
   mondayOf, moduleData, nameOf, recordOf, recordsOf, shortDate, today, withModuleData, type AttendanceTally, type Change,
-  type Ctx, type EmployeeAttendance, type Figure, type Finding, type ISODate, type TerminalState,
+  type Ctx, type EmployeeAttendance, type Figure, type Finding, type ISODate, type Reference, type TerminalState,
 } from '@keystone/core';
 
 // Employee timekeeping: who came in when, and what that means for the day. Employees only (directory records of type
@@ -49,6 +49,9 @@ export function dataOf(s: TerminalState): TimekeepingData {
 }
 
 const saved = (s: TerminalState, data: TimekeepingData) => withModuleData(s, ID, data);
+
+/** A recorded day names its employee by directory code; that record is kept. */
+export const refersTo: Reference = { tag: TAG, record: (s, code) => dataOf(s).days.some((d) => d.emp === code) };
 
 // ---------- clock times ----------
 

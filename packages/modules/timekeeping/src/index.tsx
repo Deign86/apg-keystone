@@ -10,7 +10,7 @@ import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
   clock12, dataOf, dayDraftOf, daysOf, duration, employeeAttendance, HOLIDAY_KINDS, inToday, missingTimeOuts, newHoliday,
   removeHoliday, saveDay, saveHoliday, TAG, tally, timeIn, timekeepingFigure, timekeepingFinding, timekeepingStat,
-  timeOut, todayBoard, type DayDraft, type DayResult, type DayStatus, type Holiday, type HolidayDraft, type TodayRow, ID,
+  timeOut, todayBoard, type DayDraft, type DayResult, type DayStatus, type Holiday, type HolidayDraft, type TodayRow, ID, refersTo,
 } from './rules';
 
 const TONE: Record<DayStatus, Tone> = {
@@ -235,6 +235,7 @@ export const timekeepingModule: ModuleDef = {
   stat: timekeepingStat,
   figure: timekeepingFigure,
   finding: timekeepingFinding,
+  refersTo,
   logTags: { [TAG]: 'Timekeeping' },
   provides: { [SERVICES.employeeAttendance]: employeeAttendance },
   Screen: Timekeeping,

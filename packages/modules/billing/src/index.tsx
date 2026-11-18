@@ -1,7 +1,7 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, recordOf, recordsOf, shortDate, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, ID, TAG } from './rules';
+import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
@@ -168,6 +168,7 @@ export const billingModule: ModuleDef = {
     app.go(ID);
   },
   create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go(ID); } },
+  refersTo,
   selects: { Client: 'Billing Statements' },
   logTags: { [TAG]: 'Billing' },
   onOpen: markOverdue,

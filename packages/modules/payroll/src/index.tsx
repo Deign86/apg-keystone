@@ -13,7 +13,7 @@ import { Payslip, PayrollSheet } from './PayrollPapers';
 import {
   AMOUNT_LABEL, closeCutoff, cutoffOf, lastCutoff, payrollFigure, payrollFinding, payrollStat, removeSetup,
   reopenCutoff, saveSetup, setupDraftOf, setupFor, SHARES, TAG, totalOf, workedOut, type AmountField, type PayLine,
-  type SetupDraft, ID,
+  type SetupDraft, ID, refersTo,
 } from './rules';
 
 function Amount({ field, d, set, placeholder = '0.00' }: { field: AmountField; d: SetupDraft; set: (d: SetupDraft) => void; placeholder?: string }) {
@@ -273,6 +273,7 @@ export const payrollModule: ModuleDef = {
   stat: payrollStat,
   figure: payrollFigure,
   finding: payrollFinding,
+  refersTo,
   logTags: { [TAG]: 'Payroll' },
   Screen: Payroll,
 };

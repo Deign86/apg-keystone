@@ -15,20 +15,22 @@ export const nameOf = (s: TerminalState, code: string) => recordOf(s, code)?.nam
 export const payees = (s: TerminalState) => [...recordsOf(s, 'Vendor'), ...recordsOf(s, 'Client'), ...recordsOf(s, 'Employee')];
 
 /**
- * Which saved documents refer to a record, as log tags. This reads the data, not the
- * installed modules: a record a voucher points to stays protected even in a build
- * without the vouchers screen.
+ * How a part says that its records name a directory record by code (`ModuleDef.refersTo`). The directory knows no
+ * part's records; it asks each installed part.
  */
-export function usedBy(s: TerminalState, code: string): ModuleTag[] {
-  const used: ModuleTag[] = [];
+export interface Reference {
+  /** The part's log tag, shown beside a record it names: "CV". */
+  tag: ModuleTag;
+  /** True when one of the part's saved records names the directory record with this code. Pure. */
+  record(s: TerminalState, code: string): boolean;
+}
 
-  if (s.cv.some((v) => v.payee === code)) used.push('CV');
-
-  if (s.bs.some((b) => b.client === code)) used.push('BS');
-
-  if (s.ids.some((i) => i.emp === code)) used.push('ID');
-
-  return used;
+/**
+ * Which parts' saved records refer to a directory record, as their tags, in the order given. Only an installed part
+ * can say so: a record that a part's data names is protected while that part is installed.
+ */
+export function usedBy(s: TerminalState, code: string, references: readonly Reference[]): ModuleTag[] {
+  return [...new Set(references.flatMap((r) => (r.record(s, code) ? [r.tag] : [])))];
 }
 
 export const nextCode = (s: TerminalState, type: RecordType) =>
@@ -110,12 +112,12 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
   };
 }
 
-/** Removes a record no document refers to. */
-export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx): Change<DirectoryRecord> {
+/** Removes a record that no installed part's records refer to (`references`, from `ModuleDef.refersTo`). */
+export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx, references: readonly Reference[]): Change<DirectoryRecord> {
   const d = recordOf(s, code);
 
   if (!d) throw new KeystoneError(`${code} is not in the directory.`);
-  const used = usedBy(s, code);
+  const used = usedBy(s, code, references);
 
   if (used.length) throw new KeystoneError(`${code} is used by ${used.join(', ')} records and cannot be removed.`);
 

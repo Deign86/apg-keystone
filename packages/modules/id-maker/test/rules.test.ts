@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { usedBy, type Ctx } from '@keystone/core';
-import { ID_STATUSES, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, withEmployee } from '../src/rules';
+import { ID_STATUSES, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, refersTo, withEmployee } from '../src/rules';
 import { verificationCells } from '../src/verification';
 import { sampleState } from '@keystone/core/sample';
 
@@ -22,7 +22,8 @@ describe('ID maker', () => {
     expect(d.pos).toBe('Admin Assistant');
     const r = issueID(s, d, ctx);
     expect(r.message).toBe('APG-2026-0031 issued and queued for printing.');
-    expect(usedBy(r.state, 'E-004')).toEqual(['ID']);
+    expect(usedBy(s, 'E-004', [refersTo])).toEqual([]);
+    expect(usedBy(r.state, 'E-004', [refersTo])).toEqual(['ID']);
   });
 
   it('expires cards on open', () => {

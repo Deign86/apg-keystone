@@ -42,6 +42,7 @@ Consequences**.
 | [0029](0029-keystone-installs-the-connected-apps.md) | Keystone installs the connected apps, and updates the one that cannot update itself | Accepted, changed by 0031 |
 | [0030](0030-the-ceo-names-attendance-admins.md) | The CEO names who opens the attendance tracker's admin screens | Accepted |
 | [0031](0031-a-start-that-cannot-read-the-records-stops.md) | A start that cannot read the saved records stops and says why | Accepted |
+| [0032](0032-a-module-owns-its-id-statuses-and-references.md) | A module owns its id, its statuses and what it refers to | Accepted |
 
 Template:
 
