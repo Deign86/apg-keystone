@@ -60,6 +60,15 @@ describe('across the installed modules', () => {
     expect(tags).toEqual([...new Set(tags)]);
   });
 
+  it('the Directory is told where a new record can be picked, in the words it has always used', () => {
+    const where = (type: 'Vendor' | 'Client' | 'Employee') => registry.modules.flatMap((m) => m.selects?.[type] ?? []);
+
+    // "V-005 added. It is now selectable in Requests for Funds." and its two siblings (e2e/modules/directory.e2e.ts).
+    expect(where('Vendor')).toEqual(['Requests for Funds']);
+    expect(where('Client')).toEqual(['Billing Statements']);
+    expect(where('Employee')).toEqual(['the ID Maker']);
+  });
+
   it('every published service has a provider', () => {
     for (const name of published) expect(registry.modules.some((m) => m.provides && name in m.provides)).toBe(true);
   });

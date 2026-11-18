@@ -1,9 +1,9 @@
 import {
   addDays, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
   percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
-  toneOf, type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
-  type LineItem, type Payment, type Statement, type StatementPayments, type StatementStatus,
-  type TerminalState, type WaitingItem
+  type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
+  type LineItem, type Payment, type Statement, type StatementPayments,
+  type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
 // Billing statements: receivables from clients, printed as the company's Billing
@@ -17,6 +17,19 @@ export const ID = 'billing';
 
 /** The tag its activity-log lines carry. */
 export const TAG = 'BS';
+
+export const STATEMENT_STATUSES = ['Sent', 'Paid', 'Overdue', 'Void'] as const;
+
+export type StatementStatus = (typeof STATEMENT_STATUSES)[number];
+
+const TONES: Record<StatementStatus, Tone> = { Sent: 'neutral', Paid: 'good', Overdue: 'bad', Void: 'neutral' };
+
+/** How a statement's status reads at a glance. One saved with a status this build does not know reads as neutral. */
+export function statementTone(status: string): Tone {
+  const known = STATEMENT_STATUSES.find((s) => s === status);
+
+  return known ? TONES[known] : 'neutral';
+}
 
 export const VAT_RATE = 12;
 export const EWT_RATE = 5;
@@ -243,7 +256,7 @@ export function billingFinding(s: TerminalState): Finding | null {
 
 export function billingWaiting(s: TerminalState): WaitingItem[] {
   return [...outstanding(s)].sort((a, b) => a.due.localeCompare(b.due)).map((b, i) => ({
-    no: b.no, who: `${nameOf(s, b.client)} · due ${shortDate(b.due)}`, amount: statementTotals(b).due, status: b.status, tone: toneOf(b.status), rank: 10 + i,
+    no: b.no, who: `${nameOf(s, b.client)} · due ${shortDate(b.due)}`, amount: statementTotals(b).due, status: b.status, tone: statementTone(b.status), rank: 10 + i,
   }));
 }
 

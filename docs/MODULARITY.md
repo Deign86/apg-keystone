@@ -71,6 +71,7 @@ changes.
 | `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20, IDs 10. |
 | `waiting`, `openWaiting` | | Records waiting on someone, listed on Overview, and how to open one |
 | `create` | | A "New …" button on Overview |
+| `selects` | | The directory records a person picks from on its screen, by type, as a sentence names the screen (`{ Vendor: 'Requests for Funds' }`). The Directory says so when a record of that type is added |
 | `logTags` | | The activity-log tags it writes, with their filter label |
 | `onOpen` | | Housekeeping when Keystone opens (marking overdue or expired records) |
 | `provides` | | Services it offers other parts, by published name (see below) |

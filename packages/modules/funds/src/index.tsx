@@ -272,6 +272,7 @@ export const fundsModule: ModuleDef = {
     app.go(ID);
   },
   create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go(ID); } },
+  selects: { Vendor: 'Requests for Funds' },
   logTags: { [TAG]: 'Requests for funds' },
   documents: requestDocuments,
   Screen: Funds,

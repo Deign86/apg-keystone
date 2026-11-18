@@ -1,7 +1,7 @@
 import {
   addDays, addYears, companyOf, count, KeystoneError, logged, newestFirst, nextNumber, recordOf, thisYear, today,
-  toneOf, type Change, type Ctx, type Editing, type Figure, type Finding, type IDRecord, type IDStatus,
-  type TerminalState, type WaitingItem
+  type Change, type Ctx, type Editing, type Figure, type Finding, type IDRecord,
+  type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
 // Employee ID cards. Reads the directory to fill a card from an employee record.
@@ -12,6 +12,19 @@ export const ID = 'id-maker';
 
 /** The tag its activity-log lines carry. */
 export const TAG = 'ID';
+
+export const ID_STATUSES = ['For printing', 'Active', 'Expired', 'Revoked'] as const;
+
+export type IDStatus = (typeof ID_STATUSES)[number];
+
+const TONES: Record<IDStatus, Tone> = { 'For printing': 'warn', Active: 'good', Expired: 'bad', Revoked: 'bad' };
+
+/** How an ID's status reads at a glance. One saved with a status this build does not know reads as neutral. */
+export function idTone(status: string): Tone {
+  const known = ID_STATUSES.find((s) => s === status);
+
+  return known ? TONES[known] : 'neutral';
+}
 
 export const BLOOD_TYPES = ['O+', 'O−', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−'];
 
@@ -131,5 +144,5 @@ export function idFinding(s: TerminalState): Finding | null {
 }
 
 export function idWaiting(s: TerminalState): WaitingItem[] {
-  return queuedForPrinting(s).map((i) => ({ no: i.no, who: `${i.name} · ID card`, amount: null, status: i.status, tone: toneOf(i.status), rank: 20 }));
+  return queuedForPrinting(s).map((i) => ({ no: i.no, who: `${i.name} · ID card`, amount: null, status: i.status, tone: idTone(i.status), rank: 20 }));
 }

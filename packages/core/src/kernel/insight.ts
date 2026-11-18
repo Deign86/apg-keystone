@@ -1,5 +1,5 @@
 import type { Centavos } from './money';
-import type { Status, Tone } from './schema';
+import type { Tone } from './schema';
 
 // How a domain tells the rest of the app what matters, without the rest of the app
 // knowing the domain exists. Overview and Home collect these from whatever modules are
@@ -27,7 +27,8 @@ export interface WaitingItem {
   /** Who it concerns, and any short context: "Harbor Point Logistics Corp. · due Nov 5, 2026". */
   who: string;
   amount: Centavos | null;
-  status: Status;
+  /** The record's status as its module words it, and the tone that module gives it. */
+  status: string;
   tone: Tone;
   /** Sorts the combined list: lower comes first. */
   rank: number;

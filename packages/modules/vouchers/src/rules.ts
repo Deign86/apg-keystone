@@ -1,8 +1,8 @@
 import {
   companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
-  peso, recordOf, shortDate, sumCentavos, toCentavos, today, toneOf, type Centavos, type Change, type Ctx,
-  type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Voucher, type VoucherDrafts,
-  type VoucherStatus, type WaitingItem
+  peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
+  type Editing, type Figure, type Finding, type LineDraft, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
+  type WaitingItem
 } from '@keystone/core';
 
 // Check vouchers: disbursements routed for signatures, printed as the company's
@@ -13,6 +13,19 @@ export const ID = 'vouchers';
 
 /** The tag its activity-log lines carry. */
 export const TAG = 'CV';
+
+export const VOUCHER_STATUSES = ['For Approval', 'Approved', 'Released', 'Void'] as const;
+
+export type VoucherStatus = (typeof VOUCHER_STATUSES)[number];
+
+const TONES: Record<VoucherStatus, Tone> = { 'For Approval': 'warn', Approved: 'good', Released: 'neutral', Void: 'neutral' };
+
+/** How a voucher's status reads at a glance. One saved with a status this build does not know reads as neutral. */
+export function voucherTone(status: string): Tone {
+  const known = VOUCHER_STATUSES.find((s) => s === status);
+
+  return known ? TONES[known] : 'neutral';
+}
 
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
@@ -265,6 +278,6 @@ export function voucherFinding(s: TerminalState): Finding | null {
 
 export function voucherWaiting(s: TerminalState): WaitingItem[] {
   return awaitingApproval(s).map((v) => ({
-    no: v.no, who: `${nameOf(s, v.payee)} · voucher`, amount: voucherTotal(v), status: v.status, tone: toneOf(v.status), rank: 0,
+    no: v.no, who: `${nameOf(s, v.payee)} · voucher`, amount: voucherTotal(v), status: v.status, tone: voucherTone(v.status), rank: 0,
   }));
 }

@@ -190,6 +190,15 @@ describe('directory (the shared kernel)', () => {
     expect(removeDirectoryRecord(add.state, 'C-004', ctx).state.dir).toHaveLength(11);
     expect(payees(s).slice(0, 4).map((d) => d.code)).toEqual(['V-001', 'V-002', 'V-003', 'V-004']);
   });
+
+  it('says where a new record can now be picked, as the installed screens name themselves, and nothing when none does', () => {
+    const add = (where?: string[]) => saveDirectoryRecord(state(), { ...newDirectoryDraft('Vendor'), name: 'Ortigas Hardware' }, ctx, where).message;
+
+    expect(add()).toBe('V-005 added.');
+    expect(add(['Requests for Funds'])).toBe('V-005 added. It is now selectable in Requests for Funds.');
+    expect(add(['Payroll', 'Timekeeping'])).toBe('V-005 added. It is now selectable in Payroll and Timekeeping.');
+    expect(add(['the ID Maker', 'Payroll', 'Timekeeping'])).toBe('V-005 added. It is now selectable in the ID Maker, Payroll and Timekeeping.');
+  });
 });
 
 describe('connector contract', () => {

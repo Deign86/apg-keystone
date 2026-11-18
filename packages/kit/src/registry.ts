@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import {
   CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
-  type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
+  type RecordType, type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
 /**
@@ -54,6 +54,11 @@ export interface ModuleDef {
   openWaiting?: (no: string, app: ModuleApp) => void;
   /** A "New …" action shown on Overview. */
   create?: { label: string; run: (app: ModuleApp) => void };
+  /**
+   * The directory records a person picks from on this screen, by type, as a sentence names the screen:
+   * { Vendor: 'Requests for Funds' }. The Directory says so when a record of that type is added.
+   */
+  selects?: Partial<Record<RecordType, string>>;
   /** The activity-log tags this module writes, with their filter label: { CV: 'Vouchers' }. */
   logTags?: Record<string, string>;
   /** Housekeeping when Keystone opens (statements past due become Overdue). */

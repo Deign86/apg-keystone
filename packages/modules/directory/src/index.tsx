@@ -7,12 +7,14 @@ import {
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 
 function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => void }) {
-  const { state, run } = useKeystone();
+  const { state, run, registry } = useKeystone();
   const [d, setD] = useState(draft);
   const [error, setError] = useState<string | null>(null);
 
   const save = () => {
-    const r = run((s, c) => saveDirectoryRecord(s, d, c));
+    // The screens a new record of this type can be picked on, as the installed modules say.
+    const selectableIn = registry.modules.flatMap((m) => m.selects?.[d.type] ?? []);
+    const r = run((s, c) => saveDirectoryRecord(s, d, c, selectableIn));
 
     if (r.ok) onDone(); else setError(r.error);
   };

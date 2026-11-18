@@ -1,4 +1,4 @@
-import { CODE_PREFIX, USED_IN, type DirectoryRecord, type ModuleTag, type RecordType, type TerminalState } from './schema';
+import { CODE_PREFIX, type DirectoryRecord, type ModuleTag, type RecordType, type TerminalState } from './schema';
 import { KeystoneError, logged, nextNumber, type Change, type Ctx, type Editing } from './state';
 
 // The directory: vendors, clients and employees every other domain refers to by code.
@@ -50,7 +50,14 @@ export const directoryDraftOf = (d: DirectoryRecord): DirectoryDraft => ({
 
 const clean = (x: string) => x.trim();
 
-export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ctx): Change<DirectoryRecord> {
+/** "A", "A and B", "A, B and C". */
+const listed = (names: readonly string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names.join(''));
+
+/**
+ * Adds a record, or saves a change to one. `selectableIn` names the screens a new record of this type can now be
+ * picked on, as the installed modules say (`ModuleDef.selects`); the message tells the person so.
+ */
+export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ctx, selectableIn: readonly string[] = []): Change<DirectoryRecord> {
   const name = clean(d.name);
 
   if (!name) throw new KeystoneError('Enter a name for the record.');
@@ -99,7 +106,7 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
 
   return {
     state: logged({ ...s, dir: [...s.dir, base] }, DIRECTORY_TAG, `${base.code} ${base.name} added to the directory as ${d.type.toLowerCase()}.`, ctx),
-    record: base, message: `${base.code} added. It is now selectable in ${USED_IN[d.type]}.`,
+    record: base, message: selectableIn.length ? `${base.code} added. It is now selectable in ${listed(selectableIn)}.` : `${base.code} added.`,
   };
 }
 

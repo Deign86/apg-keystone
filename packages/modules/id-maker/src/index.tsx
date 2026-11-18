@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { companyOf, count, ID_STATUSES, recordsOf, shortDate, toneOf, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG } from './rules';
+import { companyOf, count, recordsOf, shortDate, type IDRecord } from '@keystone/core';
+import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
@@ -57,7 +57,7 @@ function IDMaker() {
     { key: 'pos', header: 'Position', width: 188, cell: (i) => <span className="text-ink-2">{i.pos}</span> },
     { key: 'issued', header: 'Issued', width: 104, cell: (i) => <span className="text-ink-2 tabular-nums">{shortDate(i.issued)}</span> },
     { key: 'valid', header: 'Valid until', width: 104, cell: (i) => <span className="text-ink-2 tabular-nums">{shortDate(i.valid)}</span> },
-    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (i) => <StatusPill status={i.status} tone={toneOf(i.status)} /> },
+    { key: 'status', header: 'Status', width: 150, align: 'right', cell: (i) => <StatusPill status={i.status} tone={idTone(i.status)} /> },
   ];
 
   const employees = recordsOf(state, 'Employee');
@@ -159,6 +159,7 @@ export const idMakerModule: ModuleDef = {
     app.go(ID);
   },
   create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go(ID); } },
+  selects: { Employee: 'the ID Maker' },
   logTags: { [TAG]: 'IDs' },
   onOpen: markExpired,
   Screen: IDMaker,

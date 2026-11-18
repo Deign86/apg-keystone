@@ -59,7 +59,7 @@ COMPOSITION (the only place that knows the full list)
    Only `apps/keystone/src/modules.ts` and `src/connectors.ts` import module and connector packages.
 3. **Parts talk through contributions, not references.**
    - A module that wants to appear on Overview, Home or in the Activity filters declares it on its `ModuleDef` (`figure`,
-     `finding`, `waiting`, `openWaiting`, `create`, `stat`, `logTags`, `onOpen`).
+     `finding`, `waiting`, `openWaiting`, `create`, `stat`, `selects`, `logTags`, `onOpen`).
    - A screen that collects these (Overview, Home, Activity) reads them from the registry. It never names another
      module.
 4. **When a part needs another part's behaviour, it asks for a service.**

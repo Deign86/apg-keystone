@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
   billingFigure, billingFinding, billingWaiting, lineWithTax, markOverdue, newStatement, nextStatementNo, paidInto, payInto,
-  recordPayment, saveStatement, statementDraftOf, statementPayments, statementTotals, withClient,
+  recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftOf, statementPayments, statementTone, statementTotals, withClient,
 } from '../src/rules';
 import { billingModule } from '../src';
 import { sampleState } from '@keystone/core/sample';
@@ -12,6 +12,11 @@ const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
 const state = () => sampleState();
 
 describe('billing statements', () => {
+  it('keeps the statuses and tones a statement has always had, and reads one it does not know as neutral', () => {
+    expect(STATEMENT_STATUSES.map((s) => [s, statementTone(s)])).toEqual([['Sent', 'neutral'], ['Paid', 'good'], ['Overdue', 'bad'], ['Void', 'neutral']]);
+    expect(statementTone('Disputed')).toBe('neutral');
+  });
+
   it('totals match the prototype (VAT added, EWT withheld)', () => {
     const due = Object.fromEntries(sampleState().bs.map((b) => [b.no, statementTotals(b).due]));
     expect(due['010097-2026']).toBe(toCentavos(426930));
