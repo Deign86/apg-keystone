@@ -111,6 +111,44 @@ export function accountRemoved(s: TerminalState, m: MemberAccount, ctx: Ctx): Ch
   };
 }
 
+// ---------- the attendance tracker's admin screens ----------
+
+export const ONLY_OWNER_ATTENDANCE = 'Only the CEO decides who opens the attendance tracker\'s admin screens.';
+
+/** What the role column says: the role, and for staff the CEO has let in, that they are an attendance admin. */
+export const roleLine = (m: MemberAccount) => (m.role === 'staff' && m.attendanceAdmin ? `${roleLabel(m)} · Attendance admin` : roleLabel(m));
+
+/**
+ * Why the CEO may not change this here, or null when they may. A CEO opens the attendance tracker's admin screens
+ * already, so there is nothing to give or take.
+ */
+export function attendanceAdminRefusal(m: MemberAccount, ctx: Ctx): string | null {
+  if (!makesAccounts(ctx)) return ONLY_OWNER_ATTENDANCE;
+
+  if (m.role === 'owner') return `${m.name} is the CEO, who opens the attendance tracker's admin screens already.`;
+
+  return null;
+}
+
+/** What the CEO is asked before letting someone in, or stopping it. */
+export const attendanceAdminQuestion = (m: MemberAccount) => (m.attendanceAdmin
+  ? `${named(m)} will no longer open the attendance tracker's admin screens with this account. An admin card they hold still works there.`
+  : `${named(m)} will open the attendance tracker's admin screens with their own email and password: interns, attendance, payroll and its settings.`);
+
+/** Logs who the CEO let into the attendance tracker's admin screens, or stopped. */
+export function attendanceAdminSet(s: TerminalState, m: MemberAccount, on: boolean, ctx: Ctx): Change<MemberAccount> {
+  const refusal = attendanceAdminRefusal(m, ctx);
+
+  if (refusal) throw new KeystoneError(refusal);
+  const record = { ...m, attendanceAdmin: on };
+
+  return {
+    state: logged(s, TAG, on ? `${named(m)} made an attendance admin.` : `${named(m)} is no longer an attendance admin.`, ctx),
+    record,
+    message: on ? `${m.name} can now open the attendance tracker's admin screens.` : `${m.name} no longer opens the attendance tracker's admin screens.`,
+  };
+}
+
 // ---------- changing your own password ----------
 
 export interface PasswordDraft {

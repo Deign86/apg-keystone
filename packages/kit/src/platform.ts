@@ -44,6 +44,8 @@ export interface AppSession {
 /** A member of the records in the cloud, with the email they sign in with ('' for one added by hand without it). */
 export interface MemberAccount extends Member {
   email: string;
+  /** The CEO lets this staff member open the admin screens of the attendance tracker (docs/adr/0030). */
+  attendanceAdmin?: boolean;
 }
 
 /** What the CEO gives for a new account: the person's name, their email, and the password they first sign in with. */
@@ -77,6 +79,11 @@ export interface AppAccounts {
    * stay. Throws the sentence to show when refused.
    */
   rename(name: string): Promise<void>;
+  /**
+   * Lets a staff member open the attendance tracker's admin screens with their own account, or stops it
+   * (docs/adr/0030). Only an owner may; throws the sentence to show when refused. Absent where it cannot be kept.
+   */
+  setAttendanceAdmin?(uid: string, on: boolean): Promise<void>;
 }
 
 export interface AppUpdater {
