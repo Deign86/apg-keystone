@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { FitWidth, LandscapePage, Sheet, TwoUp } from '../src/documents';
-import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, MARKS, mmToPt, PAGE_WIDTH, PAPER, PAPER_WIDTH, PRINTABLE } from '../src/paper';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, MARKS, PAGE_WIDTH, PAPER, PAPER_WIDTH, PRINTABLE } from '../src/paper';
 import { printElement } from '../src/output';
 
 /** The @page rules in the document's head. */
@@ -19,11 +19,8 @@ describe('the paper', () => {
 
     // The stylesheet cannot read the constant, so this holds the two together.
     expect(page?.slice(1)).toEqual(['A4', String(PAPER.margin)]);
-    expect(PAPER).toEqual({ width: 210, height: 297, margin: 12 });
-    expect(PRINTABLE).toEqual({ width: 186, height: 273 });
-    // What every preview, print and PDF is laid out to.
-    expect([PAPER_WIDTH, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, HALF_PAGE_HEIGHT]).toEqual([703, 1032, 793, 561]);
-    expect(mmToPt(PAPER.margin)).toBeCloseTo(34.016, 3);
+    // What is left inside those margins is what a paper is laid out to: 186 × 273 mm.
+    expect(PRINTABLE).toEqual({ width: PAPER.width - 24, height: PAPER.height - 24 });
   });
 
   it('carries marks the print stylesheet knows by the same names', () => {

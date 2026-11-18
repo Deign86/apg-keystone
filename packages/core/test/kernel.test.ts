@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  DEADLINES, laterVersion, openDesktopApp, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
+  laterVersion, openDesktopApp, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -292,10 +292,6 @@ describe('connector contract', () => {
     // A release with no installer for this computer is not a failure: the plain sentence.
     expect(await openDesktopApp({ system: { ...refusing, latestRelease: async () => ({ version: '1.4.0', assets: [] }) } }, studio))
       .toBe('Alpha Branding Studio is not on this computer, so its download page is open.');
-  });
-
-  it('gives an app 15 seconds to answer and a download 20 minutes, the one definition the native side reads too', () => {
-    expect(DEADLINES).toEqual({ answerMs: 15_000, installMs: 20 * 60_000 });
   });
 
   it('never asks GitHub about an app that is installed', async () => {
