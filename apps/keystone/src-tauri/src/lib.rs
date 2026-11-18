@@ -10,6 +10,17 @@ fn read_file(path: String) -> Result<Response, String> {
     fs::read(&path).map(Response::new).map_err(|e| format!("Cannot read {path}: {e}"))
 }
 
+/// Whether there is a file at the path. "No" is an answer (nothing saved yet); not being able to tell (no permission
+/// to look in the folder, a failing disk) is an error, so the page never takes an unreadable file for a missing one.
+fn exists(path: &Path) -> Result<bool, String> {
+    path.try_exists().map_err(|e| format!("Cannot look for {}: {e}", path.display()))
+}
+
+#[tauri::command]
+fn file_exists(path: String) -> Result<bool, String> {
+    exists(Path::new(&path))
+}
+
 /// Writes raw bytes (the request body) to the path in the `path` header, atomically:
 /// a temporary file beside it, then a rename, so a crash never leaves half a file.
 #[tauri::command]
@@ -184,6 +195,28 @@ fn matches_digest(hash: &[u8], digest: &str) -> bool {
     digest.strip_prefix("sha256:").is_some_and(|want| want.eq_ignore_ascii_case(&hex))
 }
 
+/// How long a connected app may take, as the page counts it too: packages/core/src/kernel/deadlines.json, the one
+/// definition (core's `DEADLINES`). `answer` is for a question to GitHub; `install` is for a download.
+struct Deadlines {
+    answer: std::time::Duration,
+    install: std::time::Duration,
+}
+
+/// The page gives up on a download when `install` is over, counted from just before it asks for one. This side stops
+/// this much sooner, so an installer is never opened after the page has said it gave up.
+const GIVES_UP_EARLY: std::time::Duration = std::time::Duration::from_secs(30);
+
+fn deadlines() -> Result<Deadlines, String> {
+    let said: serde_json::Value = serde_json::from_str(include_str!("../../../../packages/core/src/kernel/deadlines.json"))
+        .map_err(|e| format!("deadlines.json could not be read: {e}"))?;
+    let number = |key: &str| said.get(key).and_then(|v| v.as_u64()).ok_or(format!("deadlines.json has no {key}."));
+    let install = std::time::Duration::from_secs(number("installMinutes")? * 60);
+    Ok(Deadlines {
+        answer: std::time::Duration::from_secs(number("answerSeconds")?),
+        install: install.checked_sub(GIVES_UP_EARLY).filter(|d| !d.is_zero()).ok_or("deadlines.json leaves no time to install.")?,
+    })
+}
+
 fn web() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .user_agent(concat!("Keystone/", env!("CARGO_PKG_VERSION")))
@@ -203,7 +236,7 @@ async fn latest_release(repo: String) -> Result<AppRelease, String> {
     let answer = web()?
         .get(format!("https://api.github.com/repos/{repo}/releases/latest"))
         .header("Accept", "application/vnd.github+json")
-        .timeout(std::time::Duration::from_secs(20))
+        .timeout(deadlines()?.answer)
         .send()
         .await
         .map_err(|_| "Could not reach GitHub. Check the internet connection.".to_string())?;
@@ -214,7 +247,8 @@ async fn latest_release(repo: String) -> Result<AppRelease, String> {
 }
 
 /// Downloads an installer into the temporary folder, checks it, and opens it the way a double-click would (so a
-/// setup program can ask for administrator rights, and a disk image mounts).
+/// setup program can ask for administrator rights, and a disk image mounts). The whole of it has `Deadlines::install`:
+/// a download still running then is stopped, and one that only just made it is not opened late.
 #[tauri::command]
 async fn install_from(asset: ReleaseAsset) -> Result<(), String> {
     use sha2::{Digest, Sha256};
@@ -224,7 +258,10 @@ async fn install_from(asset: ReleaseAsset) -> Result<(), String> {
     fs::create_dir_all(&folder).map_err(|e| format!("Cannot create {}: {e}", folder.display()))?;
     let target = folder.join(name);
     let partial = folder.join(format!("{name}.part"));
-    let mut answer = web()?.get(&asset.url).send().await.map_err(|_| "Could not reach GitHub. Check the internet connection.".to_string())?;
+    let limit = deadlines()?.install;
+    let started = std::time::Instant::now();
+    // The limit covers the answer and every byte of the file after it.
+    let mut answer = web()?.get(&asset.url).timeout(limit).send().await.map_err(|_| "Could not reach GitHub. Check the internet connection.".to_string())?;
     if !answer.status().is_success() {
         return Err(format!("GitHub answered {} for {name}.", answer.status().as_u16()));
     }
@@ -242,6 +279,10 @@ async fn install_from(asset: ReleaseAsset) -> Result<(), String> {
             return Err(format!("{name} did not arrive as GitHub published it, so it was not opened. Try again."));
         }
     }
+    if started.elapsed() >= limit {
+        let _ = fs::remove_file(&partial);
+        return Err(format!("{name} took too long to arrive, so it was not opened. Try again."));
+    }
     let _ = fs::remove_file(&target);
     fs::rename(&partial, &target).map_err(|e| format!("Cannot save {}: {e}", target.display()))?;
     tauri_plugin_opener::open_path(&target, None::<&str>).map_err(|e| format!("Could not open {name}: {e}"))
@@ -253,6 +294,28 @@ mod tests {
 
     fn asset(name: &str, url: &str) -> ReleaseAsset {
         ReleaseAsset { name: name.into(), url: url.into(), digest: None }
+    }
+
+    #[test]
+    fn a_missing_file_is_told_from_one_that_is_there() {
+        let folder = std::env::temp_dir().join(format!("keystone-test-{}", std::process::id()));
+        fs::create_dir_all(&folder).unwrap();
+        let file = folder.join("state.json");
+        assert_eq!(exists(&file), Ok(false));
+        fs::write(&file, "{}").unwrap();
+        assert_eq!(exists(&file), Ok(true));
+        fs::remove_dir_all(&folder).unwrap();
+        assert_eq!(exists(&file), Ok(false));
+    }
+
+    /// The page's deadlines (deadlines.json) are this side's too, and a download gives up before the page does.
+    #[test]
+    fn the_native_limits_are_the_pages_and_a_download_gives_up_first() {
+        let page: serde_json::Value = serde_json::from_str(include_str!("../../../../packages/core/src/kernel/deadlines.json")).unwrap();
+        let d = deadlines().unwrap();
+        assert_eq!(d.answer.as_secs(), page["answerSeconds"].as_u64().unwrap());
+        assert!(d.install < std::time::Duration::from_secs(page["installMinutes"].as_u64().unwrap() * 60));
+        assert_eq!(d.install + GIVES_UP_EARLY, std::time::Duration::from_secs(page["installMinutes"].as_u64().unwrap() * 60));
     }
 
     #[test]
@@ -340,7 +403,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![read_file, write_file, locate_app, launch_app, cpu_arch, latest_release, install_from])
+        .invoke_handler(tauri::generate_handler![read_file, file_exists, write_file, locate_app, launch_app, cpu_arch, latest_release, install_from])
         .run(tauri::generate_context!())
         .expect("Keystone could not start");
 }

@@ -2,7 +2,7 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type SystemBridge, type TerminalState } from '@keystone/core';
+import { DEADLINES, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type SystemBridge, type TerminalState } from '@keystone/core';
 import type { AppAccounts, Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
@@ -168,12 +168,6 @@ export function useDraft<T>(key: string, make: () => T): [T, (next: T) => void] 
   return [value, set];
 }
 
-/** How long opening another app may take (finding it on macOS can take a few seconds) before Keystone says so. */
-const OPEN_MS = 15_000;
-
-/** How long fetching an installer may take: they run to 150 MB, on an office line. */
-const INSTALL_MS = 20 * 60_000;
-
 /** What a connector is handed: the operating system and nothing else of the platform (no records, accounts or session). */
 function systemOf(p: Platform): SystemBridge {
   return {
@@ -189,8 +183,9 @@ function systemOf(p: Platform): SystemBridge {
 }
 
 /**
- * Runs one connector call. It has a few seconds, unless it says it is doing something slow (`env.slow`): then it has
- * the time a download needs, and `doing` hears what to show meanwhile.
+ * Runs one connector call. It has a few seconds (`DEADLINES.answerMs`), unless it says it is doing something slow
+ * (`env.slow`): then it has the time a download needs (`DEADLINES.installMs`), and `doing` hears what to show meanwhile.
+ * Work that answers after its deadline is ignored; the native download has given up by then (core's `DEADLINES`).
  */
 function useConnectorCall() {
   const { platform } = useCtx();
@@ -205,10 +200,10 @@ function useConnectorCall() {
       timer = setTimeout(() => late(new Error(`${name} did not answer within ${ms >= 60_000 ? `${Math.round(ms / 60_000)} minutes` : `${Math.round(ms / 1000)} seconds`}.`)), ms);
     };
 
-    within(OPEN_MS);
+    within(DEADLINES.answerMs);
 
     try {
-      return await Promise.race([work({ system: systemOf(platform), slow: (what) => { within(INSTALL_MS); doing?.(what); } }), deadline]);
+      return await Promise.race([work({ system: systemOf(platform), slow: (what) => { within(DEADLINES.installMs); doing?.(what); } }), deadline]);
     } finally {
       clearTimeout(timer);
     }
@@ -243,7 +238,13 @@ export function useConnectorUpdate(c: Connector) {
   useEffect(() => {
     let alive = true;
 
-    if (c.update) void call(c.name, undefined, (env) => c.update?.(env) ?? Promise.resolve(null)).then((u) => { if (alive) setUpdate(u); }, () => {});
+    if (c.update) {
+      void call(c.name, undefined, (env) => c.update?.(env) ?? Promise.resolve(null)).then(
+        (u) => { if (alive) setUpdate(u); },
+        // Never a reason the shortcut fails, but never dropped without a word either.
+        (cause: unknown) => console.warn(`Keystone could not check ${c.name} for an update; it tries again when Home next opens.`, cause),
+      );
+    }
 
     return () => { alive = false; };
   }, [c, call]);

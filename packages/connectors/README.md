@@ -29,7 +29,7 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
   `allowed_installer`, which refuse anything else at run time.
 - **Dependencies:** `@keystone/core` (for `Connector`). Never another connector or a module.
 - **Don't guard against failure yourself:** throwing, hanging or being unavailable are all fine. The shortcut gives
-  `open` 15 seconds, or 20 minutes once it calls `env.slow('Downloading …')`, and shows any error as a message. Return a sentence from `open` when it did something other than
+  `open` 15 seconds, or 20 minutes once it calls `env.slow('Downloading …')` (core's `DEADLINES`, the one definition the native side reads too), and shows any error as a message. Return a sentence from `open` when it did something other than
   open the app (the download page, say).
 - **Keep it to opening the app.** A change to the other system belongs in its own repo and is the owner's decision.
 - **Test against a fake computer,** in the package's `test/`: which app it looks for, that it starts it, what happens

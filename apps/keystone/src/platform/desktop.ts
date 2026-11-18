@@ -45,11 +45,29 @@ const readBytes = async (path: string) => new Uint8Array(await invoke<ArrayBuffe
 const writeBytes = (path: string, bytes: Uint8Array) => invoke<void>('write_file', bytes, { headers: { path: encodeURIComponent(path) } });
 const dataPath = async (...parts: string[]) => join(await appDataDir(), ...parts);
 
-async function readText(path: string): Promise<string | null> {
+/** Why the native side could not do something: it refuses with a plain sentence, not an Error. */
+const reasonOf = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
+
+/**
+ * A text file's contents, or null when there is no such file yet. A file that is there and cannot be read (no
+ * permission, a failing disk, another program holding it) throws the sentence to show: answering null would open
+ * Keystone with no records, and its first save would replace the file that could not be read.
+ */
+export async function readText(path: string): Promise<string | null> {
+  let there: boolean;
+
+  try {
+    there = await invoke<boolean>('file_exists', { path });
+  } catch (e) {
+    throw new Error(`Keystone could not look for its saved records, so it did not open with none in their place. ${reasonOf(e)}`);
+  }
+
+  if (!there) return null;
+
   try {
     return new TextDecoder().decode(await readBytes(path));
-  } catch {
-    return null;
+  } catch (e) {
+    throw new Error(`Keystone could not read its saved records, so it did not open with none in their place. ${reasonOf(e)}`);
   }
 }
 

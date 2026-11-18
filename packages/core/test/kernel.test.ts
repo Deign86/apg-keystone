@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
-  laterVersion, openDesktopApp, toCentavos, topFinding, validateConnector, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
+  DEADLINES, laterVersion, openDesktopApp, toCentavos, topFinding, validateConnector, type Ctx, type InstalledApp, type PlatformName, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -253,6 +253,26 @@ describe('connector contract', () => {
     expect(did.filter((d) => d.startsWith('install'))).toEqual(['install Studio-1.4.0-intel.dmg', 'install Studio-1.4.0-arm.dmg', 'install Studio-1.4.0-arm.dmg', 'install Studio-1.4.0-setup.exe']);
     expect(said).toEqual(['Getting Alpha Branding Studio…', 'Downloading Alpha Branding Studio 1.4.0…']);
     expect(did.some((d) => d.startsWith('open '))).toBe(false);
+  });
+
+  it('says why an installer could not be fetched, beside the download page it opened instead', async () => {
+    const { system, did } = computer('windows', null);
+    const release = { version: '1.4.0', assets: [{ name: 'Studio-1.4.0-setup.exe', url: 'https://github.com/Deign86/x/releases/download/v1.4.0/Studio-1.4.0-setup.exe' }] };
+    // The native side refuses with a plain sentence, not an Error.
+    const refusing: SystemBridge = { ...system, latestRelease: async () => release, installFrom: async () => { throw 'Studio-1.4.0-setup.exe did not arrive as GitHub published it, so it was not opened. Try again.'; } };
+
+    expect(await openDesktopApp({ system: refusing }, studio)).toBe(
+      'Alpha Branding Studio is not on this computer and its installer could not be fetched (Studio-1.4.0-setup.exe did not arrive as GitHub published it, so it was not opened. Try again.), so its download page is open.',
+    );
+    expect(did).toEqual(['open https://github.com/Deign86/x/releases/latest']);
+
+    // A release with no installer for this computer is not a failure: the plain sentence.
+    expect(await openDesktopApp({ system: { ...refusing, latestRelease: async () => ({ version: '1.4.0', assets: [] }) } }, studio))
+      .toBe('Alpha Branding Studio is not on this computer, so its download page is open.');
+  });
+
+  it('gives an app 15 seconds to answer and a download 20 minutes, the one definition the native side reads too', () => {
+    expect(DEADLINES).toEqual({ answerMs: 15_000, installMs: 20 * 60_000 });
   });
 
   it('never asks GitHub about an app that is installed', async () => {

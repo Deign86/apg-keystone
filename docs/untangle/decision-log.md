@@ -79,11 +79,28 @@ runs them.
   - `packages/kit/src/output.ts:17`: `savePdf` took the whole `Platform`; it takes `files`.
   - Tests added: `packages/kit/test/capabilities.test.tsx` (what a screen is given, `run`'s state, restore drops drafts, a refused rename leaves the name).
   - Test edited: `packages/kit/test/runtime.test.ts` "tells listeners about a change…" expects the state in the outcome.
+- **Root fix 6: stop swallowing at the platform edge** (step 2; docs/adr/0031)
+  - `apps/keystone/src/platform/desktop.ts:48-54`: `readText` turned every failure into null. It asks the new native `file_exists` first: no file is null, a file that cannot be read throws the sentence the start screen shows.
+  - `packages/kit/src/store.ts:36-40`: a damaged saved state opened empty without a word; `store.loadError` now holds a sentence the rail shows until the first save replaces the file.
+  - `packages/core/src/kernel/connectors.ts:152`: a failed installer fetch was dropped; its reason is now in the sentence that says the download page is open.
+  - `packages/kit/src/context.tsx:169`: the update check's rejection was discarded with `() => {}`; it is written to the console.
+  - `packages/kit/src/context.tsx:109` vs `apps/keystone/src-tauri/src/lib.rs:206`: 15 s on the page, 20 s natively. One definition, `packages/core/src/kernel/deadlines.json` (core's `DEADLINES`), read by both.
+  - `packages/kit/src/context.tsx:126-134` vs `lib.rs:219-248`: the native download had no limit and could open an installer after the page gave up. It now stops 30 s before the page's 20 minutes and refuses to open past that.
+  - `packages/kit/src/Shell.tsx:77`: the rail read `store.saveError` only when something else re-rendered it, so a failed save showed at the next change. It now subscribes to both notices.
+  - Tests added: `apps/keystone/src/test/desktop.test.ts` (6), `packages/kit/test/rail-notices.test.tsx` (3), two store tests, two core tests, two cargo tests (`a_missing_file_is_told_from_one_that_is_there`, `the_native_limits_are_the_pages_and_a_download_gives_up_first`).
+  - Tests edited: `packages/connectors/id-maker-app/test/id-maker-app.test.ts` "opens the download page when the installer cannot be fetched" now expects the reason; `packages/kit/test/shortcut.test.tsx` "a failed update check…" expects the console line.
 
 ## Not done this round
 
 - **`KeystoneStore.replaceAll`** (`packages/kit/src/store.ts`): kept as a store method. It resets the drafts, which are private to the store; no screen reaches it any more (Data calls `backup.restore`).
 - **Two overlapping contexts** (`useKeystone` and `useModuleApp` both return `state`, `ctx`, `go`): left. `ModuleApp` is also what contributions outside React receive (`create.run`, `openWaiting`), so it cannot simply lose them.
+- **Other swallowed errors** (photos that cannot be read, a full `localStorage`, `deleteUser` after a refused member write, an unreadable pending note, `cpu_arch`): left as they were; root fix 6 named the state, the installer and the deadlines.
 
 ## Calls made without the owner
 
+- **A start that cannot read `state.json` now stops** (step 2, docs/adr/0031). Before: it opened with no records and the first save replaced the unreadable file. Now: the "could not open" screen with the reason and Try again. This is the one intended change of behaviour this round. A computer in that state does not open Keystone until the file can be read, moved or removed by hand. To undo: revert the step 2 commit.
+- **A damaged saved state says so in the rail** (step 2). It still opens with no records and still leaves the file alone until the first change; only the sentence is new: "Keystone could not open its saved records: they are damaged. It started with none, and keeps the damaged records as they are until you change something." The wording is mine.
+- **A failed installer fetch says why** (step 2). New sentence: "<App> is not on this computer and its installer could not be fetched (<reason>), so its download page is open." The plain sentence stays when there was nothing to fetch.
+- **The native question to GitHub has 15 seconds, not 20; a native download stops at 19 min 30 s** (step 2). The page already gave up at 15 s and 20 min; the native side now reads the same file and gives up first.
+- **A new native command, `file_exists`** (step 2). The alternative was reading the operating system's error text in TypeScript.
+- **The rail shows a failed save when it fails** (step 2). Strictly a bug fix riding in a `refactor:` commit so that no release is cut while the owner is away; the release notes will not mention it.

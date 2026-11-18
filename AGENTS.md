@@ -138,7 +138,8 @@ regression suites that guard the architecture live in the composition root:
 |---|---|---|
 | Rules | `packages/modules/<id>/test/`, `packages/core/test/` | Numbering, tax math, amount in words, statuses, findings, the prototype's results kept exactly |
 | Connectors | `packages/connectors/<id>/test/` | Each shortcut against a fake computer (never a real one): which app it looks for, that it starts it, the download page when it is missing, the website's admin portal |
-| Kit | `packages/kit/test/` | Registry refusals, one provider per service, store saves and damaged files, a connector shortcut that says what happened or gives up on a hang |
+| Kit | `packages/kit/test/` | Registry refusals, one provider per service, what a screen is given, store saves and damaged files and what the rail says of them, a connector shortcut that says what happened or gives up on a hang |
+| Desktop platform | `apps/keystone/src/test/desktop.test.ts` | The desktop platform against a stand-in for the native side: no saved state yet opens empty, one that cannot be read stops with a sentence |
 | Removal | `apps/keystone/src/test/removal.test.tsx` | Every screen renders with any one part removed, with any one part alone, and with nothing but the kernel; a crashing screen stays contained |
 | Contract | `apps/keystone/src/test/contract.test.ts` | Every installed module's contributions are well formed, never mutate the state, name only real parts and services; log tags are unique; the most urgent finding wins |
 | Payroll | `apps/keystone/src/test/payroll.test.tsx` | One cut-off with every kind of day, from saved days through Timekeeping, its service and Payroll's engine to the screen, sheet and payslip, to the centavo; and without Timekeeping |

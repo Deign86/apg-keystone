@@ -64,15 +64,21 @@ describe('the ID Maker shortcut', () => {
     expect(intel.did[1]).toBe('install AlphaPremierIdMaker-Mac-Intel-v2.0.4.dmg');
   });
 
-  it('opens the download page when the installer cannot be fetched', async () => {
+  it('opens the download page when the installer cannot be fetched, and says why when fetching it failed', async () => {
     const offline = computer(null, { latestRelease: async () => { throw new Error('Could not reach GitHub.'); } });
-    const refused = computer(null, { installFrom: async () => { throw new Error('did not arrive as GitHub published it'); } });
+    // The native side refuses with a plain sentence, not an Error.
+    const refused = computer(null, { installFrom: async () => { throw 'setup.exe did not arrive as GitHub published it, so it was not opened. Try again.'; } });
     const older = computer(null, { latestRelease: undefined, installFrom: undefined });
+    const page = 'open https://github.com/Deign86/apg-id-creator/releases/latest';
 
-    for (const { env, did } of [offline, refused, older]) {
-      expect(await idMakerAppConnector.open(env)).toBe('Alpha Premier ID Maker is not on this computer, so its download page is open.');
-      expect(did.at(-1)).toBe('open https://github.com/Deign86/apg-id-creator/releases/latest');
-    }
+    expect(await idMakerAppConnector.open(offline.env))
+      .toBe('Alpha Premier ID Maker is not on this computer and its installer could not be fetched (Could not reach GitHub.), so its download page is open.');
+    expect(await idMakerAppConnector.open(refused.env))
+      .toBe('Alpha Premier ID Maker is not on this computer and its installer could not be fetched (setup.exe did not arrive as GitHub published it, so it was not opened. Try again.), so its download page is open.');
+    // A Keystone that cannot fetch installers at all has no failure to report.
+    expect(await idMakerAppConnector.open(older.env)).toBe('Alpha Premier ID Maker is not on this computer, so its download page is open.');
+
+    for (const { did } of [offline, refused, older]) expect(did.at(-1)).toBe(page);
   });
 
   it('offers a newer version, because the ID Maker has no updater of its own', async () => {

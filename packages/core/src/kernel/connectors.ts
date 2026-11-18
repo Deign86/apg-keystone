@@ -6,7 +6,20 @@
 // Adding a system = adding one package under packages/connectors/ and one line to
 // apps/keystone/src/connectors.ts. Nothing else in Keystone changes.
 
+import deadlines from './deadlines.json';
+
 export type PlatformName = 'macos' | 'windows' | 'linux' | 'web';
+
+/**
+ * How long a connected app may take before Keystone says so, written once (deadlines.json): the page counts both, and
+ * the native side reads the same file (apps/keystone/src-tauri/src/lib.rs), so its own limits are never the longer ones.
+ */
+export const DEADLINES = {
+  /** Finding and starting an app, or asking GitHub for its latest release (finding it on macOS can take a few seconds). */
+  answerMs: deadlines.answerSeconds * 1000,
+  /** Fetching an installer: they run to 150 MB, on an office line. */
+  installMs: deadlines.installMinutes * 60_000,
+} as const;
 
 /** How to find another desktop app on this machine. */
 export interface AppLocator {
@@ -50,7 +63,10 @@ export interface SystemBridge {
   readonly arch?: 'arm64' | 'x64';
   /** The latest release of an APG app's GitHub repository ("Deign86/apg-id-creator"). Desktop only. */
   latestRelease?(repo: string): Promise<AppRelease>;
-  /** Downloads a release file, checks it against its digest and opens it: the setup program, or the disk image. Desktop only. */
+  /**
+   * Downloads a release file, checks it against its digest and opens it: the setup program, or the disk image. Desktop
+   * only. It gives up by itself before `DEADLINES.installMs` is over, so it never opens one after the page said it stopped.
+   */
   installFrom?(asset: ReleaseAsset): Promise<void>;
   /** Null when the app is not installed, and always in the browser preview. */
   locateApp(locator: AppLocator): Promise<InstalledApp | null>;
@@ -98,6 +114,9 @@ export interface DesktopApp {
   installers: { windows?: RegExp; macArm?: RegExp; macIntel?: RegExp };
 }
 
+/** A failure as the sentence it carries. The native side refuses with a plain sentence, not an Error. */
+const sentenceOf = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause)).trim();
+
 /** An app's latest release page, opened when its installer cannot be fetched. */
 const downloadsPage = (app: DesktopApp) => `https://github.com/${app.repo}/releases/latest`;
 
@@ -140,7 +159,8 @@ async function fetchInstaller(env: ConnectorEnv, app: DesktopApp, release?: AppR
 
 /**
  * Starts an installed desktop app. When it is not on this computer, downloads its installer from its latest release
- * and opens it; when that cannot be done (offline, no installer for this computer), opens its download page.
+ * and opens it; when that cannot be done (offline, no installer for this computer), opens its download page, and says
+ * why the installer was not fetched when fetching it failed (offline, a download that did not match its digest).
  */
 export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: DesktopApp): Promise<string | void> {
   const e: ConnectorEnv = 'system' in env ? env : { system: env };
@@ -151,10 +171,18 @@ export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: Desk
 
   if (installed) return system.launchApp(installed);
 
-  const version = await fetchInstaller(e, app).catch(() => false as const);
+  let failed: string | null = null;
+
+  const version = await fetchInstaller(e, app).catch((cause: unknown) => {
+    failed = sentenceOf(cause);
+
+    return false as const;
+  });
 
   if (version) return `${app.name} ${version} was not on this computer. Its installer is open: finish it, then open ${app.name} here again.`;
   await system.openUrl(downloadsPage(app));
+
+  if (failed) return `${app.name} is not on this computer and its installer could not be fetched (${failed}), so its download page is open.`;
 
   return `${app.name} is not on this computer, so its download page is open.`;
 }
