@@ -1,10 +1,10 @@
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { HALF_PAGE_HEIGHT } from './documents';
+import { HALF_PAGE_HEIGHT, mmToPt, mmToPx, PAPER, PRINTABLE } from './paper';
 import type { Files } from './context';
 
-/** The print stylesheet's page margin, 12 mm, in PDF points. */
-const MARGIN_PT = (12 / 25.4) * 72;
+/** The print stylesheet's page margin in PDF points. */
+const MARGIN_PT = mmToPt(PAPER.margin);
 
 /** Whether a document is laid out on an A4 page turned on its side (a Sheet with orientation="landscape"). */
 const isLandscape = (node: HTMLElement) => node.dataset.printOrientation === 'landscape';
@@ -34,13 +34,13 @@ export async function savePdf(node: HTMLElement, name: string, files: Pick<Files
 }
 
 /**
- * The printable area of an A4 page with the print stylesheet's 12 mm margins (186 × 273 mm, or 273 × 186 mm on its
- * side), in CSS px, less 2% of the height so borders and rounding never push the last line onto a second page.
+ * The printable area of an A4 page inside the print stylesheet's margins (upright, or turned on its side), in CSS px,
+ * less 2% of the height so borders and rounding never push the last line onto a second page.
  */
 const printableArea = (landscape: boolean) => {
-  const [w, h] = landscape ? [273, 186] : [186, 273];
+  const [w, h] = landscape ? [PRINTABLE.height, PRINTABLE.width] : [PRINTABLE.width, PRINTABLE.height];
 
-  return { w: (w / 25.4) * 96, h: (h / 25.4) * 96 * 0.98 };
+  return { w: mmToPx(w), h: mmToPx(h) * 0.98 };
 };
 
 /**

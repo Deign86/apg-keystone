@@ -1,11 +1,31 @@
 import { render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { FitWidth, HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, PAPER_WIDTH, Sheet } from '../src/documents';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { FitWidth, Sheet } from '../src/documents';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, mmToPt, PAGE_WIDTH, PAPER, PAPER_WIDTH, PRINTABLE } from '../src/paper';
 import { printElement } from '../src/output';
 
 /** The @page rules in the document's head. */
 const pageRules = () => [...document.head.querySelectorAll('style')].flatMap((s) => (s.textContent?.startsWith('@page') ? [s.textContent] : []));
+
+/** The design system's stylesheet as written, found the way an import finds it. (Vitest hands an imported .css over empty.) */
+const css = readFileSync(createRequire(import.meta.url).resolve('@keystone/ui/styles.css'), 'utf8');
+
+describe('the paper', () => {
+  it('is an A4 page with the margin the print stylesheet gives it, written once', () => {
+    const page = /@page\s*\{\s*size:\s*(\w+);\s*margin:\s*(\d+)mm;\s*\}/.exec(css);
+
+    // The stylesheet cannot read the constant, so this holds the two together.
+    expect(page?.slice(1)).toEqual(['A4', String(PAPER.margin)]);
+    expect(PAPER).toEqual({ width: 210, height: 297, margin: 12 });
+    expect(PRINTABLE).toEqual({ width: 186, height: 273 });
+    // What every preview, print and PDF is laid out to.
+    expect([PAPER_WIDTH, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, HALF_PAGE_HEIGHT]).toEqual([703, 1032, 793, 561]);
+    expect(mmToPt(PAPER.margin)).toBeCloseTo(34.016, 3);
+  });
+});
 
 describe('document sheet', () => {
   it('lays the paper out at the printed width, whatever column it sits in', () => {

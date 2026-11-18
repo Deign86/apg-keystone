@@ -4,22 +4,11 @@ import logo from '@keystone/ui/logo-paper.png';
 import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, PAPER_WIDTH } from './paper';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
 // one that is printed and turned into a PDF, so the preview is exactly the output.
-
-/** The paper's width in CSS px: an A4 page less the print stylesheet's 12 mm margins (186 mm). */
-export const PAPER_WIDTH = Math.round((186 / 25.4) * 96);
-
-/** The paper's width on an A4 page turned on its side, less the same margins (273 mm): a sheet too wide to stand upright. */
-export const LANDSCAPE_PAPER_WIDTH = Math.round((273 / 25.4) * 96);
-
-/** A whole A4 page's width in CSS px (210 mm, rounded down so it never spills onto a second page): a two-up sheet prints with no margin. */
-export const PAGE_WIDTH = Math.floor((210 / 25.4) * 96);
-
-/** Half an A4 page's height in CSS px (148.5 mm, rounded down): one copy on a two-up sheet, from an edge of the page to the middle, where it is cut. */
-export const HALF_PAGE_HEIGHT = Math.floor((148.5 / 25.4) * 96);
 
 /** How far a two-up sheet's copies keep in from the paper's edges and the cut: inside what any printer reaches. */
 const EDGE = '6mm';
