@@ -2,8 +2,8 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { DEADLINES, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type SystemBridge, type TerminalState } from '@keystone/core';
-import type { AppAccounts, Platform } from './platform';
+import { DEADLINES, SERVICES, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
+import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
 
@@ -32,8 +32,6 @@ interface Capabilities {
   backup: Backup;
   /** Where the records are kept when nobody signs in: this computer's data folder, or this browser. */
   kind: Platform['kind'];
-  /** Who may open the records in the cloud. Absent with no sign-in. */
-  accounts?: AppAccounts;
 }
 
 interface KeystoneContextValue {
@@ -41,30 +39,44 @@ interface KeystoneContextValue {
   registry: Registry;
   platform: Platform;
   capabilities: Capabilities;
+  /** The services the platform offers beside the modules' (`Platform.provides`). */
+  offered: ServiceProviders;
   route: string;
   go: (id: string) => void;
 }
 
 function capabilitiesOf(store: KeystoneStore): Capabilities {
   const p = store.platform;
-  const accounts = p.accounts;
 
   return {
     files: { save: (name, bytes, filters) => p.saveFile(name, bytes, filters), open: (filters) => p.openFile(filters) },
     photos: { put: (name, bytes) => p.putPhoto(name, bytes) },
     backup: { restore: (next) => store.replaceAll(next) },
     kind: p.kind,
-    ...(accounts && {
-      accounts: {
-        ...accounts,
-        // The rail and the rules see the new name from the next change on (docs/adr/0020): the caller's log line.
-        rename: async (name) => {
-          await accounts.rename(name);
+  };
+}
 
-          if (store.ctx.who) store.ctx = { ...store.ctx, who: { ...store.ctx.who, name } };
-        },
+/**
+ * What the platform offers, as a part is handed it. The accounts service is the platform's own, with one thing added:
+ * when the member signed in changes their name, the rules' context follows, so the rail and the caller's log line
+ * (docs/adr/0020) carry the new one.
+ */
+function offeredBy(store: KeystoneStore): ServiceProviders {
+  const offered = store.platform.provides ?? {};
+  const accounts = offered[SERVICES.accounts];
+
+  if (!accounts) return offered;
+
+  return {
+    ...offered,
+    [SERVICES.accounts]: {
+      ...accounts,
+      rename: async (name) => {
+        await accounts.rename(name);
+
+        if (store.ctx.who) store.ctx = { ...store.ctx, who: { ...store.ctx.who, name } };
       },
-    }),
+    },
   };
 }
 
@@ -99,7 +111,8 @@ export function KeystoneProvider({ store, registry, children }: { store: Keyston
     return () => window.removeEventListener('hashchange', onHash);
   }, [known]);
   const capabilities = useMemo(() => capabilitiesOf(store), [store]);
-  const value = useMemo(() => ({ store, registry, platform: store.platform, capabilities, route, go }), [store, registry, capabilities, route, go]);
+  const offered = useMemo(() => offeredBy(store), [store]);
+  const value = useMemo(() => ({ store, registry, platform: store.platform, capabilities, offered, route, go }), [store, registry, capabilities, offered, route, go]);
 
   return <KeystoneContext.Provider value={value}>{children}</KeystoneContext.Provider>;
 }
@@ -142,17 +155,18 @@ export function useKeystone() {
 
 /** The app as a module sees it: navigation, drafts, and whether another module is installed. */
 export function useModuleApp(): ModuleApp {
-  const { store, registry, go } = useCtx();
+  const { store, registry, offered, go } = useCtx();
   const state = useSyncExternalStore(store.subscribe, store.getState);
 
   return useMemo(() => ({
     go,
     has: (id: string) => registry.modules.some((m) => m.id === id),
     setDraft: <T,>(key: string, draft: T) => store.setDraft(key, draft),
-    service: <N extends ServiceName>(name: N) => findService(registry.modules, name),
+    // A module's first; then the platform's own (the accounts, with a sign-in).
+    service: <N extends ServiceName>(name: N) => findService(registry.modules, name) ?? offered[name],
     state,
     ctx: store.ctx,
-  }), [go, registry, store, state]);
+  }), [go, registry, offered, store, state]);
 }
 
 /** A form draft that survives switching screens. */

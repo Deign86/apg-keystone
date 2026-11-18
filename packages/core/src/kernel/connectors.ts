@@ -6,6 +6,7 @@
 // Adding a system = adding one package under packages/connectors/ and one line to
 // apps/keystone/src/connectors.ts. Nothing else in Keystone changes.
 
+import { grantProblem, type MemberGrant } from './accounts';
 import deadlines from './deadlines.json';
 
 export type PlatformName = 'macos' | 'windows' | 'linux' | 'web';
@@ -98,6 +99,11 @@ export interface Connector {
   open(env: ConnectorEnv): Promise<string | void>;
   /** For an app with no updater of its own: the newer version out, or null. Never throws for being offline. */
   update?(env: ConnectorEnv): Promise<ConnectorUpdate | null>;
+  /**
+   * Something of this system's that the CEO gives a staff member's account, which the system reads from the member
+   * (docs/adr/0030). User Accounts offers it while this connector is installed, and not otherwise.
+   */
+  memberGrant?: MemberGrant;
 }
 
 /** A desktop app another APG team ships, and where to get it. */
@@ -229,6 +235,10 @@ export function validateConnector(c: Connector, existing: string[]): string | nu
   if (!c.name.trim()) return `Connector "${c.id}" has no name.`;
 
   if (!c.logo) return `Connector "${c.id}" has no logo.`;
+
+  const grant = c.memberGrant && grantProblem(c.memberGrant);
+
+  if (grant) return `Connector "${c.id}" offers something for members that cannot be kept: ${grant}.`;
 
   return null;
 }

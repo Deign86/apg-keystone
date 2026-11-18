@@ -100,6 +100,17 @@ runs them.
   - `packages/core/src/kernel/directory.ts:19-29`: `usedBy` hardcoded `cv`, `bs`, `ids`: replaced by `ModuleDef.refersTo`, contributed by six modules.
   - Tests added: statuses and tones in three modules; the directory message and references in core; in `contract.test.ts`, references against data written as earlier builds saved it (which also pins the `ext` keys), the old answers for the sample, the `selects` words, and that a module's reference tag is one of its log tags.
   - Tests edited: `packages/core/test/kernel.test.ts` and `packages/modules/id-maker/test/rules.test.ts` pass the references `usedBy` and `removeDirectoryRecord` now take; four `ModuleDef` literals lost `section`.
+- **Root fix 2: accounts leave `Platform`; attendance admin is a contribution** (step 4; docs/adr/0033)
+  - `packages/kit/src/platform.ts:16,45-49,58-87`: `Platform` carried `AppAccounts`, `MemberAccount`, `NewAccount`. They are core's now (`kernel/accounts.ts`, `Accounts` in `services.ts`); the platform offers the service under `Platform.provides`.
+  - `packages/kit/src/platform.ts:47-48,82-86`: `attendanceAdmin` and `setAttendanceAdmin` in the kernel contract: replaced by `MemberAccount.grants` and `Accounts.setGrant(uid, field, on)`.
+  - `packages/modules/accounts/src/rules.ts:114-150`, `index.tsx:184-190`: the module held the attendance tracker's wording and menu. The attendance connector contributes them (`Connector.memberGrant`); removing the connector removes the menu item.
+  - `accounts/src/rules.ts:20`, `funds/src/rules.ts:186`, `vouchers/src/rules.ts:101`, `company/src/rules.ts:25`, `platform/cloud.ts:61`, `platform/firestore.ts:343`: six copies of the owner test: core's `isOwner`.
+  - `platform/firestore.ts:31-33,254`: `ONLY_OWNER`, `ONLY_OWNER_REMOVES`, `ONLY_OWNER_ATTENDANCE` and the own-account sentence were copies of the accounts module's: both read core's.
+  - `platform/firestore.ts:115`: accounts depended on `member()` having set a flag: `cloud.accounts(who)` is built for the member it is given. (`read()` still uses the flag.)
+  - `packages/kit/src/context.tsx`: step 1's interim `useKeystone().accounts` is gone; screens ask `useModuleApp().service(SERVICES.accounts)`.
+  - The Firestore field `attendanceAdmin`, the member path and `firestore.rules` are unchanged (`git diff main -- firestore.rules` is empty).
+  - Tests added: `apps/keystone/src/test/accounts.test.tsx` (the shipped module, connector and grant guard together, in the e2e's words), the attendance connector's grant, registry refusals for a grant field, the platform service lookup in the kit.
+  - Tests edited: `packages/modules/accounts/test/rules.test.ts` and `screen.test.tsx` (same sentences, through a stand-in grant; `setGrant('hr-1', 'attendanceAdmin', true)` where it was `setAttendanceAdmin('hr-1', true)`; `grants: ['attendanceAdmin']` where it was `attendanceAdmin: true`), `packages/modules/profile/test/screen.test.tsx` and `packages/kit/test/capabilities.test.tsx` (the service instead of `Platform.accounts`), `apps/keystone/src/test/contract.test.ts` "every published service has a provider" (the platform's one is named).
 
 ## Not done this round
 
@@ -109,6 +120,9 @@ runs them.
 - **Other modules' ids as literals** (`funds/src/index.tsx:157` vouchers, `billing/src/index.tsx:26` banks, `overview` activity, `payroll` and `timekeeping` directory, `profile` accounts): left. A module cannot import another's `ID`; each jump is guarded by `app.has`.
 - **`Voucher`, `Statement`, `IDRecord` in core** (trade-off T1): still there, with `status` as text. Moving the types out is ADR 0003's format bump.
 - **Priorities, ranks and rail order as bare numbers**: untouched.
+- **The four fake `Platform` copies** (`packages/kit/test/fakes.ts`, and in `profile`, `accounts`, `billing` tests): still four. They no longer change with accounts, which was the churn; a part still cannot import the kit's test helper.
+- **"Enter the email …" worded twice** (`platform/firestore.ts` for a reset link, `accounts/src/rules.ts` for a new account): left; they are two different sentences for two different forms.
+- **`firestore.ts` `read()` and the `owner` flag** (`platform/firestore.ts:141`): unchanged; it has no unit test and the cloud suite cannot run here.
 
 ## Calls made without the owner
 
@@ -122,3 +136,7 @@ runs them.
 - **Protection follows the installed modules, not the saved data alone** (step 3). A build with a module taken out would no longer protect records only that module's data names. No shipped build takes one out; "Coming soon" screens stay installed.
 - **`ModuleDef.section` dropped, not rendered** (step 3). Rendering the eyebrow from it would have moved fifteen screens' headers; dropping it leaves the eyebrow in one place, the screen. No pixel changes.
 - **`Voucher.status`, `Statement.status`, `IDRecord.status` are plain text in core's types** (step 3). The words saved are the same; the lists and tones are in the vouchers, billing and ID maker modules.
+- **"Attendance admin" belongs to the attendance connector** (step 4, docs/adr/0033). Same field (`attendanceAdmin`), same rules file, same words on screen. New: a Keystone built without the attendance connector offers no such menu item and does not show who has it.
+- **`setGrant` refuses any field no connector contributed** (step 4). The alternative, a platform that writes whatever field it is handed, would let a part write `role`.
+- **The accounts service is found after the modules' services** (step 4). The registry cannot check "one provider" against the platform; a contract test holds that no module offers `accounts`.
+- **The service is named `platform.accounts`** (step 4). The name is only a key in memory; nothing saved holds it.

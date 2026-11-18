@@ -86,11 +86,11 @@ Keystone reads nothing from these systems and keeps no password for any of them.
   records and reaches the rules as `ctx.who`. A module may keep one list as cloud documents of its own
   (`ModuleDef.documents`): Requests for Funds keeps each request in `keystone/apg/rf/{no}`, where `firestore.rules`
   lets only the owner decide and lets staff read only their own. Without a sign-in there is no `ctx.who`.
-- **Accounts (docs/adr/0014, 0015):** the owner makes and removes staff accounts on the User Accounts screen, through
-  `Platform.accounts`. `platform/firestore.ts` makes the sign-in in a second Firebase app kept in memory, so the owner
+- **Accounts (docs/adr/0014, 0015, 0033):** the owner makes and removes staff accounts on the User Accounts screen, through
+  the `accounts` service the cloud platform provides (`Platform.provides`). `platform/firestore.ts` makes the sign-in in a second Firebase app kept in memory, so the owner
   stays signed in, then writes the member document; removing deletes that document and leaves the sign-in, which then
   opens nothing. `firestore.rules` let only an owner write or delete a member.
-- **Passwords (docs/adr/0016):** anyone signed in changes theirs on User Accounts (`Platform.accounts.changePassword`,
+- **Passwords (docs/adr/0016):** anyone signed in changes theirs on User Accounts (the `accounts` service's `changePassword`,
   which signs in again with the current one first). The sign-in screen's Forgot password? has Firebase email a link to
   choose a new one (`CloudSession.sendPasswordReset`), answering the same whether or not the email has an account.
 - **On a phone:** the same web build, hosted on Firebase Hosting (`firebase.json › hosting`, `npm run build:web`),

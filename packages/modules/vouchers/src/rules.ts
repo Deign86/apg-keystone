@@ -1,5 +1,5 @@
 import {
-  companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
+  companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
   peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
   type WaitingItem
@@ -120,7 +120,7 @@ export function withCheck(v: Voucher, d: Pick<VoucherDraft, 'check' | 'checkDate
 }
 
 /** Whether a voucher saved by whoever is signed in is approved as it is saved: the CEO's are; everyone else's wait for approval. */
-export const approvesOnSave = (ctx: Ctx) => ctx.who?.role === 'owner';
+export const approvesOnSave = (ctx: Ctx) => isOwner(ctx.who);
 
 /** A new voucher drafted from another: its payee, particulars and signatories, under the next number, dated today, with no check yet. */
 export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraft {

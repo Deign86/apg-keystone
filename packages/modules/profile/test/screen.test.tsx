@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Member } from '@keystone/core';
-import { App, buildRegistry, KeystoneStore, type AppAccounts, type Platform } from '@keystone/kit';
+import { SERVICES, type Accounts, type Member } from '@keystone/core';
+import { App, buildRegistry, KeystoneStore, type Platform } from '@keystone/kit';
 import { profileModule } from '../src';
 
-// The Profile screen against a stand-in for the sign-in (Platform.accounts), as the cloud build provides it: whoever is
+// The Profile screen against a stand-in for the sign-in (the platform's `accounts` service), as the cloud build provides it: whoever is
 // signed in changes their name, the rail shows it at once, and a computer with nobody signed in has no profile.
 
 const owner: Member = { uid: 'owner-1', name: 'Deign Lazaro', role: 'owner' };
@@ -15,12 +15,12 @@ const base: Platform = {
   launchApp: async () => { throw new Error('Not in tests.'); }, openUrl: async () => {},
 };
 
-const signIn = (): AppAccounts => ({
+const signIn = (): Accounts => ({
   list: vi.fn(async () => []), create: vi.fn(), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}), rename: vi.fn(async () => {}),
 });
 
-async function open(who?: Member, accounts?: AppAccounts) {
-  const store = await KeystoneStore.open({ ...base, ...(who && { who }), ...(accounts && { accounts }) });
+async function open(who?: Member, accounts?: Accounts) {
+  const store = await KeystoneStore.open({ ...base, ...(who && { who }), ...(accounts && { provides: { [SERVICES.accounts]: accounts } }) });
 
   window.location.hash = '#profile';
   render(<App store={store} registry={buildRegistry([profileModule], [])} />);

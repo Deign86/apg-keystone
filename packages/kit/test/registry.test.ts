@@ -37,6 +37,18 @@ describe('registry', () => {
     expect(r.refused.map((x) => x.id)).toEqual(['payroll', 'Bad Id', 'ghost', 'home']);
   });
 
+  it('refuses a second connector that keeps the same field on a member, and one whose field cannot be kept', () => {
+    const grant = (field: string) => ({ memberGrant: { field, label: 'Site admin', as: 'a site admin', opens: 'the site\'s admin screens', asks: { give: () => 'Give?', take: () => 'Take?' } } });
+    const r = buildRegistry([], [okConnector('site', grant('siteAdmin')), okConnector('copy', grant('siteAdmin')), okConnector('rogue', grant('role')), okConnector('odd', grant('site admin'))]);
+
+    expect(r.connectors.map((c) => c.id)).toEqual(['site']);
+    expect(r.refused).toEqual([
+      { id: 'copy', reason: 'copy keeps "siteAdmin" on a member, which site already does.' },
+      { id: 'rogue', reason: 'Connector "rogue" offers something for members that cannot be kept: the field "role" is the member\'s own.' },
+      { id: 'odd', reason: 'Connector "odd" offers something for members that cannot be kept: the field "site admin" must be letters, starting lowercase.' },
+    ]);
+  });
+
   it('refuses a module id that cannot be a route', () => {
     const r = buildRegistry([mod('Check Vouchers')], []);
     expect(r.modules).toEqual([]);

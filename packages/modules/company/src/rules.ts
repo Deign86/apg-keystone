@@ -1,5 +1,5 @@
 import {
-  COMPANY, companyOf, KeystoneError, logged, type Change, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
+  COMPANY, companyOf, isOwner, KeystoneError, logged, type Change, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
 } from '@keystone/core';
 
 // What the company's documents start from (docs/adr/0018). Core keeps them with the records (`state.company`, in the
@@ -24,7 +24,7 @@ export const companyDraftOf = (s: TerminalState): CompanyDraft => {
 };
 
 /** Signed in, only an owner changes them, as firestore.rules hold. On a computer where nobody signs in, whoever uses it. */
-export const canChange = (ctx: Ctx) => !ctx.who || ctx.who.role === 'owner';
+export const canChange = (ctx: Ctx) => !ctx.who || isOwner(ctx.who);
 
 /** One line with single spaces. */
 const line = (x: string) => x.trim().replace(/\s+/g, ' ');

@@ -1,13 +1,13 @@
 import { Button, Field, Panel, ScreenHeader, TextInput } from '@keystone/ui';
 import { useState, type FormEvent } from 'react';
-import { roleLabel, type Member } from '@keystone/core';
-import { useKeystone, useModuleApp, type AppAccounts, type ModuleDef } from '@keystone/kit';
+import { roleLabel, SERVICES, type Accounts, type Member } from '@keystone/core';
+import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG, ID } from './rules';
 
 const LINE = 'How Keystone shows you to everyone: in the rail, on what you prepare and file, and in the activity log.';
 
 /** Whoever is signed in changing the name Keystone shows for them. */
-function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) {
+function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
   const { run, ctx } = useKeystone();
   const app = useModuleApp();
   const [name, setName] = useState(who.name);
@@ -61,7 +61,8 @@ function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) 
 }
 
 function Profile() {
-  const { accounts, ctx } = useKeystone();
+  const { ctx } = useKeystone();
+  const accounts = useModuleApp().service(SERVICES.accounts);
 
   if (accounts && ctx.who) return <YourProfile accounts={accounts} who={ctx.who} />;
 

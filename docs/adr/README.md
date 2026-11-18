@@ -43,6 +43,7 @@ Consequences**.
 | [0030](0030-the-ceo-names-attendance-admins.md) | The CEO names who opens the attendance tracker's admin screens | Accepted |
 | [0031](0031-a-start-that-cannot-read-the-records-stops.md) | A start that cannot read the saved records stops and says why | Accepted |
 | [0032](0032-a-module-owns-its-id-statuses-and-references.md) | A module owns its id, its statuses and what it refers to | Accepted |
+| [0033](0033-accounts-are-a-service-the-platform-provides.md) | Accounts are a service the platform provides, and a connector says what the CEO may give a member | Accepted |
 
 Template:
 

@@ -5,7 +5,8 @@ The RFID time-in kiosk at the front desk (`Deign86/alpha-premier-attendance`: Ta
 ## Owns
 - `src/index.ts`: the connector. Its shortcut opens the attendance app.
 - `src/logo.png`: the attendance app's own icon (from its `src-tauri/icons/icon.png`).
-- `test/attendance.test.ts`: which app it looks for, that it starts it, and the download page when it is missing.
+- `test/attendance.test.ts`: which app it looks for, that it starts it, the download page when it is missing, and the
+  field and words of "attendance admin".
 
 ## How it opens the attendance app (nothing in the attendance app changes)
 - **Finding it on this computer:**
@@ -19,12 +20,17 @@ The RFID time-in kiosk at the front desk (`Deign86/alpha-premier-attendance`: Ta
 - **In the browser preview:** it says the desktop app is needed.
 
 ## Contributes
-Its shortcut on Home: the attendance app's logo, named Attendance Tracker. Directory records linked to it earlier
-keep the tag `RFID`.
+- Its shortcut on Home: the attendance app's logo, named Attendance Tracker. Directory records linked to it earlier
+  keep the tag `RFID`.
+- **"Attendance admin"** (`memberGrant`, docs/adr/0030): what the CEO gives a staff member on User Accounts so they
+  open the attendance tracker's admin screens with their own account. The connector contributes the field
+  (`attendanceAdmin`, which the kiosk reads from the member document and must never be renamed here alone) and every
+  word User Accounts shows for it.
 
 ## Needs
 Nothing.
 
 ## Removing it
 Delete its line in `apps/keystone/src/connectors.ts`, its entry in `apps/keystone/package.json` and
-`e2e/connectors/attendance.e2e.ts`. The shortcut goes; nothing else changes.
+`e2e/connectors/attendance.e2e.ts`. The shortcut goes, and User Accounts stops offering "attendance admin" (a member
+who has it keeps the field; `e2e/cloud/accounts.e2e.ts` has one test that expects the offer). Nothing else changes.

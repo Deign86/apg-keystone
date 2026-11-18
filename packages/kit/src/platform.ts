@@ -1,4 +1,4 @@
-import type { FileFilter, Member, SystemBridge } from '@keystone/core';
+import type { FileFilter, Member, ServiceProviders, SystemBridge } from '@keystone/core';
 
 /**
  * Everything Keystone needs from the machine. Modules and connectors talk only to this,
@@ -12,8 +12,11 @@ export interface Platform extends SystemBridge {
   readonly who?: Member;
   /** Signing out of the records in the cloud, by hand or when Keystone sits unused (docs/adr/0012). Absent with no sign-in. */
   readonly session?: AppSession;
-  /** Who may open the records in the cloud, and making accounts for them (docs/adr/0014). Absent with no sign-in. */
-  readonly accounts?: AppAccounts;
+  /**
+   * Services the platform itself offers, by published name, beside the modules' (docs/adr/0033): with a sign-in, who
+   * may open the records in the cloud (`SERVICES.accounts`). Absent with no sign-in.
+   */
+  readonly provides?: ServiceProviders;
 
   /** The saved state as JSON text, or null when there is none yet. Throws when it exists but cannot be read now. */
   loadState(): Promise<string | null>;
@@ -39,51 +42,6 @@ export interface AppSession {
   used(at: number): void;
   /** Ends the sign-in on this computer and reopens Keystone on the sign-in screen. Write the last save first. */
   signOut(): Promise<void>;
-}
-
-/** A member of the records in the cloud, with the email they sign in with ('' for one added by hand without it). */
-export interface MemberAccount extends Member {
-  email: string;
-  /** The CEO lets this staff member open the admin screens of the attendance tracker (docs/adr/0030). */
-  attendanceAdmin?: boolean;
-}
-
-/** What the CEO gives for a new account: the person's name, their email, and the password they first sign in with. */
-export interface NewAccount {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface AppAccounts {
-  /** Everyone who may open the records. Throws the sentence to show when they cannot be read. */
-  list(): Promise<MemberAccount[]>;
-  /**
-   * Makes a sign-in with this email and password and makes it a staff member, leaving the CEO signed in. Only an
-   * owner may; throws the sentence to show when refused, with no sign-in left behind.
-   */
-  create(account: NewAccount): Promise<MemberAccount>;
-  /**
-   * Takes a member's access away: their member document goes, so they open nothing from then on (docs/adr/0015). Their
-   * sign-in itself stays, since only a server can delete someone else's. Only an owner may, and never their own; throws
-   * the sentence to show when refused.
-   */
-  remove(uid: string): Promise<void>;
-  /**
-   * Changes the password of the member signed in, after checking their current one (docs/adr/0016). They stay signed
-   * in here. Throws the sentence to show when refused.
-   */
-  changePassword(current: string, next: string): Promise<void>;
-  /**
-   * Changes the name of the member signed in, as Keystone shows them to everyone (docs/adr/0020). Their role and email
-   * stay. Throws the sentence to show when refused.
-   */
-  rename(name: string): Promise<void>;
-  /**
-   * Lets a staff member open the attendance tracker's admin screens with their own account, or stops it
-   * (docs/adr/0030). Only an owner may; throws the sentence to show when refused. Absent where it cannot be kept.
-   */
-  setAttendanceAdmin?(uid: string, on: boolean): Promise<void>;
 }
 
 export interface AppUpdater {

@@ -1,5 +1,5 @@
 import {
-  diffDocuments, emptyState, fromDocuments, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
+  diffDocuments, emptyState, fromDocuments, isOwner, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
   type StateDocument, type TerminalState,
 } from '@keystone/core';
 import type { Platform } from '@keystone/kit';
@@ -58,7 +58,7 @@ export function cloudPlatform(
 
     // Nothing in the cloud yet. The records are only ever what people save there: the CEO starts them empty, and
     // whatever this computer holds, records of its own or made-up ones, is never copied in.
-    if (who?.role !== 'owner') throw new Error(NOT_STARTED);
+    if (!isOwner(who)) throw new Error(NOT_STARTED);
     await remote.start();
 
     return opened(emptyState());

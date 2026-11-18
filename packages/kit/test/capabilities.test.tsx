@@ -1,9 +1,10 @@
 import { FeedbackProvider } from '@keystone/ui';
 import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { emptyState, type Member } from '@keystone/core';
-import { KeystoneProvider, useDraft, useKeystone } from '../src/context';
-import type { AppAccounts, Platform } from '../src/platform';
+import { emptyState, SERVICES, type Accounts, type Member } from '@keystone/core';
+import { KeystoneProvider, useDraft, useKeystone, useModuleApp } from '../src/context';
+import type { Platform } from '../src/platform';
+import type { ModuleApp } from '../src/registry';
 import { buildRegistry } from '../src/registry';
 import { KeystoneStore } from '../src/store';
 import { memoryPlatform } from './fakes';
@@ -15,6 +16,7 @@ type Screen = ReturnType<typeof useKeystone>;
 /** What the probe screen last saw. */
 interface Seen {
   screen?: Screen;
+  app?: ModuleApp;
   draft?: string;
   setDraft?: (next: string) => void;
 }
@@ -28,6 +30,7 @@ async function mount(platform: Platform) {
     const [draft, setDraft] = useDraft('probe.draft', () => 'blank');
 
     seen.screen = useKeystone();
+    seen.app = useModuleApp();
     seen.draft = draft;
     seen.setDraft = setDraft;
 
@@ -88,19 +91,25 @@ describe('what a screen is given', () => {
     expect(seen.draft).toBe('blank');
   });
 
-  it('gives the sign-in only when there is one, and the rules see a changed name at once', async () => {
+  it('finds the accounts service only where the platform offers one, and the rules see a changed name at once', async () => {
     const who: Member = { uid: 'u1', name: 'Ana Cruz', role: 'staff' };
     const rename = vi.fn(async () => {});
-    const accounts: AppAccounts = { list: async () => [], create: vi.fn(), remove: async () => {}, changePassword: async () => {}, rename };
-    const signedIn = await mount({ ...memoryPlatform().platform, who, accounts });
+    const accounts: Accounts = { list: async () => [], create: vi.fn(), remove: async () => {}, changePassword: async () => {}, rename };
+    const nobody = await mount(memoryPlatform().platform);
 
-    await act(() => signedIn.seen.screen!.accounts!.rename('Ana Reyes'));
+    // A computer where nobody signs in has no accounts, and a screen is told so by getting none.
+    expect(nobody.seen.app!.service(SERVICES.accounts)).toBeUndefined();
+
+    const signedIn = await mount({ ...memoryPlatform().platform, who, provides: { [SERVICES.accounts]: accounts } });
+    const service = () => signedIn.seen.app!.service(SERVICES.accounts)!;
+
+    await act(() => service().rename('Ana Reyes'));
     expect(rename).toHaveBeenCalledWith('Ana Reyes');
     expect(signedIn.store.ctx.who).toEqual({ ...who, name: 'Ana Reyes' });
 
     // A refused change leaves the name as it was.
     rename.mockRejectedValueOnce(new Error('Refused.'));
-    await expect(signedIn.seen.screen!.accounts!.rename('Nobody')).rejects.toThrow('Refused.');
+    await expect(service().rename('Nobody')).rejects.toThrow('Refused.');
     expect(signedIn.store.ctx.who?.name).toBe('Ana Reyes');
   });
 });

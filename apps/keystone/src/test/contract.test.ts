@@ -124,8 +124,13 @@ describe('across the installed modules', () => {
     expect(where('Employee')).toEqual(['the ID Maker']);
   });
 
-  it('every published service has a provider', () => {
-    for (const name of published) expect(registry.modules.some((m) => m.provides && name in m.provides)).toBe(true);
+  it('every published service has a provider: a module, or for the accounts the platform of a build that signs in', () => {
+    const platforms: string[] = [SERVICES.accounts];
+
+    for (const name of published) expect(registry.modules.some((m) => m.provides && name in m.provides) || platforms.includes(name), name).toBe(true);
+
+    // And no module offers what is the platform's.
+    for (const name of platforms) expect(registry.modules.some((m) => m.provides && name in m.provides), name).toBe(false);
   });
 
   it('the finding is the most urgent thing any installed module reports', () => {

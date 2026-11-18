@@ -26,6 +26,9 @@ export * from './kernel/connectors';
 
 export * from './kernel/services';
 
+// Members of the records in the cloud, what the CEO may give them, and the one test of "is this the CEO".
+export * from './kernel/accounts';
+
 // The directory is the shared kernel every area refers to by code (docs/adr/0003).
 export * from './kernel/directory';
 

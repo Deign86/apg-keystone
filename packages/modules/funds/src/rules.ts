@@ -1,5 +1,5 @@
 import {
-  addDays, count, isISODate, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, logged,
+  addDays, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, logged,
   moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
   toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
   type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type Reference, type TerminalState, type Tone,
@@ -190,7 +190,7 @@ export const settleText = (r: Pick<FundsRequest, 'settle'>) => (r.settle === ASA
 // ---------- who may do what ----------
 
 /** Whether this person decides requests: the CEO, signed in to the cloud. */
-export const decides = (ctx: Ctx) => ctx.who?.role === 'owner';
+export const decides = (ctx: Ctx) => isOwner(ctx.who);
 
 const SIGNED_OUT = 'Only the CEO approves or declines requests, signed in to APG\'s records in the cloud. This copy of Keystone keeps its records on this computer, where nobody signs in.';
 const NOT_OWNER = 'Only the CEO approves or declines requests. The answer shows here once it is given.';
@@ -390,7 +390,7 @@ export function decideRequest(s: TerminalState, no: string, verdict: Verdict, no
 
   if (!who) throw new KeystoneError(SIGNED_OUT);
 
-  if (who.role !== 'owner') throw new KeystoneError(NOT_OWNER);
+  if (!isOwner(who)) throw new KeystoneError(NOT_OWNER);
   const data = dataOf(s);
   const r = data.requests.find((x) => x.no === no);
 

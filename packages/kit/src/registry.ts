@@ -14,7 +14,7 @@ export interface ModuleApp {
   has(moduleId: string): boolean;
   /** Puts a draft where a module's form will pick it up next time it opens. */
   setDraft<T>(key: string, draft: T): void;
-  /** A service another module provides (see SERVICES in @keystone/core), or undefined if none is installed. */
+  /** A service another module or the platform provides (see SERVICES in @keystone/core), or undefined if nobody does. */
   service<N extends ServiceName>(name: N): ServiceContracts[N] | undefined;
   state: TerminalState;
   ctx: Ctx;
@@ -100,6 +100,14 @@ export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Reg
 
     if (problem) {
       refused.push({ id: c.id, reason: problem });
+      continue;
+    }
+
+    // One field on a member, one connector: a second would read and write the first one's.
+    const taken = connectors.find((x) => c.memberGrant && x.memberGrant?.field === c.memberGrant.field);
+
+    if (taken) {
+      refused.push({ id: c.id, reason: `${c.name} keeps "${taken.memberGrant?.field}" on a member, which ${taken.name} already does.` });
       continue;
     }
 

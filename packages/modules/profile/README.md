@@ -16,15 +16,15 @@ or asked for funds, and in the activity log. First under Settings on the rail, b
 - The screen against a stand-in sign-in is tested in `test/screen.test.tsx`.
 
 The name is not in the saved state. It lives with the sign-in, in the member document (`keystone/apg/members/{uid}`:
-`name`), which the kit offers to change as `Platform.accounts.rename` when the build keeps its records in the cloud;
+`name`), which the platform offers to change as the `accounts` service's `rename` when the build keeps its records in the cloud;
 the app's `platform/firestore.ts` writes it. `firestore.rules` let a member change their own name and nothing else of
-their member document. The kit's store then shows the member under the new name (`KeystoneStore.renamed`).
+their member document. The kit then shows the member under the new name: it moves `ctx.who` when `rename` succeeds.
 
 ## Contributes
 - **Activity:** log tag `PROF` (filter "Profile"): each name changed.
 
 ## Needs
-Nothing from another part. Changing the name needs a cloud build (`Platform.accounts`); without one, the screen says
+The `accounts` service, which only the platform of a cloud build provides; without it, the screen says
 there is no profile. The link to change the password is shown only when User Accounts is installed.
 
 ## Removing it
