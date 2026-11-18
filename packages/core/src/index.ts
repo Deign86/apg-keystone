@@ -15,6 +15,9 @@ export * from './kernel/backup';
 // The saved state as one document per record, for the cloud database (docs/adr/0009).
 export * from './kernel/documents';
 
+// What firestore.rules allows, declared once and checked against the rules by `npm run check`.
+export * from './kernel/cloud-layout';
+
 export * from './kernel/lines';
 
 export * from './kernel/insight';

@@ -1,3 +1,4 @@
+import { CLOUD_LAYOUT } from './cloud-layout';
 import type { JsonValue, LogEntry, TerminalState } from './schema';
 import { isJsonObject, jsonObjects, jsonText, parseState, type JsonObject } from './state';
 
@@ -7,10 +8,11 @@ import { isJsonObject, jsonObjects, jsonText, parseState, type JsonObject } from
 // own (docs/adr/0011). The company's details are one document of their own, which only an owner writes (docs/adr/0018).
 // After a change, only the documents it touched are written.
 
-export const COLLECTIONS = ['dir', 'cv', 'bs', 'ids', 'log', 'ext', 'company'] as const;
+/** Keystone's own collections, as firestore.rules names them (CLOUD_LAYOUT). */
+export const COLLECTIONS: readonly string[] = [...CLOUD_LAYOUT.lists, CLOUD_LAYOUT.company.collection];
 
 /** The one document in `company`. */
-const DETAILS = 'details';
+const DETAILS = CLOUD_LAYOUT.company.id;
 
 /**
  * One list in a module's data kept as a document per record, in a collection of its own, instead of inside the
@@ -156,7 +158,7 @@ export function toDocuments(s: TerminalState, layout: DocumentLayout = {}): Stat
     ...listDocuments('ids', s.ids, (r) => r.no),
     ...log,
     ...ext,
-    ...(s.company ? [{ collection: 'company', id: DETAILS, pos: 0, body: JSON.stringify(s.company) }] : []),
+    ...(s.company ? [{ collection: CLOUD_LAYOUT.company.collection, id: DETAILS, pos: 0, body: JSON.stringify(s.company) }] : []),
   ];
 }
 
@@ -210,7 +212,7 @@ export function fromDocuments(docs: StateDocument[], layout: DocumentLayout = {}
 
   if (Object.keys(ext).length) state.ext = ext;
 
-  const [company] = records('company');
+  const [company] = records(CLOUD_LAYOUT.company.collection);
 
   if (company) state.company = company;
 

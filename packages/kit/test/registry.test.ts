@@ -51,6 +51,7 @@ describe('registry', () => {
       mod('copycat', { order: 2, documents: own('rf') }),
       mod('vouchers', { order: 3, documents: own('cv') }),
       mod('shouty', { order: 4, documents: own('Big-List') }),
+      mod('roster', { order: 5, documents: own('members') }),
     ], []);
 
     expect(r.modules.map((m) => m.id)).toEqual(['funds']);
@@ -58,6 +59,7 @@ describe('registry', () => {
       { id: 'copycat', reason: 'Copycat keeps its records in "rf", which Funds already uses.' },
       { id: 'vouchers', reason: 'Vouchers keeps its records in "cv", which Keystone already uses.' },
       { id: 'shouty', reason: 'Shouty keeps its records in "Big-List", which must be lowercase letters.' },
+      { id: 'roster', reason: 'Roster keeps its records in "members", which Keystone already uses.' },
     ]);
     expect(documentLayout(r.modules)).toEqual({ funds: own('rf') });
     expect(documentLayout([mod('home')])).toEqual({});

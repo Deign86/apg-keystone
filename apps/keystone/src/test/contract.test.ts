@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SERVICES, topFinding, type Ctx } from '@keystone/core';
+import { CLOUD_LAYOUT, SERVICES, topFinding, type Ctx } from '@keystone/core';
 import { buildRegistry } from '@keystone/kit';
 import { connectors } from '../connectors';
 import { builtInModules } from '../modules';
@@ -28,6 +28,14 @@ describe.each(registry.modules.map((m) => [m.id, m] as const))('the %s module', 
     }
 
     for (const w of m.waiting?.(s, ctx) ?? []) expect(w.no).toEqual(expect.any(String));
+  });
+
+  it('keeps records of its own only in a collection firestore.rules names, with the fields the rules check', () => {
+    if (!m.documents) return;
+    const own = new Map(Object.entries(CLOUD_LAYOUT.own)).get(m.documents.collection);
+
+    expect(own, `${m.documents.collection} is not declared in core's cloud-layout.json`).toBeDefined();
+    expect(m.documents.fields).toEqual(own?.fields);
   });
 
   it('leaves the state it is given alone', () => {

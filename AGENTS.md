@@ -88,7 +88,9 @@ COMPOSITION (the only place that knows the full list)
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.
    - A new module keeps its own data under `state.ext[<module id>]`. Never rename or remove a key.
-   - In the cloud (docs/adr/0009) the same state is one Firestore document per record (`toDocuments` in core). Never
+   - In the cloud (docs/adr/0009) the same state is one Firestore document per record (`toDocuments` in core). The
+     collections, checked fields, statuses and limits are declared once in core (`CLOUD_LAYOUT`,
+     `kernel/cloud-layout.json`); `npm run check:cloud` fails when `firestore.rules` differs. Change both together. Never
      import `firebase/*` outside `apps/keystone/src/platform/`; parts see only the `Platform`.
 10. **Shared UI goes in the kernel.** If two parts need the same component, move it to `@keystone/kit`
     (Keystone-specific) or `@keystone/ui` (generic), never import it across parts.
@@ -187,7 +189,7 @@ A change is not done because it was written. It is done when it was run and seen
 ## Before you commit
 
 ```bash
-npm run check      # generated files in sync · boundaries · skills · e2e files · Oxlint · typecheck · every package's tests · Taste Skill lint
+npm run check      # generated files in sync · boundaries · skills · e2e files · cloud layout against firestore.rules · Oxlint · typecheck · every package's tests · Taste Skill lint
 npm run test:e2e   # when you change a screen or a flow (both suites; the cloud one needs Java 21)
 cargo test --manifest-path apps/keystone/src-tauri/Cargo.toml   # when you touch src-tauri
 ```

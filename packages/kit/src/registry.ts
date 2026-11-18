@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import {
-  COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
+  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type RecordDocuments,
   type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
@@ -135,8 +135,9 @@ export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Reg
     return true;
   });
 
-  // A collection of its own must be one firestore.rules can name, and nobody else's.
-  const collections = new Map<string, string>(COLLECTIONS.map((c) => [c, 'Keystone']));
+  // A collection of its own must be one firestore.rules can name, and nobody else's: not one of Keystone's lists, and
+  // not one the rules keep for members, devices or the ID register.
+  const collections = new Map<string, string>([...COLLECTIONS, ...CLOUD_LAYOUT.reserved].map((c) => [c, 'Keystone']));
   modules = modules.filter((m) => {
     const c = m.documents?.collection;
 

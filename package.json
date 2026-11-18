@@ -26,9 +26,10 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:skills": "node scripts/check-skills.mjs",
     "check:e2e": "node scripts/check-e2e.mjs",
+    "check:cloud": "node scripts/check-cloud-layout.mjs",
     "icons": "node scripts/build-icons.mjs",
     "lint": "oxlint",
-    "check": "npm run sync -- --check && npm run check:boundaries && npm run check:skills && npm run check:e2e && npm run lint && npm run typecheck && npm test && npm run lint:taste"
+    "check": "npm run sync -- --check && npm run check:boundaries && npm run check:skills && npm run check:e2e && npm run check:cloud && npm run lint && npm run typecheck && npm test && npm run lint:taste"
   },
   "devDependencies": {
     "@e2e-dev/web": "^0.15.5",
