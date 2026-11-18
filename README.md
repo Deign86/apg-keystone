@@ -4,8 +4,10 @@ Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (s
 approves or declines from a PC or a phone, and an approval makes the fund transfer request or drafts the check voucher), Billing Statements, the ID Maker, a shared
 Directory, an Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
-- **The attendance tracker:** starts the app, or opens its download page when it is not installed.
-- **Alpha Branding Studio:** the same.
+- **The attendance tracker:** starts the app. When it is not installed, Keystone fetches its installer and opens it,
+  or opens its download page when it cannot.
+- **The Alpha Premier ID Maker:** the same, and Keystone offers its updates, since it cannot update itself.
+- **Alpha Branding Studio:** the same as the attendance tracker.
 - **The website:** opens its admin portal in the browser.
 
 It is one Tauri 2 + React + TypeScript codebase for macOS and Windows: the same stack as the attendance tracker.
@@ -15,14 +17,14 @@ proves it on every push. Agents and co-developers start with [`AGENTS.md`](AGENT
 ```
 apps/keystone/        the app: lists the installed modules and connectors, the platform, the native side (src-tauri)
 packages/modules/     one package per screen, with its rules and tests: vouchers, billing, id-maker, directory, timekeeping, payroll, …
-packages/connectors/  one package per connected system, its logo and how to open it: attendance, branding-studio, website
+packages/connectors/  one package per connected system, its logo and how to open it: attendance, id-maker-app, branding-studio, website
 packages/kit/         the app runtime: registries, services, store, connector shortcuts, shell, shared components
 packages/core/        the shared kernel: money, dates, the saved state, the directory, contracts
 packages/ui/          the APG design system: Tailwind theme from shared/design/tokens.json, Base UI controls
 shared/          tokens, fonts, logo, the tests' sample records
 prototype/       the original single-page web prototype (2026-10-27), kept for reference
 docs/            MODULARITY.md (the contracts), ARCHITECTURE.md (how it fits), DESIGN.md (the look),
-                 ATTENDANCE-INTEGRATION.md (one open decision),
+                 ATTENDANCE-INTEGRATION.md (a proposal withdrawn on 2026-11-02, kept as the record),
                  references/on-modular-architectures.md (our modularity reference and principles),
                  adr/ (architecture decision records)
 AGENTS.md        the rules for anyone changing Keystone (CLAUDE.md points here)

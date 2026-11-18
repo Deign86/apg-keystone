@@ -11,15 +11,17 @@ packages/core              @keystone/core   schema, money, dates, formats, log, 
 packages/ui                @keystone/ui     APG design system on Base UI; theme from shared/design/tokens.json (kernel)
 packages/kit               @keystone/kit    registries, services, store, connector shortcuts, shell,
                                             screen and document building blocks, Platform interface    (kernel)
-packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · billing · id-maker ·
-                                                      directory · activity · timekeeping · payroll ·
-                                                      data · banks                                     (parts)
-packages/connectors/<id>   @keystone/connector-<id>   attendance · branding-studio · website           (parts)
+packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · funds · billing ·
+                                                      id-maker · directory · activity · timekeeping ·
+                                                      payroll · profile · accounts · data · banks ·
+                                                      company                                          (parts)
+packages/connectors/<id>   @keystone/connector-<id>   attendance · id-maker-app · branding-studio ·
+                                                      website                                          (parts)
 apps/keystone              @keystone/app    the composition root
   src/modules.ts, src/connectors.ts           the only files that list the parts
   src/main.tsx                                builds the registry and starts the app
   src/platform/                               desktop (Tauri), browser and the cloud records behind one interface
-  src-tauri/                                  native side: files, OS keychain, finding and launching other apps
+  src-tauri/                                  native side: files, and finding, starting and installing other apps
 shared/                    tokens, fonts, logo, the tests' sample records (generated into ui and core by `npm run sync`)
 ```
 
@@ -65,8 +67,9 @@ or any failure, is a message on screen (docs/adr/0007).
 
 | System | How Keystone finds it | What its shortcut does |
 |---|---|---|
-| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app, or opens its latest release page when it is not installed |
-| Alpha Branding Studio | Bundle id `com.alphapremier.brandingstudio` (macOS) or its Uninstall registry key (Windows) | Starts the studio, or opens its latest release page |
+| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app. Not installed: fetches its installer from its latest release and opens it, or opens the release page when it cannot (docs/adr/0029) |
+| Alpha Premier ID Maker | Bundle id `com.alphapremiergroup.idmaker` (macOS) or its Uninstall registry key (Windows) | The same, and offers a newer version when one is out, since the ID Maker cannot update itself |
+| Alpha Branding Studio | Bundle id `com.alphapremier.brandingstudio` (macOS) or its Uninstall registry key (Windows) | The same as the attendance tracker |
 | Website | Nothing to find | Opens `alphapremiergroup.com/admin` in the browser |
 
 Keystone reads nothing from these systems and keeps no password for any of them.
