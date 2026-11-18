@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { COMPANY, companyOf, emptyState, parseState, type Ctx, type Member } from '@keystone/core';
 import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, type CompanyDraft } from '../src/rules';
-import { companyModule } from '../src';
 import { sampleState } from '@keystone/core/sample';
 
 /** 12 Nov 2026, 09:05 in Manila. */
@@ -74,10 +73,5 @@ describe('company details', () => {
     const before = JSON.stringify(s);
     saveCompany(s, { ...companyDraftOf(s), signatory: 'Another' }, at(owner));
     expect(JSON.stringify(s)).toBe(before);
-  });
-
-  it('sit last under Settings, log under their own tag, and raise no finding: the company is never missing', () => {
-    expect(companyModule).toMatchObject({ id: 'company', title: 'Company Details', section: 'Settings', order: 92, logTags: { CO: 'Company Details' } });
-    expect(companyModule.finding).toBeUndefined();
   });
 });

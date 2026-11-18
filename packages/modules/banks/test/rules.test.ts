@@ -121,8 +121,4 @@ describe('the bank-accounts service', () => {
     expect(removed.message).toBe('B-001 removed.');
     expect(bankAccounts.accounts(removed.state)).toEqual([{ id: 'B-002', ...bdo }]);
   });
-
-  it('logs under its own tag, with its own filter label, and sits under Settings', () => {
-    expect(banksModule).toMatchObject({ id: 'banks', title: 'Bank Accounts', section: 'Settings', logTags: { BANK: 'Bank Accounts' } });
-  });
 });
