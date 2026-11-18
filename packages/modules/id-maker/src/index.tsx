@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, ID_STATUSES, recordsOf, shortDate, toneOf, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee } from './rules';
+import { BLOOD_TYPES, idDraftOf, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
@@ -20,7 +20,7 @@ async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-const DRAFT = 'id-maker.draft';
+const DRAFT = `${ID}.draft`;
 
 function IDMaker() {
   const { state, ctx, run, files, photos, notify } = useKeystone();
@@ -143,9 +143,8 @@ function IDMaker() {
 }
 
 export const idMakerModule: ModuleDef = {
-  id: 'id-maker',
+  id: ID,
   title: 'ID Maker',
-  section: 'Employee IDs',
   blurb: 'Pick a person, add a photo, and print the card front and back.',
   order: 4,
   onHome: true,
@@ -157,10 +156,10 @@ export const idMakerModule: ModuleDef = {
     const i = app.state.ids.find((x) => x.no === no);
 
     if (i) app.setDraft(DRAFT, idDraftOf(i));
-    app.go('id-maker');
+    app.go(ID);
   },
-  create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go('id-maker'); } },
-  logTags: { ID: 'IDs' },
+  create: { label: 'New ID', run: (app) => { app.setDraft(DRAFT, newID(app.state, app.ctx)); app.go(ID); } },
+  logTags: { [TAG]: 'IDs' },
   onOpen: markExpired,
   Screen: IDMaker,
 };

@@ -3,13 +3,13 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, toneOf, VOUCHER_STATUSES, type Voucher } from '@keystone/core';
 import {
   approvesOnSave, awaitingApproval, copyVoucher, newVoucher, payeeOf, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting, withCheck,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, vouchersNewestFirst, voucherTotal, voucherWaiting, withCheck, ID, TAG,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
-const DRAFT = 'vouchers.draft';
+const DRAFT = `${ID}.draft`;
 
 /** A group of the form's fields, turned off together while the voucher is locked. */
 const FIELDS = 'm-0 flex min-w-0 flex-col gap-3.5 border-0 p-0';
@@ -269,9 +269,8 @@ function Vouchers() {
 }
 
 export const vouchersModule: ModuleDef = {
-  id: 'vouchers',
+  id: ID,
   title: 'Check Vouchers',
-  section: 'Disbursements',
   blurb: 'Prepare check vouchers, print each twice on one A4 sheet to cut in half, and route them for signatures.',
   order: 2,
   onHome: true,
@@ -283,10 +282,10 @@ export const vouchersModule: ModuleDef = {
     const v = app.state.cv.find((x) => x.no === no);
 
     if (v) app.setDraft(DRAFT, voucherDraftOf(app.state, v));
-    app.go('vouchers');
+    app.go(ID);
   },
-  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go('vouchers'); } },
-  logTags: { CV: 'Vouchers' },
+  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go(ID); } },
+  logTags: { [TAG]: 'Vouchers' },
   provides: { [SERVICES.voucherDrafts]: voucherDrafts },
   Screen: Vouchers,
 };

@@ -24,7 +24,7 @@ function banks(accounts: BankAccount[]): ModuleDef {
     add: () => { throw new Error('Not in these tests.'); }, remove: () => { throw new Error('Not in these tests.'); },
   };
 
-  return { id: 'banks', title: 'Bank Accounts', section: 'Settings', blurb: '', order: 91, Screen: () => <h1>Bank Accounts</h1>, provides: { [SERVICES.bankAccounts]: service } };
+  return { id: 'banks', title: 'Bank Accounts', blurb: '', order: 91, Screen: () => <h1>Bank Accounts</h1>, provides: { [SERVICES.bankAccounts]: service } };
 }
 
 async function openBilling(modules: ModuleDef[]) {

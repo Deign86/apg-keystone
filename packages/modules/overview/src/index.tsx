@@ -74,7 +74,6 @@ function Overview() {
 export const overviewModule: ModuleDef = {
   id: 'overview',
   title: 'Overview',
-  section: 'Administrator access',
   blurb: 'Summary figures for the CEO: what waits for approval, what is owed, what is due.',
   order: 1,
   onHome: true,

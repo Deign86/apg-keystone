@@ -6,6 +6,8 @@ import type { MemberAccount, NewAccount } from '@keystone/kit';
 // themselves live with the sign-in (Platform.accounts); these rules check what is asked for, word what the screen says,
 // and log each account made or removed and each password changed.
 
+/** This module's id, written once: its route, its ModuleDef.id. */
+export const ID = 'accounts';
 export const TAG = 'ACCT';
 
 /** The shortest password a new account may start with. Firebase itself takes 6. */

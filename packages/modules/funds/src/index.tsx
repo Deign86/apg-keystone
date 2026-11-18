@@ -6,12 +6,12 @@ import {
   accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
   fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftOf, requestLock, requestOf, requestPreview, requestsNewestFirst,
   requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
-  type Verdict,
+  type Verdict, ID, TAG,
 } from './rules';
 import { TransferPaper } from './TransferPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
-const DRAFT = 'funds.draft';
+const DRAFT = `${ID}.draft`;
 
 const WHEN = [{ value: ASAP, label: 'As soon as possible' }, { value: 'date', label: 'By a date' }];
 
@@ -255,9 +255,8 @@ function Funds() {
 }
 
 export const fundsModule: ModuleDef = {
-  id: 'funds',
+  id: ID,
   title: 'Requests for Funds',
-  section: 'Disbursements',
   blurb: 'List the expenses you need money for. The CEO decides; an approval drafts the fund transfer or check voucher.',
   // Right after Check Vouchers, which its approvals feed.
   order: 2.5,
@@ -270,10 +269,10 @@ export const fundsModule: ModuleDef = {
     const r = requestOf(app.state, no);
 
     if (r) app.setDraft(DRAFT, requestDraftOf(r));
-    app.go('funds');
+    app.go(ID);
   },
-  create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go('funds'); } },
-  logTags: { RF: 'Requests for funds' },
+  create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go(ID); } },
+  logTags: { [TAG]: 'Requests for funds' },
   documents: requestDocuments,
   Screen: Funds,
 };

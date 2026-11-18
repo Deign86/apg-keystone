@@ -6,6 +6,8 @@ import {
 // cloud an owner-only document) and every part reads them with `companyOf`; this module is the one place they are
 // changed. The company itself (name, address, contacts) is built in, core's `COMPANY` (docs/adr/0023), not typed here.
 
+/** This module's id, written once: its route, its ModuleDef.id. */
+export const ID = 'company';
 export const TAG = 'CO';
 
 /** The form: what documents start from, every field as typed, days and years too. */

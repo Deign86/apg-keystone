@@ -11,7 +11,8 @@ import {
 // or drafts the check voucher through Check Vouchers' service. Only the CEO, signed in to the records in the cloud,
 // decides; firestore.rules holds the same line, and lets staff read only their own requests.
 
-export const MODULE = 'funds';
+/** This module's id, written once: its route, its ModuleDef.id, its key under state.ext and its draft key. */
+export const ID = 'funds';
 export const TAG = 'RF';
 
 export const REQUEST_STATUSES = ['For Approval', 'Approved', 'Declined', 'Withdrawn'] as const;
@@ -117,7 +118,7 @@ function decisionOf(v: JsonObject): Decision | undefined {
 
 /** The module's data, read leniently: a record that is damaged or from an older build reads as what it can. */
 export function dataOf(s: TerminalState): FundsData {
-  const raw = moduleData(s, MODULE);
+  const raw = moduleData(s, ID);
 
   if (!isJsonObject(raw)) return { requests: [], last: '' };
 
@@ -146,7 +147,7 @@ export function dataOf(s: TerminalState): FundsData {
   return { requests, last: jsonText(raw.last) };
 }
 
-const saved = (s: TerminalState, data: FundsData) => withModuleData(s, MODULE, {
+const saved = (s: TerminalState, data: FundsData) => withModuleData(s, ID, {
   requests: data.requests.map((r) => ({ ...r, lines: r.lines.map((l) => ({ ...l })), ...(r.account && { account: { ...r.account } }) })), last: data.last,
 });
 

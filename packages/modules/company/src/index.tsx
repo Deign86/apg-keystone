@@ -1,7 +1,7 @@
 import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput } from '@keystone/ui';
 import { useCallback, useState } from 'react';
 import { FormCard, useKeystone, type ModuleDef } from '@keystone/kit';
-import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft } from './rules';
+import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft, ID } from './rules';
 
 /** The company's details, in one form. Staff see them; only an owner changes them. */
 function CompanyDetailsScreen() {
@@ -70,9 +70,8 @@ function CompanyDetailsScreen() {
 }
 
 export const companyModule: ModuleDef = {
-  id: 'company',
+  id: ID,
   title: 'Company Details',
-  section: 'Settings',
   blurb: 'What each new voucher, statement and ID starts from: signatories, payment instructions and terms.',
   // Last under Settings, after Bank Accounts.
   order: 92,

@@ -4,7 +4,7 @@ import { DASH, SERVICES, type BankAccount } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 import {
   accountDraftOf, accountLabel, accountsOf, bankAccounts, banksLine, newAccountDraft, nextAccountId, removeAccount, saveAccount, TAG,
-  type AccountDraft,
+  type AccountDraft, ID,
 } from './rules';
 
 function AccountForm({ draft, onDone }: { draft: AccountDraft; onDone: () => void }) {
@@ -97,9 +97,8 @@ function Banks() {
 }
 
 export const banksModule: ModuleDef = {
-  id: 'banks',
+  id: ID,
   title: 'Bank Accounts',
-  section: 'Settings',
   blurb: 'The company’s bank accounts, for checks and for where clients pay.',
   order: 91,
   logTags: { [TAG]: 'Bank Accounts' },

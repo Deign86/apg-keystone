@@ -29,8 +29,6 @@ export interface ModuleDef {
   /** Stable id: the route (#vouchers). Lowercase letters, digits, dashes. */
   id: string;
   title: string;
-  /** Eyebrow over the screen title. */
-  section: string;
   /** The line on its home-screen tile. */
   blurb: string;
   /** Rail position; the rail numbers modules 0, 1, 2… in this order for ⌘/Ctrl+number. */

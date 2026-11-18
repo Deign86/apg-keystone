@@ -95,7 +95,6 @@ function Home() {
 export const homeModule: ModuleDef = {
   id: 'home',
   title: 'Home',
-  section: 'Administrator access',
   blurb: '',
   order: 0,
   Screen: Home,

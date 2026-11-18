@@ -8,6 +8,12 @@ import {
 // Check vouchers: disbursements routed for signatures, printed as the company's
 // Check Voucher. The payee is typed on each voucher; an older voucher's directory code is read through the directory.
 
+/** This module's id, written once: its route, its ModuleDef.id and its draft key. */
+export const ID = 'vouchers';
+
+/** The tag its activity-log lines carry. */
+export const TAG = 'CV';
+
 export const voucherTotal = (v: Pick<Voucher, 'lines'>): Centavos => sumCentavos(v.lines, (l) => toCentavos(l.amt));
 export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
 
@@ -148,7 +154,7 @@ function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string)
   const routed = approvedBy ? `saved and approved by ${approvedBy}` : 'saved and routed for approval';
 
   return {
-    state: logged({ ...s, cv: [...s.cv, saved] }, 'CV', `${saved.no} for ${nameOf(s, v.payee)} ${routed} (${peso(voucherTotal(saved))}).`, ctx),
+    state: logged({ ...s, cv: [...s.cv, saved] }, TAG, `${saved.no} for ${nameOf(s, v.payee)} ${routed} (${peso(voucherTotal(saved))}).`, ctx),
     record: saved, message: `${saved.no} ${approvedBy ? 'saved and approved' : 'saved and routed for approval'}.`,
   };
 }
@@ -170,7 +176,7 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     if (updated.check === original.check && updated.checkDate === original.checkDate) return { state: s, record: original, message: `${original.no} is unchanged.` };
 
     return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
@@ -183,7 +189,7 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     const updated = { ...v, no: original.no, status: original.status };
 
     return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, 'CV', `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(voucherTotal(v))}).`, ctx),
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(voucherTotal(v))}).`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
   }
@@ -218,7 +224,7 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
     : `${no} returned for approval.`;
 
   return {
-    state: logged({ ...s, cv: s.cv.map((x) => (x.no === no ? updated : x)) }, 'CV', text, ctx),
+    state: logged({ ...s, cv: s.cv.map((x) => (x.no === no ? updated : x)) }, TAG, text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }

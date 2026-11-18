@@ -4,6 +4,9 @@ import { KeystoneError, logged, nextNumber, type Change, type Ctx, type Editing 
 // The directory: vendors, clients and employees every other domain refers to by code.
 // Other domains may read it (recordOf, nameOf); it reads no other domain.
 
+/** The tag the directory's activity-log lines carry. */
+export const DIRECTORY_TAG = 'DIR';
+
 export const recordOf = (s: TerminalState, code: string) => s.dir.find((d) => d.code === code);
 export const recordsOf = (s: TerminalState, type: RecordType) => s.dir.filter((d) => d.type === type);
 export const nameOf = (s: TerminalState, code: string) => recordOf(s, code)?.name ?? code;
@@ -89,13 +92,13 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
 
   if (original) {
     return {
-      state: logged({ ...s, dir: s.dir.map((x) => (x.code === original.code ? base : x)) }, 'DIR', `${base.code} ${base.name} updated.`, ctx),
+      state: logged({ ...s, dir: s.dir.map((x) => (x.code === original.code ? base : x)) }, DIRECTORY_TAG, `${base.code} ${base.name} updated.`, ctx),
       record: base, message: `${base.code} updated.`,
     };
   }
 
   return {
-    state: logged({ ...s, dir: [...s.dir, base] }, 'DIR', `${base.code} ${base.name} added to the directory as ${d.type.toLowerCase()}.`, ctx),
+    state: logged({ ...s, dir: [...s.dir, base] }, DIRECTORY_TAG, `${base.code} ${base.name} added to the directory as ${d.type.toLowerCase()}.`, ctx),
     record: base, message: `${base.code} added. It is now selectable in ${USED_IN[d.type]}.`,
   };
 }
@@ -110,7 +113,7 @@ export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx):
   if (used.length) throw new KeystoneError(`${code} is used by ${used.join(', ')} records and cannot be removed.`);
 
   return {
-    state: logged({ ...s, dir: s.dir.filter((x) => x.code !== code) }, 'DIR', `${code} ${d.name} removed from the directory.`, ctx),
+    state: logged({ ...s, dir: s.dir.filter((x) => x.code !== code) }, DIRECTORY_TAG, `${code} ${d.name} removed from the directory.`, ctx),
     record: d, message: `${code} removed.`,
   };
 }

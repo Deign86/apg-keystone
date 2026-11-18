@@ -12,7 +12,7 @@ declare module '@keystone/core' {
 }
 
 const Screen = () => null;
-const mod = (id: string, extra: Partial<ModuleDef> = {}): ModuleDef => ({ id, title: id[0].toUpperCase() + id.slice(1), section: '', blurb: '', order: 0, Screen, ...extra });
+const mod = (id: string, extra: Partial<ModuleDef> = {}): ModuleDef => ({ id, title: id[0].toUpperCase() + id.slice(1), blurb: '', order: 0, Screen, ...extra });
 
 describe('registry', () => {
   it('orders modules and keeps the connectors as listed', () => {

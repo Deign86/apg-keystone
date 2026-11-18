@@ -2,7 +2,7 @@ import { Button, Field, Panel, ScreenHeader, TextInput } from '@keystone/ui';
 import { useState, type FormEvent } from 'react';
 import { roleLabel, type Member } from '@keystone/core';
 import { useKeystone, useModuleApp, type AppAccounts, type ModuleDef } from '@keystone/kit';
-import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG } from './rules';
+import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG, ID } from './rules';
 
 const LINE = 'How Keystone shows you to everyone: in the rail, on what you prepare and file, and in the activity log.';
 
@@ -76,9 +76,8 @@ function Profile() {
 }
 
 export const profileModule: ModuleDef = {
-  id: 'profile',
+  id: ID,
   title: 'Profile',
-  section: 'Settings',
   blurb: 'Your name as Keystone shows it to everyone.',
   // First under Settings, before User Accounts.
   order: 88,

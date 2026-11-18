@@ -52,7 +52,6 @@ function Activity() {
 export const activityModule: ModuleDef = {
   id: 'activity',
   title: 'Activity Log',
-  section: 'Audit trail',
   blurb: 'Every save, approval, and issuance across the terminal, kept as the audit trail.',
   order: 6,
   onHome: true,

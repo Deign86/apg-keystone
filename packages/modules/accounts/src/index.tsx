@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useKeystone, type AppAccounts, type MemberAccount, type ModuleDef } from '@keystone/kit';
 import {
   accountMade, accountRemoved, accountsLine, attendanceAdminQuestion, attendanceAdminRefusal, attendanceAdminSet, checkAccount, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
-  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine, TAG,
+  MIN_PASSWORD, newAccountDraft, newPasswordDraft, NO_SIGN_IN, passwordChanged, removalQuestion, removeRefusal, roleLine, TAG, ID,
 } from './rules';
 
 /** The CEO's form for a new staff account: name, email and the password they first sign in with. */
@@ -240,9 +240,8 @@ function Accounts() {
 }
 
 export const accountsModule: ModuleDef = {
-  id: 'accounts',
+  id: ID,
   title: 'User Accounts',
-  section: 'Settings',
   blurb: 'Who can open APG’s records, and the CEO making an account for each staff member.',
   // Under Settings after Profile, before Data and Bank Accounts.
   order: 89,

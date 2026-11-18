@@ -8,7 +8,8 @@ import {
 // Employee); there are no interns, cards, readers or key logs here. Everything is kept in Keystone, under
 // state.ext.timekeeping, and only Keystone's screens reach it.
 
-export const MODULE = 'timekeeping';
+/** This module's id, written once: its route, its ModuleDef.id and its key under state.ext. */
+export const ID = 'timekeeping';
 export const TAG = 'DTR';
 
 /** The office day: 8:00 AM to 5:00 PM, Monday to Friday, with 12:00 to 1:00 PM unpaid for lunch. In minutes. */
@@ -33,7 +34,7 @@ export type TimekeepingData = { days: TimeDay[]; holidays: Holiday[] };
 
 /** What timekeeping has saved, checked field by field; anything unreadable is left out. */
 export function dataOf(s: TerminalState): TimekeepingData {
-  const raw = moduleData(s, MODULE);
+  const raw = moduleData(s, ID);
 
   if (!isJsonObject(raw)) return { days: [], holidays: [] };
 
@@ -47,7 +48,7 @@ export function dataOf(s: TerminalState): TimekeepingData {
   };
 }
 
-const saved = (s: TerminalState, data: TimekeepingData) => withModuleData(s, MODULE, data);
+const saved = (s: TerminalState, data: TimekeepingData) => withModuleData(s, ID, data);
 
 // ---------- clock times ----------
 

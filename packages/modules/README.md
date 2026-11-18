@@ -97,10 +97,12 @@ function Payroll() {
   );
 }
 
+/** The module's id, written once: its route, its key under state.ext and its draft key (`${ID}.draft`). */
+export const ID = 'payroll';
+
 export const payrollModule: ModuleDef = {
-  id: 'payroll',
+  id: ID,
   title: 'Payroll',
-  section: 'People',
   blurb: 'Cut-offs, payslips and the intern DTR.',
   order: 7,
   onHome: true,

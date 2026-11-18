@@ -4,6 +4,8 @@ import { CLOUD_LAYOUT, KeystoneError, logged, type Change, type Ctx, type Member
 // voucher or asked for funds, and in the activity log. The name lives with the sign-in (Platform.accounts); these rules
 // check the new one and log the change.
 
+/** This module's id, written once: its route, its ModuleDef.id. */
+export const ID = 'profile';
 export const TAG = 'PROF';
 
 /** The longest name Keystone keeps: the one firestore.rules allows. */

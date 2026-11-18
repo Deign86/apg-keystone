@@ -10,7 +10,7 @@ import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
   clock12, dataOf, dayDraftOf, daysOf, duration, employeeAttendance, HOLIDAY_KINDS, inToday, missingTimeOuts, newHoliday,
   removeHoliday, saveDay, saveHoliday, TAG, tally, timeIn, timekeepingFigure, timekeepingFinding, timekeepingStat,
-  timeOut, todayBoard, type DayDraft, type DayResult, type DayStatus, type Holiday, type HolidayDraft, type TodayRow,
+  timeOut, todayBoard, type DayDraft, type DayResult, type DayStatus, type Holiday, type HolidayDraft, type TodayRow, ID,
 } from './rules';
 
 const TONE: Record<DayStatus, Tone> = {
@@ -227,9 +227,8 @@ function Timekeeping() {
 }
 
 export const timekeepingModule: ModuleDef = {
-  id: 'timekeeping',
+  id: ID,
   title: 'Timekeeping',
-  section: 'People',
   blurb: 'Employees time in and out here; late, half days, holidays and the weekly grace are counted for payroll.',
   order: 7,
   onHome: true,

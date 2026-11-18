@@ -11,7 +11,8 @@ import { basisOf, fullAttendance, price, sharesFor, tableShares, type Pay, type 
 // in ./pay.ts. Attendance comes from the timekeeping service when it is installed. Kept under state.ext.payroll;
 // nothing leaves Keystone.
 
-export const MODULE = 'payroll';
+/** This module's id, written once: its route, its ModuleDef.id and its key under state.ext. */
+export const ID = 'payroll';
 export const TAG = 'PAY';
 
 /** A closed cut-off keeps who was paid and on what, as it was, so later corrections never reprice it. */
@@ -54,7 +55,7 @@ function tallyOf(o: JsonValue | undefined): AttendanceTally {
 
 /** What payroll has saved, checked field by field; anything unreadable is left out. */
 export function dataOf(s: TerminalState): PayrollData {
-  const raw = moduleData(s, MODULE);
+  const raw = moduleData(s, ID);
 
   if (!isJsonObject(raw)) return { setups: [], runs: [] };
 
@@ -77,7 +78,7 @@ export function dataOf(s: TerminalState): PayrollData {
   };
 }
 
-const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, MODULE, data);
+const saved = (s: TerminalState, data: PayrollData) => withModuleData(s, ID, data);
 
 export const setupFor = (s: TerminalState, emp: string) => dataOf(s).setups.find((x) => x.emp === emp);
 

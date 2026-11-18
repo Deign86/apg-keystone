@@ -13,7 +13,7 @@ import { Payslip, PayrollSheet } from './PayrollPapers';
 import {
   AMOUNT_LABEL, closeCutoff, cutoffOf, lastCutoff, payrollFigure, payrollFinding, payrollStat, removeSetup,
   reopenCutoff, saveSetup, setupDraftOf, setupFor, SHARES, TAG, totalOf, workedOut, type AmountField, type PayLine,
-  type SetupDraft,
+  type SetupDraft, ID,
 } from './rules';
 
 function Amount({ field, d, set, placeholder = '0.00' }: { field: AmountField; d: SetupDraft; set: (d: SetupDraft) => void; placeholder?: string }) {
@@ -265,9 +265,8 @@ function Payroll() {
 }
 
 export const payrollModule: ModuleDef = {
-  id: 'payroll',
+  id: ID,
   title: 'Payroll',
-  section: 'People',
   blurb: 'Each employee\'s own pay, the cut-off sheet and payslips, priced from Timekeeping.',
   order: 8,
   onHome: true,

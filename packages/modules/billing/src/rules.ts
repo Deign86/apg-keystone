@@ -12,6 +12,12 @@ import {
 
 export interface StatementTotals { subtotal: Centavos; vat: Centavos; ewt: Centavos; due: Centavos }
 
+/** This module's id, written once: its route, its ModuleDef.id and its draft key. */
+export const ID = 'billing';
+
+/** The tag its activity-log lines carry. */
+export const TAG = 'BS';
+
 export const VAT_RATE = 12;
 export const EWT_RATE = 5;
 
@@ -151,7 +157,7 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
     const updated = { ...b, no: original.no, status: original.status };
 
     return {
-      state: logged({ ...s, bs: s.bs.map((x) => (x.no === original.no ? updated : x)) }, 'BS',
+      state: logged({ ...s, bs: s.bs.map((x) => (x.no === original.no ? updated : x)) }, TAG,
         `${updated.no} for ${nameOf(s, b.client)} edited (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
       record: updated, message: `${updated.no} updated.`,
     };
@@ -165,7 +171,7 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
   const saved = { ...b, no };
 
   return {
-    state: logged({ ...s, bs: [...s.bs, saved] }, 'BS', `${saved.no} sent to ${nameOf(s, b.client)} (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
+    state: logged({ ...s, bs: [...s.bs, saved] }, TAG, `${saved.no} sent to ${nameOf(s, b.client)} (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
     record: saved, message: `${saved.no} saved and marked as sent.`,
   };
 }
@@ -184,7 +190,7 @@ export function setStatementStatus(s: TerminalState, no: string, status: Stateme
     : `${no} marked ${status.toLowerCase()}.`;
 
   return {
-    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, 'BS', text, ctx),
+    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, TAG, text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }
@@ -204,7 +210,7 @@ export function recordPayment(s: TerminalState, no: string, p: Payment, ctx: Ctx
   const how = [p.method, p.reference && `ref ${p.reference}`].filter(Boolean).join(' ');
 
   return {
-    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, 'BS',
+    state: logged({ ...s, bs: s.bs.map((x) => (x.no === no ? updated : x)) }, TAG,
       `${no} from ${nameOf(s, b.client)} paid: ${peso(paid)}${how ? ` by ${how}` : ''}, reported on ${p.source}.`, ctx),
     record: updated, message: `${no} marked paid.`,
   };

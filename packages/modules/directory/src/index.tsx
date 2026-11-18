@@ -1,7 +1,7 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column } from '@keystone/ui';
 import { useState } from 'react';
 import {
-  DASH, count, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
+  DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedBy,
   type DirectoryDraft, type DirectoryRecord, type RecordType, type Figure, type TerminalState,
 } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
@@ -172,12 +172,11 @@ function directoryFigure(s: TerminalState): Figure {
 export const directoryModule: ModuleDef = {
   id: 'directory',
   title: 'Directory',
-  section: 'Master data',
   blurb: 'One master list of vendors, clients, and employees shared by every system.',
   order: 5,
   onHome: true,
   stat: (s) => ['Records', String(s.dir.length)],
   figure: directoryFigure,
-  logTags: { DIR: 'Directory' },
+  logTags: { [DIRECTORY_TAG]: 'Directory' },
   Screen: Directory,
 };

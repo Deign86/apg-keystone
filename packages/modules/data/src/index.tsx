@@ -75,7 +75,6 @@ function Data() {
 export const dataModule: ModuleDef = {
   id: 'data',
   title: 'Data',
-  section: 'Settings',
   blurb: 'Back up or restore the data, and see any part that was left out.',
   order: 90,
   Screen: Data,

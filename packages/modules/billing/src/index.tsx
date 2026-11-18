@@ -1,11 +1,11 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, recordOf, recordsOf, shortDate, STATEMENT_STATUSES, toneOf, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft } from './rules';
+import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, statementDraftOf, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, ID, TAG } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
-const DRAFT = 'billing.draft';
+const DRAFT = `${ID}.draft`;
 
 /**
  * "Pay into", when Bank Accounts is installed: picking an account writes it into the payment instructions. Without
@@ -152,9 +152,8 @@ function Billing() {
 }
 
 export const billingModule: ModuleDef = {
-  id: 'billing',
+  id: ID,
   title: 'Billing Statements',
-  section: 'Receivables',
   blurb: 'Issue statements of account, with VAT and withholding from each client’s setup.',
   order: 3,
   onHome: true,
@@ -166,10 +165,10 @@ export const billingModule: ModuleDef = {
     const b = app.state.bs.find((x) => x.no === no);
 
     if (b) app.setDraft(DRAFT, statementDraftOf(b, app.state));
-    app.go('billing');
+    app.go(ID);
   },
-  create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go('billing'); } },
-  logTags: { BS: 'Billing' },
+  create: { label: 'New statement', run: (app) => { app.setDraft(DRAFT, newStatement(app.state, app.ctx)); app.go(ID); } },
+  logTags: { [TAG]: 'Billing' },
   onOpen: markOverdue,
   provides: { [SERVICES.statementPayments]: statementPayments },
   Screen: Billing,
