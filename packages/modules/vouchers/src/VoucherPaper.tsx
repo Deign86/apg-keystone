@@ -1,7 +1,9 @@
+// The Alpha Premier Group of Companies logo made for white paper: GROUP OF COMPANIES under ALPHA PREMIER.
+import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, type ReactNode } from 'react';
 import { amountInWords, longDate, peso, toCentavos, type Company, type Voucher } from '@keystone/core';
 import { voucherTotal, type Payee } from './rules';
-import { Letterhead, paperHeading as heading, paperLabel, Sheet } from '@keystone/kit';
+import { Masthead, paperHeading as heading, paperLabel, paperLogo, TwoUp } from '@keystone/kit';
 
 // The company's Check Voucher, twice on one A4 sheet: once on each half, cut apart along the dashed line across the
 // middle. Ruled into boxes as the printed cash voucher is, out to near the paper's edges: who and where on the left, the
@@ -30,9 +32,17 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
   ];
 
   return (
-    <Sheet ref={ref} fit="halves" label={`Check voucher ${v.no}`}>
-      {/* The Group of Companies logo, with the company's address right beside it; the logo names the company. */}
-      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} logo="companies" beside />
+    <TwoUp ref={ref} label={`Check voucher ${v.no}`}>
+      {/* The Group of Companies logo, with the company's address right beside it; the logo names the company, so its
+          name and contact are left out. */}
+      <Masthead
+        title="Check Voucher"
+        no={`No. ${v.no}`}
+        mark={<>
+          <img src={companiesLogo} alt="Alpha Premier Group of Companies" className={paperLogo} />
+          {company.address && <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
+        </>}
+      />
 
       {/* One ruled form: a firm line between its parts, a light one between the boxes inside each part. No frame around
           it, so nothing is drawn along the paper's edges. */}
@@ -101,6 +111,6 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
           ))}
         </div>
       </div>
-    </Sheet>
+    </TwoUp>
   );
 });

@@ -25,3 +25,80 @@ export const PAGE_WIDTH = Math.floor(mmToPx(PAPER.width));
 
 /** Half an A4 page's height in CSS px (148.5 mm, rounded down): one copy on a two-up sheet, from an edge of the page to the middle, where it is cut. */
 export const HALF_PAGE_HEIGHT = Math.floor(mmToPx(PAPER.height / 2));
+
+// How a sheet sits on the page. Each layout is defined once, here: its width, the marks the paper carries so Print and
+// Export PDF know which layout it is, the @page rule for its print, how it is fitted to the page before printing and
+// put back after, and how its PDF page is set up. documents.tsx renders a sheet from one of these; output.ts reads the
+// same one back from the paper it is handed. Neither branches on which paper it is.
+
+/** The marks a paper may carry, as data attributes. The print stylesheet names the last three (packages/ui/src/styles.css). */
+export const MARKS = {
+  /** How the paper is fitted to the page: `data-print-fit`. */
+  fit: 'data-print-fit',
+  /** Which way up the page is: `data-print-orientation`. */
+  orientation: 'data-print-orientation',
+  /** One copy on a sheet that holds the document more than once. */
+  copy: 'data-sheet-copy',
+  /** The one element being printed, while it prints: everything else is hidden. */
+  printRoot: 'data-print-root',
+  /** The frame that clips the scaled preview, and the wrapper that scales it. Print undoes both. */
+  frame: 'data-sheet-frame',
+  scale: 'data-sheet-scale',
+} as const;
+
+export interface PaperLayout {
+  /** The paper's width, on screen and in print, in CSS px. */
+  width: number;
+  /** What the paper carries so Print and Export PDF find this layout again. */
+  marks: { fit?: 'page' | 'halves'; orientation?: 'landscape' };
+  /** The @page rule for this print only, over the stylesheet's upright A4 with margins. None: the stylesheet's stands. */
+  page?: string;
+  /** Fits the paper to the page just before it prints, and puts it back once the print is done. */
+  fit?(paper: HTMLElement): void;
+  unfit?(paper: HTMLElement): void;
+  /** The PDF page: its margin in points, and anything the drawn copy of the paper needs changed. */
+  pdf: { margin: number; style?: Partial<CSSStyleDeclaration> };
+}
+
+/** An upright A4 page inside the print margins: the paper as tall as what it holds. */
+export const UPRIGHT: PaperLayout = { width: PAPER_WIDTH, marks: {}, pdf: { margin: mmToPt(PAPER.margin) } };
+
+/** How far a two-up sheet's copies keep in from the paper's edges and the cut: inside what any printer reaches. */
+export const TWO_UP_EDGE = '6mm';
+
+/** The copies on a sheet that holds the document more than once. */
+const copiesOf = (paper: HTMLElement) => [...paper.querySelectorAll<HTMLElement>(`[${MARKS.copy}]`)];
+
+/**
+ * The document twice on one upright A4, once on each half, out to near the paper's edges with no print margin, and a
+ * dashed line across the middle: one cut leaves two copies. Each copy is fitted to exactly half the page, shrinking
+ * one that runs longer, so the line falls at the middle, where the page is cut.
+ */
+export const TWO_UP: PaperLayout = {
+  width: PAGE_WIDTH,
+  marks: { fit: 'halves' },
+  page: '@page { size: A4; margin: 0; }',
+  fit(paper) {
+    for (const copy of copiesOf(paper)) {
+      const zoom = Math.min(1, HALF_PAGE_HEIGHT / copy.scrollHeight);
+
+      if (zoom < 1) copy.style.zoom = String(zoom);
+      copy.style.height = `${HALF_PAGE_HEIGHT / zoom}px`;
+    }
+  },
+  unfit(paper) {
+    for (const copy of copiesOf(paper)) {
+      copy.style.zoom = '';
+      copy.style.height = '';
+    }
+  },
+  // The frame marks the paper's edge on screen only. The copy html-to-image draws keeps the frame's sides as
+  // border-inline, which `border: 0` alone leaves in place: two lines down the page's edges, printed when it is fit.
+  pdf: { margin: 0, style: { border: '0', borderInline: '0', borderBlock: '0' } },
+};
+
+const LAYOUTS = [TWO_UP, UPRIGHT];
+
+/** The layout a paper was rendered with, read back from the marks it carries. */
+export const layoutOf = (paper: HTMLElement): PaperLayout =>
+  LAYOUTS.find((l) => l.marks.fit === paper.dataset.printFit && l.marks.orientation === paper.dataset.printOrientation) ?? UPRIGHT;

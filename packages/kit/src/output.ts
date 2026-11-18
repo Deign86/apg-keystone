@@ -1,6 +1,6 @@
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { HALF_PAGE_HEIGHT, mmToPt, mmToPx, PAPER, PRINTABLE } from './paper';
+import { layoutOf, MARKS, mmToPt, mmToPx, PAPER, PRINTABLE } from './paper';
 import type { Files } from './context';
 
 /** The print stylesheet's page margin in PDF points. */
@@ -11,15 +11,13 @@ const isLandscape = (node: HTMLElement) => node.dataset.printOrientation === 'la
 
 /**
  * Renders a document element to an A4 PDF (sharp at 4×, about 380 dpi on A4) and asks where to save it, on a landscape
- * page for a landscape sheet. A two-up sheet (data-print-fit="halves") fills the whole page, as it prints: a copy on
- * each half, the dashed line between them.
+ * page for a landscape sheet, with what its layout asks of the PDF: a two-up sheet fills the whole page, as it prints,
+ * a copy on each half and the dashed line between them.
  */
 export async function savePdf(node: HTMLElement, name: string, files: Pick<Files, 'save'>): Promise<string | null> {
-  const halves = node.dataset.printFit === 'halves';
-  const margin = halves ? 0 : MARGIN_PT;
-  // A two-up sheet's frame marks the paper's edge on screen only. The copy html-to-image draws keeps the frame's sides
-  // as border-inline, which `border: 0` alone leaves in place: two lines down the page's edges, printed when it is fit.
-  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style: halves ? { border: '0', borderInline: '0', borderBlock: '0' } : undefined });
+  // A paper that is not on a layout of its own yet (the payroll sheet) prints and saves inside the page's margins.
+  const { margin, style } = node.dataset.printFit === 'page' ? { margin: MARGIN_PT, style: undefined } : layoutOf(node).pdf;
+  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style });
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: isLandscape(node) ? 'landscape' : 'portrait' });
   const page = { w: pdf.internal.pageSize.getWidth(), h: pdf.internal.pageSize.getHeight() };
   const room = { w: page.w - margin * 2, h: page.h - margin * 2 };
@@ -58,35 +56,19 @@ function fitToPage(node: HTMLElement, page: { w: number; h: number }) {
   if (zoom < 1) node.style.zoom = String(zoom);
 }
 
-/** The copies on a two-up sheet. */
-const copiesOf = (node: HTMLElement) => [...node.querySelectorAll<HTMLElement>('[data-sheet-copy]')];
-
 /**
- * Fits each copy on a two-up sheet to exactly half the page, shrinking one that runs longer, so the dashed line between
- * them falls at the middle, where the page is cut.
- */
-function fitToHalves(node: HTMLElement) {
-  for (const copy of copiesOf(node)) {
-    const zoom = Math.min(1, HALF_PAGE_HEIGHT / copy.scrollHeight);
-
-    if (zoom < 1) copy.style.zoom = String(zoom);
-    copy.style.height = `${HALF_PAGE_HEIGHT / zoom}px`;
-  }
-}
-
-/**
- * Prints only this element (the print stylesheet hides everything else). One marked
- * data-print-fit="page", such as the payroll sheet, is scaled to fit a single page. One marked
- * data-print-orientation="landscape", such as the payroll sheet, prints on an A4 turned on its side. A two-up
- * sheet, such as a check voucher, prints with no page margin: its copies keep in from the edges themselves.
+ * Prints only this element (the print stylesheet hides everything else), the way its layout prints: fitted to the page
+ * first, under the layout's own @page rule, and put back once the print is done. One marked data-print-fit="page" is
+ * scaled to fit a single page, and one marked data-print-orientation="landscape" prints on an A4 turned on its side.
  */
 export function printElement(node: HTMLElement) {
+  const layout = layoutOf(node);
   const fit = node.dataset.printFit;
   const landscape = isLandscape(node);
-  // A later @page rule wins over the print stylesheet's (upright A4, 12 mm margin), for this print only.
+  // A later @page rule wins over the print stylesheet's (upright A4 inside its margins), for this print only.
   const page = document.createElement('style');
 
-  node.setAttribute('data-print-root', '');
+  node.setAttribute(MARKS.printRoot, '');
 
   if (fit === 'page') fitToPage(node, printableArea(landscape));
 
@@ -95,21 +77,17 @@ export function printElement(node: HTMLElement) {
     document.head.append(page);
   }
 
-  if (fit === 'halves') {
-    fitToHalves(node);
-    page.textContent = '@page { size: A4; margin: 0; }';
+  layout.fit?.(node);
+
+  if (layout.page) {
+    page.textContent = layout.page;
     document.head.append(page);
   }
 
   const done = () => {
-    node.removeAttribute('data-print-root');
+    node.removeAttribute(MARKS.printRoot);
     node.style.zoom = '';
-
-    for (const copy of copiesOf(node)) {
-      copy.style.zoom = '';
-      copy.style.height = '';
-    }
-
+    layout.unfit?.(node);
     page.remove();
     window.removeEventListener('afterprint', done);
   };

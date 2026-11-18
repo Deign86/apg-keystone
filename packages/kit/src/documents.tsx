@@ -1,25 +1,21 @@
 // The APG logo made for white paper: the phoenix in solid gold and "ALPHA PREMIER GROUP" in black, drawn in HD so it
-// stays sharp on screen and in print; and the same with "GROUP OF COMPANIES" under "ALPHA PREMIER".
+// stays sharp on screen and in print.
 import logo from '@keystone/ui/logo-paper.png';
-import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
-import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, PAPER_WIDTH } from './paper';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, MARKS, PAPER_WIDTH, TWO_UP, TWO_UP_EDGE, type PaperLayout } from './paper';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
 // one that is printed and turned into a PDF, so the preview is exactly the output.
 
-/** How far a two-up sheet's copies keep in from the paper's edges and the cut: inside what any printer reaches. */
-const EDGE = '6mm';
-
 /** One copy on a two-up sheet. The second sits below the dashed line to cut along, and screen readers skip it. */
 function Copy({ children, second }: { children: ReactNode; second?: boolean }) {
   return (
     <div
-      data-sheet-copy=""
+      {...{ [MARKS.copy]: '' }}
       aria-hidden={second || undefined}
-      style={{ minHeight: HALF_PAGE_HEIGHT, padding: EDGE }}
+      style={{ minHeight: HALF_PAGE_HEIGHT, padding: TWO_UP_EDGE }}
       className={`flex flex-col ${second ? 'border-t border-dashed border-paper-muted' : ''}`}
     >
       {children}
@@ -61,42 +57,61 @@ function useShrinkToFit(box: RefObject<HTMLElement>, content: RefObject<HTMLElem
 }
 
 /**
- * A document, always laid out at the paper's width. Where the column is narrower, the
- * preview is scaled down to fit (a transform on a wrapper, so the paper itself, which
- * Print and Export PDF take, stays at full size). `orientation="landscape"` turns the
- * A4 on its side, for a sheet too wide to stand upright: the paper is `LANDSCAPE_PAPER_WIDTH`
- * wide, and Print and Export PDF use a landscape page. `fit="page"` prints the sheet scaled to
- * a single page, however long it is. `fit="halves"` lays the document out twice on one A4,
- * upright, once on each half, out to near the paper's edges with no print margin, and draws a
- * dashed line across the middle: one cut leaves two copies, each on half an A4.
+ * The paper itself, always laid out at its layout's width, in the frame that scales its preview. Where the column is
+ * narrower, the preview is scaled down to fit (a transform on a wrapper, so the paper, which Print and Export PDF
+ * take, stays at full size). The paper carries its layout's marks, so the two find the layout again.
  */
-export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page' | 'halves'; orientation?: 'portrait' | 'landscape' }>(function Sheet({ children, label, fit: printFit, orientation }, ref) {
-  const halves = printFit === 'halves';
-  const landscape = !halves && orientation === 'landscape';
-  const width = halves ? PAGE_WIDTH : landscape ? LANDSCAPE_PAPER_WIDTH : PAPER_WIDTH;
+const Paper = forwardRef<HTMLElement, { children: ReactNode; label: string; layout: PaperLayout; className: string }>(function Paper({ children, label, layout, className }, ref) {
   const frame = useRef<HTMLDivElement>(null);
   // Holds only the paper, so its size is the paper's; a transform leaves that size unscaled.
   const scaler = useRef<HTMLDivElement>(null);
   const fit = useShrinkToFit(frame, scaler);
 
   return (
-    <div ref={frame} data-sheet-frame="" className="overflow-hidden" style={fit ? { height: fit.height } : undefined}>
-      <div ref={scaler} data-sheet-scale="" className="mx-auto w-fit origin-top-left" style={fit ? { transform: `scale(${fit.scale})`, marginInline: 0 } : undefined}>
+    <div ref={frame} {...{ [MARKS.frame]: '' }} className="overflow-hidden" style={fit ? { height: fit.height } : undefined}>
+      <div ref={scaler} {...{ [MARKS.scale]: '' }} className="mx-auto w-fit origin-top-left" style={fit ? { transform: `scale(${fit.scale})`, marginInline: 0 } : undefined}>
         <article
           ref={ref}
           data-ui="document"
-          data-print-fit={printFit}
-          data-print-orientation={landscape ? 'landscape' : undefined}
+          {...{ [MARKS.fit]: layout.marks.fit, [MARKS.orientation]: layout.marks.orientation }}
           aria-label={label}
           // As tall as what it holds: a short paper (a statement with no charges yet) leaves no blank band at its foot.
-          style={{ width }}
-          // A two-up sheet's frame only marks the paper's edge on screen; it never prints.
-          className={`border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink ${halves ? 'print:border-0' : 'px-[30px] py-7'}`}
+          style={{ width: layout.width }}
+          className={`border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink ${className}`}
         >
-          {halves ? <><Copy>{children}</Copy><Copy second>{children}</Copy></> : children}
+          {children}
         </article>
       </div>
     </div>
+  );
+});
+
+/** The padding of a paper that prints inside the page's margins. */
+const PADDED = 'px-[30px] py-7';
+
+/**
+ * A document on an upright A4 page. `orientation="landscape"` turns the A4 on its side, for a sheet too wide to stand
+ * upright: the paper is `LANDSCAPE_PAPER_WIDTH` wide, and Print and Export PDF use a landscape page. `fit="page"`
+ * prints the sheet scaled to a single page, however long it is.
+ */
+export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page'; orientation?: 'portrait' | 'landscape' }>(function Sheet({ children, label, fit, orientation }, ref) {
+  const landscape = orientation === 'landscape';
+  // Until the payroll sheet has a layout of its own: the marks output.ts still reads for it.
+  const layout: PaperLayout = { width: landscape ? LANDSCAPE_PAPER_WIDTH : PAPER_WIDTH, marks: { fit, orientation: landscape ? 'landscape' : undefined }, pdf: { margin: 0 } };
+
+  return <Paper ref={ref} label={label} layout={layout} className={PADDED}>{children}</Paper>;
+});
+
+/**
+ * A document twice on one A4 sheet, a copy on each half, to be cut apart along the dashed line across the middle
+ * (`TWO_UP`). Its frame only marks the paper's edge on screen; it never prints.
+ */
+export const TwoUp = forwardRef<HTMLElement, { children: ReactNode; label: string }>(function TwoUp({ children, label }, ref) {
+  return (
+    <Paper ref={ref} label={label} layout={TWO_UP} className="print:border-0">
+      <Copy>{children}</Copy>
+      <Copy second>{children}</Copy>
+    </Paper>
   );
 });
 
@@ -121,39 +136,44 @@ export function FitWidth({ children }: { children: ReactNode }) {
 }
 
 /**
- * The APG logo, the company and the document's title and number. The company is as Company Details keeps it, and
- * nothing of it shows until it is filled in. `logo="companies"` is the Alpha Premier Group of Companies logo. `beside`
- * puts the address alone beside the logo, which already names the company, and leaves the name and contact out.
- * Otherwise the name, address and contact run under the logo, across the page.
+ * The row every letterhead opens with, over the gold rule: `mark` on the left (a logo, and anything set beside it),
+ * the document's title, number and date on the right. `children` run under the row, across the page. A paper with a
+ * letterhead of its own composes this.
  */
-export function Letterhead({ company, title, no, date, logo: variant, beside }: {
-  company: Company; title: string; no: string; date?: string; logo?: 'group' | 'companies'; beside?: boolean;
-}) {
+export function Masthead({ mark, title, no, date, children }: { mark: ReactNode; title: string; no: string; date?: string; children?: ReactNode }) {
   return (
     <header className="mb-3.5 border-b-2 border-paper-gold pb-2.5">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          {variant === 'companies'
-            ? <img src={companiesLogo} alt="Alpha Premier Group of Companies" className="h-15 w-auto shrink-0" />
-            : <img src={logo} alt="Alpha Premier Group" className="h-15 w-auto shrink-0" />}
-          {beside && company.address && (
-            <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>
-          )}
-        </div>
+        <div className="flex min-w-0 items-center gap-4">{mark}</div>
         <div className="shrink-0 text-right">
           <p className="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">{title}</p>
           <p className="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">{no}</p>
           {date && <p className="m-0 text-xs font-medium tabular-nums">{date}</p>}
         </div>
       </div>
-      {!beside && (company.name || company.address || company.contact) && (
+      {children}
+    </header>
+  );
+}
+
+/** How a logo sits in a masthead. */
+export const paperLogo = 'h-15 w-auto shrink-0';
+
+/**
+ * The APG logo, the document's title and number, and under them the company as Company Details keeps it: its name,
+ * address and contact, across the page. Nothing of the company shows until it is filled in.
+ */
+export function Letterhead({ company, title, no, date }: { company: Company; title: string; no: string; date?: string }) {
+  return (
+    <Masthead mark={<img src={logo} alt="Alpha Premier Group" className={paperLogo} />} title={title} no={no} date={date}>
+      {(company.name || company.address || company.contact) && (
         <div className="mt-2">
           {company.name && <p className="m-0 text-[12.5px] font-semibold">{company.name}</p>}
           {company.address && <p className="m-0 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
           {company.contact && <p className="m-0 text-[11px] text-paper-muted">{company.contact}</p>}
         </div>
       )}
-    </header>
+    </Masthead>
   );
 }
 

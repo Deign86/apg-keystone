@@ -3,8 +3,8 @@ import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { FitWidth, Sheet } from '../src/documents';
-import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, mmToPt, PAGE_WIDTH, PAPER, PAPER_WIDTH, PRINTABLE } from '../src/paper';
+import { FitWidth, Sheet, TwoUp } from '../src/documents';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, MARKS, mmToPt, PAGE_WIDTH, PAPER, PAPER_WIDTH, PRINTABLE } from '../src/paper';
 import { printElement } from '../src/output';
 
 /** The @page rules in the document's head. */
@@ -24,6 +24,12 @@ describe('the paper', () => {
     // What every preview, print and PDF is laid out to.
     expect([PAPER_WIDTH, LANDSCAPE_PAPER_WIDTH, PAGE_WIDTH, HALF_PAGE_HEIGHT]).toEqual([703, 1032, 793, 561]);
     expect(mmToPt(PAPER.margin)).toBeCloseTo(34.016, 3);
+  });
+
+  it('carries marks the print stylesheet knows by the same names', () => {
+    // Printing shows only the print root, and undoes the preview's frame and scale.
+    for (const mark of [MARKS.printRoot, MARKS.frame, MARKS.scale]) expect(css, mark).toContain(`[${mark}]`);
+    expect(MARKS).toMatchObject({ fit: 'data-print-fit', orientation: 'data-print-orientation', copy: 'data-sheet-copy' });
   });
 });
 
@@ -45,7 +51,7 @@ describe('document sheet', () => {
   });
 
   it('lays a two-up sheet out twice on a whole A4 page, a copy on each half, for screen readers once', () => {
-    render(<Sheet label="Check voucher 888-001" fit="halves">Paper</Sheet>);
+    render(<TwoUp label="Check voucher 888-001">Paper</TwoUp>);
     const paper = screen.getByRole('article', { name: 'Check voucher 888-001' });
     const [top, bottom] = paper.querySelectorAll<HTMLElement>('[data-sheet-copy]');
 
@@ -59,6 +65,8 @@ describe('document sheet', () => {
     expect(bottom).toHaveTextContent('Paper');
     expect(bottom).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getAllByText('Paper', { ignore: '[aria-hidden], [aria-hidden] *' })).toHaveLength(1);
+    // Upright, always: a two-up sheet has no other way round to be asked for.
+    expect(paper).not.toHaveAttribute('data-print-orientation');
   });
 
   it('turns a sheet too wide to stand upright on its side, and prints it on a landscape page', () => {
@@ -81,13 +89,5 @@ describe('document sheet', () => {
     expect(pageRules()).toEqual([]);
     expect(paper).not.toHaveAttribute('data-print-root');
     print.mockRestore();
-  });
-
-  it('keeps a two-up sheet upright', () => {
-    render(<Sheet label="Check voucher 888-001" fit="halves" orientation="landscape">Paper</Sheet>);
-    const paper = screen.getByRole('article', { name: 'Check voucher 888-001' });
-
-    expect(paper.style.width).toBe('793px');
-    expect(paper).not.toHaveAttribute('data-print-orientation');
   });
 });
