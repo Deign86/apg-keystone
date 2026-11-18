@@ -31,6 +31,11 @@ test('a kiosk device writes its backup in batches, and only an owner reads it', 
   expect(await commitAs(kioskToken, [['/att_users/APG-2026-101', intern], ['/att_attendance/A-1', day]])).toBe(200);
   expect(await commitAs(kioskToken, [['/att_attendance/A-1', { ...day, time_out: words('2026-11-02T09:00:00Z') }]])).toBe(200);
 
+  // The kiosk sends 20 records a request, each checked against the devices list: the most one batch may ask of the rules.
+  const twenty = Array.from({ length: 20 }, (_, n) => [`/att_audit_logs/log-${n}`, { log_id: words(`log-${n}`), message: words('history') }] as const);
+  expect(await commitAs(kioskToken, twenty)).toBe(200);
+  expect(await asMember(ownerToken, '/att_audit_logs/log-19')).toBe(200);
+
   // Only an owner reads it. The kiosk cannot read back what it wrote.
   expect(await asMember(ownerToken, '/att_users/APG-2026-101')).toBe(200);
   expect(await asMember(ownerToken, '/att_attendance')).toBe(200);
