@@ -10,7 +10,8 @@ rules_version = '2';
 //   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, kind, by } (docs/adr/0025)
 //   keystone/{company}/idreg/{no}/replacements/{at}   a replacement card for that number (docs/adr/0025)
 //   keystone/{company}/devices/{uid}     a kiosk's own account, which reads the ID register: { name } (docs/adr/0026)
-//   keystone/{company}/att_{table}/{id}  the attendance kiosk's copy of its own records, one per row (docs/adr/0027)
+//   keystone/{company}/att_{table}/{id}  the attendance kiosk's records, one per row (docs/adr/0027, 0028)
+//   keystone/{company}/attprivate_{table}/{id}  the TIN and bank account number of that row, kept apart (docs/adr/0028)
 //
 // The records are only ever what members save here: an owner starts them empty, and Keystone copies nothing in from a
 // computer. Only an owner starts them and changes the company's details, which every document prints (payment
@@ -28,8 +29,9 @@ rules_version = '2';
 //
 // A device is not a member. It is an account an owner lists under devices for a kiosk, such as the attendance tracker
 // (Deign86/alpha-premier-attendance), which takes new interns from the register. It reads issued IDs and its own
-// device document. The one thing it writes is the copy of its own records under att_…, which it cannot read back;
-// only an owner reads those. The kiosk's own database stays the source of truth, so Keystone never writes them.
+// device document. The one thing it writes is its own records under att_… and attprivate_…, which it reads back to
+// rebuild itself on a new computer; besides it only an owner reads those. These documents are the attendance records
+// (docs/adr/0028); the kiosk is their only writer, so Keystone never writes them.
 //
 // Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
 // only their own, and only while it waits. Keystone reads a request's status, requester and decision from the fields
@@ -111,10 +113,14 @@ service cloud.firestore {
         allow delete: if owner(company);
       }
 
-      // The attendance kiosk's backup (docs/adr/0027): written by a device, read by an owner, and by nobody else.
+      // The attendance kiosk's records (docs/adr/0027, 0028): written by a device, read by that device and an owner,
+      // and by nobody else. TINs and bank account numbers sit apart under attprivate_…, so a later rule that lets
+      // someone else read att_… cannot show them by accident.
       match /{backup}/{id} {
-        allow read: if backup.matches('att_[a-z_]+') && owner(company);
+        allow read: if backup.matches('att_[a-z_]+') && (owner(company) || device(company));
         allow write: if backup.matches('att_[a-z_]+') && device(company);
+        allow read: if backup.matches('attprivate_[a-z_]+') && (owner(company) || device(company));
+        allow write: if backup.matches('attprivate_[a-z_]+') && device(company);
       }
 
       match /company/{id} {
