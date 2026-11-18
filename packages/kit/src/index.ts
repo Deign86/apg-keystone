@@ -10,7 +10,7 @@ export { buildRegistry, documentLayout, findService, type ModuleApp, type Module
 export { comingSoon } from './ComingSoon';
 
 export {
-  useDraft, useKeystone, useModuleApp, usePhoto,
+  useDraft, useKeystone, useModuleApp, usePhoto, type Backup, type Files, type Photos,
 } from './context';
 
 export { ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';

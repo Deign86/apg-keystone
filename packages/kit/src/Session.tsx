@@ -1,7 +1,7 @@
 import { AlertSheet, Button } from '@keystone/ui';
 import { LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useKeystone } from './context';
+import { useRuntime } from './context';
 
 // Signing out of the records in the cloud (docs/adr/0012): a button in the rail, and on its own once Keystone has sat
 // unused for the session's idleMs, with a minute's warning first. Nothing shows without a sign-in.
@@ -21,7 +21,7 @@ const ANSWER = new Set(['pointerdown', 'keydown']);
 
 /** Writes the last save, then signs out once, however many times it is asked. */
 function useSignOut() {
-  const { platform, store } = useKeystone();
+  const { platform, store } = useRuntime();
   const session = platform.session;
   const leaving = useRef(false);
 
@@ -35,7 +35,7 @@ function useSignOut() {
 
 /** "Sign out" in the rail foot. */
 export function SignOutButton() {
-  const { platform } = useKeystone();
+  const { platform } = useRuntime();
   const signOut = useSignOut();
 
   if (!platform.session) return null;
@@ -50,7 +50,7 @@ export function SignOutButton() {
 
 /** Signs out after the session's idleMs without use, and asks "Still there?" for the last minute. */
 export function IdleSignOut() {
-  const { platform } = useKeystone();
+  const { platform } = useRuntime();
   const session = platform.session;
   const signOut = useSignOut();
   const [left, setLeft] = useState<number | null>(null);

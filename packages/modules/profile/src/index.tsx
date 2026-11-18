@@ -8,7 +8,7 @@ const LINE = 'How Keystone shows you to everyone: in the rail, on what you prepa
 
 /** Whoever is signed in changing the name Keystone shows for them. */
 function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) {
-  const { run, store } = useKeystone();
+  const { run, ctx } = useKeystone();
   const app = useModuleApp();
   const [name, setName] = useState(who.name);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +20,10 @@ function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) 
     setBusy(true);
 
     try {
-      const next = checkName(name, store.ctx);
+      const next = checkName(name, ctx);
 
-      await accounts.rename(next);
       // The rail shows the new name with the log line that says so.
-      store.renamed(next);
+      await accounts.rename(next);
       run((s, c) => nameChanged(s, who.name, next, c));
       setName(next);
     } catch (err) {
@@ -62,9 +61,9 @@ function YourProfile({ accounts, who }: { accounts: AppAccounts; who: Member }) 
 }
 
 function Profile() {
-  const { platform, ctx } = useKeystone();
+  const { accounts, ctx } = useKeystone();
 
-  if (platform.accounts && ctx.who) return <YourProfile accounts={platform.accounts} who={ctx.who} />;
+  if (accounts && ctx.who) return <YourProfile accounts={accounts} who={ctx.who} />;
 
   return (
     <>

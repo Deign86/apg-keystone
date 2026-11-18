@@ -61,3 +61,29 @@ The end-to-end suites could not run here; CI runs them.
 - **Root fix 1, the rest**: the company id `apg`, the root `keystone`, the marker, member field names, and the ID Maker's and kiosk's shapes are not in the layout; `e2e/cloud` still spells them.
 - **Root fix 7, the rest**: `run` returning the new state, `store`/`platform` leaving `useKeystone`, `renamed()`/`replaceAll()`: the screens they touch are covered only by the end-to-end suites, which cannot run here.
 - **Stale docs seen, not fixed**: AGENTS.md's cloud e2e row still says "the first computer moving its records in"; `README.md:18` and `docs/ARCHITECTURE.md:17` list three connectors; `packages/modules/README.md:23` still describes a website screen.
+
+# Keystone untangle, round 2: decision log
+
+Branch `refactor/untangle-2`, local commits on top of `main` (fcc9641). Nothing pushed. The owner was away and said to
+finish without him, so every choice that was his is listed under "Calls made without the owner".
+Baseline `npm run check`: 458 tests in 37 files. `cargo test`: 5 passed. The end-to-end suites could not run here; CI
+runs them.
+
+## Fixes
+
+- **Root fix 7, the rest: a screen gets capabilities, not the store** (step 1)
+  - `packages/kit/src/context.tsx:67-75`: `run` returned no state; `Outcome` now carries the state after the rule.
+  - `packages/kit/src/context.tsx:62-78`: `useKeystone()` handed out `store` and `platform`; it now gives `files`, `photos`, `backup`, `kind` and (signed in) `accounts`. The kit's own shell reads the store through `useRuntime`, which the package index does not export.
+  - `vouchers/src/index.tsx:72,163`, `billing/src/index.tsx:61`, `funds/src/index.tsx:114,127,133`, `id-maker/src/index.tsx:38`, `company/src/index.tsx:20`: the eight `store.getState()` call sites read the returned state.
+  - `packages/kit/src/store.ts:63-65`: `renamed()` removed; the kit's `accounts.rename` moves `ctx.who` itself, so the caller no longer has to remember the second call.
+  - `packages/kit/src/output.ts:17`: `savePdf` took the whole `Platform`; it takes `files`.
+  - Tests added: `packages/kit/test/capabilities.test.tsx` (what a screen is given, `run`'s state, restore drops drafts, a refused rename leaves the name).
+  - Test edited: `packages/kit/test/runtime.test.ts` "tells listeners about a change…" expects the state in the outcome.
+
+## Not done this round
+
+- **`KeystoneStore.replaceAll`** (`packages/kit/src/store.ts`): kept as a store method. It resets the drafts, which are private to the store; no screen reaches it any more (Data calls `backup.restore`).
+- **Two overlapping contexts** (`useKeystone` and `useModuleApp` both return `state`, `ctx`, `go`): left. `ModuleApp` is also what contributions outside React receive (`create.run`, `openWaiting`), so it cannot simply lose them.
+
+## Calls made without the owner
+

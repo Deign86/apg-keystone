@@ -1,7 +1,8 @@
 import { emptyState, KeystoneError, parseState, type Change, type Ctx, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 
-export type Outcome<T> = { ok: true; record: T; message: string } | { ok: false; error: string };
+/** What a rule did: its record, its sentence and the state after it; or the sentence that refused it. */
+export type Outcome<T> = { ok: true; record: T; message: string; state: TerminalState } | { ok: false; error: string };
 
 /**
  * Holds the one saved state, applies changes through the core rules and writes them to
@@ -56,14 +57,6 @@ export class KeystoneStore {
     return store;
   }
 
-  /**
-   * The member signed in, under the name they just changed to (docs/adr/0020). The rail and the rules see it from the
-   * next change on, so commit one after: the log line saying so.
-   */
-  renamed(name: string) {
-    if (this.ctx.who) this.ctx = { ...this.ctx, who: { ...this.ctx.who, name } };
-  }
-
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
 
@@ -101,7 +94,7 @@ export class KeystoneStore {
 
       if (r.state !== this.state) this.commit(r.state);
 
-      return { ok: true, record: r.record, message: r.message };
+      return { ok: true, record: r.record, message: r.message, state: r.state };
     } catch (e) {
       if (e instanceof KeystoneError) return { ok: false, error: e.message };
       console.error(e);
@@ -122,6 +115,7 @@ export class KeystoneStore {
     this.drafts.set(key, value);
   }
 
+  /** Everything replaced at once (a restored backup): the half-filled forms belonged to the old records, so they go. */
   replaceAll(next: TerminalState) {
     this.drafts.clear();
     this.commit(next);

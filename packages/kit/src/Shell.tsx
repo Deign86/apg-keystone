@@ -3,7 +3,7 @@ import { Button, KeyBadge, Sheet, cn } from '@keystone/ui';
 import { Menu } from 'lucide-react';
 import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
-import { useKeystone } from './context';
+import { useKeystone, useRuntime } from './context';
 import type { ModuleDef } from './registry';
 import { IdleSignOut, SignOutButton } from './Session';
 import { UpdateNotice } from './UpdateNotice';
@@ -60,7 +60,8 @@ function Brand({ onGo }: { onGo?: () => void }) {
 
 /** Who is using Keystone and where the records are kept, signing out, the save error if any, and the keys. */
 function RailFoot() {
-  const { registry, store, platform, ctx } = useKeystone();
+  const { registry, ctx, kind } = useKeystone();
+  const { store } = useRuntime();
   const mod = shortcutKey();
   // As the rules see them: under a name changed since signing in, too.
   const who = ctx.who;
@@ -72,7 +73,7 @@ function RailFoot() {
         <span aria-hidden="true" className="size-[7px] rounded-full bg-good" />
         {who ? `${who.name} · ${roleLabel(who)}` : 'Administrator access'}
       </p>
-      <p className="m-0">{who ? 'Saved in APG\'s records in the cloud' : platform.kind === 'desktop' ? 'Saved on this computer' : 'Browser preview · saved in this browser'}</p>
+      <p className="m-0">{who ? 'Saved in APG\'s records in the cloud' : kind === 'desktop' ? 'Saved on this computer' : 'Browser preview · saved in this browser'}</p>
       <SignOutButton />
       {store.saveError && <p role="alert" className="m-0 text-bad">{store.saveError}</p>}
       {/* A phone has no keyboard to press them on. */}

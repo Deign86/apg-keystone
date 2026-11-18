@@ -83,7 +83,7 @@ function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Perio
 }
 
 function Payroll() {
-  const { state, ctx, run, platform, notify } = useKeystone();
+  const { state, ctx, run, files, notify } = useKeystone();
   const app = useModuleApp();
   const attendance = app.service(SERVICES.employeeAttendance);
   const confirm = useConfirm();
@@ -236,7 +236,7 @@ function Payroll() {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, file, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, file, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
             </div>
           </div>
           <div className="overflow-hidden rounded-card border border-line">

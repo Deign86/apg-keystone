@@ -44,7 +44,7 @@ function PayInto({ draft, setDraft }: { draft: StatementDraft; setDraft: (d: Sta
 }
 
 function Billing() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
+  const { state, ctx, run, files, notify } = useKeystone();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newStatement(state, ctx));
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +58,8 @@ function Billing() {
     const r = run((s, c) => saveStatement(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newStatement(store.getState(), ctx));
-  }, [run, draft, ctx, setDraft, store]);
+    if (r.ok) setDraft(newStatement(r.state, ctx));
+  }, [run, draft, ctx, setDraft]);
 
   const columns: Column<Statement>[] = [
     { key: 'no', header: 'Invoice No.', width: 128, cell: (b) => <span className="font-semibold text-gold-bright tabular-nums">{b.no}</span> },
@@ -110,7 +110,7 @@ function Billing() {
             error={error}
             actions={<>
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {editing && <Button onClick={() => save(true)}>Save as new</Button>}
               <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and mark as sent'}</Button>
             </>}

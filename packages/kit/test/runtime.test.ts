@@ -110,7 +110,9 @@ describe('store', () => {
     store.subscribe(heard);
     store.setDraft('vouchers', { payee: 'Meralco' });
     const r = store.run((s) => ({ state: { ...s, ext: { a: 1 } }, record: 'done', message: 'Saved.' }));
-    expect(r).toEqual({ ok: true, record: 'done', message: 'Saved.' });
+    // The state after the rule comes back with it, so a screen never reaches into the store for it.
+    expect(r).toEqual({ ok: true, record: 'done', message: 'Saved.', state: store.state });
+    expect(store.state.ext).toEqual({ a: 1 });
     expect(heard).toHaveBeenCalledOnce();
     expect(store.draft('vouchers', () => ({ payee: '' }))).toEqual({ payee: 'Meralco' });
     store.replaceAll(sampleState());

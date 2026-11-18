@@ -34,7 +34,7 @@ type NewAccount = { bank: string; branch: string; name: string; number: string }
  * picked can be removed from there. Nothing needs adding on the Bank Accounts screen first.
  */
 function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) => void }) {
-  const { state, run, store } = useKeystone();
+  const { state, run } = useKeystone();
   const app = useModuleApp();
   const confirm = useConfirm();
   const banks = app.service(SERVICES.bankAccounts);
@@ -69,10 +69,12 @@ function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) 
 
   const remove = (id: string) => {
     const r = run((s, c) => banks.remove(s, id, c));
-    const next = banks.accounts(store.getState())[0];
 
+    if (!r.ok) return;
     // The check is then drawn on the first account still kept, if any.
-    if (r.ok) onChange(next ? banks.label(next) : '');
+    const next = banks.accounts(r.state)[0];
+
+    onChange(next ? banks.label(next) : '');
   };
 
   const field = (key: keyof NewAccount) => ({ value: adding?.[key] ?? '', onChange: (v: string) => adding && setAdding({ ...adding, [key]: v }) });
@@ -133,7 +135,7 @@ function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) 
 }
 
 function Vouchers() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
+  const { state, ctx, run, files, notify } = useKeystone();
   const app = useModuleApp();
   const bank = firstBank(app);
   const confirm = useConfirm();
@@ -160,8 +162,8 @@ function Vouchers() {
     setError(r.ok ? null : r.error);
 
     // Number the next blank voucher from the state after the save.
-    if (r.ok) setDraft(newVoucher(store.getState(), ctx, bank));
-  }, [run, draft, ctx, setDraft, store, bank]);
+    if (r.ok) setDraft(newVoucher(r.state, ctx, bank));
+  }, [run, draft, ctx, setDraft, bank]);
 
   const columns: Column<Voucher>[] = [
     { key: 'no', header: 'CV No.', width: 120, cell: (v) => <span className="font-semibold text-gold-bright tabular-nums">{v.no}</span> },
@@ -211,7 +213,7 @@ function Vouchers() {
             error={error}
             actions={<>
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
               {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
               {(!locked || checkOpen) && <Button kind="primary" type="submit">{checkOpen ? 'Save check' : editing ? 'Save changes' : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}

@@ -1,7 +1,7 @@
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { HALF_PAGE_HEIGHT } from './documents';
-import type { Platform } from './platform';
+import type { Files } from './context';
 
 /** The print stylesheet's page margin, 12 mm, in PDF points. */
 const MARGIN_PT = (12 / 25.4) * 72;
@@ -14,7 +14,7 @@ const isLandscape = (node: HTMLElement) => node.dataset.printOrientation === 'la
  * page for a landscape sheet. A two-up sheet (data-print-fit="halves") fills the whole page, as it prints: a copy on
  * each half, the dashed line between them.
  */
-export async function savePdf(node: HTMLElement, name: string, platform: Platform): Promise<string | null> {
+export async function savePdf(node: HTMLElement, name: string, files: Pick<Files, 'save'>): Promise<string | null> {
   const halves = node.dataset.printFit === 'halves';
   const margin = halves ? 0 : MARGIN_PT;
   // A two-up sheet's frame marks the paper's edge on screen only. The copy html-to-image draws keeps the frame's sides
@@ -30,7 +30,7 @@ export async function savePdf(node: HTMLElement, name: string, platform: Platfor
 
   const bytes = new Uint8Array(pdf.output('arraybuffer'));
 
-  return platform.saveFile(name, bytes, [{ name: 'PDF', extensions: ['pdf'] }]);
+  return files.save(name, bytes, [{ name: 'PDF', extensions: ['pdf'] }]);
 }
 
 /**

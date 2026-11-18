@@ -3,16 +3,69 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
 import { type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type SystemBridge, type TerminalState } from '@keystone/core';
-import type { Platform } from './platform';
+import type { AppAccounts, Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
+
+/** Asking the person where to save a file, or for one to open. */
+export interface Files {
+  /** Asks where to save, then writes. Returns the file's name, or null if cancelled. */
+  save: Platform['saveFile'];
+  /** Asks for one file and reads it. Null if cancelled. */
+  open: Platform['openFile'];
+}
+
+/** The card photos kept beside the records. Read one with `usePhoto`. */
+export interface Photos {
+  put: Platform['putPhoto'];
+}
+
+/** Everything Keystone holds, replaced at once from a backup. Half-filled forms are dropped with it. */
+export interface Backup {
+  restore(next: TerminalState): void;
+}
+
+/** What a screen may do to the machine: each capability by name, never the store or the platform themselves. */
+interface Capabilities {
+  files: Files;
+  photos: Photos;
+  backup: Backup;
+  /** Where the records are kept when nobody signs in: this computer's data folder, or this browser. */
+  kind: Platform['kind'];
+  /** Who may open the records in the cloud. Absent with no sign-in. */
+  accounts?: AppAccounts;
+}
 
 interface KeystoneContextValue {
   store: KeystoneStore;
   registry: Registry;
   platform: Platform;
+  capabilities: Capabilities;
   route: string;
   go: (id: string) => void;
+}
+
+function capabilitiesOf(store: KeystoneStore): Capabilities {
+  const p = store.platform;
+  const accounts = p.accounts;
+
+  return {
+    files: { save: (name, bytes, filters) => p.saveFile(name, bytes, filters), open: (filters) => p.openFile(filters) },
+    photos: { put: (name, bytes) => p.putPhoto(name, bytes) },
+    backup: { restore: (next) => store.replaceAll(next) },
+    kind: p.kind,
+    ...(accounts && {
+      accounts: {
+        ...accounts,
+        // The rail and the rules see the new name from the next change on (docs/adr/0020): the caller's log line.
+        rename: async (name) => {
+          await accounts.rename(name);
+
+          if (store.ctx.who) store.ctx = { ...store.ctx, who: { ...store.ctx.who, name } };
+        },
+      },
+    }),
+  };
 }
 
 const KeystoneContext = createContext<KeystoneContextValue | null>(null);
@@ -45,7 +98,8 @@ export function KeystoneProvider({ store, registry, children }: { store: Keyston
 
     return () => window.removeEventListener('hashchange', onHash);
   }, [known]);
-  const value = useMemo(() => ({ store, registry, platform: store.platform, route, go }), [store, registry, route, go]);
+  const capabilities = useMemo(() => capabilitiesOf(store), [store]);
+  const value = useMemo(() => ({ store, registry, platform: store.platform, capabilities, route, go }), [store, registry, capabilities, route, go]);
 
   return <KeystoneContext.Provider value={value}>{children}</KeystoneContext.Provider>;
 }
@@ -58,9 +112,19 @@ function useCtx() {
   return v;
 }
 
-/** The state, the rules' context, and `run`, which applies a rule and shows its result. */
+/** The store and the platform themselves, for the kit's own shell (saving, signing out, updating). Never for a screen. */
+export function useRuntime() {
+  const { store, platform } = useCtx();
+
+  return { store, platform };
+}
+
+/**
+ * The state, the rules' context, `run`, which applies a rule, shows its result and returns the state after it, and the
+ * capabilities a screen may use: files, photos, the backup.
+ */
 export function useKeystone() {
-  const { store, registry, platform, route, go } = useCtx();
+  const { store, registry, capabilities, route, go } = useCtx();
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const notify = useNotify();
 
@@ -73,7 +137,7 @@ export function useKeystone() {
     return r;
   }, [store, notify]);
 
-  return { state, ctx: store.ctx, run, store, registry, platform, route, go, notify };
+  return { state, ctx: store.ctx, run, registry, route, go, notify, ...capabilities };
 }
 
 /** The app as a module sees it: navigation, drafts, and whether another module is installed. */

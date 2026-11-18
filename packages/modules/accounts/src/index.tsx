@@ -225,9 +225,9 @@ function Members({ accounts }: { accounts: AppAccounts }) {
 }
 
 function Accounts() {
-  const { platform } = useKeystone();
+  const { accounts } = useKeystone();
 
-  if (platform.accounts) return <Members accounts={platform.accounts} />;
+  if (accounts) return <Members accounts={accounts} />;
 
   return (
     <>

@@ -23,7 +23,7 @@ async function squareJpeg(bytes: Uint8Array): Promise<Uint8Array> {
 const DRAFT = 'id-maker.draft';
 
 function IDMaker() {
-  const { state, ctx, run, platform, notify, store } = useKeystone();
+  const { state, ctx, run, files, photos, notify } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -35,16 +35,16 @@ function IDMaker() {
     const r = run((s, c) => issueID(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newID(store.getState(), ctx));
-  }, [run, draft, ctx, setDraft, store]);
+    if (r.ok) setDraft(newID(r.state, ctx));
+  }, [run, draft, ctx, setDraft]);
 
   const choosePhoto = async () => {
     try {
-      const file = await platform.openFile([{ name: 'Photo', extensions: ['jpg', 'jpeg', 'png', 'webp', 'heic'] }]);
+      const file = await files.open([{ name: 'Photo', extensions: ['jpg', 'jpeg', 'png', 'webp', 'heic'] }]);
 
       if (!file) return;
       const name = `card-${Date.now()}.jpg`;
-      await platform.putPhoto(name, await squareJpeg(file.bytes));
+      await photos.put(name, await squareJpeg(file.bytes));
       setDraft({ ...draft, photo: name });
     } catch (e) {
       notify(`That file could not be used as a photo: ${e instanceof Error ? e.message : String(e)}`, 'error');
@@ -100,7 +100,7 @@ function IDMaker() {
             error={error}
             actions={<>
               <Button onClick={() => sheet.current && printElement(sheet.current)}>Print</Button>
-              <Button onClick={() => sheet.current && savePdf(sheet.current, `${draft.editing ?? draft.no}.pdf`, platform).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export print file</Button>
+              <Button onClick={() => sheet.current && savePdf(sheet.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export print file</Button>
               {editing && <Button onClick={() => save(true)}>Issue as new</Button>}
               <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and issue'}</Button>
             </>}
