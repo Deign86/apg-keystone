@@ -14,13 +14,11 @@ export const ATTENDANCE_APP: AppLocator = {
   windowsExe: 'alpha-premier-attendance.exe',
 };
 
-export const ATTENDANCE: DesktopApp = {
+const ATTENDANCE: DesktopApp = {
   name: 'Alpha Premier Attendance',
   locator: ATTENDANCE_APP,
-  downloads: 'https://github.com/Deign86/alpha-premier-attendance/releases/latest',
   repo: 'Deign86/alpha-premier-attendance',
   installers: { windows: /_x64-setup\.exe$/, macArm: /_aarch64\.dmg$/, macIntel: /_x64\.dmg$/ },
-  updatesItself: true,
 };
 
 export const attendanceConnector: Connector = {

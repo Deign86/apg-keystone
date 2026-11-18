@@ -19,12 +19,14 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
   imported: `import logo from './logo.png'`.
 - **Reach the outside world only through `env.system`:** find an installed app, start it, open a URL. Never import
   `@tauri-apps/*`. A desktop app opens with `openDesktopApp(env, app)` from core, where `app` is a `DesktopApp`: its
-  name, how to find it, its repository, which release file is the installer on each computer, and whether it updates
-  itself.
+  name, how to find it, its repository and which release file is the installer on each computer. Its download page
+  is its repository's latest release.
 - **Installing and updating** (docs/adr/0029): not installed, `openDesktopApp` fetches the installer and opens it.
-  An app with its own updater sets `updatesItself: true` and gets nothing more. One without sets it `false` and adds
-  `update: (env) => desktopAppUpdate(env, app)`; "Update to …" then shows under its shortcut. Put the real file names
-  of a release in the package's test.
+  An app with its own updater gets nothing more. One without adds `update: (env) => desktopAppUpdate(env, app)`;
+  "Update to …" then shows under its shortcut. Put the real file names of a release in the package's test, and the
+  repository and installers in `apps/keystone/src-tauri/src/connected-apps.json`: `npm run check` holds that file to
+  what the connector asks for, and `cargo test` runs it through the native side's `allowed_repo` and
+  `allowed_installer`, which refuse anything else at run time.
 - **Dependencies:** `@keystone/core` (for `Connector`). Never another connector or a module.
 - **Don't guard against failure yourself:** throwing, hanging or being unavailable are all fine. The shortcut gives
   `open` 15 seconds, or 20 minutes once it calls `env.slow('Downloading …')`, and shows any error as a message. Return a sentence from `open` when it did something other than

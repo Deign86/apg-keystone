@@ -14,13 +14,11 @@ export const STUDIO_APP: AppLocator = {
   windowsExe: 'Alpha.Branding.exe',
 };
 
-export const STUDIO: DesktopApp = {
+const STUDIO: DesktopApp = {
   name: 'Alpha Branding Studio',
   locator: STUDIO_APP,
-  downloads: 'https://github.com/Deign86/Alpha_Branding/releases/latest',
   repo: 'Deign86/Alpha_Branding',
   installers: { windows: /^Alpha\.Branding\.Setup\.exe$/, macArm: /-macos\.zip$/, macIntel: /-macos\.zip$/ },
-  updatesItself: true,
 };
 
 export const brandingStudioConnector: Connector = {

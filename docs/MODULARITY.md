@@ -134,8 +134,8 @@ cannot update itself (docs/adr/0029).
 | `open(env)` | yes | Opens the app. `env.system` finds and starts installed apps and opens URLs. It may return a sentence to show |
 | `tag` | | Short label for directory records linked to this system |
 
-Desktop apps use `openDesktopApp(system, { name, locator, downloads })` from core: it starts the installed app or
-opens its download page, and in the browser preview says the desktop app is needed.
+Desktop apps use `openDesktopApp(env, { name, locator, repo, installers })` from core: it starts the installed app, or
+fetches its installer, or opens its download page, and in the browser preview says the desktop app is needed.
 
 `buildRegistry` validates every connector; a broken one (no name, no logo) is refused, not loaded. The kit's
 `ConnectorShortcut` runs `open` under a 15-second deadline and shows any failure as a message, so a connector that

@@ -14,14 +14,12 @@ export const ID_MAKER_APP: AppLocator = {
   windowsExe: 'AlphaPremierIdMaker.exe',
 };
 
-export const ID_MAKER: DesktopApp = {
+const ID_MAKER: DesktopApp = {
   name: 'Alpha Premier ID Maker',
   locator: ID_MAKER_APP,
-  downloads: 'https://github.com/Deign86/apg-id-creator/releases/latest',
   repo: 'Deign86/apg-id-creator',
   // The setup program, never the portable .exe: only an installed copy can be found again and updated.
   installers: { windows: /-Setup-.*\.exe$/, macArm: /-Mac-AppleSilicon-.*\.dmg$/, macIntel: /-Mac-Intel-.*\.dmg$/ },
-  updatesItself: false,
 };
 
 export const idMakerAppConnector: Connector = {

@@ -89,15 +89,17 @@ export interface DesktopApp {
   /** As the person knows it: "Alpha Premier Attendance". */
   name: string;
   locator: AppLocator;
-  /** Its latest release page, opened when its installer cannot be fetched. */
-  downloads: string;
-  /** Its GitHub repository, whose latest release holds the installers: "Deign86/alpha-premier-attendance". */
-  repo?: string;
+  /**
+   * Its GitHub repository, whose latest release holds the installers: "Deign86/alpha-premier-attendance". The native
+   * side refuses any other owner's (apps/keystone/src/test/connected-apps.test.ts holds every connector to that).
+   */
+  repo: string;
   /** Which file of a release is the installer for each computer, by its name: /_x64-setup\.exe$/, /_aarch64\.dmg$/. */
-  installers?: { windows?: RegExp; macArm?: RegExp; macIntel?: RegExp };
-  /** True when the app updates itself once installed. Keystone then only installs it; false, Keystone offers its updates too. */
-  updatesItself?: boolean;
+  installers: { windows?: RegExp; macArm?: RegExp; macIntel?: RegExp };
 }
+
+/** An app's latest release page, opened when its installer cannot be fetched. */
+const downloadsPage = (app: DesktopApp) => `https://github.com/${app.repo}/releases/latest`;
 
 /** True when version `a` is later than `b`: "2.0.10" is later than "2.0.4". Anything not a number counts as 0. */
 export function laterVersion(a: string, b: string): boolean {
@@ -113,8 +115,8 @@ export function laterVersion(a: string, b: string): boolean {
 
 /** The installer in a release for this computer, or undefined when the release has none. */
 function installerFor(system: SystemBridge, app: DesktopApp, release: AppRelease): ReleaseAsset | undefined {
-  const named = system.platform === 'windows' ? app.installers?.windows
-    : system.platform === 'macos' ? (system.arch === 'x64' ? app.installers?.macIntel : app.installers?.macArm)
+  const named = system.platform === 'windows' ? app.installers.windows
+    : system.platform === 'macos' ? (system.arch === 'x64' ? app.installers.macIntel : app.installers.macArm)
     : undefined;
 
   return named ? release.assets.find((a) => named.test(a.name)) : undefined;
@@ -124,7 +126,7 @@ function installerFor(system: SystemBridge, app: DesktopApp, release: AppRelease
 async function fetchInstaller(env: ConnectorEnv, app: DesktopApp, release?: AppRelease): Promise<string | false> {
   const { system } = env;
 
-  if (!app.repo || !system.latestRelease || !system.installFrom) return false;
+  if (!system.latestRelease || !system.installFrom) return false;
   env.slow?.(`Getting ${app.name}…`);
   const latest = release ?? await system.latestRelease(app.repo);
   const installer = installerFor(system, app, latest);
@@ -152,19 +154,20 @@ export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: Desk
   const version = await fetchInstaller(e, app).catch(() => false as const);
 
   if (version) return `${app.name} ${version} was not on this computer. Its installer is open: finish it, then open ${app.name} here again.`;
-  await system.openUrl(app.downloads);
+  await system.openUrl(downloadsPage(app));
 
   return `${app.name} is not on this computer, so its download page is open.`;
 }
 
 /**
  * For a desktop app with no updater of its own: the newer version out, when the app is installed and Keystone can
- * tell. Null otherwise, and when offline: an update is never a reason the shortcut fails.
+ * tell. Null otherwise, and when offline: an update is never a reason the shortcut fails. A connector whose app
+ * updates itself leaves `update` out; one whose app cannot sets `update` to this.
  */
 export async function desktopAppUpdate(env: ConnectorEnv, app: DesktopApp): Promise<ConnectorUpdate | null> {
   const { system } = env;
 
-  if (app.updatesItself || !app.repo || !system.latestRelease || !system.installFrom) return null;
+  if (!system.latestRelease || !system.installFrom) return null;
 
   try {
     const installed = await system.locateApp(app.locator);

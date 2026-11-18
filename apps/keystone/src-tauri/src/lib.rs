@@ -285,6 +285,26 @@ mod tests {
         }
     }
 
+    /// What every installed connector asks for (connected-apps.json, which apps/keystone/src/test/connected-apps.test.ts
+    /// holds to the connectors): its repository and the installers of one real release. All of it is allowed.
+    #[test]
+    fn every_connected_app_is_allowed() {
+        let apps: serde_json::Value = serde_json::from_str(include_str!("connected-apps.json")).unwrap();
+        let apps = apps.as_object().unwrap();
+        assert!(!apps.is_empty());
+        for (id, app) in apps {
+            let (repo, tag) = (app["repo"].as_str().unwrap(), app["tag"].as_str().unwrap());
+            assert_eq!(allowed_repo(repo), Ok(repo), "{id}");
+            let installers = app["installers"].as_array().unwrap();
+            assert!(!installers.is_empty(), "{id} names no installer");
+            for name in installers {
+                let name = name.as_str().unwrap();
+                let file = asset(name, &format!("https://github.com/{repo}/releases/download/{tag}/{name}"));
+                assert_eq!(allowed_installer(&file), Ok(name), "{id}");
+            }
+        }
+    }
+
     #[test]
     fn a_release_is_read_as_github_writes_it() {
         let body = serde_json::json!({"tag_name": "v2.0.4", "assets": [
