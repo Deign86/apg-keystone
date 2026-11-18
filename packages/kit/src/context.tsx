@@ -2,7 +2,7 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type TerminalState } from '@keystone/core';
+import { type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type SystemBridge, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
@@ -110,6 +110,20 @@ const OPEN_MS = 15_000;
 /** How long fetching an installer may take: they run to 150 MB, on an office line. */
 const INSTALL_MS = 20 * 60_000;
 
+/** What a connector is handed: the operating system and nothing else of the platform (no records, accounts or session). */
+function systemOf(p: Platform): SystemBridge {
+  return {
+    platform: p.platform,
+    // Read when asked: the desktop learns its processor a moment after it starts.
+    get arch() { return p.arch; },
+    latestRelease: p.latestRelease?.bind(p),
+    installFrom: p.installFrom?.bind(p),
+    locateApp: (locator) => p.locateApp(locator),
+    launchApp: (app) => p.launchApp(app),
+    openUrl: (url) => p.openUrl(url),
+  };
+}
+
 /**
  * Runs one connector call. It has a few seconds, unless it says it is doing something slow (`env.slow`): then it has
  * the time a download needs, and `doing` hears what to show meanwhile.
@@ -130,7 +144,7 @@ function useConnectorCall() {
     within(OPEN_MS);
 
     try {
-      return await Promise.race([work({ system: platform, slow: (what) => { within(INSTALL_MS); doing?.(what); } }), deadline]);
+      return await Promise.race([work({ system: systemOf(platform), slow: (what) => { within(INSTALL_MS); doing?.(what); } }), deadline]);
     } finally {
       clearTimeout(timer);
     }
