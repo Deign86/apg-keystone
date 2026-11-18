@@ -3,7 +3,7 @@
 import logo from '@keystone/ui/logo-paper.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
-import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, MARKS, PAPER_WIDTH, TWO_UP, TWO_UP_EDGE, type PaperLayout } from './paper';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, MARKS, TWO_UP, TWO_UP_EDGE, UPRIGHT, type PaperLayout } from './paper';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
@@ -89,17 +89,17 @@ const Paper = forwardRef<HTMLElement, { children: ReactNode; label: string; layo
 /** The padding of a paper that prints inside the page's margins. */
 const PADDED = 'px-[30px] py-7';
 
-/**
- * A document on an upright A4 page. `orientation="landscape"` turns the A4 on its side, for a sheet too wide to stand
- * upright: the paper is `LANDSCAPE_PAPER_WIDTH` wide, and Print and Export PDF use a landscape page. `fit="page"`
- * prints the sheet scaled to a single page, however long it is.
- */
-export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string; fit?: 'page'; orientation?: 'portrait' | 'landscape' }>(function Sheet({ children, label, fit, orientation }, ref) {
-  const landscape = orientation === 'landscape';
-  // Until the payroll sheet has a layout of its own: the marks output.ts still reads for it.
-  const layout: PaperLayout = { width: landscape ? LANDSCAPE_PAPER_WIDTH : PAPER_WIDTH, marks: { fit, orientation: landscape ? 'landscape' : undefined }, pdf: { margin: 0 } };
+/** A document on an upright A4 page, inside the print margins (`UPRIGHT`). */
+export const Sheet = forwardRef<HTMLElement, { children: ReactNode; label: string }>(function Sheet({ children, label }, ref) {
+  return <Paper ref={ref} label={label} layout={UPRIGHT} className={PADDED}>{children}</Paper>;
+});
 
-  return <Paper ref={ref} label={label} layout={layout} className={PADDED}>{children}</Paper>;
+/**
+ * A document on an A4 page turned on its side, for a sheet too wide to stand upright, printed scaled to a single page
+ * however long it is (`LANDSCAPE_PAGE`). Print and Export PDF use a landscape page.
+ */
+export const LandscapePage = forwardRef<HTMLElement, { children: ReactNode; label: string }>(function LandscapePage({ children, label }, ref) {
+  return <Paper ref={ref} label={label} layout={LANDSCAPE_PAGE} className={PADDED}>{children}</Paper>;
 });
 
 /**

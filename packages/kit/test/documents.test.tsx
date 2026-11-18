@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { FitWidth, Sheet, TwoUp } from '../src/documents';
+import { FitWidth, LandscapePage, Sheet, TwoUp } from '../src/documents';
 import { HALF_PAGE_HEIGHT, LANDSCAPE_PAPER_WIDTH, MARKS, mmToPt, PAGE_WIDTH, PAPER, PAPER_WIDTH, PRINTABLE } from '../src/paper';
 import { printElement } from '../src/output';
 
@@ -36,8 +36,8 @@ describe('the paper', () => {
 describe('document sheet', () => {
   it('lays the paper out at the printed width, whatever column it sits in', () => {
     const ref = createRef<HTMLElement>();
-    render(<div style={{ width: 320 }}><Sheet ref={ref} label="Payroll sheet, Oct 16–31, 2026" fit="page">Paper</Sheet></div>);
-    const paper = screen.getByRole('article', { name: 'Payroll sheet, Oct 16–31, 2026' });
+    render(<div style={{ width: 320 }}><Sheet ref={ref} label="Payslip, Oct 16–31, 2026">Paper</Sheet></div>);
+    const paper = screen.getByRole('article', { name: 'Payslip, Oct 16–31, 2026' });
 
     // 186 mm, an A4 page less the print margins: the preview, the print and the PDF share one layout.
     expect(PAPER_WIDTH).toBe(703);
@@ -45,7 +45,9 @@ describe('document sheet', () => {
     // As tall as what it holds: no minimum leaves a blank band under a short paper.
     expect(paper.style.minHeight).toBe('');
     expect(paper.style.transform).toBe('');
-    expect(paper).toHaveAttribute('data-print-fit', 'page');
+    // An upright sheet inside the margins carries no mark: it prints as the stylesheet says.
+    expect(paper).not.toHaveAttribute('data-print-fit');
+    expect(paper).not.toHaveAttribute('data-print-orientation');
     // Print and Export PDF are handed the paper itself, not the frame that scales it on screen.
     expect(ref.current).toBe(paper);
   });
@@ -70,7 +72,7 @@ describe('document sheet', () => {
   });
 
   it('turns a sheet too wide to stand upright on its side, and prints it on a landscape page', () => {
-    render(<Sheet label="Payroll sheet, Oct 16–31, 2026" fit="page" orientation="landscape"><FitWidth><table><tbody><tr><td>Net pay</td></tr></tbody></table></FitWidth></Sheet>);
+    render(<LandscapePage label="Payroll sheet, Oct 16–31, 2026"><FitWidth><table><tbody><tr><td>Net pay</td></tr></tbody></table></FitWidth></LandscapePage>);
     const paper = screen.getByRole('article', { name: 'Payroll sheet, Oct 16–31, 2026' });
     const print = vi.spyOn(window, 'print').mockImplementation(() => {});
 
@@ -78,6 +80,8 @@ describe('document sheet', () => {
     expect(LANDSCAPE_PAPER_WIDTH).toBe(1032);
     expect(paper.style.width).toBe('1032px');
     expect(paper).toHaveAttribute('data-print-orientation', 'landscape');
+    // And fitted to one page when it prints.
+    expect(paper).toHaveAttribute('data-print-fit', 'page');
     expect(paper).toHaveTextContent('Net pay');
 
     printElement(paper);

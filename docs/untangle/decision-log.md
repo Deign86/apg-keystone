@@ -111,6 +111,14 @@ runs them.
   - The Firestore field `attendanceAdmin`, the member path and `firestore.rules` are unchanged (`git diff main -- firestore.rules` is empty).
   - Tests added: `apps/keystone/src/test/accounts.test.tsx` (the shipped module, connector and grant guard together, in the e2e's words), the attendance connector's grant, registry refusals for a grant field, the platform service lookup in the kit.
   - Tests edited: `packages/modules/accounts/test/rules.test.ts` and `screen.test.tsx` (same sentences, through a stand-in grant; `setGrant('hr-1', 'attendanceAdmin', true)` where it was `setAttendanceAdmin('hr-1', true)`; `grants: ['attendanceAdmin']` where it was `attendanceAdmin: true`), `packages/modules/profile/test/screen.test.tsx` and `packages/kit/test/capabilities.test.tsx` (the service instead of `Platform.accounts`), `apps/keystone/src/test/contract.test.ts` "every published service has a provider" (the platform's one is named).
+- **Root fix 5: the kit's document blocks, one paper at a time** (step 5)
+  - Baseline first: `packages/modules/{vouchers,billing,funds,payroll}/test/paper.test.tsx` snapshot each paper's markup (class names, inline styles, data attributes) and what printing does to it (the `@page` rule, the print root, the copies' sizes, a long sheet's zoom). Every later commit of this step leaves all 17 snapshots identical.
+  - `packages/kit/src/documents.tsx:13,16` vs `output.ts:7,41` vs `packages/ui/src/styles.css:160`: 12, 186, 273, 210 and 148.5 mm typed three times. One constant (`packages/kit/src/paper.ts`), and a kit test that holds the stylesheet's `@page` rule to it.
+  - `packages/kit/src/documents.tsx:99-100` vs `output.ts:10,18,62,84,89` vs `styles.css:136-155`: the data-attribute strings. Named once (`MARKS`); a kit test holds the stylesheet to the three it uses.
+  - **Check voucher.** `documents.tsx:85-87,107` and `output.ts:68-75,98-102` (`fit === 'halves'`, `Copy`, `fitToHalves`): a `TwoUp` sheet and one `TWO_UP` layout definition. `documents.tsx:147-152,160` (`logo="companies"`, `beside`): a `Masthead` the voucher composes itself; the Group of Companies logo is imported by the vouchers module, not the kit.
+  - **Payroll sheet.** `documents.tsx:86,100` and `output.ts:40-59,91-96` (`fit="page"`, landscape, `fitToPage`): a `LandscapePage` sheet and one `LANDSCAPE_PAGE` layout definition. `output.ts:79-81` no longer names "the payroll sheet" or "a check voucher".
+  - **Billing statement, fund transfer request, payslip.** They use the plain `Sheet`, which lost its `fit` and `orientation` props; their files did not change and their snapshots are identical.
+  - Tests edited: `packages/kit/test/documents.test.tsx` renders `TwoUp` and `LandscapePage` where it passed `fit` and `orientation` to `Sheet`; "keeps a two-up sheet upright" deleted (it passed an orientation a two-up sheet can no longer be given; its claim moved into the test above it); the plain sheet is now expected to carry no print mark.
 
 ## Not done this round
 
@@ -123,6 +131,9 @@ runs them.
 - **The four fake `Platform` copies** (`packages/kit/test/fakes.ts`, and in `profile`, `accounts`, `billing` tests): still four. They no longer change with accounts, which was the churn; a part still cannot import the kit's test helper.
 - **"Enter the email …" worded twice** (`platform/firestore.ts` for a reset link, `accounts/src/rules.ts` for a new account): left; they are two different sentences for two different forms.
 - **`firestore.ts` `read()` and the `owner` flag** (`platform/firestore.ts:141`): unchanged; it has no unit test and the cloud suite cannot run here.
+- **The voucher's own ruling** (`vouchers/src/VoucherPaper.tsx:13-21,56-100` draws its boxes, line table, total band and signature blocks instead of the kit's `Meta`, `Lines`, `Signatures`): left. Moving it onto the kit's blocks changes the voucher's markup, and this round's rule for papers was an identical snapshot.
+- **`savePdf`** (`packages/kit/src/output.ts`): reads the layout like `printElement`, but no test draws a PDF here (it needs a real canvas); the cloud and module end-to-end suites export one.
+- **The ID card sheet** (`id-maker/src/IDCard.tsx`): it does not use the kit's `Sheet`; untouched.
 
 ## Calls made without the owner
 
@@ -140,3 +151,5 @@ runs them.
 - **`setGrant` refuses any field no connector contributed** (step 4). The alternative, a platform that writes whatever field it is handed, would let a part write `role`.
 - **The accounts service is found after the modules' services** (step 4). The registry cannot check "one provider" against the platform; a contract test holds that no module offers `accounts`.
 - **The service is named `platform.accounts`** (step 4). The name is only a key in memory; nothing saved holds it.
+- **The Group of Companies logo is imported by the vouchers module** (step 5). It was the kit's import for a `Letterhead` variant only the voucher used. Same file, same `<img>`.
+- **`Sheet fit="page"` upright is gone** (step 5). No paper used it without `orientation="landscape"`; the one-page fit now comes only with `LandscapePage`.

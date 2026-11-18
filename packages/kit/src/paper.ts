@@ -56,12 +56,39 @@ export interface PaperLayout {
   /** Fits the paper to the page just before it prints, and puts it back once the print is done. */
   fit?(paper: HTMLElement): void;
   unfit?(paper: HTMLElement): void;
-  /** The PDF page: its margin in points, and anything the drawn copy of the paper needs changed. */
-  pdf: { margin: number; style?: Partial<CSSStyleDeclaration> };
+  /** The PDF page: which way up, its margin in points, and anything the drawn copy of the paper needs changed. */
+  pdf: { orientation: 'portrait' | 'landscape'; margin: number; style?: Partial<CSSStyleDeclaration> };
 }
 
 /** An upright A4 page inside the print margins: the paper as tall as what it holds. */
-export const UPRIGHT: PaperLayout = { width: PAPER_WIDTH, marks: {}, pdf: { margin: mmToPt(PAPER.margin) } };
+export const UPRIGHT: PaperLayout = { width: PAPER_WIDTH, marks: {}, pdf: { orientation: 'portrait', margin: mmToPt(PAPER.margin) } };
+
+/**
+ * An A4 page turned on its side, for a sheet too wide to stand upright, scaled to a single page however long it is.
+ * Only by its height, measured as laid out at the page's width, and less 2% so borders and rounding never push the
+ * last line onto a second page: the paper is already the page's width, and anything wider shrinks inside it
+ * (FitWidth), on screen as in print.
+ */
+export const LANDSCAPE_PAGE: PaperLayout = {
+  width: LANDSCAPE_PAPER_WIDTH,
+  marks: { fit: 'page', orientation: 'landscape' },
+  page: '@page { size: A4 landscape; }',
+  fit(paper) {
+    const page = { w: mmToPx(PRINTABLE.height), h: mmToPx(PRINTABLE.width) * 0.98 };
+    const width = paper.style.width;
+
+    paper.style.width = `${page.w}px`;
+    const height = paper.scrollHeight;
+    paper.style.width = width;
+    const zoom = Math.min(1, page.h / height);
+
+    if (zoom < 1) paper.style.zoom = String(zoom);
+  },
+  unfit(paper) {
+    paper.style.zoom = '';
+  },
+  pdf: { orientation: 'landscape', margin: mmToPt(PAPER.margin) },
+};
 
 /** How far a two-up sheet's copies keep in from the paper's edges and the cut: inside what any printer reaches. */
 export const TWO_UP_EDGE = '6mm';
@@ -94,10 +121,10 @@ export const TWO_UP: PaperLayout = {
   },
   // The frame marks the paper's edge on screen only. The copy html-to-image draws keeps the frame's sides as
   // border-inline, which `border: 0` alone leaves in place: two lines down the page's edges, printed when it is fit.
-  pdf: { margin: 0, style: { border: '0', borderInline: '0', borderBlock: '0' } },
+  pdf: { orientation: 'portrait', margin: 0, style: { border: '0', borderInline: '0', borderBlock: '0' } },
 };
 
-const LAYOUTS = [TWO_UP, UPRIGHT];
+const LAYOUTS = [TWO_UP, LANDSCAPE_PAGE, UPRIGHT];
 
 /** The layout a paper was rendered with, read back from the marks it carries. */
 export const layoutOf = (paper: HTMLElement): PaperLayout =>
