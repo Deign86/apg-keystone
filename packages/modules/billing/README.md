@@ -5,7 +5,8 @@
   setup, editing in place while Sent, Print, and Export PDF.
 - `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement: Bill to and
   Attention, the invoice and due dates, the late-payment penalty, Qty · Description · Unit price · Amount with tax,
-  subtotal, VAT, EWT when the client withholds, the total, then payment instructions and notes.
+  subtotal, VAT, EWT when the client withholds, the total, then payment instructions and notes. It prints twice on
+  one A4 sheet, as the check voucher does (the kit's `TwoUp`): a copy on each half, cut apart along the dashed line.
 - `src/rules.ts`: its rules (totals with VAT and EWT, each line's amount with tax, numbering, defaults from the client,
   `recordPayment`, overdue on open, the account the payment instructions name) and what it contributes. Tested in
   `test/rules.test.ts`.

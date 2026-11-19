@@ -1,10 +1,11 @@
 import { forwardRef } from 'react';
 import { DASH, longDate, peso, toCentavos, type Company, type DirectoryRecord, type Statement } from '@keystone/core';
 import { EWT_RATE, lineWithTax, statementTotals, VAT_RATE } from './rules';
-import { Letterhead, Lines, Meta, orDash, paperHeading, Sheet } from '@keystone/kit';
+import { Letterhead, Lines, Meta, orDash, paperHeading, TwoUp } from '@keystone/kit';
 
 // The company's Billing Statement: who it is for, the invoice dates and penalty terms, the
-// charges with tax, then how to pay.
+// charges with tax, then how to pay. Twice on one A4 sheet, as the check voucher is: once on each half, cut apart
+// along the dashed line across the middle, one copy for the client and one to keep.
 
 function Note({ title, text }: { title: string; text?: string }) {
   if (!text?.trim()) return null;
@@ -27,7 +28,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
   footer.push(['Total amount due', peso(t.due), true]);
 
   return (
-    <Sheet ref={ref} label={`Billing statement ${b.no}`}>
+    <TwoUp ref={ref} label={`Billing statement ${b.no}`}>
       <Letterhead company={company} title="Billing Statement" no={`Invoice No. ${b.no}`} date={`Date: ${longDate(b.date)}`} />
       <Meta rows={[
         ['Bill to', client?.name ?? DASH, true], ['Invoice date', longDate(b.invoiceDate ?? b.date)],
@@ -47,6 +48,6 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
       />
       <Note title="Payment instructions" text={b.notes} />
       <Note title="Notes" text={b.note} />
-    </Sheet>
+    </TwoUp>
   );
 });
