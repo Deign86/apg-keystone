@@ -85,10 +85,10 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   // The staff member's change reaches the cloud too (firestore.rules lets members write records): the check, written
   // after the CEO approved the voucher.
   await register.getByRole('cell', '888-001').tap();
-  const approved = screen.getByRole('form', 'Viewing 888-001');
+  const approved = screen.getByRole('form', 'Editing 888-001');
 
   await approved.getByRole('textbox', 'Check No.').fill('0004530');
-  await approved.getByRole('button', 'Save check').tap();
+  await approved.getByRole('button', 'Save changes').tap();
   await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved', check: '0004530' });
 
   // A staff member's own voucher still waits for the CEO's approval.

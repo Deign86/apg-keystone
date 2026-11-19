@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
-  canMoveTo, clearVoided, copyVoucher, freesNumber, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
+  canMoveTo, clearVoided, copyVoucher, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
   voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
@@ -136,53 +136,53 @@ describe('check vouchers', () => {
     expect(saveVoucher(theirs.state, { ...voucherDraftOf(state(), theirs.record), check: '0004512' }, ceo).record.status).toBe('For Approval');
   });
 
-  it('takes the check number and date of check on an approved voucher until it is released, and nothing else', () => {
+  it('edits an approved voucher until it is released: the CEO keeps its approval, anyone else sends it back', () => {
     const s = state();
     const approved = s.cv.find((v) => v.no === 'CV-2026-0140')!;
-    const d = { ...voucherDraftOf(state(), approved), check: ' 0004530 ', checkDate: '2026-11-03', ...water, lines: [lineDraft({ desc: 'Something else', amount: '1' })] };
+    const d = { ...voucherDraftOf(state(), approved), check: ' 0004530 ', checkDate: '2026-11-03', lines: [lineDraft({ desc: 'Printing of lease folders (500 pcs)', amount: '12000' })] };
 
+    // Nobody signed in, or staff: the corrected voucher waits for approval again.
     const r = saveVoucher(s, d, ctx);
-    expect(r.record).toEqual({ ...approved, check: '0004530', checkDate: '2026-11-03' });
-    expect(r.state.cv.find((v) => v.no === 'CV-2026-0140')).toEqual(r.record);
-    expect(r.message).toBe('CV-2026-0140 updated.');
-    expect(r.state.log[0].text).toBe('CV-2026-0140 check 0004530 entered, dated Nov 3, 2026.');
-    expect(setVoucherStatus(r.state, 'CV-2026-0140', 'Released', ctx).state.log[0].text).toBe('CV-2026-0140 released; check 0004530 to JL Santos Printing Services.');
 
-    const cleared = saveVoucher(r.state, { ...voucherDraftOf(state(), r.record), check: '', checkDate: '' }, ctx);
-    expect(cleared.record.check).toBe('');
-    expect(cleared.record).not.toHaveProperty('checkDate');
-    expect(cleared.state.log[0].text).toBe('CV-2026-0140 check number cleared.');
-    expect(saveVoucher(r.state, voucherDraftOf(state(), r.record), ctx)).toMatchObject({ state: r.state, message: 'CV-2026-0140 is unchanged.' });
+    expect(r.record).toMatchObject({ no: 'CV-2026-0140', status: 'For Approval', check: '0004530', checkDate: '2026-11-03', lines: [{ amt: 12000 }] });
+    expect(r.message).toBe('CV-2026-0140 updated and returned for approval.');
+    expect(r.state.log[0].text).toBe('CV-2026-0140 for JL SANTOS PRINTING SERVICES edited after approval, and returned for approval (₱12,000.00).');
+    // The CEO's correction stays approved.
+    const ceo: Ctx = { ...ctx, who: { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' } };
+    const mine = saveVoucher(s, d, ceo);
+
+    expect(mine.record.status).toBe('Approved');
+    expect(mine.message).toBe('CV-2026-0140 updated.');
+    expect(mine.state.log[0].text).toBe('CV-2026-0140 for JL SANTOS PRINTING SERVICES edited after approval (₱12,000.00).');
 
     const released = s.cv.find((v) => v.no === 'CV-2026-0139')!;
     expect(() => saveVoucher(s, { ...voucherDraftOf(state(), released), check: '0009999' }, ctx)).toThrow(/released and can no longer be changed/);
   });
 
-  it('logs status changes and needs a check number to release', () => {
-    const r = setVoucherStatus(state(), 'CV-2026-0141', 'Approved', ctx);
-    expect(r.state.log[0].text).toBe('CV-2026-0141 approved by CEO.');
-    const blank = { ...state(), cv: state().cv.map((v) => ({ ...v, check: '' })) };
-    expect(() => setVoucherStatus(blank, 'CV-2026-0140', 'Released', ctx)).toThrow(/check number/);
+  it('keeps an approved voucher approved when only its check is written in, by anyone, older vouchers too', () => {
+    const s = state();
+    // CV-2026-0140 names its payee by directory code and was saved before names were in capitals.
+    const approved = s.cv.find((v) => v.no === 'CV-2026-0140')!;
+    const d = { ...voucherDraftOf(state(), approved), check: ' 0004530 ', checkDate: '2026-11-03' };
+
+    expect(returnsForApproval(s, d, ctx)).toBe(false);
+    expect(returnsForApproval(s, { ...d, address: 'Pasig City' }, ctx)).toBe(true);
+    const r = saveVoucher(s, d, ctx);
+
+    expect(r.record).toMatchObject({ status: 'Approved', check: '0004530', checkDate: '2026-11-03' });
+    expect(r.state.log[0].text).toBe('CV-2026-0140 check 0004530 entered, dated Nov 3, 2026.');
+    expect(saveVoucher(r.state, voucherDraftOf(r.state, r.record), ctx)).toMatchObject({ state: r.state, message: 'CV-2026-0140 is unchanged.' });
+    const cleared = saveVoucher(r.state, { ...voucherDraftOf(r.state, r.record), check: '', checkDate: '' }, ctx);
+
+    expect(cleared.record).toMatchObject({ status: 'Approved', check: '' });
+    expect(cleared.state.log[0].text).toBe('CV-2026-0140 check number cleared.');
   });
 
-  it('releases only an approved voucher, and a released one can only be voided', () => {
-    // CV-2026-0141 waits for approval and already has its check number.
-    expect(() => setVoucherStatus(state(), 'CV-2026-0141', 'Released', ctx)).toThrow('Approve CV-2026-0141 before releasing it.');
-    const approved = setVoucherStatus(state(), 'CV-2026-0141', 'Approved', ctx).state;
-    expect(setVoucherStatus(approved, 'CV-2026-0141', 'Released', ctx).state.log[0].text).toBe('CV-2026-0141 released; check 0001188 to Vergara & Associates Law Office.');
-
-    // Approval can be taken back until the check is released.
-    expect(setVoucherStatus(state(), 'CV-2026-0140', 'For Approval', ctx).state.log[0].text).toBe('CV-2026-0140 returned for approval.');
-    expect(() => setVoucherStatus(state(), 'CV-2026-0139', 'For Approval', ctx)).toThrow('CV-2026-0139 is released and stays released. Void it if the check is cancelled.');
-    expect(() => setVoucherStatus(state(), 'CV-2026-0139', 'Approved', ctx)).toThrow(/stays released/);
-    expect(setVoucherStatus(state(), 'CV-2026-0139', 'Void', ctx).record.status).toBe('Void');
-  });
-
-  it('locks a voucher once approved, and copies it to a new voucher with no check', () => {
+  it('locks a voucher once released, and copies it to a new voucher with no check', () => {
     const s = state();
     const byNo = (no: string) => s.cv.find((v) => v.no === no)!;
     expect(voucherLock(byNo('CV-2026-0141'))).toBeNull();
-    expect(voucherLock(byNo('CV-2026-0140'))).toBe('CV-2026-0140 is approved: only its check number and date of check can change until it is released. Copy it to a new voucher to change the rest.');
+    expect(voucherLock(byNo('CV-2026-0140'))).toBeNull();
     expect(voucherLock(byNo('CV-2026-0139'))).toBe('CV-2026-0139 is released and can no longer be changed. Copy it to a new voucher to change it.');
     expect(() => saveVoucher(s, voucherDraftOf(state(), byNo('CV-2026-0139')), ctx)).toThrow(voucherLock(byNo('CV-2026-0139'))!);
 

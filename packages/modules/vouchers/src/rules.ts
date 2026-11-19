@@ -109,29 +109,14 @@ export const voucherDraftOf = (s: TerminalState, v: Voucher): VoucherDraft => ca
 });
 
 /**
- * Why a voucher can no longer be changed, or null while it is still For Approval. Once
- * approved, the voucher prints as it was approved; a change goes on a new voucher. Only
- * the check, often written after approval, still goes on it until it is released.
+ * Why a voucher can no longer be changed, or null while it can: For Approval or Approved, until its check is released.
+ * An approved voucher stays open so a mistake on it can still be put right (saveVoucher says what that does to its
+ * approval). Released or void, a change goes on a new voucher.
  */
 export function voucherLock(v: Voucher): string | null {
-  if (v.status === 'For Approval') return null;
-
-  if (takesCheck(v)) return `${v.no} is approved: only its check number and date of check can change until it is released. Copy it to a new voucher to change the rest.`;
+  if (v.status === 'For Approval' || v.status === 'Approved') return null;
 
   return `${v.no} is ${v.status.toLowerCase()} and can no longer be changed. Copy it to a new voucher to change it.`;
-}
-
-/** Whether an approved voucher still takes its check number and date of check: until the check is released. */
-export const takesCheck = (v: Voucher) => v.status === 'Approved';
-
-/** The voucher with the check number and date of check typed on `d`, and nothing else of `d`. */
-export function withCheck(v: Voucher, d: Pick<VoucherDraft, 'check' | 'checkDate'>): Voucher {
-  const out: Voucher = { ...v, check: d.check.trim() };
-
-  if (d.checkDate) out.checkDate = d.checkDate;
-  else delete out.checkDate;
-
-  return out;
 }
 
 /** Whether a voucher saved by whoever is signed in is approved as it is saved: the CEO's are; everyone else's wait for approval. */
@@ -197,41 +182,66 @@ function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string)
 }
 
 /**
- * Saves a voucher. A draft loaded from the register updates that voucher while it is
- * still For Approval, or only its check while it is approved; `asNew` (or a voucher
- * released or void) saves a copy under the next number. A new voucher waits for
- * approval, unless the CEO saves it: theirs is approved as it is saved.
+ * A voucher as the form would save it back, as a list of its fields in one order, without its check: to tell whether
+ * only the check changed. Read back through the form, a voucher saved before names were in capitals counts as unchanged.
+ */
+function withoutCheck(s: TerminalState, v: Voucher): string {
+  const saved = { ...voucherOf(voucherDraftOf(s, v)), no: v.no, status: v.status, check: '', checkDate: '' };
+
+  return JSON.stringify(Object.entries(saved).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/**
+ * Whether saving `d` over the approved voucher it was loaded from sends it back for approval: a change beyond the check
+ * number and date of check (written once approved), saved by anyone but the CEO.
+ */
+export function returnsForApproval(s: TerminalState, d: VoucherDraft, ctx: Ctx): boolean {
+  const original = d.editing ? s.cv.find((x) => x.no === d.editing) : undefined;
+
+  if (original?.status !== 'Approved' || approvesOnSave(ctx)) return false;
+
+  return withoutCheck(s, { ...voucherOf(d, 'Approved'), no: original.no }) !== withoutCheck(s, original);
+}
+
+/**
+ * Saves a voucher. A draft loaded from the register updates that voucher while it is For Approval or Approved; `asNew`
+ * saves a copy under the next number. An approved voucher keeps its approval when only its check is written in, or when
+ * the CEO edits it; any other change goes back for approval, so what is approved is what the CEO saw. A new voucher waits for approval, unless the
+ * CEO saves it: theirs is approved as it is saved.
  */
 export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew = false): Change<Voucher> {
   const v = checkedVoucher(d);
   const original = d.editing ? s.cv.find((x) => x.no === d.editing) : undefined;
-
-  if (original && !asNew && takesCheck(original)) {
-    const updated = withCheck(original, d);
-    const dated = updated.checkDate ? `, dated ${shortDate(updated.checkDate)}` : '';
-
-    if (updated.check === original.check && updated.checkDate === original.checkDate) return { state: s, record: original, message: `${original.no} is unchanged.` };
-
-    return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
-      record: updated, message: `${updated.no} updated.`,
-    };
-  }
 
   if (original && !asNew) {
     const lock = voucherLock(original);
 
     if (lock) throw new KeystoneError(lock);
 
-    const updated = { ...v, no: original.no, status: original.status };
+    const returned = returnsForApproval(s, d, ctx);
+    const updated: Voucher = { ...v, no: original.no, status: returned ? 'For Approval' : original.status };
+
+    if (original.status === 'Approved' && withoutCheck(s, updated) === withoutCheck(s, original)) return checkWritten(s, original, updated, ctx);
+    const after = returned ? ' after approval, and returned for approval' : original.status === 'Approved' ? ' after approval' : '';
 
     return {
-      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, `${updated.no} for ${nameOf(s, v.payee)} edited (${peso(voucherTotal(v))}).`, ctx),
-      record: updated, message: `${updated.no} updated.`,
+      state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, `${updated.no} for ${nameOf(s, v.payee)} edited${after} (${peso(voucherTotal(v))}).`, ctx),
+      record: updated, message: returned ? `${updated.no} updated and returned for approval.` : `${updated.no} updated.`,
     };
   }
 
   return addVoucher(s, v, ctx, approvesOnSave(ctx) ? ctx.who?.name : undefined);
+}
+
+/** An approved voucher with only its check number or date of check changed: it stays approved. */
+function checkWritten(s: TerminalState, original: Voucher, updated: Voucher, ctx: Ctx): Change<Voucher> {
+  if (updated.check === original.check && updated.checkDate === original.checkDate) return { state: s, record: original, message: `${original.no} is unchanged.` };
+  const dated = updated.checkDate ? `, dated ${shortDate(updated.checkDate)}` : '';
+
+  return {
+    state: logged({ ...s, cv: s.cv.map((x) => (x.no === original.no ? updated : x)) }, TAG, updated.check ? `${updated.no} check ${updated.check} entered${dated}.` : `${updated.no} check number cleared.`, ctx),
+    record: updated, message: `${updated.no} updated.`,
+  };
 }
 
 /**
