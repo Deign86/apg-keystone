@@ -18,8 +18,9 @@ is the shortcut to that program. It is not the ID Maker screen inside Keystone (
 - **Not installed:** Keystone downloads the installer from the latest release (`…-Setup-….exe`, or the `.dmg` for this
   Mac's processor), checks it against the digest GitHub publishes, and opens it. The person finishes the installer.
   If that cannot be done, the release page opens instead.
-- **A newer version is out:** the ID Maker cannot update itself, so "Update to 2.0.5" shows under the shortcut and
-  does the same download. A portable copy is not found and so is never offered an update.
+- **A newer version is out:** "Update to 2.0.5" shows under the shortcut and does the same download (docs/adr/0035),
+  the only way the ID Maker is updated, since it has no updater of its own. A portable copy is not found and so is
+  never offered an update.
 - **In the browser preview:** it says the desktop app is needed.
 
 ## Contributes

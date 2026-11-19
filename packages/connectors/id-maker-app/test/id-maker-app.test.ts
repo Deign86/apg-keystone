@@ -81,7 +81,7 @@ describe('the ID Maker shortcut', () => {
     for (const { did } of [offline, refused, older]) expect(did.at(-1)).toBe(page);
   });
 
-  it('offers a newer version, because the ID Maker has no updater of its own', async () => {
+  it('update found: offers a newer version, the only way the ID Maker is updated', async () => {
     const { env, did } = computer({ path: 'C:\\ID\\AlphaPremierIdMaker.exe', version: '2.0.3' });
     const update = await idMakerAppConnector.update?.(env);
 
@@ -91,17 +91,22 @@ describe('the ID Maker shortcut', () => {
     expect(did).toEqual(['ask Deign86/apg-id-creator', 'install AlphaPremierIdMaker-Setup-v2.0.4.exe']);
   });
 
-  it('offers nothing when up to date, newer, not installed, of unknown version, or offline', async () => {
+  it('up to date: offers nothing when up to date, newer, not installed, of unknown version, or on a computer it has no installer for', async () => {
     const none = [
       computer({ path: 'x', version: '2.0.4' }),
       computer({ path: 'x', version: '2.1.0' }),
       computer(null),
       computer({ path: 'x' }),
-      computer({ path: 'x', version: '2.0.3' }, { latestRelease: async () => { throw new Error('offline'); } }),
       computer({ path: 'x', version: '2.0.3' }, { platform: 'linux' }),
     ];
 
     for (const { env } of none) expect(await idMakerAppConnector.update?.(env)).toBeNull();
+  });
+
+  it('check failed: says why, so the shortcut keeps what it last knew', async () => {
+    const { env } = computer({ path: 'x', version: '2.0.3' }, { latestRelease: async () => { throw new Error('offline'); } });
+
+    await expect(idMakerAppConnector.update?.(env)).rejects.toThrow('offline');
   });
 
   it('shows the app’s own logo', () => {

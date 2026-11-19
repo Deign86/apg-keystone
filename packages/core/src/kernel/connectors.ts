@@ -1,7 +1,7 @@
 // The contract every connected system implements: a shortcut on Home, its app's logo, that opens the app. A connector
 // is a plain object. Opening it is time-limited and caught, so an app that is not installed or does not start shows a
-// message and affects nothing else (docs/adr/0007). Keystone is also where the other APG apps are installed from and,
-// for one that has no updater of its own, updated (docs/adr/0029).
+// message and affects nothing else (docs/adr/0007). Keystone is also where the other APG apps are installed from
+// (docs/adr/0029), and where a newer version of each shows (docs/adr/0035).
 //
 // Adding a system = adding one package under packages/connectors/ and one line to
 // apps/keystone/src/connectors.ts. Nothing else in Keystone changes.
@@ -100,7 +100,11 @@ export interface Connector {
   logo: string;
   /** Opens the app. Returns a sentence to show when it did something else (opened the download page, say). */
   open(env: ConnectorEnv): Promise<string | void>;
-  /** For an app with no updater of its own: the newer version out, or null. Never throws for being offline. */
+  /**
+   * For an app installed on this computer: the newer version out, or null when there is none. Rejects when it cannot
+   * tell (offline); the shortcut keeps what it last knew and asks again later. Left out by a system with nothing to
+   * install (the website).
+   */
   update?(env: ConnectorEnv): Promise<ConnectorUpdate | null>;
   /**
    * Something of this system's that the CEO gives a staff member's account, which the system reads from the member
@@ -196,36 +200,44 @@ export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: Desk
 }
 
 /**
- * For a desktop app with no updater of its own: the newer version out, when the app is installed and Keystone can
- * tell. Null otherwise, and when offline: an update is never a reason the shortcut fails. A connector whose app
- * updates itself leaves `update` out; one whose app cannot sets `update` to this.
+ * A connected desktop app's newer version: the latest release, when it is later than the version installed here and
+ * has an installer for this computer. Null when the app is up to date, not installed, of a version the computer does
+ * not say, or where Keystone cannot install (the browser preview). Rejects when it cannot tell (offline, GitHub's
+ * limit), so the shortcut can say so and keep what it last knew (docs/adr/0035).
  */
 export async function desktopAppUpdate(env: ConnectorEnv, app: DesktopApp): Promise<ConnectorUpdate | null> {
   const { system } = env;
 
   if (!system.latestRelease || !system.installFrom) return null;
+  const installed = await system.locateApp(app.locator);
 
-  try {
-    const installed = await system.locateApp(app.locator);
+  if (!installed?.version) return null;
+  const release = await system.latestRelease(app.repo);
 
-    if (!installed?.version) return null;
-    const release = await system.latestRelease(app.repo);
+  if (!laterVersion(release.version, installed.version) || !installerFor(system, app, release)) return null;
 
-    if (!laterVersion(release.version, installed.version) || !installerFor(system, app, release)) return null;
+  return {
+    version: release.version,
+    install: async (e) => {
+      const version = await fetchInstaller(e, app, release);
 
-    return {
-      version: release.version,
-      install: async (e) => {
-        const version = await fetchInstaller(e, app, release);
+      if (!version) throw new Error(`${app.name} ${release.version} has no installer for this computer.`);
 
-        if (!version) throw new Error(`${app.name} ${release.version} has no installer for this computer.`);
+      return `The installer for ${app.name} ${version} is open. Close ${app.name} first, then finish the installer.`;
+    },
+  };
+}
 
-        return `The installer for ${app.name} ${version} is open. Close ${app.name} first, then finish the installer.`;
-      },
-    };
-  } catch {
-    return null;
-  }
+/**
+ * The shortcut of an APG desktop app, the same for every one (docs/adr/0029, 0035): opening starts it, or fetches its
+ * installer when it is missing; and its newer versions are offered under it, whether or not the app also updates
+ * itself.
+ */
+export function desktopAppShortcut(app: DesktopApp): Pick<Connector, 'open' | 'update'> {
+  return {
+    open: (env) => openDesktopApp(env, app),
+    update: (env) => desktopAppUpdate(env, app),
+  };
 }
 
 /** Checks a connector definition when it registers, so a broken one is refused with a reason. */

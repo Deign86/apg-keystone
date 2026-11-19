@@ -5,9 +5,9 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
 
 | Package | System (repo) | Its shortcut on Home | README |
 |---|---|---|---|
-| `attendance/` | RFID attendance tracker (`alpha-premier-attendance`) | Starts the app, or installs it. It updates itself. | [attendance/README.md](attendance/README.md) |
+| `attendance/` | RFID attendance tracker (`alpha-premier-attendance`) | Starts the app, or installs it, and offers its updates | [attendance/README.md](attendance/README.md) |
 | `id-maker-app/` | Alpha Premier ID Maker (`apg-id-creator`) | Starts the app, or installs it, and offers its updates | [id-maker-app/README.md](id-maker-app/README.md) |
-| `branding-studio/` | Alpha Branding Studio (`Alpha_Branding`) | Starts the studio, or installs it. It updates itself. | [branding-studio/README.md](branding-studio/README.md) |
+| `branding-studio/` | Alpha Branding Studio (`Alpha_Branding`) | Starts the studio, or installs it, and offers its updates | [branding-studio/README.md](branding-studio/README.md) |
 | `website/` | alphapremiergroup.com (`apg-website`) | Opens the admin portal in the browser | [website/README.md](website/README.md) |
 
 ## Rules
@@ -18,15 +18,17 @@ of installed connectors is `apps/keystone/src/connectors.ts`, the only place con
 - **The logo is the app's own,** kept in the package as `src/logo.png` (about 288 px, transparent edges trimmed) and
   imported: `import logo from './logo.png'`.
 - **Reach the outside world only through `env.system`:** find an installed app, start it, open a URL. Never import
-  `@tauri-apps/*`. A desktop app opens with `openDesktopApp(env, app)` from core, where `app` is a `DesktopApp`: its
-  name, how to find it, its repository and which release file is the installer on each computer. Its download page
-  is its repository's latest release.
-- **Installing and updating** (docs/adr/0029): not installed, `openDesktopApp` fetches the installer and opens it.
-  An app with its own updater gets nothing more. One without adds `update: (env) => desktopAppUpdate(env, app)`;
-  "Update to …" then shows under its shortcut. Put the real file names of a release in the package's test, and the
-  repository and installers in `apps/keystone/src-tauri/src/connected-apps.json`: `npm run check` holds that file to
-  what the connector asks for, and `cargo test` runs it through the native side's `allowed_repo` and
-  `allowed_installer`, which refuse anything else at run time.
+  `@tauri-apps/*`. A desktop app's connector spreads `desktopAppShortcut(app)` from core, where `app` is a
+  `DesktopApp`: its name, how to find it, its repository and which release file is the installer on each computer.
+  Its download page is its repository's latest release.
+- **Installing and updating** (docs/adr/0029, 0035): `desktopAppShortcut` gives both `open` and `update`. Not
+  installed, `open` fetches the installer and opens it. Installed and older than the latest release, "Update to …"
+  shows under its shortcut, whether or not the app also updates itself: an app's own updater runs only while it is
+  open. `update` answers null when there is nothing newer and rejects when it cannot tell (offline); Home keeps what it
+  last knew and asks again within the hour. Test all three in the package, with the real file names of a release,
+  and put the repository and installers in `apps/keystone/src-tauri/src/connected-apps.json`: `npm run check` holds
+  that file to what the connector asks for (and to offering updates), and `cargo test` runs it through the native
+  side's `allowed_repo` and `allowed_installer`, which refuse anything else at run time.
 - **Dependencies:** `@keystone/core` (for `Connector`). Never another connector or a module.
 - **Don't guard against failure yourself:** throwing, hanging or being unavailable are all fine. The shortcut gives
   `open` 15 seconds, or 20 minutes once it calls `env.slow('Downloading …')` (core's `DEADLINES`, the one definition the native side reads too), and shows any error as a message. Return a sentence from `open` when it did something other than

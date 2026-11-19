@@ -5,8 +5,8 @@ The RFID time-in kiosk at the front desk (`Deign86/alpha-premier-attendance`: Ta
 ## Owns
 - `src/index.ts`: the connector. Its shortcut opens the attendance app.
 - `src/logo.png`: the attendance app's own icon (from its `src-tauri/icons/icon.png`).
-- `test/attendance.test.ts`: which app it looks for, that it starts it, the download page when it is missing, and the
-  field and words of "attendance admin".
+- `test/attendance.test.ts`: which app it looks for, that it starts it, the download page when it is missing, when
+  it offers an update (the real file names of v0.2.57), and the field and words of "attendance admin".
 
 ## How it opens the attendance app (nothing in the attendance app changes)
 - **Finding it on this computer:**
@@ -16,7 +16,8 @@ The RFID time-in kiosk at the front desk (`Deign86/alpha-premier-attendance`: Ta
 - **Installed:** Keystone starts it.
 - **Not installed:** Keystone downloads its installer from its latest release, checks it against the digest GitHub
   publishes, and opens it; the person finishes the installer. If that cannot be done, the release page opens.
-- **Updates:** the app updates itself once installed, so Keystone does nothing here (docs/adr/0029).
+- **A newer version is out:** "Update to …" shows under the shortcut and does the same download (docs/adr/0035).
+  The app also updates itself, but only while it is open, so Home is where it is seen first.
 - **In the browser preview:** it says the desktop app is needed.
 
 ## Contributes

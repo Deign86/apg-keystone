@@ -20,6 +20,10 @@ describe('the website shortcut', () => {
     }
   });
 
+  it('offers no update: the website is served, so whoever opens it has the latest (docs/adr/0035)', () => {
+    expect(websiteConnector.update).toBeUndefined();
+  });
+
   it('shows the website’s own logo', () => {
     expect(websiteConnector.logo).toMatch(/logo\.png$/);
   });

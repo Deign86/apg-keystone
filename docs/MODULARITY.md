@@ -126,8 +126,8 @@ interfaces. The rules:
 
 ### `Connector` (`packages/core/src/kernel/connectors.ts`)
 
-A connector is a shortcut to another APG app (docs/adr/0007) that also installs it, and updates it when the app
-cannot update itself (docs/adr/0029).
+A connector is a shortcut to another APG app (docs/adr/0007) that also installs it (docs/adr/0029) and shows its
+newer version on Home (docs/adr/0035).
 
 | Field | Required | What it is for |
 |---|---|---|
@@ -135,10 +135,12 @@ cannot update itself (docs/adr/0029).
 | `logo` | yes | The app's own logo, imported from the package (`import logo from './logo.png'`) |
 | `open(env)` | yes | Opens the app. `env.system` finds and starts installed apps and opens URLs. It may return a sentence to show |
 | `tag` | | Short label for directory records linked to this system |
+| `update(env)` | | The installed app's newer version, or null; rejects when it cannot tell. Home asks when it shows and every hour (docs/adr/0035) |
 | `memberGrant` | | Something of this system's that the CEO gives a staff member's account: the yes-or-no field kept on the member, and the words User Accounts shows for it (docs/adr/0030, 0033) |
 
-Desktop apps use `openDesktopApp(env, { name, locator, repo, installers })` from core: it starts the installed app, or
-fetches its installer, or opens its download page, and in the browser preview says the desktop app is needed.
+Desktop apps spread `desktopAppShortcut({ name, locator, repo, installers })` from core: its `open` starts the
+installed app, or fetches its installer, or opens its download page, and in the browser preview says the desktop app is
+needed; its `update` compares the installed version with the latest release.
 
 `buildRegistry` validates every connector; a broken one (no name, no logo) is refused, not loaded. The kit's
 `ConnectorShortcut` runs `open` under a 15-second deadline and shows any failure as a message, so a connector that

@@ -67,8 +67,8 @@ or any failure, is a message on screen (docs/adr/0007).
 
 | System | How Keystone finds it | What its shortcut does |
 |---|---|---|
-| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app. Not installed: fetches its installer from its latest release and opens it, or opens the release page when it cannot (docs/adr/0029) |
-| Alpha Premier ID Maker | Bundle id `com.alphapremiergroup.idmaker` (macOS) or its Uninstall registry key (Windows) | The same, and offers a newer version when one is out, since the ID Maker cannot update itself |
+| Attendance tracker | Bundle id `com.alphapremier.attendance` (macOS) or its Uninstall registry key (Windows) | Starts the app. Not installed: fetches its installer from its latest release and opens it, or opens the release page when it cannot (docs/adr/0029). Installed and older: offers the newer version under its shortcut (docs/adr/0035) |
+| Alpha Premier ID Maker | Bundle id `com.alphapremiergroup.idmaker` (macOS) or its Uninstall registry key (Windows) | The same as the attendance tracker |
 | Alpha Branding Studio | Bundle id `com.alphapremier.brandingstudio` (macOS) or its Uninstall registry key (Windows) | The same as the attendance tracker |
 | Website | Nothing to find | Opens `alphapremiergroup.com/admin` in the browser |
 

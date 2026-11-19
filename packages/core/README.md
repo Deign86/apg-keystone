@@ -15,7 +15,7 @@ numbering, blank lines dropped).
 | `src/kernel/lines.ts` | Line-item drafts for documents: an amount per line (vouchers), or a quantity at a unit price (statements) |
 | `src/kernel/insight.ts` | `Figure`, `Finding`, `WaitingItem`, `topFinding` |
 | `src/kernel/directory.ts` | The shared directory: records, payees, codes, saving and removing |
-| `src/kernel/connectors.ts` | The connector contract (a shortcut to another app), `openDesktopApp` (start it, or fetch its installer) and `desktopAppUpdate` |
+| `src/kernel/connectors.ts` | The connector contract (a shortcut to another app), `desktopAppShortcut`, the same for every desktop app: `openDesktopApp` (start it, or fetch its installer) and `desktopAppUpdate` (its newer version, docs/adr/0035) |
 | `src/kernel/services.ts` | Published service contracts: `SERVICES` names and their types (`StatementPayments`, `EmployeeAttendance`) |
 | `sample/` | The tests' sample records, `@keystone/core/sample` (`sampleState`, `sampleText`): made-up records with APG's company details. `sample.json` is generated from `shared/data/sample.json` by `npm run sync`; don't edit it here. Only tests may import it (`npm run check:boundaries`): Keystone ships no records (docs/adr/0018) |
 

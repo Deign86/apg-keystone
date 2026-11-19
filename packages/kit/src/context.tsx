@@ -241,8 +241,16 @@ export function useOpenConnector() {
 }
 
 /**
- * The newer version of a connected app that Keystone can install, for an app with no updater of its own; null when
- * there is none, the app updates itself, or Keystone cannot tell. `install` fetches and opens its installer.
+ * How often a shortcut on screen asks again whether its app has a newer version. Home is often left open all day; the
+ * desktop platform answers a repeated question about one release from memory for ten minutes, so GitHub's limit of 60
+ * an hour from one office holds.
+ */
+export const CONNECTOR_CHECK_EVERY_MS = 60 * 60 * 1000;
+
+/**
+ * The newer version of a connected app that Keystone can install; null when there is none, or Keystone cannot tell.
+ * Asked when the shortcut shows and every `CONNECTOR_CHECK_EVERY_MS` while it stays (docs/adr/0035). A check that
+ * fails keeps what the last one found. `install` fetches and opens its installer.
  */
 export function useConnectorUpdate(c: Connector) {
   const call = useConnectorCall();
@@ -250,17 +258,26 @@ export function useConnectorUpdate(c: Connector) {
   const [update, setUpdate] = useState<ConnectorUpdate | null>(null);
 
   useEffect(() => {
+    const ask = c.update;
+
+    if (!ask) return;
     let alive = true;
 
-    if (c.update) {
-      void call(c.name, undefined, (env) => c.update?.(env) ?? Promise.resolve(null)).then(
+    const look = () => {
+      void call(c.name, undefined, (env) => ask(env)).then(
         (u) => { if (alive) setUpdate(u); },
         // Never a reason the shortcut fails, but never dropped without a word either.
-        (cause: unknown) => console.warn(`Keystone could not check ${c.name} for an update; it tries again when Home next opens.`, cause),
+        (cause: unknown) => console.warn(`Keystone could not check ${c.name} for an update; it tries again within the hour.`, cause),
       );
-    }
+    };
 
-    return () => { alive = false; };
+    look();
+    const every = setInterval(look, CONNECTOR_CHECK_EVERY_MS);
+
+    return () => {
+      alive = false;
+      clearInterval(every);
+    };
   }, [c, call]);
 
   const install = useCallback(async (doing?: (what: string) => void) => {
