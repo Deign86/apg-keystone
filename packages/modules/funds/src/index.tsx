@@ -1,6 +1,6 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
+import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
 import { FormCard, LineEditor, printElement, savePdf, useDraft, useKeystone, useModuleApp, Workspace, type ModuleDef } from '@keystone/kit';
 import {
   accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
@@ -243,6 +243,24 @@ function Funds() {
             { label: 'Edit', disabled: !!requestLock(r, ctx), onSelect: () => { setDraft(requestDraftOf(r)); setError(null); } },
             { label: 'Withdraw…', danger: true, disabled: !!requestLock(r, ctx), onSelect: () => withdraw(r) },
           ]}
+          bulk={(picked, clear): RowAction[] => {
+            const open = picked.filter((r) => !requestLock(r, ctx));
+
+            return [{
+              label: `Withdraw (${open.length})…`, danger: true, disabled: !open.length,
+              onSelect: () => confirm({
+                title: `Withdraw ${count(open.length, 'request')}?`, body: `${open.map((r) => r.no).join(', ')}. They stay on record as withdrawn; to ask again, file a new request.`, confirm: 'Withdraw', danger: true,
+                onConfirm: () => {
+                  const out = run((s, c) => changeEach(s, open.map((r) => r.no), (x, no) => withdrawRequest(x, no, c), (rs) => `${count(rs.length, 'request')} withdrawn.`));
+
+                  if (!out.ok) return;
+                  clear();
+
+                  if (open.some((r) => r.no === draft.editing)) setDraft(newRequest(out.state, ctx));
+                },
+              }),
+            }];
+          }}
           empty={<EmptyState text="No requests yet." action={<Button size="sm" kind="primary" onClick={() => document.getElementById('rf-form')?.scrollIntoView({ block: 'start' })}>Ask for funds</Button>} />}
         />
       </Panel>

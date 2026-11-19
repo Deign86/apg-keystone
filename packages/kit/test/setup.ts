@@ -17,3 +17,8 @@ if (!window.matchMedia) {
 if (!('ResizeObserver' in window)) {
   Object.defineProperty(window, 'ResizeObserver', { configurable: true, writable: true, value: class { observe() {} unobserve() {} disconnect() {} } });
 }
+
+// Base UI's checkbox raises a PointerEvent when it is clicked; jsdom has none, so a MouseEvent stands in.
+if (!('PointerEvent' in window)) {
+  Object.defineProperty(window, 'PointerEvent', { configurable: true, writable: true, value: class extends MouseEvent {} });
+}

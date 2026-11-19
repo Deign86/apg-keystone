@@ -106,6 +106,7 @@ test('asks before voiding a statement', async ({ app, screen }) => {
 
   await row.getByRole('button', 'Actions for 010098-2026').tap();
   await screen.getByRole('menuitem', 'Void statement…').tap();
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
   await confirm.getByRole('button', 'Void statement').tap();
 
   await expect(row.getByRole('cell', 'Void')).toBeVisible();
@@ -388,6 +389,7 @@ test('logs each statement sent, paid and voided, under the Billing filter', asyn
 
   await register.getByRole('button', 'Actions for 010098-2026').tap();
   await screen.getByRole('menuitem', 'Void statement…').tap();
+  await screen.getByRole('alertdialog', 'Void 010098-2026?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Void 010098-2026?').getByRole('button', 'Void statement').tap();
   await expect(register.getByRole('row', /^010098-2026 /).getByRole('cell', 'Void')).toBeVisible();
 

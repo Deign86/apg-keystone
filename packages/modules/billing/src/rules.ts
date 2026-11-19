@@ -1,5 +1,5 @@
 import {
-  addDays, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
+  addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
   percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type LineItem, type Payment, type Statement, type StatementPayments,
@@ -210,6 +210,10 @@ export function setStatementStatus(s: TerminalState, no: string, status: Stateme
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
 }
+
+/** Moves several statements to one status at once: every one, or none if any is refused. */
+export const setStatementsStatus = (s: TerminalState, nos: readonly string[], status: StatementStatus, ctx: Ctx): Change<Statement[]> =>
+  changeEach(s, nos, (st, no) => setStatementStatus(st, no, status, ctx), (bs) => `${count(bs.length, 'statement')} marked ${status.toLowerCase()}.`);
 
 /** Settles a statement with a reported payment. A payment short of the amount due is refused. */
 export function recordPayment(s: TerminalState, no: string, p: Payment, ctx: Ctx): Change<Statement> {

@@ -156,6 +156,7 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
 
   await register.getByRole('button', 'Actions for RF-2026-0001').tap();
   await screen.getByRole('menuitem', 'Withdraw…').tap();
+  await screen.getByRole('alertdialog', 'Withdraw RF-2026-0001?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Withdraw RF-2026-0001?').getByRole('button', 'Withdraw').tap();
 
   await expect(register.getByRole('row', /^RF-2026-0001 /).getByRole('cell', 'Withdrawn')).toBeVisible();

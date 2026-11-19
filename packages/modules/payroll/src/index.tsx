@@ -1,10 +1,10 @@
 import {
   Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, Sheet, StatusPill,
-  TextInput, cn, useConfirm, type Column,
+  TextInput, cn, useConfirm, type Column, type RowAction,
 } from '@keystone/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import {
-  DASH, companyOf, count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
+  changeEach, DASH, companyOf, count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
   type DirectoryRecord, type Period,
 } from '@keystone/core';
 import { printElement, savePdf, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
@@ -177,6 +177,17 @@ function Payroll() {
               onSelect: () => confirm({ title: `Take ${e.name} off the payroll?`, body: 'Their pay setup is removed. Closed cut-offs keep what they were paid.', confirm: 'Take off payroll', danger: true, onConfirm: () => run((s, c) => removeSetup(s, e.code, c)) }),
             },
           ]}
+          bulk={(picked, clear): RowAction[] => {
+            const on = picked.filter((e) => setupFor(state, e.code));
+
+            return [{
+              label: `Take off payroll (${on.length})…`, danger: true, disabled: !on.length,
+              onSelect: () => confirm({
+                title: `Take ${count(on.length, 'employee')} off the payroll?`, body: `${on.map((e) => e.name).join(', ')}: their pay setup is removed. Closed cut-offs keep what they were paid.`, confirm: 'Take off payroll', danger: true,
+                onConfirm: () => { if (run((s, c) => changeEach(s, on.map((e) => e.code), (x, code) => removeSetup(x, code, c), (r) => `${count(r.length, 'employee')} taken off the payroll.`)).ok) clear(); },
+              }),
+            }];
+          }}
           empty={<EmptyState text="No employees in the Directory yet." action={app.has('directory') ? <Button size="sm" kind="primary" onClick={() => app.go('directory')}>Open the Directory</Button> : undefined} />}
         />
       </Panel>

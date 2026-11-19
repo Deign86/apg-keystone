@@ -188,6 +188,7 @@ test('the CEO removes a staff account after asking, and that person can no longe
   const question = screen.getByRole('alertdialog', 'Remove Ana Cruz?');
 
   await expect(question.getByText(/^Ana Cruz can no longer open APG's records, on any computer or phone\./)).toBeVisible();
+  await question.getByRole('checkbox', 'I understand this can’t be undone').tap();
   await question.getByRole('button', 'Remove account').tap();
 
   await expect(screen.getByRole('dialog', 'Ana Cruz can no longer open APG\'s records.')).toBeVisible();

@@ -60,6 +60,7 @@ test('restores a backup only after asking, and drops what was saved since', asyn
 
   await app.open('/#data');
   await screen.getByRole('region', 'Data').getByRole('button', 'Restore from backup…').setInputFiles(backup.absolutePath);
+  await screen.getByRole('alertdialog', `Restore ${file}?`).getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', `Restore ${file}?`).getByRole('button', 'Replace with backup').tap();
   await expect(screen.getByRole('dialog', `Restored ${file}.`)).toBeVisible();
 
@@ -93,6 +94,7 @@ test('brings the work in a backup into a Keystone that starts with no records', 
   const confirm = screen.getByRole('alertdialog', `Restore ${file}?`);
 
   await expect(confirm.getByText('It holds 4 vouchers, 3 statements, 3 IDs and 11 directory records. Everything Keystone holds now is replaced.')).toBeVisible();
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
   await confirm.getByRole('button', 'Replace with backup').tap();
   await expect(screen.getByRole('dialog', `Restored ${file}.`)).toBeVisible();
 

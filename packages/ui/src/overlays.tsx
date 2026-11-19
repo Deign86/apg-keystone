@@ -3,6 +3,7 @@ import { Dialog } from '@base-ui/react/dialog';
 import { Toast } from '@base-ui/react/toast';
 import { X } from 'lucide-react';
 import { createContext, useCallback, useContext, useState, type ReactNode, type RefObject } from 'react';
+import { Checkbox } from './fields';
 import { Button, cn } from './primitives';
 
 // Dialogs and toasts are real overlays, so they may float.
@@ -20,9 +21,13 @@ interface ConfirmRequest {
   title: string;
   body: string;
   confirm: string;
+  /** Destructive or irreversible: the button is red, and stays off until "I understand…" is ticked. */
   danger?: boolean;
   onConfirm: () => void;
 }
+
+/** What a destructive confirmation asks to be ticked before its button works. */
+export const UNDERSTOOD = 'I understand this can’t be undone';
 
 const ConfirmContext = createContext<(r: ConfirmRequest) => void>(() => {});
 
@@ -32,7 +37,9 @@ export const useConfirm = () => useContext(ConfirmContext);
 function ConfirmProvider({ children }: { children: ReactNode }) {
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
   const [open, setOpen] = useState(false);
-  const ask = useCallback((r: ConfirmRequest) => { setRequest(r); setOpen(true); }, []);
+  // Ticked afresh for every request: one confirmation never carries over to the next.
+  const [understood, setUnderstood] = useState(false);
+  const ask = useCallback((r: ConfirmRequest) => { setRequest(r); setUnderstood(false); setOpen(true); }, []);
 
   return (
     <ConfirmContext.Provider value={ask}>
@@ -43,10 +50,16 @@ function ConfirmProvider({ children }: { children: ReactNode }) {
           <AlertDialog.Popup className={POPUP}>
             <AlertDialog.Title className="m-0 font-display text-[15px] font-semibold text-ink">{request?.title}</AlertDialog.Title>
             <AlertDialog.Description className="mt-2 mb-0 text-[13px] text-ink-2">{request?.body}</AlertDialog.Description>
+            {request?.danger && (
+              <div className="mt-4 rounded-control border border-line px-3 py-2.5">
+                <Checkbox checked={understood} onChange={setUnderstood}>{UNDERSTOOD}</Checkbox>
+              </div>
+            )}
             <div className="mt-6 flex justify-end gap-2">
               <AlertDialog.Close render={<Button />}>Cancel</AlertDialog.Close>
               <Button
                 kind={request?.danger ? 'danger' : 'primary'}
+                disabled={request?.danger && !understood}
                 onClick={() => { setOpen(false); request?.onConfirm(); }}
               >
                 {request?.confirm}

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SERVICES, type Accounts, type Connector, type Member, type MemberAccount, type MemberGrant, type NewAccount } from '@keystone/core';
 import { App, buildRegistry, KeystoneStore } from '@keystone/kit';
+import { UNDERSTOOD } from '@keystone/ui';
 import { memoryPlatform } from '@keystone/kit/testing';
 import { accountsModule } from '../src';
 
@@ -67,7 +68,12 @@ async function fill(dialog: HTMLElement, name: string, email: string, password: 
 async function removeFromRow(name: string) {
   fireEvent.click(screen.getByRole('button', { name: `Actions for ${name}` }));
   fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove…' }));
-  fireEvent.click(within(await screen.findByRole('alertdialog', { name: `Remove ${name}?` })).getByRole('button', { name: 'Remove account' }));
+  const dialog = within(await screen.findByRole('alertdialog', { name: `Remove ${name}?` }));
+
+  // A destructive confirmation works only once it is ticked as understood.
+  expect(dialog.getByRole('button', { name: 'Remove account' })).toBeDisabled();
+  fireEvent.click(dialog.getByRole('checkbox', { name: UNDERSTOOD }));
+  fireEvent.click(dialog.getByRole('button', { name: 'Remove account' }));
   await act(async () => {});
 }
 

@@ -1,7 +1,7 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, recordOf, recordsOf, shortDate, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, ID, TAG, refersTo } from './rules';
+import { billingFigure, billingFinding, billingWaiting, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
@@ -95,6 +95,16 @@ function Billing() {
             ...STATEMENT_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()}`, disabled: b.status === s || b.status === 'Void', onSelect: () => run((st, c) => setStatementStatus(st, b.no, s, c)) })),
             { label: 'Void statement…', danger: true, disabled: b.status === 'Void', onSelect: () => confirm({ title: `Void ${b.no}?`, body: `${peso(statementTotals(b).due)} billed to ${recordOf(state, b.client)?.name ?? b.client}. A void statement stays in the register and cannot be reopened.`, confirm: 'Void statement', danger: true, onConfirm: () => run((st, c) => setStatementStatus(st, b.no, 'Void', c)) }) },
           ]}
+          bulk={(picked, clear): RowAction[] => {
+            const open = picked.filter((b) => b.status !== 'Void');
+            const to = (status: StatementStatus) => open.filter((b) => b.status !== status);
+            const move = (status: StatementStatus, nos: string[]) => { if (run((st, c) => setStatementsStatus(st, nos, status, c)).ok) clear(); };
+
+            return [
+              ...STATEMENT_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()} (${to(s).length})`, disabled: !to(s).length, onSelect: () => move(s, to(s).map((b) => b.no)) })),
+              { label: `Void (${open.length})…`, danger: true, disabled: !open.length, onSelect: () => confirm({ title: `Void ${count(open.length, 'statement')}?`, body: `${open.map((b) => b.no).join(', ')}. A void statement stays in the register and cannot be reopened.`, confirm: 'Void statements', danger: true, onConfirm: () => move('Void', open.map((b) => b.no)) }) },
+            ];
+          }}
           empty={<EmptyState text="No statements yet." action={<Button size="sm" kind="primary" onClick={() => document.getElementById('bs-form')?.scrollIntoView({ block: 'start' })}>Bill the first client</Button>} />}
         />
       </Panel>

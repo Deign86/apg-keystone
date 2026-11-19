@@ -198,6 +198,7 @@ test('removes an unused record after asking, and refuses one a document uses', a
 
   await directory.getByRole('button', 'Actions for V-002').tap();
   await screen.getByRole('menuitem', 'Remove…').tap();
+  await screen.getByRole('alertdialog', /V-002/).getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', /V-002/).getByRole('button', /^Remove/).tap();
 
   await expect(directory.getByRole('row', /^V-002 /)).toBeHidden();
@@ -218,6 +219,7 @@ test('says what removing a record does, keeps it on cancel, and logs the removal
 
   await directory.getByRole('button', 'Actions for V-002').tap();
   await screen.getByRole('menuitem', 'Remove…').tap();
+  await screen.getByRole('alertdialog', 'Remove V-002?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Remove V-002?').getByRole('button', 'Remove record').tap();
   await expect(screen.getByRole('dialog', 'V-002 removed.')).toBeVisible();
 
