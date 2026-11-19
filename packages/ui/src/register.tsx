@@ -2,14 +2,16 @@ import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox';
 import { Menu } from '@base-ui/react/menu';
 import { Check, Minus, MoreHorizontal } from 'lucide-react';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { cn } from './primitives';
+import { Button, cn } from './primitives';
 
 // A register: a real <table> with gold header capitals, rows on a 45px pitch split by
 // 1px lines, figures right-aligned in tabular digits, one status per row and one menu
 // at the far right. Clicking a row (or Enter on it) opens the record. A register that takes actions on several rows at
 // once has a box at the end of each row, before its menu, and one over them all (at the end, so a row is still named
 // by what it holds first); with any ticked, a bar over the table names how many
-// and offers the actions for them.
+// and offers the actions for them. The row open elsewhere on the screen (in the form beside it) is marked, as the rail
+// marks its screen, with a gold line at its edge. A long register shows a page of rows at a time, with Previous and
+// Next under it.
 
 export interface Column<T> {
   key: string;
@@ -87,8 +89,31 @@ function Tick({ checked, mixed, label, onChange }: { checked: boolean; mixed?: b
 /** The box column. */
 const TICK_WIDTH = 36;
 
+/** Rows a page holds, for a register that shows its rows a page at a time. */
+export const PAGE_SIZE = 10;
+
+/**
+ * Page `page` (counted from 0, kept within the pages there are) of `total` rows, `size` to a page: which page it is,
+ * how many there are, and the rows it shows, from `first` up to but not including `end`.
+ */
+export function pageOf(total: number, size: number, page: number) {
+  const pages = Math.max(1, Math.ceil(total / size));
+  const at = Math.min(Math.max(0, page), pages - 1);
+
+  return { page: at, pages, first: at * size, end: Math.min(total, (at + 1) * size) };
+}
+
+/** Previous or Next under a register. Kept in the tab order at either end, so a press there never loses focus. */
+function PageButton({ children, off, onPress }: { children: ReactNode; off: boolean; onPress: () => void }) {
+  return (
+    <Button size="sm" aria-disabled={off || undefined} onClick={() => { if (!off) onPress(); }} className="aria-disabled:pointer-events-none aria-disabled:opacity-40">
+      {children}
+    </Button>
+  );
+}
+
 export function Register<T>({
-  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, bulk, empty, caption,
+  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, bulk, empty, caption, current, pageSize,
 }: {
   label: string;
   columns: Column<T>[];
@@ -106,6 +131,10 @@ export function Register<T>({
   bulk?: (selected: T[], clear: () => void) => RowAction[];
   empty: ReactNode;
   caption?: string;
+  /** The key of the row open elsewhere on the screen, such as in the form beside the register: marked, and announced as current. */
+  current?: string;
+  /** Given, a register longer than this shows that many rows at a time, with Previous and Next under it (PAGE_SIZE suits most). */
+  pageSize?: number;
 }) {
   const need = columns.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), (actions ? MENU_WIDTH : 0) + (bulk ? TICK_WIDTH : 0));
   const [box, roomy] = useRoomFor(need);
@@ -113,14 +142,41 @@ export function Register<T>({
   const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set());
   // Only rows still in the register count: one deleted or filtered away drops out of the selection.
   const selected = bulk ? rows.filter((r) => ticked.has(rowKey(r))) : [];
-  const all = rows.length > 0 && selected.length === rows.length;
   const clear = () => setTicked(new Set());
 
-  const tick = (key: string, on: boolean) => setTicked((prev) => {
+  // A row opened from elsewhere (Home, Overview, another page) is brought into view: its page is shown when the register
+  // opens with it current, and whenever it becomes current.
+  const pageWith = (key: string | undefined) => {
+    const i = key === undefined ? -1 : rows.findIndex((r) => rowKey(r) === key);
+
+    return i >= 0 && pageSize ? Math.floor(i / pageSize) : null;
+  };
+
+  const [page, setPage] = useState(() => pageWith(current) ?? 0);
+  const [seen, setSeen] = useState(current);
+
+  if (current !== seen) {
+    setSeen(current);
+    const p = pageWith(current);
+
+    if (p !== null) setPage(p);
+  }
+
+  const paged = pageSize !== undefined && rows.length > pageSize;
+  const at = pageOf(rows.length, pageSize ?? Math.max(1, rows.length), page);
+
+  const visible = paged ? rows.slice(at.first, at.end) : rows;
+  // The box over the rows ticks those on view: the page shown, or every row when there is one page.
+  const all = visible.length > 0 && visible.every((r) => ticked.has(rowKey(r)));
+  const some = visible.some((r) => ticked.has(rowKey(r)));
+
+  const tick = (keys: string[], on: boolean) => setTicked((prev) => {
     const next = new Set(prev);
 
-    if (on) next.add(key);
-    else next.delete(key);
+    for (const key of keys) {
+      if (on) next.add(key);
+      else next.delete(key);
+    }
 
     return next;
   });
@@ -170,41 +226,55 @@ export function Register<T>({
             ))}
             {bulk && (
               <th scope="col" className="pl-3">
-                {rows.length > 0 && <Tick checked={all} mixed={!all && selected.length > 0} label={`Select every row in ${label}`} onChange={(on) => setTicked(on ? new Set(rows.map(rowKey)) : new Set())} />}
+                {rows.length > 0 && <Tick checked={all} mixed={!all && some} label={paged ? `Select every row on this page of ${label}` : `Select every row in ${label}`} onChange={(on) => tick(visible.map(rowKey), on)} />}
               </th>
             )}
             {actions && <th scope="col"><span className="sr-only">Actions</span></th>}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr
-              key={rowKey(row)}
-              tabIndex={onOpen ? 0 : undefined}
-              onClick={onOpen ? () => onOpen(row) : undefined}
-              onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(row); } : undefined}
-              className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2', ticked.has(rowKey(row)) && 'bg-gold-tint')}
-            >
-              {shown.map((c) => (
-                <td key={c.key} className={cn('h-[45px] max-w-0 truncate px-2.5', c.align === 'right' && 'text-right tabular-nums')}>
-                  {c.cell(row)}
-                </td>
-              ))}
-              {bulk && (
-                <td className="pl-3" onClick={(e) => e.stopPropagation()}>
-                  <Tick checked={ticked.has(rowKey(row))} label={`Select ${rowLabel(row)}`} onChange={(on) => tick(rowKey(row), on)} />
-                </td>
-              )}
-              {actions && (
-                <td className="px-1 text-right" onClick={(e) => e.stopPropagation()}>
-                  {actions(row).length > 0 && <RowMenu label={`Actions for ${rowLabel(row)}`} actions={actions(row)} />}
-                </td>
-              )}
-            </tr>
-          ))}
+          {visible.map((row) => {
+            const key = rowKey(row);
+            const open = key === current;
+
+            return (
+              <tr
+                key={key}
+                tabIndex={onOpen ? 0 : undefined}
+                aria-current={open || undefined}
+                onClick={onOpen ? () => onOpen(row) : undefined}
+                onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(row); } : undefined}
+                className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2', open && 'bg-surface-2', ticked.has(key) && 'bg-gold-tint')}
+              >
+                {shown.map((c, i) => (
+                  <td key={c.key} className={cn('h-[45px] max-w-0 truncate px-2.5', c.align === 'right' && 'text-right tabular-nums', i === 0 && 'relative')}>
+                    {i === 0 && open && <span aria-hidden="true" className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full bg-gold" />}
+                    {c.cell(row)}
+                  </td>
+                ))}
+                {bulk && (
+                  <td className="pl-3" onClick={(e) => e.stopPropagation()}>
+                    <Tick checked={ticked.has(key)} label={`Select ${rowLabel(row)}`} onChange={(on) => tick([key], on)} />
+                  </td>
+                )}
+                {actions && (
+                  <td className="px-1 text-right" onClick={(e) => e.stopPropagation()}>
+                    {actions(row).length > 0 && <RowMenu label={`Actions for ${rowLabel(row)}`} actions={actions(row)} />}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {rows.length === 0 && empty}
+      {paged && (
+        <nav aria-label={`${label}, pages`} className="flex items-center justify-end gap-2 border-t border-line pt-2.5">
+          <span aria-live="polite" className="mr-auto text-xs text-ink-2 tabular-nums">{at.first + 1}–{at.end} of {rows.length}</span>
+          <PageButton off={at.page === 0} onPress={() => setPage(at.page - 1)}>Previous</PageButton>
+          <PageButton off={at.page === at.pages - 1} onPress={() => setPage(at.page + 1)}>Next</PageButton>
+        </nav>
+      )}
     </div>
   );
 }

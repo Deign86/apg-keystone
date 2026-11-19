@@ -1,7 +1,8 @@
 # Check Vouchers
 
 ## Owns
-- `src/index.tsx`: the register (status changes from the row menu; void asks first), the form, editing in place while a
+- `src/index.tsx`: the register (Edit voucher, or View voucher once it can no longer change, and status changes from
+  the row menu; void asks first; ten vouchers to a page; the voucher open in the form marked in its row), the form, editing in place while a
   voucher is For Approval or Approved, Save as new, Print, and Export PDF. An approved voucher stays open so a mistake
   on it can be put right: writing in only its Check No. and Date of check keeps the approval; any other change, saved by
   anyone but the CEO, sends it back for approval (**Save and return for approval**, `returnsForApproval`). A released
@@ -42,7 +43,11 @@
   lock once released, what an edit does to an approval, copying one) and what it contributes. Tested in
   `test/rules.test.ts`.
 - Numbering: 888-001, 888-002 and on, with no year (older vouchers keep their CV-2026-… or 8888-… numbers). A new
-  voucher's signatories start as the last voucher's, so each preparer types their full name once.
+  voucher's CV No. offers the next number, as the register stands when it is saved, and can be changed, as Billing's
+  Invoice No. can: the number typed is kept, and one already used is refused with the next free one (`draftNo`). A saved
+  voucher keeps its number. A new voucher's signatories start as the last voucher's, so each preparer types their full
+  name once.
+- Opening a voucher (its row, or Edit/View in its menu) and New voucher bring the form into view, under the register.
 
 Older vouchers keep the account code they were saved with; it is no longer entered or printed.
 

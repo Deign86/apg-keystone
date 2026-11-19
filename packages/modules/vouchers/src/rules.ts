@@ -43,6 +43,17 @@ const SERIES = '888-';
  */
 export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
 
+/**
+ * The number a draft is saved under. A saved voucher keeps its own. A new one takes the number typed on it, or, until
+ * one is typed (or once it is cleared), the next number as the register stands, so a voucher saved by someone else
+ * meanwhile never makes the number offered a used one.
+ */
+export function draftNo(s: TerminalState, d: Pick<VoucherDraft, 'editing' | 'no' | 'typedNo'>): string {
+  if (d.editing) return d.editing;
+
+  return (d.typedNo && d.no.trim()) || nextVoucherNo(s);
+}
+
 /** Whether deleting this voucher gives its number back: it is the highest of the series left. */
 export const freesNumber = (s: TerminalState, no: string) => nextVoucherNo({ ...s, cv: s.cv.filter((v) => v.no !== no) }) === no;
 
@@ -62,7 +73,10 @@ export function payeeOf(s: TerminalState, v: Pick<Voucher, 'payee' | 'address'>)
 }
 
 export interface VoucherDraft extends Editing {
-  no: string; date: string;
+  no: string;
+  /** Whether `no` was typed in. A new voucher's number is otherwise the next one as it is saved: see draftNo. */
+  typedNo?: boolean;
+  date: string;
   /** The payee's name and address, typed in. */
   payee: string; address: string;
   /** The payee's TIN, printed only when typed in. */
@@ -170,9 +184,13 @@ function checkedVoucher(d: VoucherDraft): Voucher {
   return v;
 }
 
-/** Adds a voucher under the next number: For Approval, or approved by the CEO who saved it. */
-function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string): Change<Voucher> {
-  const saved: Voucher = { ...v, no: nextVoucherNo(s), status: approvedBy ? 'Approved' : 'For Approval' };
+/**
+ * Adds a voucher under `no` (the next number unless given): For Approval, or approved by the CEO who saved it. A number
+ * already in the register is refused, with the next free one.
+ */
+function addVoucher(s: TerminalState, v: Voucher, ctx: Ctx, approvedBy?: string, no = nextVoucherNo(s)): Change<Voucher> {
+  if (s.cv.some((x) => x.no === no)) throw new KeystoneError(`CV No. ${no} is already used. The next free one is ${nextVoucherNo(s)}.`);
+  const saved: Voucher = { ...v, no, status: approvedBy ? 'Approved' : 'For Approval' };
   const routed = approvedBy ? `saved and approved by ${approvedBy}` : 'saved and routed for approval';
 
   return {
@@ -207,7 +225,7 @@ export function returnsForApproval(s: TerminalState, d: VoucherDraft, ctx: Ctx):
  * Saves a voucher. A draft loaded from the register updates that voucher while it is For Approval or Approved; `asNew`
  * saves a copy under the next number. An approved voucher keeps its approval when only its check is written in, or when
  * the CEO edits it; any other change goes back for approval, so what is approved is what the CEO saw. A new voucher waits for approval, unless the
- * CEO saves it: theirs is approved as it is saved.
+ * CEO saves it: theirs is approved as it is saved. It keeps a CV No. typed on it, unless that number is already used.
  */
 export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew = false): Change<Voucher> {
   const v = checkedVoucher(d);
@@ -230,7 +248,8 @@ export function saveVoucher(s: TerminalState, d: VoucherDraft, ctx: Ctx, asNew =
     };
   }
 
-  return addVoucher(s, v, ctx, approvesOnSave(ctx) ? ctx.who?.name : undefined);
+  // A copy of a saved voucher takes the next number; a new one, the number typed on it (draftNo).
+  return addVoucher(s, v, ctx, approvesOnSave(ctx) ? ctx.who?.name : undefined, d.editing ? nextVoucherNo(s) : draftNo(s, d));
 }
 
 /** An approved voucher with only its check number or date of check changed: it stays approved. */

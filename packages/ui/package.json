@@ -15,7 +15,8 @@
     "./keystone-mark.png": "./src/assets/keystone-mark.png"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@base-ui/react": "^1.9.0",
