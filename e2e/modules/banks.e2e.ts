@@ -79,8 +79,8 @@ test('adds an account, and a statement picks it under Pay into and prints it', a
 
   await expect(form.getByRole('combobox', 'Pay into')).toHaveText('BDO · 0012 3456 7890');
   await expect(form.getByRole('textbox', 'Payment instructions')).toHaveValue(INSTRUCTIONS);
-  await expect(paper.getByText('Account Number: 0012 3456 7890', { exact: false })).toBeVisible();
-  await expect(paper.getByText('Bank: BDO, Ortigas Center', { exact: false })).toBeVisible();
+  await expect(paper.getByText('Account Number: 0012 3456 7890', { exact: false }).first()).toBeVisible();
+  await expect(paper.getByText('Bank: BDO, Ortigas Center', { exact: false }).first()).toBeVisible();
   await expect(paper.getByText('Account Number: 4011 0258 68', { exact: false })).toBeHidden();
 });
 
