@@ -79,8 +79,7 @@ test('issues a billing statement to a client the Directory keeps', async ({ app,
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('combobox', 'Bill to').tap();
-  await screen.getByRole('option', 'Novatek BPO Solutions Inc. (C-001)').tap();
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
