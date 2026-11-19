@@ -2,7 +2,7 @@
 import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, type ReactNode } from 'react';
 import { amountInWords, longDate, peso, toCentavos, type Company, type Voucher } from '@keystone/core';
-import { voucherTotal, type Payee } from './rules';
+import { caps, voucherTotal, type Payee } from './rules';
 import { Masthead, paperHeading as heading, paperLabel, paperLogo, TwoUp } from '@keystone/kit';
 
 // The company's Check Voucher, twice on one A4 sheet: once on each half, cut apart along the dashed line across the
@@ -27,7 +27,7 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
   const total = voucherTotal(v);
 
   const signatures = [
-    [v.preparedPos, v.prepared, 'Prepared by'], [v.checkedPos, v.checked, 'Audited by'], [v.approvedPos, v.approved, 'Approved by'],
+    [v.preparedPos, caps(v.prepared), 'Prepared by'], [v.checkedPos, caps(v.checked), 'Audited by'], [v.approvedPos, caps(v.approved), 'Approved by'],
     ['', '', 'Received payment by'],
   ];
 
@@ -53,12 +53,12 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
             rest. The line before the dates is drawn on their left, as it is down the amounts below, so the two meet
             in one straight line. */}
         <dl className="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
-          <Box label="Payee" className="border-b border-paper-line">{payee.name}</Box>
+          <Box label="Payee" className="border-b border-paper-line">{caps(payee.name)}</Box>
           <Box label="TIN" className="max-w-[18rem] border-b border-paper-line">{v.tin}</Box>
           <Box label="Date" className="border-b border-l border-paper-line">{longDate(v.date)}</Box>
           <Box label="Address" className="col-span-2 border-b border-paper-line">{payee.address}</Box>
           <Box label="Check no." className="border-b border-l border-paper-line">{v.check}</Box>
-          <Box label="Issuer">{v.issuer}</Box>
+          <Box label="Issuer">{v.issuer && caps(v.issuer)}</Box>
           <Box label="Bank" className="max-w-[18rem]">{v.bank}</Box>
           <Box label="Date of check" className="border-l border-paper-line">{v.checkDate ? longDate(v.checkDate) : ''}</Box>
         </dl>

@@ -2,8 +2,8 @@ import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sec
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, copyVoucher, newVoucher, payeeOf, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, VOUCHER_STATUSES, vouchersNewestFirst, voucherTone, voucherTotal, voucherWaiting, withCheck, ID, TAG, refersTo,
+  approvesOnSave, awaitingApproval, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, newVoucher, payeeOf, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, withCheck, ID, TAG, refersTo,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -165,6 +165,24 @@ function Vouchers() {
     if (r.ok) setDraft(newVoucher(r.state, ctx, bank));
   }, [run, draft, ctx, setDraft, bank]);
 
+  /** Deletes a void voucher, and clears the form if it held that voucher. */
+  const remove = (no: string) => {
+    const r = run((st, c) => deleteVoucher(st, no, c));
+
+    if (r.ok && draft.editing === no) setDraft(newVoucher(r.state, ctx, bank));
+  };
+
+  const register = voucherRegister(state, ctx);
+
+  const open = (v: Voucher) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); };
+
+  const actions = (v: Voucher) => [
+    ...VOUCHER_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()}`, disabled: v.status === s || v.status === 'Void', onSelect: () => run((st, c) => setVoucherStatus(st, v.no, s, c)) })),
+    v.status === 'Void'
+      ? { label: 'Delete voucher…', danger: true, onSelect: () => confirm({ title: `Delete ${v.no}?`, body: `The void voucher for ${peso(voucherTotal(v))} to ${payeeOf(state, v).name} is removed from the register now, instead of on ${shortDate(clearsOn(v))}. Its number is not used again.`, confirm: 'Delete voucher', danger: true, onConfirm: () => remove(v.no) }) }
+      : { label: 'Void voucher…', danger: true, onSelect: () => confirm({ title: `Void ${v.no}?`, body: `${peso(voucherTotal(v))} to ${payeeOf(state, v).name}. A void voucher cannot be reopened, and is cleared from the register ${VOID_KEPT_DAYS} days after.`, confirm: 'Void voucher', danger: true, onConfirm: () => run((st, c) => setVoucherStatus(st, v.no, 'Void', c)) }) },
+  ];
+
   const columns: Column<Voucher>[] = [
     { key: 'no', header: 'CV No.', width: 120, cell: (v) => <span className="font-semibold text-gold-bright tabular-nums">{v.no}</span> },
     { key: 'date', header: 'Date', width: 104, cell: (v) => <span className="text-ink-2 tabular-nums">{shortDate(v.date)}</span> },
@@ -191,15 +209,27 @@ function Vouchers() {
         <Register
           label="Voucher register"
           columns={columns}
-          rows={vouchersNewestFirst(state)}
+          rows={register.current}
           rowKey={(v) => v.no}
-          onOpen={(v) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); }}
-          actions={(v) => [
-            ...VOUCHER_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()}`, disabled: v.status === s || v.status === 'Void', onSelect: () => run((st, c) => setVoucherStatus(st, v.no, s, c)) })),
-            { label: 'Void voucher…', danger: true, disabled: v.status === 'Void', onSelect: () => confirm({ title: `Void ${v.no}?`, body: `${peso(voucherTotal(v))} to ${payeeOf(state, v).name}. A void voucher stays in the register and cannot be reopened.`, confirm: 'Void voucher', danger: true, onConfirm: () => run((st, c) => setVoucherStatus(st, v.no, 'Void', c)) }) },
-          ]}
-          empty={<EmptyState text="No vouchers yet." action={<Button size="sm" kind="primary" onClick={() => document.getElementById('cv-form')?.scrollIntoView({ block: 'start' })}>Write the first one</Button>} />}
+          onOpen={open}
+          actions={actions}
+          empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={() => document.getElementById('cv-form')?.scrollIntoView({ block: 'start' })}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
         />
+        {/* Earlier months' released and void vouchers, folded away, newest month first. */}
+        {register.earlier.map((m) => (
+          <details key={m.month} className="group mt-3 border-t border-line pt-3">
+            <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 rounded-control px-1 py-1 hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
+              <span className="flex items-baseline gap-2 font-semibold">
+                <span aria-hidden="true" className="inline-block text-ink-2 transition-transform group-open:rotate-90">›</span>
+                <span>{m.label}</span>
+              </span>
+              <span className="text-xs text-ink-2 tabular-nums">{count(m.vouchers.length, 'voucher')} · {peso(m.total)}</span>
+            </summary>
+            <div className="mt-2">
+              <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} empty={null} />
+            </div>
+          </details>
+        ))}
       </Panel>
 
       <Workspace
@@ -226,10 +256,10 @@ function Vouchers() {
                 <Field label="CV No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
                 <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
               </FieldRow>
-              <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} /></Field>
+              <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
               <Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
               <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
-              <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer })} /></Field>
+              <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>
               <DrawnOn value={shown.bank} onChange={(b) => setDraft({ ...draft, bank: b })} />
             </fieldset>
             <fieldset disabled={!!locked && !checkOpen} className={FIELDS}>
@@ -247,15 +277,15 @@ function Vouchers() {
               {/* Each signatory's name over their position, as the voucher prints them. */}
               <FieldRow min={120}>
                 <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
+                  <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} /></Field>
                   <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
+                  <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} /></Field>
                   <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                  <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} /></Field>
                   <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
                 </div>
               </FieldRow>
@@ -286,6 +316,7 @@ export const vouchersModule: ModuleDef = {
   },
   create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go(ID); } },
   refersTo,
+  onOpen: clearVoided,
   logTags: { [TAG]: 'Vouchers' },
   provides: { [SERVICES.voucherDrafts]: voucherDrafts },
   Screen: Vouchers,
