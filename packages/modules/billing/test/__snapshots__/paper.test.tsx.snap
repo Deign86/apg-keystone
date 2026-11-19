@@ -2,10 +2,13 @@
 
 exports[`the billing statement on paper > is laid out, and prints, exactly as it has > at the printer 1`] = `
 {
-  "page": [],
+  "page": [
+    "@page { size: A4; margin: 0; }",
+  ],
   "paper": "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010097-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<article data-ui="document" data-print-fit="halves" aria-label="Billing statement 010097-2026" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0" data-print-root="">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
@@ -76,6 +79,79 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </tr>
 </tfoot>
 </table>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Billing Statement</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Invoice No. 010097-2026</p>
+<p class="m-0 text-xs font-medium tabular-nums">Date: October 1, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bill to</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Novatek BPO Solutions Inc.</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Invoice date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">October 1, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Attention</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Carlo Mendiola</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Due date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">October 15, 2026</dd>
+</dl>
+<p class="mt-0 mb-2 text-[11px] text-paper-muted">5% penalty charge will be applied to delayed monthly payments.</p>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount with tax</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Monthly rent – 18/F, 420 sqm (October 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱399,840.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Association dues (October 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱47,040.00</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Subtotal</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱399,000.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">VAT (12%)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱47,880.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Less: 5% expanded withholding tax (BIR Form 2307 to follow)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">(₱19,950.00)</td>
+</tr>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="3" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total amount due</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱426,930.00</td>
+</tr>
+</tfoot>
+</table>
+</div>
 </article>
 </div>
 </div>",
@@ -85,7 +161,8 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 exports[`the billing statement on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010097-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" data-print-fit="halves" aria-label="Billing statement 010097-2026" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
@@ -156,6 +233,79 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </tr>
 </tfoot>
 </table>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Billing Statement</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Invoice No. 010097-2026</p>
+<p class="m-0 text-xs font-medium tabular-nums">Date: October 1, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bill to</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Novatek BPO Solutions Inc.</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Invoice date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">October 1, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Attention</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Carlo Mendiola</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Due date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">October 15, 2026</dd>
+</dl>
+<p class="mt-0 mb-2 text-[11px] text-paper-muted">5% penalty charge will be applied to delayed monthly payments.</p>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount with tax</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Monthly rent – 18/F, 420 sqm (October 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱399,840.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Association dues (October 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱47,040.00</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Subtotal</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱399,000.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">VAT (12%)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱47,880.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Less: 5% expanded withholding tax (BIR Form 2307 to follow)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">(₱19,950.00)</td>
+</tr>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="3" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total amount due</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱426,930.00</td>
+</tr>
+</tfoot>
+</table>
+</div>
 </article>
 </div>
 </div>"
@@ -164,7 +314,8 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 exports[`the billing statement on paper > lays out every statement in the sample the same way, with and without tax, and one with no charges > 010098-2026 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010098-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" data-print-fit="halves" aria-label="Billing statement 010098-2026" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
@@ -228,6 +379,72 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 </tfoot>
 </table>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Billing Statement</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Invoice No. 010098-2026</p>
+<p class="m-0 text-xs font-medium tabular-nums">Date: October 1, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bill to</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Dela Cruz, Maria Teresa</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Invoice date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">October 1, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Attention</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">—</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Due date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">October 10, 2026</dd>
+</dl>
+<p class="mt-0 mb-2 text-[11px] text-paper-muted">
+</p>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Monthly rent – Unit 12B (October 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱85,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱85,000.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Parking slot P-214 (October 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱6,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱6,000.00</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Subtotal</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱91,000.00</td>
+</tr>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="3" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total amount due</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱91,000.00</td>
+</tr>
+</tfoot>
+</table>
+</div>
 </article>
 </div>
 </div>"
@@ -236,7 +453,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 exports[`the billing statement on paper > lays out every statement in the sample the same way, with and without tax, and one with no charges > 010099-2026 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010099-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" data-print-fit="halves" aria-label="Billing statement 010099-2026" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
@@ -308,6 +526,80 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 </tfoot>
 </table>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Billing Statement</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Invoice No. 010099-2026</p>
+<p class="m-0 text-xs font-medium tabular-nums">Date: October 25, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bill to</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Harbor Point Logistics Corp.</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Invoice date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">October 25, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Attention</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Liza Tan</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Due date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">November 5, 2026</dd>
+</dl>
+<p class="mt-0 mb-2 text-[11px] text-paper-muted">
+</p>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount with tax</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">Warehouse lease – Bldg 4 (November 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱510,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱571,200.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top">
+<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line ">CUSA charges (November 2026)</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱38,250.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,840.00</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Subtotal</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱548,250.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">VAT (12%)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱65,790.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Less: 5% expanded withholding tax (BIR Form 2307 to follow)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">(₱27,412.50)</td>
+</tr>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="3" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total amount due</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱586,627.50</td>
+</tr>
+</tfoot>
+</table>
+</div>
 </article>
 </div>
 </div>"
@@ -316,7 +608,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 exports[`the billing statement on paper > lays out every statement in the sample the same way, with and without tax, and one with no charges > blank 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement blank" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" data-print-fit="halves" aria-label="Billing statement blank" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
@@ -379,7 +672,90 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 </tfoot>
 </table>
+</div>
+<div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Billing Statement</p>
+<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">Invoice No. blank</p>
+<p class="m-0 text-xs font-medium tabular-nums">Date: October 1, 2026</p>
+</div>
+</div>
+<div class="mt-2">
+<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
+<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
+</div>
+</header>
+<dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bill to</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Novatek BPO Solutions Inc.</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Invoice date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">October 1, 2026</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Attention</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Carlo Mendiola</dd>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Due date</dt>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">October 15, 2026</dd>
+</dl>
+<p class="mt-0 mb-2 text-[11px] text-paper-muted">
+</p>
+<table class="my-2 w-full border-collapse border border-paper-ink">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
+<th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount with tax</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule">
+<td colspan="4" class="px-2.5 py-1.5 text-paper-muted">No charges yet.</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Subtotal</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱0.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">VAT (12%)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">₱0.00</td>
+</tr>
+<tr class=" ">
+<td colspan="3" class="px-2.5 py-1.5 text-right font-medium">Less: 5% expanded withholding tax (BIR Form 2307 to follow)</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">(₱0.00)</td>
+</tr>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="3" class="px-2.5 py-1.5 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total amount due</td>
+<td class="border-l border-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱0.00</td>
+</tr>
+</tfoot>
+</table>
+</div>
 </article>
 </div>
 </div>"
+`;
+
+exports[`the billing statement on paper > prints twice on one A4, and shrinks a copy that runs past half the page so the cut still falls at the middle > long copies at the printer 1`] = `
+{
+  "copies": [
+    {
+      "height": "700px",
+      "zoom": "0.8014285714285714",
+    },
+    {
+      "height": "700px",
+      "zoom": "0.8014285714285714",
+    },
+  ],
+  "page": [
+    "@page { size: A4; margin: 0; }",
+  ],
+}
 `;

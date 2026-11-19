@@ -9,6 +9,15 @@
   role `owner`) is approved as it is saved, with **Save and approve** (docs/adr/0022); anyone else's waits for approval.
   Approval can be taken back until the check is released; a released voucher can only be voided, and a void voucher
   stays void.
+- **The register does not grow without end.** A void voucher is cleared from it 7 days after it was voided
+  (`VOID_KEPT_DAYS`, on open, one log line), and **Delete voucher…** in its row menu clears it now, after asking. Only a
+  void voucher can be deleted. A deleted voucher's number is never given out again: the highest one removed is kept under
+  `state.ext.vouchers`. A voucher released before this month folds into a dropdown for the month it is dated, newest
+  month first, each showing its count and total; everything still waiting, everything released this month and every
+  void voucher stays on top (`voucherRegister`). A voucher is dated as it is released (`released`) and voided
+  (`voided`); older ones count from their own date.
+- **Names are in capitals:** the payee, the issuer and the three signatories turn to capitals as they are typed, are
+  saved that way, and print that way, older vouchers too. Positions and addresses stay as typed.
 - `src/VoucherPaper.tsx`: the printed Check Voucher, headed by the Alpha Premier Group of Companies logo with the
   company's built-in address right beside it (core's `COMPANY`, docs/adr/0023; the logo names the company), and ruled into boxes like the company's cash
   voucher, out to near the paper's edges: payee and TIN, address, issuer and bank, the number, date, check no. and date
@@ -38,6 +47,7 @@ Older vouchers keep the account code they were saved with; it is no longer enter
   "New check voucher" button.
 - **Finding:** "N vouchers worth ₱… wait for approval" (priority 20).
 - **Home:** a tile.
+- **On open:** void vouchers 7 days past voiding are cleared from the register.
 - **Activity:** log tag `CV`.
 - **Draft key:** `vouchers.draft`.
 - **Directory:** a record that an older voucher names by code is kept (`refersTo`), marked `CV`.

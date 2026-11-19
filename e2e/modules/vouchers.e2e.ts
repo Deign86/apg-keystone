@@ -33,7 +33,7 @@ test('writes a voucher and routes it for approval', async ({ app, screen }) => {
   await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
   const register = screen.getByRole('table', 'Voucher register');
 
-  await expect(register.getByRole('row', /^888-001 Nov 2, 2026 Manila Electric Company \(Meralco\).*₱1,500\.50 For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^888-001 Nov 2, 2026 MANILA ELECTRIC COMPANY \(MERALCO\).*₱1,500\.50 For Approval/)).toBeVisible();
   await expect(screen.getByText('2 vouchers worth ₱36,500.50 wait for approval.')).toBeVisible();
 
   // The form is blank again, numbered from the register.
@@ -102,7 +102,10 @@ test('releases a voucher only once it is approved and has its check number', asy
 
 test('a released voucher stays released', async ({ app, screen }) => {
   await app.open('/#vouchers');
-  const row = screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0139 /);
+  // Released in October, it is folded under October 2026 by November.
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0139 /)).toBeHidden();
+  await screen.getByText('October 2026').tap();
+  const row = screen.getByRole('table', 'Vouchers, October 2026').getByRole('row', /^CV-2026-0139 /);
 
   await row.getByRole('button', 'Actions for CV-2026-0139').tap();
   await screen.getByRole('menuitem', 'Mark for approval').tap();
@@ -111,7 +114,7 @@ test('a released voucher stays released', async ({ app, screen }) => {
   await expect(row.getByRole('cell', 'Released')).toBeVisible();
 });
 
-test('asks before voiding, and a void voucher stays void', async ({ app, screen }) => {
+test('asks before voiding, a void voucher stays void, and deleting it removes it for good', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const row = screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0141 /);
 
@@ -119,7 +122,7 @@ test('asks before voiding, and a void voucher stays void', async ({ app, screen 
   await screen.getByRole('menuitem', 'Void voucher…').tap();
   const confirm = screen.getByRole('alertdialog', 'Void CV-2026-0141?');
 
-  await expect(confirm.getByText('₱35,000.00 to Vergara & Associates Law Office. A void voucher stays in the register and cannot be reopened.')).toBeVisible();
+  await expect(confirm.getByText('₱35,000.00 to Vergara & Associates Law Office. A void voucher cannot be reopened, and is cleared from the register 7 days after.')).toBeVisible();
   await confirm.getByRole('button', 'Cancel').tap();
   await expect(row.getByRole('cell', 'For Approval')).toBeVisible();
 
@@ -130,7 +133,15 @@ test('asks before voiding, and a void voucher stays void', async ({ app, screen 
 
   await row.getByRole('button', 'Actions for CV-2026-0141').tap();
   await expect(screen.getByRole('menuitem', 'Mark approved')).toBeDisabled();
-  await expect(screen.getByRole('menuitem', 'Void voucher…')).toBeDisabled();
+  await expect(screen.getByRole('menuitem', 'Void voucher…')).toBeHidden();
+
+  // Deleting asks too, says when it would have been cleared on its own, and its number is never given out again.
+  await screen.getByRole('menuitem', 'Delete voucher…').tap();
+  const del = screen.getByRole('alertdialog', 'Delete CV-2026-0141?');
+
+  await expect(del.getByText('The void voucher for ₱35,000.00 to Vergara & Associates Law Office is removed from the register now, instead of on Nov 9, 2026. Its number is not used again.')).toBeVisible();
+  await del.getByRole('button', 'Delete voucher').tap();
+  await expect(row).toBeHidden();
 });
 
 test('edits a voucher while it waits for approval, and saves changes in place', async ({ app, screen }) => {
@@ -145,7 +156,8 @@ test('edits a voucher while it waits for approval, and saves changes in place', 
   await form.getByRole('button', 'Save changes').tap();
 
   await expect(register.getByRole('row', /^CV-2026-0141 .* 0001190 /)).toBeVisible();
-  await expect(register.getByRole('row')).toHaveCount(4);
+  // The heading row, 0140 and 0141: the released 0139 is folded under October 2026.
+  await expect(register.getByRole('row')).toHaveCount(3);
 });
 
 test('an approved voucher takes only its check, and copies to a new voucher', async ({ app, screen }) => {
@@ -186,13 +198,14 @@ test('an approved voucher takes only its check, and copies to a new voucher', as
   await copy.getByRole('textbox', 'Check No.').fill('0004521');
   await copy.getByRole('button', 'Save and route for approval').tap();
 
-  await expect(register.getByRole('row', /^888-001 Nov 2, 2026 JL Santos Printing Services 0004521 .*₱13,150\.00 For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^888-001 Nov 2, 2026 JL SANTOS PRINTING SERVICES 0004521 .*₱13,150\.00 For Approval/)).toBeVisible();
   await expect(register.getByRole('row', /^CV-2026-0140 .*Approved/)).toBeVisible();
 });
 
 test('a released voucher opens read-only, its check too', async ({ app, screen }) => {
   await app.open('/#vouchers');
-  await screen.getByRole('table', 'Voucher register').getByRole('cell', 'CV-2026-0139').tap();
+  await screen.getByText('October 2026').tap();
+  await screen.getByRole('table', 'Vouchers, October 2026').getByRole('cell', 'CV-2026-0139').tap();
   const form = screen.getByRole('form', 'Viewing CV-2026-0139');
 
   await expect(form.getByText('CV-2026-0139 is released and can no longer be changed. Copy it to a new voucher to change it.')).toBeVisible();
@@ -229,7 +242,8 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   await expect(form.getByRole('textbox', 'Address')).toHaveValue('');
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Address').fill('Ortigas Ave., Pasig City');
-  await expect(box('Manila Electric Company (Meralco)')).toBeVisible();
+  // Names print in capitals, however they are typed.
+  await expect(box('MANILA ELECTRIC COMPANY (MERALCO)')).toBeVisible();
   await expect(box('Ortigas Ave., Pasig City')).toBeVisible();
 
   // The payee's TIN prints only once someone types it.
@@ -238,10 +252,10 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   await expect(box('000-101-528-000')).toBeVisible();
   await expect(box('BPI · 4011 0258 68')).toBeVisible();
   await form.getByRole('textbox', 'Issuer').fill('Alpha Premier Realty');
-  await expect(box('Alpha Premier Realty')).toBeVisible();
+  await expect(box('ALPHA PREMIER REALTY')).toBeVisible();
   // The issuer comes first on its row, under the payee, and the bank beside it, under the TIN; each on one line.
-  await expect(paper.first()).toContainText(/Issuer\s*Alpha Premier Realty\s*Bank\s*BPI · 4011 0258 68\s*Date of check/i);
-  expect(await paperValueLines(browser, 'Alpha Premier Realty')).toBe(1);
+  await expect(paper.first()).toContainText(/Issuer\s*ALPHA PREMIER REALTY\s*Bank\s*BPI · 4011 0258 68\s*Date of check/i);
+  expect(await paperValueLines(browser, 'ALPHA PREMIER REALTY')).toBe(1);
   expect(await paperValueLines(browser, 'BPI · 4011 0258 68')).toBe(1);
   // The line before the dates runs on down the amounts to the total, straight: not a hair to one side anywhere.
   expect(await voucherColumnLines(browser)).toHaveLength(1);
@@ -257,9 +271,9 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   // Each signatory's name prints above their position.
   await form.getByRole('textbox', 'Approved by').fill('Mark Anthony Santos');
   await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
-  await expect(paper.getByText('Mark Anthony Santos').first()).toBeVisible();
+  await expect(paper.getByText('MARK ANTHONY SANTOS').first()).toBeVisible();
   await expect(paper.getByText('Chief Executive Officer').first()).toBeVisible();
-  await expect(paper).toContainText(/Mark Anthony Santos\s*Chief Executive Officer/);
+  await expect(paper).toContainText(/MARK ANTHONY SANTOS\s*Chief Executive Officer/);
 
   // Its labels included, nothing on it is smaller than 11px or fainter than 4.5:1.
   expect(await tinyPaperText(browser)).toEqual([]);
@@ -363,8 +377,8 @@ test('starts each voucher with the signatories the last one was saved with', asy
   await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
 
   await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('888-002');
-  await expect(form.getByRole('textbox', 'Prepared by')).toHaveValue('Kristine Joy L. Villanueva');
-  await expect(screen.getByRole('article', 'Check voucher 888-002').getByText('Kristine Joy L. Villanueva').first()).toBeVisible();
+  await expect(form.getByRole('textbox', 'Prepared by')).toHaveValue('KRISTINE JOY L. VILLANUEVA');
+  await expect(screen.getByRole('article', 'Check voucher 888-002').getByText('KRISTINE JOY L. VILLANUEVA').first()).toBeVisible();
 });
 
 test('a saved voucher shows in the activity log', async ({ app, screen }) => {
@@ -381,7 +395,7 @@ test('a saved voucher shows in the activity log', async ({ app, screen }) => {
   const first = screen.getByRole('region', 'Entries').getByRole('listitem').first();
 
   await expect(first).toContainText('888-001');
-  await expect(first).toContainText('Manila Electric Company (Meralco)');
+  await expect(first).toContainText('MANILA ELECTRIC COMPANY (MERALCO)');
 });
 
 test('New voucher puts away the voucher open in the form and starts a blank one', async ({ app, screen }) => {
@@ -512,9 +526,9 @@ test('logs each edit, approval, release and void, under the Vouchers filter', as
   await expect(entries).toHaveCount(7);
   await expect(entries).toContainText([
     'CV-2026-0140 voided (₱13,150.00).',
-    'CV-2026-0141 released; check 0001188 to Vergara & Associates Law Office.',
+    'CV-2026-0141 released; check 0001188 to VERGARA & ASSOCIATES LAW OFFICE.',
     'CV-2026-0141 approved by CEO.',
-    'CV-2026-0141 for Vergara & Associates Law Office edited (₱35,000.00).',
+    'CV-2026-0141 for VERGARA & ASSOCIATES LAW OFFICE edited (₱35,000.00).',
     'CV-2026-0141 for Vergara & Associates Law Office saved and routed for approval (₱35,000.00).',
     'CV-2026-0140 approved by CEO.',
     'CV-2026-0139 released; check 0004509 picked up by Meralco collector.',

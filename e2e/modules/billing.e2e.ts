@@ -26,7 +26,7 @@ test('issues a statement with VAT and withholding from the client', async ({ app
   await expect(form.getByText('₱21,400.00')).toBeVisible();
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
-  await expect(paper.getByRole('row', 'Total amount due ₱21,400.00')).toBeVisible();
+  await expect(paper.getByRole('row', 'Total amount due ₱21,400.00').first()).toBeVisible();
 
   await form.getByRole('button', 'Save and mark as sent').tap();
 
@@ -53,9 +53,9 @@ test('a non-VAT client gets no VAT and no withholding', async ({ app, screen }) 
   await expect(form.getByText('Subtotal ₱45,500.00')).toBeVisible();
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
-  await expect(paper.getByRole('row', 'Total amount due ₱45,500.00')).toBeVisible();
+  await expect(paper.getByRole('row', 'Total amount due ₱45,500.00').first()).toBeVisible();
   await expect(paper.getByRole('row', 'VAT (12%) ₱0.00')).toBeHidden();
-  await expect(paper.getByRole('row', 'Qty Description Unit price Amount')).toBeVisible();
+  await expect(paper.getByRole('row', 'Qty Description Unit price Amount').first()).toBeVisible();
 });
 
 test('refuses an invoice number already in use and offers the next free one', async ({ app, screen }) => {
@@ -116,8 +116,8 @@ test('prints the company billing statement with the payment instructions', async
   const statement = screen.getByRole('article', 'Billing statement 010100-2026');
 
   await expect(statement).toBeVisible();
-  await expect(statement.getByText('Account Number: 4011 0258 68', { exact: false })).toBeVisible();
-  await expect(statement.getByText('5% penalty charge will be applied to delayed monthly payments.')).toBeVisible();
+  await expect(statement.getByText('Account Number: 4011 0258 68', { exact: false }).first()).toBeVisible();
+  await expect(statement.getByText('5% penalty charge will be applied to delayed monthly payments.').first()).toBeVisible();
   // Its labels included, nothing on it is smaller than 11px or fainter than 4.5:1.
   expect(await tinyPaperText(browser)).toEqual([]);
   expect(await faintPaperText(browser)).toEqual([]);
@@ -154,7 +154,7 @@ test('pays into the account picked under Pay into, and the saved statement keeps
     '',
     'Kindly send proof of payment to accounting@alphapremiergroup.com',
   ].join('\n'));
-  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Account Number: 0000 0712 3456', { exact: false })).toBeVisible();
+  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Account Number: 0000 0712 3456', { exact: false }).first()).toBeVisible();
 
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
@@ -167,7 +167,7 @@ test('pays into the account picked under Pay into, and the saved statement keeps
   const saved = screen.getByRole('form', 'Editing 010100-2026');
 
   await expect(saved.getByRole('combobox', 'Pay into')).toHaveText('Security Bank · 0000 0712 3456');
-  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Bank: Security Bank', { exact: false })).toBeVisible();
+  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Bank: Security Bank', { exact: false }).first()).toBeVisible();
 });
 
 test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
@@ -293,13 +293,13 @@ test('unticking VAT or withholding by hand changes the totals', async ({ app, sc
 
   await expect(form.getByText('Subtotal ₱10,000.00 · VAT ₱1,200.00')).toBeVisible();
   await expect(form.getByText('₱11,200.00')).toBeVisible();
-  await expect(paper.getByRole('row', 'Total amount due ₱11,200.00')).toBeVisible();
+  await expect(paper.getByRole('row', 'Total amount due ₱11,200.00').first()).toBeVisible();
 
   await form.getByRole('checkbox', 'Add 12% VAT').tap();
 
   await expect(form.getByText('Subtotal ₱10,000.00')).toBeVisible();
   await expect(form.getByText('₱10,000.00')).toBeVisible();
-  await expect(paper.getByRole('row', 'Total amount due ₱10,000.00')).toBeVisible();
+  await expect(paper.getByRole('row', 'Total amount due ₱10,000.00').first()).toBeVisible();
 
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. Nov 2, 2026 Nov 17, 2026 ₱10,000\.00 Sent/)).toBeVisible();

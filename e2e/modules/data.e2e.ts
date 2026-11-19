@@ -65,7 +65,8 @@ test('restores a backup only after asking, and drops what was saved since', asyn
 
   await app.open('/#vouchers');
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeHidden();
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row')).toHaveCount(4);
+  // The heading row, 0140 and 0141: the released 0139 is folded under October 2026.
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row')).toHaveCount(3);
 
   // Home and the Activity Log are back to the sample data too.
   await app.open('/');
@@ -97,7 +98,7 @@ test('brings the work in a backup into a Keystone that starts with no records', 
 
   // The voucher is back in the register, on Home and in the Activity Log.
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 Nov 2, 2026 Manila Electric Company \(Meralco\).*₱1,250\.50 For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 Nov 2, 2026 MANILA ELECTRIC COMPANY \(MERALCO\).*₱1,250\.50 For Approval/)).toBeVisible();
 
   await app.open('/');
   await expect(screen.getByRole('button', /^Check Vouchers .* Awaiting approval 2$/)).toBeVisible();
@@ -106,7 +107,7 @@ test('brings the work in a backup into a Keystone that starts with no records', 
   const entries = screen.getByRole('region', 'Entries');
 
   await expect(entries.getByRole('listitem')).toHaveCount(7);
-  await expect(entries.getByText('888-001 for Manila Electric Company (Meralco) saved and routed for approval (₱1,250.50).')).toBeVisible();
+  await expect(entries.getByText('888-001 for MANILA ELECTRIC COMPANY (MERALCO) saved and routed for approval (₱1,250.50).')).toBeVisible();
 });
 
 test('refuses a file that is not a Keystone backup, and changes nothing', async ({ app, screen }) => {

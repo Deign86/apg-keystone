@@ -1,8 +1,8 @@
 import {
-  companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
-  peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
+  addDays, companyOf, count, isJsonObject, isOwner, jsonText, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
+  moduleData, peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
-  type WaitingItem
+  type WaitingItem, withModuleData
 } from '@keystone/core';
 
 // Check vouchers: disbursements routed for signatures, printed as the company's
@@ -36,8 +36,23 @@ export const refersTo: Reference = { tag: TAG, codes: (s) => s.cv.map((v) => v.p
 /** Voucher numbers run 888-001, 888-002 and on, with no year. */
 const SERIES = '888-';
 
-/** The next voucher number in the 888- series. Older vouchers (CV-2026-0141, 8888-001) keep theirs and do not count. */
-export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
+/**
+ * The highest 888- number a voucher removed from the register had, kept under state.ext.vouchers so it is never issued
+ * again: a void voucher's number stays used after the voucher is deleted. "" when none was removed.
+ */
+const removedHighest = (s: TerminalState) => {
+  const raw = moduleData(s, ID);
+
+  return isJsonObject(raw) ? jsonText(raw.highest) : '';
+};
+
+/**
+ * The next voucher number in the 888- series, past every voucher in the register and every one removed from it. Older
+ * vouchers (CV-2026-0141, 8888-001) keep theirs and do not count.
+ */
+export const nextVoucherNo = (s: TerminalState) =>
+  nextNumber([...s.cv.map((v) => v.no), removedHighest(s)].filter((no) => no.startsWith(SERIES)), SERIES, 3);
+
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
 /** Who a voucher pays, as printed on it. */
@@ -74,6 +89,13 @@ export interface VoucherDraft extends Editing {
  * The payee, their address and TIN start blank, for whoever prepares the voucher to type.
  */
 export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft {
+  return capsDraft(blankVoucher(s, ctx, bank));
+}
+
+/** The draft with its names in capitals, as the form shows them. */
+const capsDraft = (d: VoucherDraft): VoucherDraft => ({ ...d, ...Object.fromEntries(NAMED.map((k) => [k, caps(d[k])])) });
+
+function blankVoucher(s: TerminalState, ctx: Ctx, bank: string): VoucherDraft {
   const d = companyOf(s);
   const last = s.cv.at(-1);
 
@@ -86,7 +108,7 @@ export function newVoucher(s: TerminalState, ctx: Ctx, bank = ''): VoucherDraft 
   };
 }
 
-export const voucherDraftOf = (s: TerminalState, v: Voucher): VoucherDraft => ({
+export const voucherDraftOf = (s: TerminalState, v: Voucher): VoucherDraft => capsDraft({
   editing: v.no, no: v.no, date: v.date, payee: payeeOf(s, v).name, address: payeeOf(s, v).address, tin: v.tin ?? '', check: v.check, checkDate: v.checkDate ?? '',
   bank: v.bank ?? '', issuer: v.issuer ?? '',
   lines: v.lines.map(lineDraftOf), prepared: v.prepared, checked: v.checked, approved: v.approved,
@@ -133,19 +155,25 @@ export function copyVoucher(s: TerminalState, v: Voucher, ctx: Ctx): VoucherDraf
   };
 }
 
+/** The names on a voucher, all in capitals as typed and as printed: the payee, the issuer and the signatories. */
+export const NAMED = ['payee', 'issuer', 'prepared', 'checked', 'approved'] as const;
+
+/** A name as a voucher keeps and prints it: in capitals. */
+export const caps = (name: string) => name.toUpperCase();
+
 /** The optional fields a voucher keeps only when they are filled in. */
 const OPTIONAL = ['address', 'tin', 'bank', 'issuer', 'preparedPos', 'checkedPos', 'approvedPos'] as const;
 
 export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval'): Voucher {
   const v: Voucher = {
-    no: d.no, date: d.date, payee: d.payee.trim(), check: d.check.trim(), lines: lineItemsOf(d.lines, 'amount'),
-    status, prepared: d.prepared, checked: d.checked, approved: d.approved,
+    no: d.no, date: d.date, payee: caps(d.payee.trim()), check: d.check.trim(), lines: lineItemsOf(d.lines, 'amount'),
+    status, prepared: caps(d.prepared), checked: caps(d.checked), approved: caps(d.approved),
   };
 
   if (d.checkDate) v.checkDate = d.checkDate;
 
   for (const key of OPTIONAL) {
-    const value = d[key].trim();
+    const value = key === 'issuer' ? caps(d[key].trim()) : d[key].trim();
 
     if (value) v[key] = value;
   }
@@ -232,7 +260,11 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
   if (status === 'Released' && v.status !== 'Approved') throw new KeystoneError(`Approve ${no} before releasing it.`);
 
   if (status === 'Released' && !v.check) throw new KeystoneError(`Enter the check number on ${no} before releasing it.`);
-  const updated = { ...v, status };
+  const updated: Voucher = { ...v, status };
+
+  if (status === 'Released') updated.released = today(ctx);
+
+  if (status === 'Void') updated.voided = today(ctx);
 
   const text = status === 'Approved' ? `${no} approved by ${v.approved || 'the approver'}.`
     : status === 'Released' ? `${no} released; check ${v.check} to ${nameOf(s, v.payee)}.`
@@ -243,6 +275,87 @@ export function setVoucherStatus(s: TerminalState, no: string, status: VoucherSt
     state: logged({ ...s, cv: s.cv.map((x) => (x.no === no ? updated : x)) }, TAG, text, ctx),
     record: updated, message: `${no} marked ${status.toLowerCase()}.`,
   };
+}
+
+// ---------- clearing void vouchers, and folding older ones away ----------
+
+/** Days a void voucher stays in the register after it is voided, before it is cleared on its own. */
+export const VOID_KEPT_DAYS = 7;
+
+/** The day a void voucher is cleared from the register: VOID_KEPT_DAYS after it was voided (its date, if older). */
+export const clearsOn = (v: Voucher) => addDays(v.voided ?? v.date, VOID_KEPT_DAYS);
+
+/** The state without these vouchers, their numbers kept as used so no later voucher is given one. */
+function withoutVouchers(s: TerminalState, gone: Voucher[]): TerminalState {
+  const nos = new Set(gone.map((v) => v.no));
+  const out = { ...s, cv: s.cv.filter((v) => !nos.has(v.no)) };
+  // The highest of the series among those removed, ever: zero-padded, so the longest then the greatest is the highest.
+  const series = [removedHighest(s), ...gone.map((v) => v.no)].filter((no) => no.startsWith(SERIES));
+  const highest = series.sort((a, b) => a.length - b.length || a.localeCompare(b)).at(-1);
+
+  return highest ? withModuleData(out, ID, { highest }) : out;
+}
+
+/** Deletes a void voucher from the register now. Only a void one: every other voucher is a record of money paid or owed. */
+export function deleteVoucher(s: TerminalState, no: string, ctx: Ctx): Change<Voucher> {
+  const v = s.cv.find((x) => x.no === no);
+
+  if (!v) throw new KeystoneError(`${no} is not in the register.`);
+
+  if (v.status !== 'Void') throw new KeystoneError(`Only a void voucher can be deleted. Void ${no} first.`);
+
+  return {
+    state: logged(withoutVouchers(s, [v]), TAG, `${no} (void, ${peso(voucherTotal(v))}) deleted from the register.`, ctx),
+    record: v, message: `${no} deleted.`,
+  };
+}
+
+/** On open: clears every void voucher VOID_KEPT_DAYS after it was voided, in one log line. */
+export function clearVoided(s: TerminalState, ctx: Ctx): TerminalState {
+  const t = today(ctx);
+  const due = s.cv.filter((v) => v.status === 'Void' && clearsOn(v) <= t);
+
+  if (!due.length) return s;
+
+  return logged(withoutVouchers(s, due), TAG, `${count(due.length, 'void voucher')} cleared from the register, ${VOID_KEPT_DAYS} days after voiding: ${due.map((v) => v.no).join(', ')}.`, ctx);
+}
+
+/** The month a released voucher folds away after: the month it was released in, or its own month if older. */
+const releasedIn = (v: Voucher) => (v.released ?? v.date).slice(0, 7);
+
+/** One earlier month's released vouchers, folded into a dropdown. */
+export interface VoucherMonth { month: string; label: string; vouchers: Voucher[]; total: Centavos }
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** "October 2026" for "2026-10". */
+const monthLabel = (month: string) => `${MONTHS[Number(month.slice(5, 7)) - 1]} ${month.slice(0, 4)}`;
+
+/** The register as the screen shows it: see voucherRegister. */
+export interface VoucherRegister { current: Voucher[]; earlier: VoucherMonth[] }
+
+/**
+ * The register, newest first, in two parts, so it does not grow without end. `earlier`: each voucher released before
+ * this month, under the month it is dated, newest month first, each month folded into a dropdown. `current`: the rest,
+ * every voucher still waiting for approval or release, every one released this month, and every void one until it is
+ * cleared (VOID_KEPT_DAYS).
+ */
+export function voucherRegister(s: TerminalState, ctx: Ctx): VoucherRegister {
+  const thisMonth = today(ctx).slice(0, 7);
+  const current: Voucher[] = [];
+  const months = new Map<string, Voucher[]>();
+
+  for (const v of vouchersNewestFirst(s)) {
+    const month = v.date.slice(0, 7);
+
+    if (v.status !== 'Released' || releasedIn(v) >= thisMonth) current.push(v);
+    else months.set(month, [...(months.get(month) ?? []), v]);
+  }
+
+  const earlier = [...months].sort(([a], [b]) => b.localeCompare(a))
+    .map(([month, vouchers]) => ({ month, label: monthLabel(month), vouchers, total: sumCentavos(vouchers, voucherTotal) }));
+
+  return { current, earlier };
 }
 
 /**

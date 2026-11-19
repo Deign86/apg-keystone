@@ -72,6 +72,10 @@ export interface Voucher {
   lines: LineItem[];
   /** As saved. The statuses a voucher goes through, and their tones, belong to the module that keeps vouchers. */
   status: string;
+  /** The day it was released, on a released voucher. Older released vouchers have none. */
+  released?: ISODate;
+  /** The day it was voided, on a void voucher. Older void vouchers have none. */
+  voided?: ISODate;
   prepared: string;
   /** Printed as "Audited by" (the key is the prototype's). */
   checked: string;
