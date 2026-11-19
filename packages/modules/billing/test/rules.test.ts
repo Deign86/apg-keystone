@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
-  billingFigure, billingFinding, billingWaiting, lineWithTax, markOverdue, newStatement, nextStatementNo, paidInto, payInto,
+  billingFigure, billingFinding, billingWaiting, EWT_RATE, EWT_RATES, ewtRateOf, markOverdue, newStatement, nextStatementNo, paidInto, payInto,
   recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftOf, statementPayments, statementTone, statementTotals, withClient,
 } from '../src/rules';
 import { billingModule } from '../src';
@@ -10,6 +10,9 @@ import { sampleState } from '@keystone/core/sample';
 /** 30 Oct 2026, 09:05 in Manila. */
 const ctx: Ctx = { now: () => new Date(2026, 9, 30, 9, 5) };
 const state = () => sampleState();
+
+/** A new statement billed to Novatek (C-001), typed as its directory name: a VAT client that withholds EWT. */
+const billed = (s: ReturnType<typeof state>) => withClient(s, newStatement(s, ctx), 'Novatek BPO Solutions Inc.');
 
 describe('billing statements', () => {
   it('keeps the statuses and tones a statement has always had, and reads one it does not know as neutral', () => {
@@ -33,39 +36,89 @@ describe('billing statements', () => {
 
   it('keeps the invoice number typed on a new statement, and refuses one in use', () => {
     const s = state();
-    const d = { ...newStatement(s, ctx), lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', amount: '2,299' })] };
+    const d = { ...billed(s), lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', amount: '2,299' })] };
     expect(saveStatement(s, d, ctx).record.no).toBe('010100-2026');
     expect(saveStatement(s, { ...d, no: '010150-2026' }, ctx).record.no).toBe('010150-2026');
     expect(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx)).toThrow('Invoice No. 010099-2026 is already used. The next free one is 010100-2026.');
     expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('010100-2026'); // a copy takes the next
   });
 
-  it('prices each charge by quantity and shows it with tax, as the company statement does', () => {
+  it('prices each charge by quantity, and adds VAT on the subtotal', () => {
     const s = state();
-    const d = { ...withClient(s, newStatement(s, ctx), 'C-001'), ewt: false, lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', qty: '1', amount: '2,299' })] };
+    const d = { ...billed(s), ewt: false, lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', qty: '1', amount: '2,299' })] };
     const b = saveStatement(s, d, ctx).record;
     expect(b.lines).toEqual([{ desc: 'Virtual Office Service (October 2026)', qty: 1, price: 2299, amt: 2299 }]);
     expect(statementTotals(b)).toEqual({ subtotal: toCentavos(2299), vat: toCentavos(275.88), ewt: 0, due: toCentavos(2574.88) });
-    expect(lineWithTax(b, b.lines[0])).toBe(toCentavos(2574.88));
-    expect(lineWithTax({ vat: false }, b.lines[0])).toBe(toCentavos(2299));
     const two = saveStatement(s, { ...d, lines: [lineDraft({ desc: 'Desk', qty: '2', amount: '1,500' })] }, ctx).record;
     expect(statementTotals(two).subtotal).toBe(toCentavos(3000));
     expect(() => saveStatement(s, { ...d, lines: [lineDraft({ desc: 'Desk', qty: '0', amount: '1,500' })] }, ctx)).toThrow('Enter a quantity above zero on every charge.');
   });
 
-  it('takes defaults from the client', () => {
+  it('withholds 2% EWT on a new statement, and keeps the 5% an older one withheld', () => {
+    const s = state();
+    const d = { ...billed(s), lines: [lineDraft({ desc: 'Virtual office', amount: '10,000' })] };
+    expect(EWT_RATE).toBe(2);
+    expect(d.ewtRate).toBe(2);
+    const b = saveStatement(s, d, ctx).record;
+    expect(b.ewtRate).toBe(2);
+    expect(statementTotals(b)).toEqual({ subtotal: toCentavos(10000), vat: toCentavos(1200), ewt: toCentavos(200), due: toCentavos(11000) });
+
+    // The sample's statements were saved before statements kept their rate: they withheld 5%, and still do once edited.
+    const older = s.bs.find((x) => x.no === '010099-2026')!;
+    expect(older.ewtRate).toBeUndefined();
+    expect(ewtRateOf(older)).toBe(5);
+    expect(saveStatement(s, statementDraftOf(older, s), ctx).record.ewtRate).toBe(5);
+  });
+
+  it('withholds 5% EWT when that rate is picked, and no rate but 2% or 5%', () => {
+    const s = state();
+    const d = { ...billed(s), ewtRate: 5, lines: [lineDraft({ desc: 'Unit rental', amount: '10,000' })] };
+    expect(EWT_RATES).toEqual([2, 5]);
+    const b = saveStatement(s, d, ctx).record;
+    expect(b.ewtRate).toBe(5);
+    expect(statementTotals(b)).toEqual({ subtotal: toCentavos(10000), vat: toCentavos(1200), ewt: toCentavos(500), due: toCentavos(10700) });
+
+    expect(() => saveStatement(s, { ...d, ewtRate: 10 }, ctx)).toThrow('Withhold 2% or 5% EWT.');
+    // With nothing withheld, the rate is not asked about.
+    expect(saveStatement(s, { ...d, ewt: false, ewtRate: 10 }, ctx).record.ewt).toBe(false);
+  });
+
+  it('is prepared by whoever is signed in, and checked and approved as the last statement was', () => {
+    const s = state();
+    const d = billed(s);
+    // No statement names its signatories yet, so they start as Company Details'.
+    expect(d).toMatchObject({ prepared: 'D. Lazaro', checked: 'Accounting', approved: 'CEO' });
+    expect(newStatement(s, { ...ctx, who: { uid: 'staff-1', name: 'Jean Ashley Chico', role: 'staff' } }).prepared).toBe('Jean Ashley Chico');
+
+    const saved = saveStatement(s, { ...d, checked: ' Mark Anthony Santos ', approved: 'Brian Sy', lines: [lineDraft({ desc: 'Rent', amount: '100' })] }, ctx);
+    expect(saved.record).toMatchObject({ checked: 'Mark Anthony Santos', approved: 'Brian Sy' });
+    expect(newStatement(saved.state, ctx)).toMatchObject({ checked: 'Mark Anthony Santos', approved: 'Brian Sy' });
+  });
+
+  it('is billed to whoever is typed, and a directory client typed by name brings its setup', () => {
     const s = state();
     const d = newStatement(s, ctx);
+    expect(d).toMatchObject({ client: '', attention: '', vat: false, ewt: false });
     expect(d.due).toBe('2026-11-14');
     expect(d.invoiceDate).toBe('2026-10-30');
     expect(d.notes).toContain('Account Number: 4011 0258 68');
-    expect(withClient(s, d, 'C-002')).toMatchObject({ vat: false, ewt: false, attention: '' });
-    expect(withClient(s, d, 'C-003')).toMatchObject({ vat: true, ewt: true, attention: 'Liza Tan' });
+    expect(withClient(s, d, '  harbor point logistics corp. ')).toMatchObject({ vat: true, ewt: true, attention: 'Liza Tan' });
+    expect(withClient(s, { ...d, vat: true, ewt: true, attention: 'Liza Tan' }, 'Dela Cruz, Maria Teresa')).toMatchObject({ vat: false, ewt: false, attention: '' });
+    // A name not in the directory leaves the setup as it was.
+    const racil = withClient(s, { ...d, vat: true }, 'RACIL REALTY INC');
+    expect(racil).toMatchObject({ client: 'RACIL REALTY INC', vat: true, ewt: false });
+
+    const saved = saveStatement(s, { ...racil, lines: [lineDraft({ desc: 'Commission', amount: '210,000' })] }, ctx);
+    expect(saved.record.client).toBe('RACIL REALTY INC');
+    expect(saved.state.log[0].text).toBe('010100-2026 sent to RACIL REALTY INC (₱235,200.00 due Nov 14, 2026).');
+    expect(() => saveStatement(s, { ...racil, client: '  ', lines: [lineDraft({ desc: 'Commission', amount: '1' })] }, ctx)).toThrow('Enter who the statement is billed to.');
+    // A statement saved before Bill to was typed names its client by code, and comes back with the name.
+    expect(statementDraftOf(s.bs[2], s).client).toBe('Harbor Point Logistics Corp.');
   });
 
   it('refuses a statement due before its invoice date', () => {
     const s = state();
-    const d = { ...newStatement(s, ctx), due: '2026-10-01', lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
+    const d = { ...billed(s), due: '2026-10-01', lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
     expect(() => saveStatement(s, d, ctx)).toThrow('The due date is before the invoice date.');
   });
 
@@ -137,9 +190,23 @@ describe('the account a client pays into', () => {
     expect(paidInto('Pay in cash.', [bpi])).toBeUndefined();
   });
 
+  it('pays a new statement into the account the last one named, or the one Company Details names, or the first kept', () => {
+    const s = state();
+    const save = (st: typeof s, notes: string) => saveStatement(st, { ...billed(st), notes, lines: [lineDraft({ desc: 'Rent', amount: '100' })] }, ctx).state;
+
+    // No statement names an account yet: Company Details' instructions name BPI.
+    expect(paidInto(newStatement(s, ctx, [bdo, bpi]).notes, [bdo, bpi])).toBe(bpi);
+    // The last statement paid into BDO, so the next one does too, as a voucher is drawn on the last voucher's bank.
+    expect(paidInto(newStatement(save(s, payInto(instructions, bdo)), ctx, [bpi, bdo]).notes, [bpi, bdo])).toBe(bdo);
+    // Neither names a kept account: the first kept, written into Company Details' text.
+    expect(newStatement(s, ctx, [bdo]).notes).toBe(payInto(instructions, bdo));
+    // Without Bank Accounts the instructions are Company Details' as typed.
+    expect(newStatement(s, ctx).notes).toBe(instructions);
+  });
+
   it('saves the account picked with the statement, as its payment instructions', () => {
     const s = state();
-    const d = { ...newStatement(s, ctx), lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
+    const d = { ...billed(s), lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
     const b = saveStatement(s, { ...d, notes: payInto(d.notes, bdo) }, ctx).record;
     expect(b.notes).toContain('Account Number: 0012 3456 7890');
     expect(paidInto(statementDraftOf(b, s).notes, [bpi, bdo])).toBe(bdo);

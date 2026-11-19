@@ -59,7 +59,7 @@ test('adds a client with the VAT setup Billing Statements then follows', async (
   // A client is billed, so it gets an Attention line and its own VAT and withholding; VAT is on to start with.
   await expect(dialog.getByText('Gets code C-004.')).toBeVisible();
   await expect(dialog.getByRole('checkbox', 'VAT-registered (statements add 12% VAT)')).toBeChecked();
-  await expect(dialog.getByRole('checkbox', 'Withholds 5% EWT')).not.toBeChecked();
+  await expect(dialog.getByRole('checkbox', 'Withholds EWT')).not.toBeChecked();
   await dialog.getByRole('textbox', 'Name').fill('Bayside Realty Corp.');
   await dialog.getByRole('textbox', 'TIN').fill('009-412-776-000');
   await dialog.getByRole('textbox', 'Address').fill('12/F Bayside Tower, Pasay City');
@@ -69,16 +69,15 @@ test('adds a client with the VAT setup Billing Statements then follows', async (
   await expect(screen.getByRole('dialog', 'C-004 added. It is now selectable in Billing Statements.')).toBeVisible();
   await expect(screen.getByRole('table', 'Directory').getByRole('row', /^C-004 Client Bayside Realty Corp\. 009-412-776-000 12\/F Bayside Tower, Pasay City · VAT — /)).toBeVisible();
 
-  // Billing it takes the Attention and the setup: VAT, but no withholding, unlike Novatek.
+  // Billing it by its name takes the Attention and the setup: VAT, but no withholding, unlike Novatek.
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('combobox', 'Bill to').tap();
-  await screen.getByRole('option', 'Bayside Realty Corp. (C-004)').tap();
+  await form.getByRole('textbox', 'Bill to').fill('Bayside Realty Corp.');
 
   await expect(form.getByRole('textbox', 'Attention')).toHaveValue('Nina Ocampo');
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).toBeChecked();
-  await expect(form.getByRole('checkbox', 'Less 5% expanded withholding tax')).not.toBeChecked();
+  await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).not.toBeChecked();
 });
 
 test('adds an employee, who can then be given an ID and is counted on Home and Overview', async ({ app, screen }) => {

@@ -1,8 +1,8 @@
 import {
   addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
-  percent, peso, recordOf, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
+  percent, peso, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
-  type LineItem, type Payment, type Statement, type StatementPayments,
+  type Payment, type Statement, type StatementPayments,
   type Reference, type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
@@ -33,25 +33,32 @@ export function statementTone(status: string): Tone {
 
 export const VAT_RATE = 12;
 
-/** A statement names its client by directory code; that record is kept. */
+/**
+ * A statement saved before Bill to was typed names its client by directory code; that record is kept. A typed name is
+ * no code, so it keeps nothing.
+ */
 export const refersTo: Reference = { tag: TAG, codes: (s) => s.bs.map((b) => b.client) };
-export const EWT_RATE = 5;
+
+/** The expanded withholding tax rates a statement can withhold, in percent: 2 on services, 5 on rentals and fees. */
+export const EWT_RATES = [2, 5] as const;
+
+/** The rate a new statement withholds, until another is picked. */
+export const EWT_RATE = 2;
+
+/** What a statement saved before it kept its own rate withheld. */
+const OLDER_EWT_RATE = 5;
+
+/** The percent of EWT a statement withholds when `ewt` is on: its own, or 5 on one saved before it kept one. */
+export const ewtRateOf = (b: Pick<Statement, 'ewtRate'>) => b.ewtRate ?? OLDER_EWT_RATE;
 
 /** VAT is added and EWT withheld, both on the subtotal. */
-export function statementTotals(b: Pick<Statement, 'lines' | 'vat' | 'ewt'>): StatementTotals {
+export function statementTotals(b: Pick<Statement, 'lines' | 'vat' | 'ewt' | 'ewtRate'>): StatementTotals {
   const subtotal = sumCentavos(b.lines, (l) => toCentavos(l.amt));
   const vat = b.vat ? percent(subtotal, VAT_RATE) : 0;
-  const ewt = b.ewt ? percent(subtotal, EWT_RATE) : 0;
+  const ewt = b.ewt ? percent(subtotal, ewtRateOf(b)) : 0;
 
   return { subtotal, vat, ewt, due: subtotal + vat - ewt };
 }
-
-/** A line's amount with VAT added, as the statement's last column shows it. */
-export const lineWithTax = (b: Pick<Statement, 'vat'>, l: LineItem): Centavos => {
-  const amount = toCentavos(l.amt);
-
-  return amount + (b.vat ? percent(amount, VAT_RATE) : 0);
-};
 
 /** Invoice numbers: a six-digit running number and the year, "010100-2026". */
 const INVOICE_NO = /^(\d{6})-\d{4}$/;
@@ -74,32 +81,46 @@ export const outstandingTotal = (s: TerminalState) => sumCentavos(outstanding(s)
 
 export interface StatementDraft extends Editing {
   no: string; date: string; invoiceDate: string; due: string; client: string; attention: string;
-  lines: LineDraft[]; vat: boolean; ewt: boolean; notes: string; note: string;
+  lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string;
+  prepared: string; checked: string; approved: string;
 }
 
-/** A blank statement, from Company Details: its payment instructions, note and days to pay (no due date until set). */
-export function newStatement(s: TerminalState, ctx: Ctx): StatementDraft {
+/**
+ * A blank statement, from Company Details: its payment instructions, note and days to pay (no due date until set). It
+ * is prepared by whoever is signed in; the other signatories start as the last statement's (Company Details' names
+ * before the first). With `accounts` (those Bank Accounts keeps), it pays into the account the last statement named,
+ * as a new voucher is drawn on the last voucher's bank, or else the one Company Details' instructions name, or else
+ * the first kept.
+ */
+export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[] = []): StatementDraft {
   const d = companyOf(s);
-  const client = recordsOf(s, 'Client')[0];
+  const last = s.bs.at(-1);
   const t = today(ctx);
+  const account = paidInto(last?.notes ?? '', accounts) ?? paidInto(d.paymentInstructions, accounts) ?? accounts[0];
 
   return {
-    no: nextStatementNo(s, ctx), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: client?.code ?? '',
-    attention: client?.attention ?? '', lines: [lineDraft()], vat: client?.vat ?? false, ewt: client?.ewt ?? false,
-    notes: d.paymentInstructions, note: d.billingNote,
+    no: nextStatementNo(s, ctx), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: '',
+    attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
+    notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote,
+    prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
   };
 }
 
-/** A saved statement back in the form. One saved before it kept its own notes takes Company Details'. */
+/**
+ * A saved statement back in the form. One saved before it kept its own notes takes Company Details'; one saved before
+ * Bill to was typed names its client by directory code, and comes back with that client's name.
+ */
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
-  editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: b.client,
-  attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt,
+  editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: nameOf(s, b.client),
+  attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
   notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote,
+  prepared: b.prepared ?? '', checked: b.checked ?? '', approved: b.approved ?? '',
 });
 
 export const statementOf = (d: StatementDraft, status: StatementStatus = 'Sent'): Statement => ({
-  no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client, attention: d.attention.trim(),
-  lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, notes: d.notes, note: d.note, status,
+  no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client.trim(), attention: d.attention.trim(),
+  lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, note: d.note,
+  prepared: d.prepared.trim(), checked: d.checked.trim(), approved: d.approved.trim(), status,
 });
 
 // ---------- the account a client pays into (when Bank Accounts is installed) ----------
@@ -141,11 +162,21 @@ export function paidInto(notes: string, accounts: BankAccount[]): BankAccount | 
   return key ? accounts.find((a) => numberKey(a.number) === key) : undefined;
 }
 
-/** Picking a client sets VAT, EWT and who to address from its directory record. */
-export function withClient(s: TerminalState, d: StatementDraft, client: string): StatementDraft {
-  const c = recordOf(s, client);
+/** The directory client a typed Bill to names, by its name however it is capitalised or spaced at the ends. */
+export const clientNamed = (s: TerminalState, typed: string) => {
+  const key = typed.trim().toLowerCase();
 
-  return { ...d, client, attention: c?.attention ?? '', vat: c?.vat ?? false, ewt: c?.ewt ?? false };
+  return key ? recordsOf(s, 'Client').find((c) => c.name.trim().toLowerCase() === key) : undefined;
+};
+
+/**
+ * Bill to as typed. Typing a directory client's name sets VAT, EWT and who to address from its record; any other name
+ * leaves them as they are, to be set by hand.
+ */
+export function withClient(s: TerminalState, d: StatementDraft, client: string): StatementDraft {
+  const c = clientNamed(s, client);
+
+  return c ? { ...d, client, attention: c.attention ?? '', vat: c.vat ?? false, ewt: c.ewt ?? false } : { ...d, client };
 }
 
 export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asNew = false): Change<Statement> {
@@ -156,7 +187,9 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
 
   if (!b.lines.length || t.subtotal <= 0) throw new KeystoneError('Add at least one charge with an amount.');
 
-  if (!recordOf(s, b.client)) throw new KeystoneError('Choose a client from the directory.');
+  if (!b.client) throw new KeystoneError('Enter who the statement is billed to.');
+
+  if (b.ewt && !EWT_RATES.some((r) => r === b.ewtRate)) throw new KeystoneError(`Withhold ${EWT_RATES.join('% or ')}% EWT.`);
 
   // A new statement has no due date until Company Details says how many days clients have to pay.
   if (!b.due) throw new KeystoneError('Enter the due date.');

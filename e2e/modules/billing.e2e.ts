@@ -4,35 +4,53 @@ import { readFile } from 'node:fs/promises';
 import { faintPaperText, tinyPaperText } from '../support/paper';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
-// and 010099-2026 sent (due Nov 5), so a new statement is 010100-2026. Novatek (C-001) is a VAT client that withholds
-// 5%; Dela Cruz (C-002) is non-VAT.
+// and 010099-2026 sent (due Nov 5), so a new statement is 010100-2026. Bill to is typed; a directory client's name brings
+// its setup. Novatek (C-001) is a VAT client that withholds EWT, 2% on a new statement (the sample's, saved before
+// statements kept their rate, withheld 5%); Dela Cruz (C-002) is non-VAT.
 
 test('issues a statement with VAT and withholding from the client', async ({ app, screen }) => {
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010100-2026');
-  await expect(form.getByRole('combobox', 'Bill to')).toHaveText('Novatek BPO Solutions Inc. (C-001)');
+  await expect(form.getByRole('textbox', 'Bill to')).toHaveValue('');
+  await expect(form.getByRole('checkbox', 'Add 12% VAT')).not.toBeChecked();
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await expect(form.getByRole('textbox', 'Attention')).toHaveValue('Carlo Mendiola');
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).toBeChecked();
-  await expect(form.getByRole('checkbox', 'Less 5% expanded withholding tax')).toBeChecked();
+  await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).toBeChecked();
 
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 quantity').fill('2');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
 
-  // 2 × ₱10,000 = ₱20,000; VAT 12% adds ₱2,400; EWT 5% takes ₱1,000 off.
-  await expect(form.getByText('Subtotal ₱20,000.00 · VAT ₱2,400.00 · EWT (₱1,000.00)')).toBeVisible();
-  await expect(form.getByText('₱21,400.00')).toBeVisible();
+  // 2 × ₱10,000 = ₱20,000; VAT 12% adds ₱2,400; EWT 2% takes ₱400 off.
+  await expect(form.getByText('Subtotal ₱20,000.00 · VAT ₱2,400.00 · EWT (₱400.00)')).toBeVisible();
+  await expect(form.getByText('₱22,000.00')).toBeVisible();
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
+  const totals = paper.getByRole('table', 'Totals');
 
-  await expect(paper.getByRole('row', 'Total amount due ₱21,400.00').first()).toBeVisible();
+  // The statement prints twice, a copy on each half of the sheet; the first copy is enough.
+  await expect(paper.getByText('Novatek BPO Solutions Inc.', { exact: true }).first()).toBeVisible();
+  await expect(totals.getByRole('row', 'Subtotal ₱20,000.00').first()).toBeVisible();
+  await expect(totals.getByRole('row', 'VAT (12%) ₱2,400.00').first()).toBeVisible();
+  await expect(totals.getByRole('row', 'Less: EWT (2%) (₱400.00)').first()).toBeVisible();
+  await expect(totals.getByRole('row', 'Total amount due ₱22,000.00').first()).toBeVisible();
+
+  // A rental withholds 5% instead: ₱1,000 off, so ₱21,400 is due.
+  await form.getByRole('combobox', 'EWT rate').tap();
+  await screen.getByRole('option', '5%').tap();
+  await expect(form.getByRole('checkbox', 'Less 5% expanded withholding tax')).toBeChecked();
+  await expect(totals.getByRole('row', 'Less: EWT (5%) (₱1,000.00)').first()).toBeVisible();
+  await expect(totals.getByRole('row', 'Total amount due ₱21,400.00').first()).toBeVisible();
+  await form.getByRole('combobox', 'EWT rate').tap();
+  await screen.getByRole('option', '2%').tap();
 
   await form.getByRole('button', 'Save and mark as sent').tap();
 
   const register = screen.getByRole('table', 'Statements issued');
 
-  await expect(register.getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. Nov 2, 2026 Nov 17, 2026 ₱21,400\.00 Sent/)).toBeVisible();
+  await expect(register.getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. Nov 2, 2026 Nov 17, 2026 ₱22,000\.00 Sent/)).toBeVisible();
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010101-2026');
 });
 
@@ -40,21 +58,21 @@ test('a non-VAT client gets no VAT and no withholding', async ({ app, screen }) 
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('combobox', 'Bill to').tap();
-  await screen.getByRole('option', 'Dela Cruz, Maria Teresa (C-002)').tap();
+  await form.getByRole('textbox', 'Bill to').fill('Dela Cruz, Maria Teresa');
 
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).not.toBeChecked();
-  await expect(form.getByRole('checkbox', 'Less 5% expanded withholding tax')).not.toBeChecked();
+  await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).not.toBeChecked();
 
   await form.getByRole('textbox', 'Line 1 description').fill('Unit rental, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('45500');
 
-  // No VAT or withholding line on the form or on the printed statement.
+  // No VAT or withholding on the form; the printed statement's totals box shows a dash on both lines.
   await expect(form.getByText('Subtotal ₱45,500.00')).toBeVisible();
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
   await expect(paper.getByRole('row', 'Total amount due ₱45,500.00').first()).toBeVisible();
-  await expect(paper.getByRole('row', 'VAT (12%) ₱0.00')).toBeHidden();
+  await expect(paper.getByRole('row', 'VAT (12%) —').first()).toBeVisible();
+  await expect(paper.getByRole('row', 'Less: EWT (2%) —').first()).toBeVisible();
   await expect(paper.getByRole('row', 'Qty Description Unit price Amount').first()).toBeVisible();
 });
 
@@ -63,6 +81,7 @@ test('refuses an invoice number already in use and offers the next free one', as
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Invoice No.').fill('010099-2026');
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
@@ -143,7 +162,8 @@ test('pays into the account picked under Pay into, and the saved statement keeps
 
   await expect(payInto).toHaveText('BPI · 4011 0258 68');
   await payInto.tap();
-  await expect(screen.getByRole('option')).toHaveCount(2);
+  // The two accounts, then Others… to add one.
+  await expect(screen.getByRole('option')).toHaveCount(3);
   await screen.getByRole('option', 'Security Bank · 0000 0712 3456').tap();
 
   // Only the account lines change; the rest of the instructions stay as they were.
@@ -157,13 +177,14 @@ test('pays into the account picked under Pay into, and the saved statement keeps
   ].join('\n'));
   await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Account Number: 0000 0712 3456', { exact: false }).first()).toBeVisible();
 
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
 
-  // The next statement starts from the default instructions again; the saved one keeps the account picked.
-  await expect(screen.getByRole('form', 'New statement').getByRole('combobox', 'Pay into')).toHaveText('BPI · 4011 0258 68');
+  // The next statement pays into the account the last one named, as a voucher is drawn on the last voucher's bank.
+  await expect(screen.getByRole('form', 'New statement').getByRole('combobox', 'Pay into')).toHaveText('Security Bank · 0000 0712 3456');
   await screen.getByRole('table', 'Statements issued').getByRole('cell', '010100-2026').tap();
   const saved = screen.getByRole('form', 'Editing 010100-2026');
 
@@ -197,7 +218,7 @@ test('opens a sent statement from the register and saves changes to it', async (
   const form = screen.getByRole('form', 'Editing 010099-2026');
 
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010099-2026');
-  await expect(form.getByRole('combobox', 'Bill to')).toHaveText('Harbor Point Logistics Corp. (C-003)');
+  await expect(form.getByRole('textbox', 'Bill to')).toHaveValue('Harbor Point Logistics Corp.');
   await form.getByRole('textbox', 'Due date').fill('2026-11-10');
   await form.getByRole('button', 'Save changes').tap();
 
@@ -238,6 +259,7 @@ test('refuses a charge with no quantity, and a due date before the invoice date'
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 quantity').fill('0');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
@@ -285,12 +307,13 @@ test('unticking VAT or withholding by hand changes the totals', async ({ app, sc
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
-  await expect(form.getByText('Subtotal ₱10,000.00 · VAT ₱1,200.00 · EWT (₱500.00)')).toBeVisible();
-  await expect(form.getByText('₱10,700.00')).toBeVisible();
+  await expect(form.getByText('Subtotal ₱10,000.00 · VAT ₱1,200.00 · EWT (₱200.00)')).toBeVisible();
+  await expect(form.getByText('₱11,000.00')).toBeVisible();
 
-  await form.getByRole('checkbox', 'Less 5% expanded withholding tax').tap();
+  await form.getByRole('checkbox', 'Less 2% expanded withholding tax').tap();
 
   await expect(form.getByText('Subtotal ₱10,000.00 · VAT ₱1,200.00')).toBeVisible();
   await expect(form.getByText('₱11,200.00')).toBeVisible();
@@ -311,6 +334,7 @@ test('a statement past its due date turns overdue the next time Keystone opens',
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, October');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('textbox', 'Invoice date').fill('2026-10-01');
@@ -318,12 +342,12 @@ test('a statement past its due date turns overdue the next time Keystone opens',
   await form.getByRole('button', 'Save and mark as sent').tap();
   const row = screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 /);
 
-  await expect(row).toHaveAccessibleName(/^010100-2026 Novatek BPO Solutions Inc\. Oct 1, 2026 Oct 20, 2026 ₱10,700\.00 Sent/);
+  await expect(row).toHaveAccessibleName(/^010100-2026 Novatek BPO Solutions Inc\. Oct 1, 2026 Oct 20, 2026 ₱11,000\.00 Sent/);
 
   await browser.reload();
 
   await expect(row.getByRole('cell', 'Overdue')).toBeVisible();
-  await expect(screen.getByText('₱688,327.50 outstanding on 3 statements, 2 overdue.')).toBeVisible();
+  await expect(screen.getByText('₱688,627.50 outstanding on 3 statements, 2 overdue.')).toBeVisible();
 
   await app.open('/');
   await expect(screen.getByText('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026. One of 2 overdue statements.')).toBeVisible();
@@ -377,6 +401,7 @@ test('logs each statement sent, paid and voided, under the Billing filter', asyn
   const form = screen.getByRole('form', 'New statement');
   const register = screen.getByRole('table', 'Statements issued');
 
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 quantity').fill('2');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
@@ -402,8 +427,83 @@ test('logs each statement sent, paid and voided, under the Billing filter', asyn
   await expect(entries).toContainText([
     '010098-2026 marked void.',
     '010099-2026 from Harbor Point Logistics Corp. marked paid (₱586,627.50).',
-    '010100-2026 sent to Novatek BPO Solutions Inc. (₱21,400.00 due Nov 17, 2026).',
+    '010100-2026 sent to Novatek BPO Solutions Inc. (₱22,000.00 due Nov 17, 2026).',
     '010099-2026 sent to Harbor Point Logistics Corp. (₱586,627.50 due Nov 5, 2026).',
     '010097-2026 marked paid; BDO deposit ref 7731925.',
   ]);
+});
+
+test('bills someone not in the directory, typed as the statement prints it', async ({ app, screen }) => {
+  await app.open('/#billing');
+  const form = screen.getByRole('form', 'New statement');
+  const paper = screen.getByRole('article', 'Billing statement 010100-2026');
+
+  await form.getByRole('textbox', 'Bill to').fill('RACIL REALTY INC');
+  await form.getByRole('textbox', 'Attention').fill('Angela Marie B. Pagulayan');
+  await form.getByRole('checkbox', 'Add 12% VAT').tap();
+  await form.getByRole('textbox', 'Line 1 description').fill('Commercial rental commission');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('210000');
+
+  // ₱210,000 with 12% VAT; no withholding until it is ticked.
+  await expect(paper.getByText('RACIL REALTY INC', { exact: true }).first()).toBeVisible();
+  await expect(paper.getByText('Angela Marie B. Pagulayan', { exact: true }).first()).toBeVisible();
+  await expect(paper.getByRole('row', 'Total amount due ₱235,200.00').first()).toBeVisible();
+
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 RACIL REALTY INC Nov 2, 2026 Nov 17, 2026 ₱235,200\.00 Sent/)).toBeVisible();
+
+  // A statement needs someone to bill.
+  await form.getByRole('textbox', 'Line 1 description').fill('Commercial rental commission');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('210000');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(form.getByRole('alert')).toHaveText('Enter who the statement is billed to.');
+});
+
+test('prints who prepared, checked and approved the statement', async ({ app, screen }) => {
+  await app.open('/#billing');
+  const form = screen.getByRole('form', 'New statement');
+  const paper = screen.getByRole('article', 'Billing statement 010100-2026');
+
+  // Before any statement names them, the signatories are Company Details'.
+  await expect(form.getByRole('textbox', 'Prepared by')).toHaveValue('D. Lazaro');
+  await expect(form.getByRole('textbox', 'Checked by')).toHaveValue('Accounting');
+  await expect(form.getByRole('textbox', 'Approved by')).toHaveValue('CEO');
+  await form.getByRole('textbox', 'Checked by').fill('Mark Anthony Santos');
+  await form.getByRole('textbox', 'Approved by').fill('Brian Sy');
+
+  await expect(paper.getByText('Mark Anthony Santos', { exact: true }).first()).toBeVisible();
+  await expect(paper.getByText('Brian Sy', { exact: true }).first()).toBeVisible();
+
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
+
+  // The next statement is checked and approved by the same people.
+  await expect(form.getByRole('textbox', 'Checked by')).toHaveValue('Mark Anthony Santos');
+  await expect(form.getByRole('textbox', 'Approved by')).toHaveValue('Brian Sy');
+});
+
+test('adds an account under Others on a statement, and Bank Accounts keeps it', async ({ app, screen }) => {
+  await app.open('/#billing');
+  const form = screen.getByRole('form', 'New statement');
+  const payInto = form.getByRole('combobox', 'Pay into');
+
+  await payInto.tap();
+  await screen.getByRole('option', 'Others…').tap();
+  const account = form.getByRole('group', 'New bank account');
+
+  await account.getByRole('textbox', 'Bank name').fill('BDO');
+  await account.getByRole('textbox', 'Account number').fill('0012 3456 7890');
+  await account.getByRole('textbox', 'Branch').fill('Ortigas Center');
+  await account.getByRole('button', 'Save account').tap();
+
+  await expect(account).toBeHidden();
+  await expect(payInto).toHaveText('BDO · 0012 3456 7890');
+  await expect(form.getByRole('textbox', 'Payment instructions')).toHaveValue(/^Please make payment to:\nBank: BDO, Ortigas Center\nAccount Name: .+\nAccount Number: 0012 3456 7890\n/);
+  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Bank: BDO, Ortigas Center', { exact: false }).first()).toBeVisible();
+
+  await app.open('/#banks');
+  await expect(screen.getByRole('table', 'Bank accounts').getByRole('row', /^B-002 BDO Ortigas Center /)).toBeVisible();
 });

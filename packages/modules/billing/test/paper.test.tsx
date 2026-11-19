@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { companyOf, recordOf } from '@keystone/core';
+import { companyOf, nameOf } from '@keystone/core';
 import { printElement } from '@keystone/kit';
 import { StatementPaper } from '../src/StatementPaper';
 import { sampleState } from '@keystone/core/sample';
@@ -35,7 +35,7 @@ describe('the billing statement on paper', () => {
   it('is laid out, and prints, exactly as it has', () => {
     const b = s.bs[0];
 
-    render(<StatementPaper statement={b} client={recordOf(s, b.client)} company={companyOf(s)} terms={companyOf(s).billingTerms} />);
+    render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms={companyOf(s).billingTerms} />);
     const paper = screen.getByRole('article', { name: `Billing statement ${b.no}` });
     const before = markup(paper);
 
@@ -48,7 +48,7 @@ describe('the billing statement on paper', () => {
   it('prints twice on one A4, and shrinks a copy that runs past half the page so the cut still falls at the middle', () => {
     const b = s.bs[0];
 
-    render(<StatementPaper statement={b} client={recordOf(s, b.client)} company={companyOf(s)} terms="" />);
+    render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
     const paper = screen.getByRole('article', { name: `Billing statement ${b.no}` });
     const copies = [...paper.querySelectorAll<HTMLElement>('[data-sheet-copy]')];
 
@@ -67,7 +67,7 @@ describe('the billing statement on paper', () => {
 
   it('lays out every statement in the sample the same way, with and without tax, and one with no charges', () => {
     for (const b of [...s.bs.slice(1), { ...s.bs[0], no: 'blank', lines: [], notes: '', note: '' }]) {
-      const { unmount } = render(<StatementPaper statement={b} client={recordOf(s, b.client)} company={companyOf(s)} terms="" />);
+      const { unmount } = render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
 
       expect(markup(screen.getByRole('article', { name: `Billing statement ${b.no}` }))).toMatchSnapshot(b.no);
       unmount();

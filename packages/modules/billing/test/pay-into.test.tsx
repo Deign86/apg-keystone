@@ -17,8 +17,14 @@ const bdo: BankAccount = { id: 'B-002', bank: 'BDO', branch: 'Ortigas Center', n
 function banks(accounts: BankAccount[]): ModuleDef {
   const service: BankAccounts = {
     accounts: () => accounts, label: (a) => `${a.bank} · ${a.number}`,
-    // Billing only reads the accounts.
-    add: () => { throw new Error('Not in these tests.'); }, remove: () => { throw new Error('Not in these tests.'); },
+    // Keeps the account in the list given, as Bank Accounts keeps it in the state.
+    add: (state, a) => {
+      const record = { ...a, id: `B-00${accounts.length + 1}` };
+      accounts.push(record);
+
+      return { state, record, message: `${record.id} added.` };
+    },
+    remove: () => { throw new Error('Not in these tests.'); },
   };
 
   return { id: 'banks', title: 'Bank Accounts', blurb: '', order: 91, Screen: () => <h1>Bank Accounts</h1>, provides: { [SERVICES.bankAccounts]: service } };
@@ -80,13 +86,26 @@ describe('Pay into on a statement', () => {
     expect(paper).not.toHaveTextContent('4011 0258 68');
   });
 
-  it('offers to add an account when Bank Accounts holds none', async () => {
-    const { form } = await openBilling([billingModule, banks([])]);
+  it('with none kept, adds one under Others and writes it into the payment instructions', async () => {
+    const { form, paper } = await openBilling([billingModule, banks([])]);
+    const payInto = within(form).getByRole('combobox', { name: 'Pay into' });
 
-    expect(within(form).queryByRole('combobox', { name: 'Pay into' })).toBeNull();
-    fireEvent.click(within(form).getByRole('button', { name: 'Add a bank account' }));
+    fireEvent.click(payInto);
+    await act(async () => {});
+    const others = await screen.findByRole('option', { name: 'Others…' });
+    fireEvent.pointerDown(others);
+    fireEvent.click(others);
     await act(async () => {});
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Bank Accounts' })).toBeInTheDocument();
+    const group = within(form).getByRole('group', { name: 'New bank account' });
+    fireEvent.change(within(group).getByRole('textbox', { name: 'Bank name' }), { target: { value: 'BDO' } });
+    fireEvent.change(within(group).getByRole('textbox', { name: 'Account number' }), { target: { value: '0012 3456 7890' } });
+    fireEvent.click(within(group).getByRole('button', { name: 'Save account' }));
+    await act(async () => {});
+
+    expect(within(form).queryByRole('group', { name: 'New bank account' })).toBeNull();
+    expect(within(form).getByRole('combobox', { name: 'Pay into' })).toHaveTextContent('BDO · 0012 3456 7890');
+    expect(within(form).getByRole('textbox', { name: 'Payment instructions' })).toHaveDisplayValue(/Bank: BDO\nAccount Name: .+\nAccount Number: 0012 3456 7890/);
+    expect(paper).toHaveTextContent('Account Number: 0012 3456 7890');
   });
 });

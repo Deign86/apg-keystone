@@ -20,7 +20,7 @@ export interface DirectoryRecord {
   /** Address for vendors and clients, position for employees. */
   detail: string;
   dept?: string;
-  /** Clients: whether statements add 12% VAT and withhold 5% EWT by default. */
+  /** Clients: whether statements add 12% VAT and withhold expanded withholding tax by default. */
   vat?: boolean;
   ewt?: boolean;
   email?: string;
@@ -94,7 +94,10 @@ export interface Statement {
   /** The invoice date; older statements have only `date`. */
   invoiceDate?: ISODate;
   due: ISODate;
-  /** Directory code of the client. */
+  /**
+   * Who the statement is billed to, as printed, typed on it. A statement saved before Bill to was typed holds a
+   * directory code instead, and prints that client's name.
+   */
   client: string;
   /** Who the statement is addressed to at the client. */
   attention?: string;
@@ -105,10 +108,16 @@ export interface Statement {
   lines: LineItem[];
   vat: boolean;
   ewt: boolean;
+  /** The percent of expanded withholding tax the statement withholds when `ewt` is on. Older statements have none and withheld 5. */
+  ewtRate?: number;
   /** Payment instructions. */
   notes?: string;
   /** The closing note under the payment instructions. */
   note?: string;
+  /** Who signs the statement, printed at its foot. Older statements have none. */
+  prepared?: string;
+  checked?: string;
+  approved?: string;
   /** As saved. The statuses a statement goes through belong to the module that keeps statements. */
   status: string;
 }
@@ -167,9 +176,9 @@ export interface Company {
 
 /** What a new voucher, statement or ID starts from. */
 export interface Defaults {
-  /** A new voucher's "Prepared by" when nobody is signed in. Signed in, it is the member's own name. */
+  /** A new voucher's or statement's "Prepared by" when nobody is signed in. Signed in, it is the member's own name. */
   preparedBy: string;
-  /** The voucher's "Audited by". */
+  /** The voucher's "Audited by", a statement's "Checked by". */
   checkedBy: string;
   approvedBy: string;
   /** A statement's payment instructions: bank, account name and number, where to send proof. */
