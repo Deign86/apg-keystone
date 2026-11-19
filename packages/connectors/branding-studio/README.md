@@ -5,7 +5,8 @@ The listing-photo branding app (`Deign86/Alpha_Branding`), native on both platfo
 ## Owns
 - `src/index.ts`: the connector. Its shortcut opens the studio.
 - `src/logo.png`: the studio's own icon (from its `.github/assets/icon.png`).
-- `test/branding-studio.test.ts`: which app it looks for, that it starts it, and the download page when it is missing.
+- `test/branding-studio.test.ts`: which app it looks for, that it starts it, the download page when it is missing,
+  and when it offers an update (the real file names of v2.8.1).
 
 ## How it opens the studio (nothing in the studio changes)
 - **Finding it:**
@@ -15,7 +16,9 @@ The listing-photo branding app (`Deign86/Alpha_Branding`), native on both platfo
 - **Installed:** Keystone starts it (`open -a` on macOS, its `.exe` on Windows).
 - **Not installed:** Keystone downloads its installer from its latest release, checks it against the digest GitHub
   publishes, and opens it; the person finishes the installer. If that cannot be done, the release page opens.
-- **Updates:** the app updates itself once installed, so Keystone does nothing here (docs/adr/0029).
+- **A newer version is out:** "Update to …" shows under the shortcut and does the same download (docs/adr/0035).
+  The studio also updates itself, but only while it is open, so Home is where it is seen first. On a Mac the
+  download is a `.zip`: the person moves the new studio into Applications.
 - **In the browser preview:** it says the desktop app is needed.
 
 ## Contributes

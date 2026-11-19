@@ -82,8 +82,9 @@ COMPOSITION (the only place that knows the full list)
    (docs/adr/0029). It reaches the world only through `env.system`: find an installed app, start it, open a URL, read
    an app's latest release, fetch and open its installer. Never import `@tauri-apps/*` outside
    `apps/keystone/src/platform/`. Opening is time-limited and caught; a failure is a message on screen and nothing
-   else. An app that updates itself is left to; only one that cannot gets `update`. The native side, not the page,
-   decides which repositories and files are allowed.
+   else. Every desktop app's connector is `desktopAppShortcut`, so its newer version shows on Home whether or not it
+   also updates itself (docs/adr/0035); a failed check rejects and changes nothing on screen. The native side, not
+   the page, decides which repositories and files are allowed.
 9. **The saved state keeps the prototype's schema.**
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.

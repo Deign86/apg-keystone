@@ -6,7 +6,8 @@ alphapremiergroup.com and its admin portal (`Deign86/apg-website`: React plus PH
 - `src/index.ts`: the connector. Its shortcut opens the admin portal, `https://alphapremiergroup.com/admin`, in the
   browser, where inquiries, payments reported online and job applicants are handled.
 - `src/logo.png`: the APG mark the website uses (from its `promo-video/assets/img/logo-mark.png`).
-- `test/website.test.ts`: it opens the admin portal on the desktop and in the browser preview alike.
+- `test/website.test.ts`: it opens the admin portal on the desktop and in the browser preview alike, and offers no
+  update: the website is served, so whoever opens it has the latest (docs/adr/0035).
 
 ## Contributes
 Its shortcut on Home: the APG logo, named APG Website. Directory records linked to it earlier keep the tag `WEB`.

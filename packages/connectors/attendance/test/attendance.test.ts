@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AppLocator, InstalledApp, SystemBridge } from '@keystone/core';
+import type { AppLocator, AppRelease, InstalledApp, ReleaseAsset, SystemBridge } from '@keystone/core';
 import { ATTENDANCE_APP, attendanceConnector } from '../src';
 
 /** What the shortcut asked the computer to do. */
@@ -46,7 +46,7 @@ describe('the attendance app shortcut', () => {
     expect(did.opened).toEqual(['https://github.com/Deign86/alpha-premier-attendance/releases/latest']);
   });
 
-  it('not installed: fetches the installer for this computer from its latest release, and offers no update of its own', async () => {
+  it('not installed: fetches the installer for this computer from its latest release', async () => {
     // The file names of a real release, so a renamed asset fails here and not on someone's desk.
     const assets = ['Alpha.Premier.Attendance_0.2.51_aarch64.dmg', 'Alpha.Premier.Attendance_0.2.51_x64-setup.exe', 'Alpha.Premier.Attendance_0.2.51_x64-setup.exe.sig', 'Alpha.Premier.Attendance_0.2.51_x64.dmg', 'Alpha.Premier.Attendance_aarch64.app.tar.gz', 'Alpha.Premier.Attendance_x64.app.tar.gz', 'latest.json'].map((name) => ({ name, url: `https://github.com/Deign86/alpha-premier-attendance/releases/download/v1/${name}` }));
 
@@ -65,13 +65,73 @@ describe('the attendance app shortcut', () => {
       expect(fetched).toEqual([file]);
       expect(said).toMatch(/Its installer is open/);
     }
-
-    // It updates itself once installed, so Keystone leaves its updates alone.
-    expect(attendanceConnector.update).toBeUndefined();
   });
 
   it('shows the app’s own logo', () => {
     expect(attendanceConnector.logo).toMatch(/logo\.png$/);
+  });
+});
+
+// The real file names of release v0.2.57 (Deign86/alpha-premier-attendance), the one this computer's 0.2.20 missed.
+const asset = (name: string): ReleaseAsset => ({ name, url: `https://github.com/Deign86/alpha-premier-attendance/releases/download/v0.2.57/${name}`, digest: 'sha256:00' });
+
+const V0257: AppRelease = {
+  version: '0.2.57',
+  assets: [
+    'Alpha.Premier.Attendance_0.2.57_aarch64.dmg', 'Alpha.Premier.Attendance_0.2.57_x64-setup.exe', 'Alpha.Premier.Attendance_0.2.57_x64-setup.exe.sig',
+    'Alpha.Premier.Attendance_0.2.57_x64.dmg', 'Alpha.Premier.Attendance_aarch64.app.tar.gz', 'Alpha.Premier.Attendance_aarch64.app.tar.gz.sig',
+    'Alpha.Premier.Attendance_x64.app.tar.gz', 'Alpha.Premier.Attendance_x64.app.tar.gz.sig', 'latest.json',
+  ].map(asset),
+};
+
+/** An installed attendance app of `version`, on a computer that asks GitHub with `latestRelease`. */
+function installedAt(version: string | undefined, latestRelease: SystemBridge['latestRelease'] = async () => V0257, over: Partial<SystemBridge> = {}) {
+  const did: string[] = [];
+
+  const system: SystemBridge = {
+    platform: 'windows',
+    locateApp: async () => ({ path: 'C:\\Program Files\\Alpha Premier Attendance\\alpha-premier-attendance.exe', version }),
+    launchApp: async () => {},
+    openUrl: async (u) => { did.push(`open ${u}`); },
+    latestRelease: async (repo) => { did.push(`ask ${repo}`);
+
+ return latestRelease(repo); },
+    installFrom: async (a) => { did.push(`install ${a.name}`); },
+    ...over,
+  };
+
+  return { env: { system }, did };
+}
+
+// docs/adr/0035: the app updates itself only while it is open, so Home says when a newer version is out.
+describe('the attendance app’s updates, on Home', () => {
+  it('update found: an installed app older than the latest release is offered it, and its setup program is fetched', async () => {
+    const { env, did } = installedAt('0.2.20');
+    const update = await attendanceConnector.update?.(env);
+
+    expect(update?.version).toBe('0.2.57');
+    expect(did).toEqual(['ask Deign86/alpha-premier-attendance']);
+    expect(await update?.install(env)).toBe('The installer for Alpha Premier Attendance 0.2.57 is open. Close Alpha Premier Attendance first, then finish the installer.');
+    expect(did.at(-1)).toBe('install Alpha.Premier.Attendance_0.2.57_x64-setup.exe');
+  });
+
+  it('update found on a Mac: the disk image for its processor', async () => {
+    for (const [arch, file] of [['arm64', 'Alpha.Premier.Attendance_0.2.57_aarch64.dmg'], ['x64', 'Alpha.Premier.Attendance_0.2.57_x64.dmg']] as const) {
+      const { env, did } = installedAt('0.2.56', undefined, { platform: 'macos', arch });
+
+      await (await attendanceConnector.update?.(env))?.install(env);
+      expect(did.at(-1)).toBe(`install ${file}`);
+    }
+  });
+
+  it('up to date: nothing is offered, nor for a version the computer does not say', async () => {
+    for (const version of ['0.2.57', '0.2.58', undefined]) expect(await attendanceConnector.update?.(installedAt(version).env)).toBeNull();
+  });
+
+  it('check failed: says why, so the shortcut keeps what it last knew', async () => {
+    const { env } = installedAt('0.2.20', async () => { throw new Error('Could not reach GitHub. Check the internet connection.'); });
+
+    await expect(attendanceConnector.update?.(env)).rejects.toThrow('Could not reach GitHub. Check the internet connection.');
   });
 });
 

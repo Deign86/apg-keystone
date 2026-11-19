@@ -1,6 +1,7 @@
 # 0029. Keystone installs the connected apps, and updates the one that cannot update itself
 
-Status: Accepted · Date: 2026-11-18 · Changes [0007](0007-connected-systems-are-shortcuts.md)
+Status: Accepted · Date: 2026-11-18 · Changes [0007](0007-connected-systems-are-shortcuts.md) · Changed by
+[0035](0035-home-shows-every-connected-apps-update.md): every installed app's newer version now shows on Home
 
 ## Context
 

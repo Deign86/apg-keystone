@@ -1,11 +1,12 @@
-import { openDesktopApp, type AppLocator, type Connector, type DesktopApp, type MemberGrant } from '@keystone/core';
+import { desktopAppShortcut, type AppLocator, type Connector, type DesktopApp, type MemberGrant } from '@keystone/core';
 import logo from './logo.png';
 
 // Alpha Premier Attendance (Deign86/alpha-premier-attendance): the RFID time-in kiosk at the front desk. Its shortcut
 // on Home opens the app. Keystone finds it by its bundle id com.alphapremier.attendance on macOS ("Alpha Premier
 // Attendance.app"), and on Windows by the Uninstall registry key "Alpha Premier Attendance" that its NSIS installer
 // writes, with alpha-premier-attendance.exe. Not installed: Keystone fetches its installer from its latest release and
-// opens it. Once installed it updates itself (Tauri's updater), so Keystone offers no update of its own.
+// opens it. Installed and older than that release: "Update to …" shows under its shortcut (docs/adr/0035). The app also
+// updates itself (Tauri's updater), but only while it is open, so Home is where a newer version is seen first.
 
 export const ATTENDANCE_APP: AppLocator = {
   macBundleId: 'com.alphapremier.attendance',
@@ -42,6 +43,6 @@ export const attendanceConnector: Connector = {
   name: 'Attendance Tracker',
   tag: 'RFID',
   logo,
-  open: (env) => openDesktopApp(env, ATTENDANCE),
+  ...desktopAppShortcut(ATTENDANCE),
   memberGrant: ATTENDANCE_ADMIN,
 };

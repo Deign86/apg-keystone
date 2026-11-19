@@ -59,6 +59,30 @@ describe('what the connectors ask of the native side', () => {
     expect([...new Set(installed.map((a) => a.name))].sort()).toEqual([...app.installers].sort());
   });
 
+  // docs/adr/0035: an attendance tracker three dozen versions behind went unseen on Home because its connector left
+  // `update` out. Every app Keystone installs also has its newer versions offered, on every kind of computer.
+  it.each(connectors.filter((c) => described.has(c.id)).map((c) => [c.id, c] as const))('%s offers the newer version of its installed app', async (id, connector) => {
+    const app = described.get(id);
+    const latest = app?.tag.slice(1) ?? '';
+
+    for (const [platform, arch] of COMPUTERS) {
+      const system: SystemBridge = {
+        platform,
+        arch,
+        locateApp: async () => ({ path: 'installed', version: '0.0.1' }),
+        launchApp: async () => {},
+        openUrl: async () => {},
+        latestRelease: async (repo) => ({
+          version: latest,
+          assets: (app?.installers ?? []).map((name) => ({ name, url: `https://github.com/${repo}/releases/download/${app?.tag}/${name}` })),
+        }),
+        installFrom: async () => {},
+      };
+
+      expect((await connector.update?.({ system }))?.version, `${id} on ${platform} ${arch ?? ''}`).toBe(latest);
+    }
+  });
+
   it('describes no app whose connector is not installed', () => {
     const ids = connectors.map((c) => c.id);
 

@@ -5,8 +5,8 @@ approves or declines from a PC or a phone, and an approval makes the fund transf
 Directory, an Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
 - **The attendance tracker:** starts the app. When it is not installed, Keystone fetches its installer and opens it,
-  or opens its download page when it cannot.
-- **The Alpha Premier ID Maker:** the same, and Keystone offers its updates, since it cannot update itself.
+  or opens its download page when it cannot. When a newer version is out, "Update to …" shows under its shortcut.
+- **The Alpha Premier ID Maker:** the same.
 - **Alpha Branding Studio:** the same as the attendance tracker.
 - **The website:** opens its admin portal in the browser.
 

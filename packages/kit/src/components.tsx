@@ -101,8 +101,9 @@ export function FormCard({
 
 /**
  * A connected system's shortcut: its app's logo, which opens the app, or fetches its installer when the app is not
- * on this computer. Under it, for an app with no updater of its own, the newer version to install when one is out
- * (docs/adr/0007, 0029). Works for any connector.
+ * on this computer. Under it, the newer version to install when one is out, asked when it shows and every hour after
+ * (docs/adr/0007, 0029, 0035). A group named for the system, so "Update to …" is heard as that app's. Works for any
+ * connector.
  */
 export function ConnectorShortcut({ connector }: { connector: Connector }) {
   const open = useOpenConnector();
@@ -112,7 +113,7 @@ export function ConnectorShortcut({ connector }: { connector: Connector }) {
   const run = (work: (say: (what: string) => void) => Promise<void>) => { setDoing(''); void work(setDoing).finally(() => setDoing(null)); };
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div role="group" aria-label={connector.name} className="flex flex-col gap-1.5">
       <button
         type="button"
         aria-label={`Open ${connector.name}`}

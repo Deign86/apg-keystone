@@ -1,11 +1,12 @@
-import { desktopAppUpdate, openDesktopApp, type AppLocator, type Connector, type DesktopApp } from '@keystone/core';
+import { desktopAppShortcut, type AppLocator, type Connector, type DesktopApp } from '@keystone/core';
 import logo from './logo.png';
 
 // Alpha Premier ID Maker (Deign86/apg-id-creator): the native program HR issues employee ID cards with (WPF on
 // Windows, AppKit on a Mac). Its shortcut on Home opens the app. Keystone finds it by its bundle id
 // com.alphapremiergroup.idmaker on macOS, and on Windows by the Uninstall registry key its Inno Setup installer writes
 // (its AppId and "_is1"), with AlphaPremierIdMaker.exe. Not installed: Keystone fetches its installer from its latest
-// release and opens it. The ID Maker has no updater of its own, so Keystone also offers its newer versions.
+// release and opens it. Installed and older than that release: "Update to …" shows under its shortcut, the only way
+// the ID Maker is updated, since it has no updater of its own (docs/adr/0029, 0035).
 
 export const ID_MAKER_APP: AppLocator = {
   macBundleId: 'com.alphapremiergroup.idmaker',
@@ -26,6 +27,5 @@ export const idMakerAppConnector: Connector = {
   id: 'id-maker-app',
   name: 'Alpha Premier ID Maker',
   logo,
-  open: (env) => openDesktopApp(env, ID_MAKER),
-  update: (env) => desktopAppUpdate(env, ID_MAKER),
+  ...desktopAppShortcut(ID_MAKER),
 };
