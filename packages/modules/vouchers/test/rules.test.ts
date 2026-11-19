@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
-  canMoveTo, clearVoided, copyVoucher, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
+  canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
   voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
@@ -50,6 +50,38 @@ describe('check vouchers', () => {
     expect(r.record.no).toBe('888-001');
     expect(r.record.lines).toHaveLength(1);
     expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'CV', text: '888-001 for MANILA WATER COMPANY saved and routed for approval (₱8,412.30).' });
+  });
+
+  it('offers the next CV No. on a new voucher, keeps one typed in instead, and refuses a number already used', () => {
+    const s = state();
+    const d = { ...newVoucher(s, ctx), ...water, lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' })] };
+
+    // Typed, the number is kept, and numbering carries on after it when it is in the series.
+    const typed = saveVoucher(s, { ...d, no: ' 888-120 ', typedNo: true }, ctx);
+    expect(typed.record.no).toBe('888-120');
+    expect(nextVoucherNo(typed.state)).toBe('888-121');
+    // A number outside the series is kept too, and leaves the series' count alone.
+    expect(saveVoucher(s, { ...d, no: 'CV-2027-0001', typedNo: true }, ctx).record.no).toBe('CV-2027-0001');
+
+    expect(() => saveVoucher(typed.state, { ...d, no: '888-120', typedNo: true }, ctx)).toThrow('CV No. 888-120 is already used. The next free one is 888-121.');
+    expect(() => saveVoucher(s, { ...d, no: 'CV-2026-0141', typedNo: true }, ctx)).toThrow('CV No. CV-2026-0141 is already used. The next free one is 888-001.');
+    // Cleared, it takes the next number.
+    expect(saveVoucher(s, { ...d, no: '  ', typedNo: true }, ctx).record.no).toBe('888-001');
+  });
+
+  it('saves a number it only offered as the next one when it is saved, and a saved voucher under its own', () => {
+    const s = state();
+    const d = { ...newVoucher(s, ctx), ...water, lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' })] };
+    // Someone else saves 888-001 while this draft still shows it.
+    const meanwhile = saveVoucher(s, d, ctx).state;
+
+    expect(draftNo(meanwhile, d)).toBe('888-002');
+    expect(saveVoucher(meanwhile, d, ctx).record.no).toBe('888-002');
+
+    const pending = s.cv.find((v) => v.status === 'For Approval')!;
+    expect(draftNo(s, voucherDraftOf(s, pending))).toBe(pending.no);
+    // A copy saved from it takes the next number, whatever is in the field.
+    expect(saveVoucher(s, { ...voucherDraftOf(s, pending), no: '888-500', typedNo: true }, ctx, true).record.no).toBe('888-001');
   });
 
   it('pays whoever is typed in, at the address typed in, and needs a payee', () => {
