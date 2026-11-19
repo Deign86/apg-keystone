@@ -10,7 +10,7 @@ import {
   updatePassword, type Auth,
 } from 'firebase/auth';
 import {
-  collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, onSnapshot, persistentLocalCache, persistentMultipleTabManager,
   query, serverTimestamp, setDoc, updateDoc, where, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
@@ -143,13 +143,23 @@ export function openFirebase(
    * The documents of one collection. A module's own list that only some may read (RecordDocuments.readBy) is asked for
    * as firestore.rules allows: all of it by an owner, only their own by anyone else.
    */
-  async function read(c: string): Promise<StateDocument[]> {
+  function listOf(c: string) {
     const own = Object.values(layout).find((l) => l.collection === c);
     const uid = me();
     const list = collection(company, c);
-    const found = await getDocs(own?.readBy && !owner && uid ? query(list, where(own.readBy, '==', uid)) : list);
 
-    return found.docs.map((d): StateDocument => {
+    return own?.readBy && !owner && uid ? query(list, where(own.readBy, '==', uid)) : list;
+  }
+
+  async function read(c: string): Promise<StateDocument[]> {
+    return documentsOf(c, (await getDocs(listOf(c))).docs);
+  }
+
+  /** The documents Firestore found in one collection, as StateDocuments. */
+  function documentsOf(c: string, found: { id: string; get(field: string): JsonValue | undefined }[]): StateDocument[] {
+    const own = Object.values(layout).find((l) => l.collection === c);
+
+    return found.map((d): StateDocument => {
       const pos: JsonValue = d.get('pos') ?? null;
       const body: JsonValue = d.get('body') ?? null;
       // A field edited by hand into something else reads as nothing; fromDocuments then leaves that record out.
@@ -185,6 +195,30 @@ export function openFirebase(
     // Started with nothing in it; firestore.rules let only an owner do this (docs/adr/0018).
     async start() {
       await setDoc(company, { status: 'ready', by: me(), at: serverTimestamp() });
+    },
+
+    /**
+     * Every collection watched at once. Once each has answered, every change to any of them (this computer's saves
+     * straight away, from its own copy; others' as the cloud sends them) hands over all the documents, a moment after the
+     * last of a burst, so one save across several lists arrives as one.
+     */
+    watch(onChange) {
+      const lists = [...COLLECTIONS, ...Object.values(layout).map((l) => l.collection)];
+      const held = new Map<string, StateDocument[]>();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+
+      const stops = lists.map((c) => onSnapshot(listOf(c), (snap) => {
+        held.set(c, documentsOf(c, snap.docs));
+
+        if (held.size < lists.length) return;
+        clearTimeout(timer);
+        timer = setTimeout(() => onChange([...held.values()].flat()), 50);
+      }, (cause) => console.warn(`Live updates stopped for ${c}.`, cause)));
+
+      return () => {
+        clearTimeout(timer);
+        stops.forEach((stop) => stop());
+      };
     },
 
     write(change: DocumentChanges) {

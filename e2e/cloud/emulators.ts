@@ -296,6 +296,24 @@ export async function recordsInCloud() {
 }
 
 /**
+ * Another computer's save, as the cloud gets it: one record's body replaced, or the record deleted (`body` null). For
+ * the live updates a Keystone already open must show.
+ */
+export async function saveElsewhere(collection: string, id: string, body: JsonObject | null) {
+  const path = `${DATABASE}/documents/keystone/apg/${collection}/${id}`;
+
+  if (!body) {
+    await call(path, { method: 'DELETE', headers: ADMIN });
+
+    return;
+  }
+
+  await call(`${path}?updateMask.fieldPaths=body`, {
+    method: 'PATCH', headers: { ...ADMIN, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { body: { stringValue: JSON.stringify(body) } } }),
+  });
+}
+
+/**
  * Puts records on this computer, where the browser preview keeps them (apps/keystone/src/platform/browser.ts): the
  * sample records, logged as "Records kept on <computer>.", so a test can show they never reach the cloud
  * (docs/adr/0018). Leaves Keystone open on its sign-in screen.

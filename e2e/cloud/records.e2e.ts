@@ -1,6 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
-import { asMember, documentIds, emptyCloud, expectHome, idToken, keepRecordsHere, makeAccount, marker, record, recordsInCloud, signIn } from './emulators';
+import { asMember, documentIds, emptyCloud, expectHome, idToken, keepRecordsHere, makeAccount, marker, record, recordsInCloud, saveElsewhere, signIn } from './emulators';
 
 // The records in the cloud (apps/keystone/src/platform/cloud.ts, firestore.ts; docs/adr/0009), their only source
 // (docs/adr/0018): the CEO's first sign-in starts them empty and nothing a computer holds is ever copied in, every
@@ -166,4 +166,35 @@ test('a change made just before a reload reaches the cloud, and is there when Ke
 
   await app.open('/#activity');
   await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('B-002 BDO');
+});
+
+test('shows what another computer saves as it is saved, without reopening, and keeps a change made here', async ({ app, screen }) => {
+  const owner = await makeAccount('owner');
+
+  await recordsInCloud();
+  await app.open('/');
+  await signIn(screen, owner);
+  await expectHome(screen);
+  await app.open('/#vouchers');
+  const register = screen.getByRole('table', 'Voucher register');
+
+  await expect(register.getByRole('row', /^CV-2026-0141 .*For Approval/)).toBeVisible();
+
+  // Someone else approves CV-2026-0141 and deletes CV-2026-0140: this screen follows at once.
+  const waiting = await record('cv', 'CV-2026-0141');
+
+  await saveElsewhere('cv', 'CV-2026-0141', { ...waiting, status: 'Approved' });
+  await expect(register.getByRole('row', /^CV-2026-0141 .*Approved/)).toBeVisible({ timeout: 10_000 });
+  await saveElsewhere('cv', 'CV-2026-0140', null);
+  await expect(register.getByRole('row', /^CV-2026-0140 /)).toBeHidden({ timeout: 10_000 });
+
+  // A save made here after that is written over what the cloud holds now, and brings back nothing deleted elsewhere.
+  const form = screen.getByRole('form', 'New voucher');
+
+  await form.getByRole('textbox', 'Payee').fill('Manila Water Company');
+  await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await form.getByRole('textbox', 'Line 1 amount').fill('980');
+  await form.getByRole('button', 'Save and approve').tap();
+  await expect.poll(() => documentIds('cv'), { timeout: 10_000 }).toEqual(['888-001', 'CV-2026-0139', 'CV-2026-0141']);
+  expect(await record('cv', 'CV-2026-0141')).toMatchObject({ status: 'Approved' });
 });

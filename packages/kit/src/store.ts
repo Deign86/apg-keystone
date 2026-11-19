@@ -1,4 +1,7 @@
-import { emptyState, KeystoneError, parseState, sentenceOf, type Change, type Ctx, type TerminalState } from '@keystone/core';
+import {
+  applyDocumentChanges, diffDocuments, emptyState, fromDocuments, KeystoneError, parseState, sentenceOf, toDocuments, type Change, type Ctx,
+  type TerminalState,
+} from '@keystone/core';
 import type { Platform } from './platform';
 
 /** Shown in the rail when the saved state was read but is not a Keystone state. */
@@ -22,9 +25,17 @@ export class KeystoneStore {
   saveError: string | null = null;
   /** Why Keystone opened with no records although something was saved: the saved state is damaged. Null otherwise. */
   loadError: string | null = null;
+  /**
+   * The saved state as last read or handed to the platform: what a change made here and not saved yet is measured from,
+   * when someone else's save arrives first (receive).
+   */
+  private base: TerminalState;
+  /** Stops the live updates, where the platform has them. */
+  private unwatch: (() => void) | undefined;
 
   constructor(readonly platform: Platform, initial: TerminalState) {
     this.state = initial;
+    this.base = initial;
     this.ctx = { now: () => new Date(), ...(platform.who && { who: platform.who }) };
   }
 
@@ -64,8 +75,47 @@ export class KeystoneStore {
     }
 
     if (tidied !== state) store.commit(tidied);
+    // Where others save to the same records (the cloud), their changes show here as they are made.
+    store.unwatch = platform.watchState?.((json) => store.receive(json));
 
     return store;
+  }
+
+  /**
+   * The saved state as it is now, after someone's save (live updates). Shown at once; a change made here and not saved
+   * yet is kept, put back on top (the last save of a record wins), and saved as usual. A state that does not read is
+   * passed over.
+   */
+  receive(json: string) {
+    let remote: TerminalState;
+
+    try {
+      remote = parseState(json);
+    } catch (e) {
+      console.warn('A live update could not be read; kept what is shown.', e);
+
+      return;
+    }
+
+    let next = remote;
+
+    if (this.saveTimer !== undefined) {
+      const mine = diffDocuments(toDocuments(this.base), toDocuments(this.state));
+
+      next = fromDocuments(applyDocumentChanges(toDocuments(remote), mine));
+    }
+
+    this.base = remote;
+
+    if (JSON.stringify(next) === JSON.stringify(this.state)) return;
+    this.state = next;
+    this.listeners.forEach((fn) => fn());
+  }
+
+  /** Stops the live updates (signing out, or a test done with the store). */
+  close() {
+    this.unwatch?.();
+    this.unwatch = undefined;
   }
 
   subscribe = (fn: () => void) => {
@@ -91,6 +141,7 @@ export class KeystoneStore {
     if (this.saveTimer === undefined) return Promise.resolve();
     clearTimeout(this.saveTimer);
     this.saveTimer = undefined;
+    this.base = this.state;
 
     return this.platform.saveState(JSON.stringify(this.state, null, 2)).then(
       // The damaged file, if there was one, is the new records from here on.
