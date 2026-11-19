@@ -50,7 +50,7 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
       {d.type === 'Client' && (
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           <Checkbox checked={d.vat} onChange={(vat) => setD({ ...d, vat })}>VAT-registered (statements add 12% VAT)</Checkbox>
-          <Checkbox checked={d.ewt} onChange={(ewt) => setD({ ...d, ewt })}>Withholds 5% EWT</Checkbox>
+          <Checkbox checked={d.ewt} onChange={(ewt) => setD({ ...d, ewt })}>Withholds EWT</Checkbox>
         </div>
       )}
       <div className="flex items-center justify-end gap-2 border-t border-line pt-3">

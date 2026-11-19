@@ -1,8 +1,8 @@
-import { Button, CellInput, EmptyState, Panel, SectionLabel, Tag, cn } from '@keystone/ui';
+import { Button, CellInput, EmptyState, Field, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm } from '@keystone/ui';
 import { X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { lineDraft, shortDate, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
-import { useConnectorUpdate, useOpenConnector } from './context';
+import { companyOf, lineDraft, SERVICES, shortDate, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
+import { useConnectorUpdate, useKeystone, useModuleApp, useOpenConnector } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
@@ -160,5 +160,126 @@ export function Feed({ entries, compact = false }: { entries: LogEntry[]; compac
         </li>
       ))}
     </ol>
+  );
+}
+
+/** The last choice in a bank account list, for an account not kept yet. No account's label is this: each has " · ". */
+const OTHERS = 'others';
+
+/** An account typed under Others, before Bank Accounts keeps it. */
+type TypedAccount = { bank: string; branch: string; name: string; number: string };
+
+/**
+ * A company bank account picked from Bank Accounts (SERVICES.bankAccounts), the same on every form that names one: the
+ * bank a check is drawn on, the account a client pays into. `value` is the account as printed ("BPI · 4011 0258 68");
+ * one no longer kept, or typed by hand, stays listed as it was saved. The list ends with Others…, a small form whose
+ * account is saved to Bank Accounts and picked, so every form after lists it too; Remove… takes the picked one off.
+ * `onChange` gets the account's label and the account, or "" when none is left. Nothing without the service.
+ */
+export function BankAccountPicker({ label, value, onChange, hint, noneHint, after, kept }: {
+  label: string; value: string; onChange: (label: string, account?: BankAccount) => void;
+  /** Under the list when it has accounts, and when it has none. */
+  hint: string; noneHint: string;
+  /** Who else lists an account saved here: "every voucher after this one". */
+  after: string;
+  /** What happens to papers that named a removed account: "Vouchers already saved keep the bank written on them." */
+  kept: string;
+}) {
+  const { state, run } = useKeystone();
+  const app = useModuleApp();
+  const confirm = useConfirm();
+  const banks = app.service(SERVICES.bankAccounts);
+  // The account's name starts as the company's: these are its own accounts.
+  const blank = (): TypedAccount => ({ bank: '', branch: '', name: companyOf(state).name, number: '' });
+  const [adding, setAdding] = useState<TypedAccount | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!banks) return null;
+  const accounts = banks.accounts(state);
+  const labels = accounts.map((a) => banks.label(a));
+  const picked = accounts.find((a) => banks.label(a) === value);
+  const options = [...(value && !labels.includes(value) ? [value] : []), ...labels, OTHERS];
+
+  const pick = (choice: string) => {
+    setError(null);
+    setAdding(choice === OTHERS ? blank() : null);
+
+    if (choice !== OTHERS) onChange(choice, accounts.find((a) => banks.label(a) === choice));
+  };
+
+  const save = () => {
+    if (!adding) return;
+    const r = run((s, c) => banks.add(s, adding, c));
+
+    if (!r.ok) return setError(r.error);
+    onChange(banks.label(r.record), r.record);
+    setAdding(null);
+    setError(null);
+  };
+
+  const remove = (id: string) => {
+    const r = run((s, c) => banks.remove(s, id, c));
+
+    if (!r.ok) return;
+    // The form then names the first account still kept, if any.
+    const next = banks.accounts(r.state)[0];
+
+    onChange(next ? banks.label(next) : '', next);
+  };
+
+  const field = (key: keyof TypedAccount) => ({ value: adding?.[key] ?? '', onChange: (v: string) => adding && setAdding({ ...adding, [key]: v }) });
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <Field label={label} hint={accounts.length ? hint : noneHint}>
+        <div className="flex gap-2">
+          <div className="min-w-0 flex-1">
+            <SelectInput
+              value={adding ? OTHERS : value}
+              onChange={pick}
+              options={options.map((l) => ({ value: l, label: l === OTHERS ? 'Others…' : l }))}
+            />
+          </div>
+          {picked && !adding && (
+            <Button
+              onClick={() => confirm({
+                title: `Remove ${picked.id}?`,
+                body: `${banks.label(picked)}, in the name of ${picked.name}, is removed from Bank Accounts and from this list. ${kept}`,
+                confirm: 'Remove account',
+                danger: true,
+                onConfirm: () => remove(picked.id),
+              })}
+            >
+              Remove…
+            </Button>
+          )}
+        </div>
+      </Field>
+      {adding && (
+        // Inside the form that names it, so Enter saves the account here, not the form.
+        <div
+          role="group"
+          aria-label="New bank account"
+          className="flex flex-col gap-2.5 rounded-control border border-line p-3"
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } }}
+        >
+          <FieldRow>
+            <Field label="Bank name"><TextInput autoFocus placeholder="BDO" {...field('bank')} /></Field>
+            <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" {...field('number')} /></Field>
+          </FieldRow>
+          <FieldRow>
+            <Field label="Account name" hint="As the bank holds it."><TextInput {...field('name')} /></Field>
+            <Field label="Branch"><TextInput placeholder="Optional" {...field('branch')} /></Field>
+          </FieldRow>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {error
+              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-pretty text-bad">{error}</p>
+              : <span className="mr-auto text-[13px] text-pretty text-ink-2">Saved to Bank Accounts, for {after}.</span>}
+            {accounts.length > 0 && <Button size="sm" onClick={() => { setAdding(null); setError(null); }}>Cancel</Button>}
+            <Button size="sm" onClick={save}>Save account</Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

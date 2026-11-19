@@ -156,15 +156,14 @@ test('removes an account after asking, and offers to add one when none is left',
   await expect(screen.getByText('No bank accounts are kept yet.')).toBeVisible();
   await expect(screen.getByText('No bank accounts yet.')).toBeVisible();
 
-  // With no account to pick, a statement's payment instructions are typed, and the form says where to add one.
+  // With no account to pick, a statement's Pay into names none and offers Others…, as a voucher's Bank does.
   await app.open('/#billing');
   const form = screen.getByRole('form', 'New statement');
 
-  await expect(form.getByRole('combobox', 'Pay into')).toBeHidden();
-  await expect(form.getByText('No bank accounts are kept yet, so the payment instructions are typed below.')).toBeVisible();
-  await form.getByRole('button', 'Add a bank account').tap();
-  await expect(screen.getByRole('heading', { name: 'Bank Accounts', level: 1 })).toBeVisible();
+  await expect(form.getByRole('combobox', 'Pay into')).toHaveText('—');
+  await expect(form.getByText('No bank accounts are kept yet: add the one clients pay into under Others, or type the instructions below.')).toBeVisible();
 
+  await app.open('/#banks');
   await screen.getByRole('button', 'Add one').tap();
   await expect(screen.getByRole('dialog', 'Add account').getByText('Gets B-001.')).toBeVisible();
 });

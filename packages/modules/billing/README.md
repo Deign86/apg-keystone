@@ -1,18 +1,27 @@
 # Billing Statements
 
 ## Owns
-- `src/index.tsx`: the register (Mark paid, sent or overdue; void asks first), the form, VAT and EWT from the client's
-  setup, editing in place while Sent, Print, and Export PDF.
-- `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement: Bill to and
-  Attention, the invoice and due dates, the late-payment penalty, Qty · Description · Unit price · Amount with tax,
-  subtotal, VAT, EWT when the client withholds, the total, then payment instructions and notes. It prints twice on
-  one A4 sheet, as the check voucher does (the kit's `TwoUp`): a copy on each half, cut apart along the dashed line.
-- `src/rules.ts`: its rules (totals with VAT and EWT, each line's amount with tax, numbering, defaults from the client,
+- `src/index.tsx`: the register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent,
+  Print, and Export PDF. **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and
+  Attention, and any other name leaves them to be set by hand. **Prepared by** starts as whoever is signed in,
+  **Checked by** and **Approved by** as the last statement's (Company Details' before the first).
+- `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under the check
+  voucher's masthead (the Group of Companies logo, the address beside it, the title, number and date): Bill to and
+  Attention, the invoice box (number, invoice and due dates, the late-payment penalty), Qty · Description · Unit price ·
+  Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%) and the total amount due, every line shown, a
+  dash where a tax does not apply. Then payment instructions, notes and who signs. It prints twice on one A4 sheet, as
+  the check voucher does (the kit's `TwoUp`): a copy on each half, cut apart along the dashed line.
+- `src/rules.ts`: its rules (totals with VAT and EWT, numbering, the client typed or from the directory,
   `recordPayment`, overdue on open, the account the payment instructions name) and what it contributes. Tested in
   `test/rules.test.ts`.
-- **Pay into**, when Bank Accounts is installed: a list of the company's bank accounts on the form, showing the one the
-  payment instructions name. Picking one rewrites their Bank, Account Name and Account Number lines (`payInto`) and
-  keeps the rest of the text, so the printed statement names that account. Tested with and without the service in
+- **EWT** is 2% (services) or 5% (rentals and professional fees), picked under **EWT rate** once withholding is ticked
+  and kept on the statement as `ewtRate`; a new statement starts at 2%. A statement saved before it kept its rate
+  withheld 5% and still does, so its amount due never changes.
+- **Pay into**, when Bank Accounts is installed: kit's `BankAccountPicker`, the same list as a check voucher's Bank. It
+  shows the account the payment instructions name; picking one rewrites their Bank, Account Name and Account Number
+  lines (`payInto`) and keeps the rest of the text. **Others…** adds an account to Bank Accounts and picks it;
+  **Remove…** takes the picked one off. A new statement pays into the account the last statement named, else the one
+  Company Details' instructions name, else the first kept. Tested with and without the service in
   `test/pay-into.test.tsx`.
 
 **Invoice numbers** are a six-digit running number and the year, `010100-2026`. A new statement offers the next one
@@ -28,8 +37,8 @@ neither is entered or printed any more.
 - **Home:** a tile.
 - **Activity:** log tag `BS`.
 - **Draft key:** `billing.draft`.
-- **Directory:** a client a statement names is kept (`refersTo`), marked `BS`; a new client is said to be selectable in
-  Billing Statements (`selects`).
+- **Directory:** a client a statement saved before Bill to was typed names by code is kept (`refersTo`), marked `BS`; a
+  new client is said to be selectable in Billing Statements (`selects`), where typing its name brings its setup.
 
 ## Provides
 `billing.statement-payments` (`SERVICES.statementPayments`, typed `StatementPayments` in core): the open statements,
@@ -37,7 +46,7 @@ earliest due first, and settling one with a reported payment (a short payment is
 matching uses it.
 
 ## Needs
-Clients in the directory (data). Uses `banks.bank-accounts` (`SERVICES.bankAccounts`) when it is installed, for Pay
+Clients in the directory (data), for their VAT, EWT and Attention when their name is typed. Uses `banks.bank-accounts` (`SERVICES.bankAccounts`) when it is installed, for Pay
 into; without it there is no Pay into, and the payment instructions are typed.
 
 ## Removing it

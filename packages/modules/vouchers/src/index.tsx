@@ -1,11 +1,11 @@
-import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, SectionLabel, StatusPill, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
   approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
   voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
-import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { BankAccountPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
@@ -20,118 +20,6 @@ function firstBank(app: ModuleApp): string {
   const first = banks?.accounts(app.state)[0];
 
   return banks && first ? banks.label(first) : '';
-}
-
-/** The last choice in the Bank list, for an account not kept yet. No account's label is this: each has " · ". */
-const OTHERS = 'others';
-
-/** An account typed under Others, before Bank Accounts keeps it. */
-type NewAccount = { bank: string; branch: string; name: string; number: string };
-
-/**
- * The account the check is drawn on, picked from Bank Accounts when it is installed. The voucher keeps it as printed.
- * One not in the list is typed under Others and saved to Bank Accounts, so every voucher after lists it too; the one
- * picked can be removed from there. Nothing needs adding on the Bank Accounts screen first.
- */
-function DrawnOn({ value, onChange }: { value: string; onChange: (bank: string) => void }) {
-  const { state, run } = useKeystone();
-  const app = useModuleApp();
-  const confirm = useConfirm();
-  const banks = app.service(SERVICES.bankAccounts);
-  // The account's name starts as the company's: its checks are drawn on its own accounts.
-  const blank = (): NewAccount => ({ bank: '', branch: '', name: companyOf(state).name, number: '' });
-  const [adding, setAdding] = useState<NewAccount | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  if (!banks) return null;
-  const accounts = banks.accounts(state);
-  const labels = accounts.map((a) => banks.label(a));
-  const picked = accounts.find((a) => banks.label(a) === value);
-  // An older voucher may name an account no longer kept, or one typed by hand; it stays as it was saved.
-  const options = [...(value && !labels.includes(value) ? [value] : []), ...labels, OTHERS];
-
-  const pick = (choice: string) => {
-    setError(null);
-    setAdding(choice === OTHERS ? blank() : null);
-
-    if (choice !== OTHERS) onChange(choice);
-  };
-
-  const save = () => {
-    if (!adding) return;
-    const r = run((s, c) => banks.add(s, adding, c));
-
-    if (!r.ok) return setError(r.error);
-    onChange(banks.label(r.record));
-    setAdding(null);
-    setError(null);
-  };
-
-  const remove = (id: string) => {
-    const r = run((s, c) => banks.remove(s, id, c));
-
-    if (!r.ok) return;
-    // The check is then drawn on the first account still kept, if any.
-    const next = banks.accounts(r.state)[0];
-
-    onChange(next ? banks.label(next) : '');
-  };
-
-  const field = (key: keyof NewAccount) => ({ value: adding?.[key] ?? '', onChange: (v: string) => adding && setAdding({ ...adding, [key]: v }) });
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      <Field label="Bank" hint={accounts.length ? 'The account the check is drawn on. Others adds one not listed.' : 'No bank accounts are kept yet: add the one the check is drawn on under Others.'}>
-        <div className="flex gap-2">
-          <div className="min-w-0 flex-1">
-            <SelectInput
-              value={adding ? OTHERS : value}
-              onChange={pick}
-              options={options.map((l) => ({ value: l, label: l === OTHERS ? 'Others…' : l }))}
-            />
-          </div>
-          {picked && !adding && (
-            <Button
-              onClick={() => confirm({
-                title: `Remove ${picked.id}?`,
-                body: `${banks.label(picked)}, in the name of ${picked.name}, is removed from Bank Accounts and from this list. Vouchers already saved keep the bank written on them.`,
-                confirm: 'Remove account',
-                danger: true,
-                onConfirm: () => remove(picked.id),
-              })}
-            >
-              Remove…
-            </Button>
-          )}
-        </div>
-      </Field>
-      {adding && (
-        // Inside the voucher's own form, so Enter saves the account here, not the voucher.
-        <div
-          role="group"
-          aria-label="New bank account"
-          className="flex flex-col gap-2.5 rounded-control border border-line p-3"
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } }}
-        >
-          <FieldRow>
-            <Field label="Bank name"><TextInput autoFocus placeholder="BDO" {...field('bank')} /></Field>
-            <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" {...field('number')} /></Field>
-          </FieldRow>
-          <FieldRow>
-            <Field label="Account name" hint="As the bank holds it."><TextInput {...field('name')} /></Field>
-            <Field label="Branch"><TextInput placeholder="Optional" {...field('branch')} /></Field>
-          </FieldRow>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {error
-              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-pretty text-bad">{error}</p>
-              : <span className="mr-auto text-[13px] text-pretty text-ink-2">Saved to Bank Accounts, for every voucher after this one.</span>}
-            {accounts.length > 0 && <Button size="sm" onClick={() => { setAdding(null); setError(null); }}>Cancel</Button>}
-            <Button size="sm" onClick={save}>Save account</Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 function Vouchers() {
@@ -293,7 +181,15 @@ function Vouchers() {
               <Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
               <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
               <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>
-              <DrawnOn value={shown.bank} onChange={(b) => setDraft({ ...draft, bank: b })} />
+              <BankAccountPicker
+                label="Bank"
+                value={shown.bank}
+                onChange={(b) => setDraft({ ...draft, bank: b })}
+                hint="The account the check is drawn on. Others adds one not listed."
+                noneHint="No bank accounts are kept yet: add the one the check is drawn on under Others."
+                after="every voucher after this one"
+                kept="Vouchers already saved keep the bank written on them."
+              />
             </fieldset>
             <fieldset disabled={!!locked} className={FIELDS}>
               <FieldRow>

@@ -46,6 +46,7 @@ Consequences**.
 | [0033](0033-accounts-are-a-service-the-platform-provides.md) | Accounts are a service the platform provides, and a connector says what the CEO may give a member | Accepted |
 | [0034](0034-a-sheets-layout-is-defined-once.md) | A sheet's layout is defined once, and a paper composes its own letterhead | Accepted |
 | [0035](0035-home-shows-every-connected-apps-update.md) | Home shows every connected app's newer version | Accepted |
+| [0036](0036-a-billing-statement-follows-the-company-form.md) | A billing statement follows the company's form, its client is typed, and it withholds 2% or 5% | Accepted |
 
 Template:
 
