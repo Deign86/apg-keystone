@@ -502,7 +502,7 @@ test('adds an account under Others on a statement, and Bank Accounts keeps it', 
   await expect(account).toBeHidden();
   await expect(payInto).toHaveText('BDO · 0012 3456 7890');
   await expect(form.getByRole('textbox', 'Payment instructions')).toHaveValue(/^Please make payment to:\nBank: BDO, Ortigas Center\nAccount Name: .+\nAccount Number: 0012 3456 7890\n/);
-  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Bank: BDO, Ortigas Center', { exact: false })).toBeVisible();
+  await expect(screen.getByRole('article', 'Billing statement 010100-2026').getByText('Bank: BDO, Ortigas Center', { exact: false }).first()).toBeVisible();
 
   await app.open('/#banks');
   await expect(screen.getByRole('table', 'Bank accounts').getByRole('row', /^B-002 BDO Ortigas Center /)).toBeVisible();
