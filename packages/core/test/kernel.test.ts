@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDays, addYears, amountInWords, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
+  addDays, addYears, amountInWords, changeEach, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
   KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
@@ -342,5 +342,21 @@ describe('the sentence for whatever was thrown', () => {
     // The native side refuses with a plain sentence.
     expect(sentenceOf('Cannot read state.json: Permission denied (os error 13)')).toBe('Cannot read state.json: Permission denied (os error 13)');
     expect(sentenceOf(undefined)).toBe('undefined');
+  });
+});
+
+describe('one rule over several records', () => {
+  it('applies the rule to each in turn as one change, or refuses all of them with the rule\'s own sentence', () => {
+    const s = state();
+    const one = (st: typeof s, code: string) => removeDirectoryRecord(st, code, ctx, []);
+    const r = changeEach(s, ['V-002', 'C-003'], one, (gone) => `${gone.length} removed.`);
+
+    expect(r.state.dir.map((d) => d.code)).not.toContain('V-002');
+    expect(r.state.dir.map((d) => d.code)).not.toContain('C-003');
+    expect(r.record.map((d) => d.code)).toEqual(['V-002', 'C-003']);
+    expect(r.message).toBe('2 removed.');
+    // One refused: nothing changes, and the sentence is the rule's.
+    expect(() => changeEach(s, ['V-002', 'X-999'], one, () => '')).toThrow(KeystoneError);
+    expect(s.dir.map((d) => d.code)).toContain('V-002');
   });
 });

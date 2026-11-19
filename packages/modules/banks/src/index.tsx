@@ -1,6 +1,6 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useState } from 'react';
-import { DASH, SERVICES, type BankAccount } from '@keystone/core';
+import { changeEach, count, DASH, SERVICES, type BankAccount } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 import {
   accountDraftOf, accountLabel, accountsOf, bankAccounts, banksLine, newAccountDraft, nextAccountId, removeAccount, saveAccount, TAG,
@@ -81,6 +81,15 @@ function Banks() {
               }),
             },
           ]}
+          bulk={(picked, clear): RowAction[] => [{
+            label: `Remove (${picked.length})…`, danger: true,
+            onSelect: () => confirm({
+              title: `Remove ${count(picked.length, 'account')}?`,
+              body: `${picked.map(accountLabel).join(', ')} ${picked.length === 1 ? 'is' : 'are'} removed from Bank Accounts. Statements already issued keep the payment instructions written on them.`,
+              confirm: 'Remove accounts', danger: true,
+              onConfirm: () => { if (run((s, c) => changeEach(s, picked.map((a) => a.id), (x, id) => removeAccount(x, id, c), (r) => `${count(r.length, 'account')} removed.`)).ok) clear(); },
+            }),
+          }]}
           empty={<EmptyState text="No bank accounts yet." action={<Button size="sm" kind="primary" onClick={add}>Add one</Button>} />}
         />
       </Panel>

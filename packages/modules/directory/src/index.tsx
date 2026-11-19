@@ -1,7 +1,7 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column } from '@keystone/ui';
+import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useMemo, useState } from 'react';
 import {
-  DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedByCode,
+  changeEach, DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedByCode,
   type DirectoryDraft, type DirectoryRecord, type RecordType, type Figure, type TerminalState,
 } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
@@ -158,6 +158,20 @@ function Directory() {
               onSelect: () => confirm({ title: `Remove ${d.code}?`, body: `${d.name} is removed from the directory. Nothing refers to it yet, so no document changes.`, confirm: 'Remove record', danger: true, onConfirm: () => run((s, c) => removeDirectoryRecord(s, d.code, c, references)) }),
             },
           ]}
+          bulk={(picked, clear): RowAction[] => {
+            // A record a document names stays: only the ones nothing refers to can go.
+            const free = picked.filter((d) => !usedBy(d.code).length);
+
+            return [{
+              label: `Remove (${free.length})…`, danger: true, disabled: !free.length,
+              onSelect: () => confirm({
+                title: `Remove ${count(free.length, 'record')}?`,
+                body: `${free.map((d) => d.name).join(', ')} ${free.length === 1 ? 'is' : 'are'} removed from the directory.${free.length < picked.length ? ` ${count(picked.length - free.length, 'record')} a document names ${picked.length - free.length === 1 ? 'stays' : 'stay'}.` : ''}`,
+                confirm: 'Remove records', danger: true,
+                onConfirm: () => { if (run((s, c) => changeEach(s, free.map((d) => d.code), (x, code) => removeDirectoryRecord(x, code, c, references), (r) => `${count(r.length, 'record')} removed.`)).ok) clear(); },
+              }),
+            }];
+          }}
           empty={<EmptyState text={q ? `Nothing matches “${query}”.` : 'No records of this type yet.'} action={q ? <Button size="sm" onClick={() => setQuery('')}>Clear search</Button> : <Button size="sm" kind="primary" onClick={() => setEditing(newDirectoryDraft(filter === 'All' ? 'Vendor' : filter))}>Add one</Button>} />}
         />
       </Panel>

@@ -148,6 +148,7 @@ test('removes an account after asking, and offers to add one when none is left',
 
   await accounts.getByRole('button', 'Actions for B-001').tap();
   await screen.getByRole('menuitem', 'Remove…').tap();
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
   await confirm.getByRole('button', 'Remove account').tap();
 
   await expect(screen.getByRole('dialog', 'B-001 removed.')).toBeVisible();
@@ -180,6 +181,7 @@ test('logs each account added, edited and removed under the Bank Accounts filter
 
   await accounts.getByRole('button', 'Actions for B-002').tap();
   await screen.getByRole('menuitem', 'Remove…').tap();
+  await screen.getByRole('alertdialog', 'Remove B-002?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Remove B-002?').getByRole('button', 'Remove account').tap();
   await expect(accounts.getByRole('row', /^B-002 /)).toBeHidden();
 

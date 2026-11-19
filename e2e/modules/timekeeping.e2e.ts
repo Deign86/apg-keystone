@@ -291,6 +291,7 @@ test('removes a holiday only after asking', async ({ app, screen }) => {
   await holidays.getByRole('button', 'Actions for 2026-11-30').tap();
   await screen.getByRole('menuitem', 'Remove…').tap();
   confirm = screen.getByRole('alertdialog', 'Remove Bonifacio Day?');
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
   await confirm.getByRole('button', 'Remove holiday').tap();
   await expect(screen.getByRole('dialog', 'Nov 30, 2026 is no longer a holiday.')).toBeVisible();
   await expect(holidays.getByRole('row', /^Nov 30, 2026 /)).toBeHidden();

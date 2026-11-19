@@ -1,6 +1,6 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
-import { companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
+import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
 import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
 import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
@@ -84,6 +84,14 @@ function IDMaker() {
           rowKey={(i) => i.no}
           onOpen={(i) => { setDraft(idDraftOf(i)); setError(null); notify(`${i.no} loaded for preview.`); }}
           actions={(i) => ID_STATUSES.map((s) => ({ label: s === 'Active' ? 'Mark printed and handed over' : `Mark ${s.toLowerCase()}`, disabled: i.status === s, danger: s === 'Revoked', onSelect: () => run((st, c) => setIDStatus(st, i.no, s, c)) }))}
+          bulk={(picked, clear): RowAction[] => ID_STATUSES.map((s) => {
+            const nos = picked.filter((i) => i.status !== s).map((i) => i.no);
+
+            return {
+              label: `${s === 'Active' ? 'Mark printed and handed over' : `Mark ${s.toLowerCase()}`} (${nos.length})`, disabled: !nos.length, danger: s === 'Revoked',
+              onSelect: () => { if (run((st, c) => changeEach(st, nos, (x, no) => setIDStatus(x, no, s, c), (r) => `${count(r.length, 'card')} marked ${s.toLowerCase()}.`)).ok) clear(); },
+            };
+          })}
           empty={<EmptyState text="No cards issued yet." action={<Button size="sm" kind="primary" onClick={() => document.getElementById('id-form')?.scrollIntoView({ block: 'start' })}>Make the first card</Button>} />}
         />
       </Panel>

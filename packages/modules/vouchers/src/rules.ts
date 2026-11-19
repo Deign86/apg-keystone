@@ -1,8 +1,8 @@
 import {
-  addDays, companyOf, count, isJsonObject, isOwner, jsonText, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
-  moduleData, peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
+  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
+  peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
-  type WaitingItem, withModuleData
+  type WaitingItem
 } from '@keystone/core';
 
 // Check vouchers: disbursements routed for signatures, printed as the company's
@@ -37,21 +37,14 @@ export const refersTo: Reference = { tag: TAG, codes: (s) => s.cv.map((v) => v.p
 const SERIES = '888-';
 
 /**
- * The highest 888- number a voucher removed from the register had, kept under state.ext.vouchers so it is never issued
- * again: a void voucher's number stays used after the voucher is deleted. "" when none was removed.
+ * The next voucher number in the 888- series: one past the highest still in the register, so deleting the last
+ * vouchers brings the count back down and their numbers are given out again. Older vouchers (CV-2026-0141, 8888-001)
+ * keep theirs and do not count.
  */
-const removedHighest = (s: TerminalState) => {
-  const raw = moduleData(s, ID);
+export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
 
-  return isJsonObject(raw) ? jsonText(raw.highest) : '';
-};
-
-/**
- * The next voucher number in the 888- series, past every voucher in the register and every one removed from it. Older
- * vouchers (CV-2026-0141, 8888-001) keep theirs and do not count.
- */
-export const nextVoucherNo = (s: TerminalState) =>
-  nextNumber([...s.cv.map((v) => v.no), removedHighest(s)].filter((no) => no.startsWith(SERIES)), SERIES, 3);
+/** Whether deleting this voucher gives its number back: it is the highest of the series left. */
+export const freesNumber = (s: TerminalState, no: string) => nextVoucherNo({ ...s, cv: s.cv.filter((v) => v.no !== no) }) === no;
 
 export const awaitingApproval = (s: TerminalState) => s.cv.filter((v) => v.status === 'For Approval');
 
@@ -285,15 +278,24 @@ export const VOID_KEPT_DAYS = 7;
 /** The day a void voucher is cleared from the register: VOID_KEPT_DAYS after it was voided (its date, if older). */
 export const clearsOn = (v: Voucher) => addDays(v.voided ?? v.date, VOID_KEPT_DAYS);
 
-/** The state without these vouchers, their numbers kept as used so no later voucher is given one. */
+/** The state without these vouchers. */
 function withoutVouchers(s: TerminalState, gone: Voucher[]): TerminalState {
   const nos = new Set(gone.map((v) => v.no));
-  const out = { ...s, cv: s.cv.filter((v) => !nos.has(v.no)) };
-  // The highest of the series among those removed, ever: zero-padded, so the longest then the greatest is the highest.
-  const series = [removedHighest(s), ...gone.map((v) => v.no)].filter((no) => no.startsWith(SERIES));
-  const highest = series.sort((a, b) => a.length - b.length || a.localeCompare(b)).at(-1);
 
-  return highest ? withModuleData(out, ID, { highest }) : out;
+  return { ...s, cv: s.cv.filter((v) => !nos.has(v.no)) };
+}
+
+/**
+ * The state without the highest deleted number an earlier build kept under state.ext.vouchers to hold numbers back.
+ * Numbering follows the register now, so it is dropped, from the cloud too.
+ */
+export function withoutHeldNumber(s: TerminalState): TerminalState {
+  if (!s.ext || !(ID in s.ext)) return s;
+  const ext = { ...s.ext };
+
+  delete ext[ID];
+
+  return { ...s, ext };
 }
 
 /** Deletes a void voucher from the register now. Only a void one: every other voucher is a record of money paid or owed. */
@@ -310,8 +312,26 @@ export function deleteVoucher(s: TerminalState, no: string, ctx: Ctx): Change<Vo
   };
 }
 
-/** On open: clears every void voucher VOID_KEPT_DAYS after it was voided, in one log line. */
-export function clearVoided(s: TerminalState, ctx: Ctx): TerminalState {
+/** Deletes several void vouchers at once: every one, or none if any is not void. The numbering closes up behind them. */
+export const deleteVouchers = (s: TerminalState, nos: readonly string[], ctx: Ctx): Change<Voucher[]> =>
+  changeEach(s, nos, (st, no) => deleteVoucher(st, no, ctx), (vs) => `${count(vs.length, 'void voucher')} deleted.`);
+
+/** Whether a voucher can be moved to `status` as it stands: the order setVoucherStatus keeps, the check aside. */
+export function canMoveTo(v: Voucher, status: VoucherStatus): boolean {
+  if (v.status === status || v.status === 'Void') return false;
+
+  if (v.status === 'Released') return status === 'Void';
+
+  return status !== 'Released' || v.status === 'Approved';
+}
+
+/** Moves several vouchers to one status at once: every one, or none if any is refused (its own sentence). */
+export const setVouchersStatus = (s: TerminalState, nos: readonly string[], status: VoucherStatus, ctx: Ctx): Change<Voucher[]> =>
+  changeEach(s, nos, (st, no) => setVoucherStatus(st, no, status, ctx), (vs) => `${count(vs.length, 'voucher')} marked ${status.toLowerCase()}.`);
+
+/** On open: drops a number held back by an earlier build, and clears every void voucher VOID_KEPT_DAYS after it was voided, in one log line. */
+export function clearVoided(open: TerminalState, ctx: Ctx): TerminalState {
+  const s = withoutHeldNumber(open);
   const t = today(ctx);
   const due = s.cv.filter((v) => v.status === 'Void' && clearsOn(v) <= t);
 

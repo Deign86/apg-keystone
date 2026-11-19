@@ -1,9 +1,9 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, type Voucher } from '@keystone/core';
+import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, newVoucher, payeeOf, saveVoucher, setVoucherStatus, takesCheck, voucherDraftOf, voucherDrafts,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, withCheck, ID, TAG, refersTo,
+  approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, freesNumber, newVoucher, payeeOf, saveVoucher, setVoucherStatus, setVouchersStatus, takesCheck, voucherDraftOf, voucherDrafts,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, withCheck, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -172,6 +172,16 @@ function Vouchers() {
     if (r.ok && draft.editing === no) setDraft(newVoucher(r.state, ctx, bank));
   };
 
+  /** Deletes several void vouchers, unticks them, and clears the form if it held one of them. */
+  const removeAll = (nos: string[], clear: () => void) => {
+    const r = run((st, c) => deleteVouchers(st, nos, c));
+
+    if (!r.ok) return;
+    clear();
+
+    if (draft.editing && nos.includes(draft.editing)) setDraft(newVoucher(r.state, ctx, bank));
+  };
+
   const register = voucherRegister(state, ctx);
 
   const open = (v: Voucher) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); };
@@ -179,14 +189,28 @@ function Vouchers() {
   const actions = (v: Voucher) => [
     ...VOUCHER_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()}`, disabled: v.status === s || v.status === 'Void', onSelect: () => run((st, c) => setVoucherStatus(st, v.no, s, c)) })),
     v.status === 'Void'
-      ? { label: 'Delete voucher…', danger: true, onSelect: () => confirm({ title: `Delete ${v.no}?`, body: `The void voucher for ${peso(voucherTotal(v))} to ${payeeOf(state, v).name} is removed from the register now, instead of on ${shortDate(clearsOn(v))}. Its number is not used again.`, confirm: 'Delete voucher', danger: true, onConfirm: () => remove(v.no) }) }
+      ? { label: 'Delete voucher…', danger: true, onSelect: () => confirm({ title: `Delete ${v.no}?`, body: `The void voucher for ${peso(voucherTotal(v))} to ${payeeOf(state, v).name} is removed from the register now, instead of on ${shortDate(clearsOn(v))}.${freesNumber(state, v.no) ? ` The next new voucher takes ${v.no} again.` : ''}`, confirm: 'Delete voucher', danger: true, onConfirm: () => remove(v.no) }) }
       : { label: 'Void voucher…', danger: true, onSelect: () => confirm({ title: `Void ${v.no}?`, body: `${peso(voucherTotal(v))} to ${payeeOf(state, v).name}. A void voucher cannot be reopened, and is cleared from the register ${VOID_KEPT_DAYS} days after.`, confirm: 'Void voucher', danger: true, onConfirm: () => run((st, c) => setVoucherStatus(st, v.no, 'Void', c)) }) },
   ];
+
+  /** What can be done to the vouchers ticked in a register: each action counts and takes only those it applies to. */
+  const bulk = (picked: Voucher[], clear: () => void): RowAction[] => {
+    const to = (status: VoucherStatus) => picked.filter((v) => canMoveTo(v, status));
+    const move = (status: VoucherStatus, nos: string[]) => { if (run((st, c) => setVouchersStatus(st, nos, status, c)).ok) clear(); };
+    const voidable = to('Void');
+    const voided = picked.filter((v) => v.status === 'Void');
+
+    return [
+      ...VOUCHER_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()} (${to(s).length})`, disabled: !to(s).length, onSelect: () => move(s, to(s).map((v) => v.no)) })),
+      { label: `Void (${voidable.length})…`, danger: true, disabled: !voidable.length, onSelect: () => confirm({ title: `Void ${count(voidable.length, 'voucher')}?`, body: `${voidable.map((v) => v.no).join(', ')}, ${peso(sumCentavos(voidable, voucherTotal))} in all. A void voucher cannot be reopened, and is cleared from the register ${VOID_KEPT_DAYS} days after.`, confirm: 'Void vouchers', danger: true, onConfirm: () => move('Void', voidable.map((v) => v.no)) }) },
+      { label: `Delete void (${voided.length})…`, danger: true, disabled: !voided.length, onSelect: () => confirm({ title: `Delete ${count(voided.length, 'void voucher')}?`, body: `${voided.map((v) => v.no).join(', ')} are removed from the register now. Numbering carries on from the highest voucher left.`, confirm: 'Delete vouchers', danger: true, onConfirm: () => removeAll(voided.map((v) => v.no), clear) }) },
+    ];
+  };
 
   const columns: Column<Voucher>[] = [
     { key: 'no', header: 'CV No.', width: 120, cell: (v) => <span className="font-semibold text-gold-bright tabular-nums">{v.no}</span> },
     { key: 'date', header: 'Date', width: 104, cell: (v) => <span className="text-ink-2 tabular-nums">{shortDate(v.date)}</span> },
-    { key: 'payee', header: 'Payee', cell: (v) => payeeOf(state, v).name },
+    { key: 'payee', header: 'Payee', cell: (v) => caps(payeeOf(state, v).name) },
     // The check number over its date, so the payee keeps the width at the narrowest window.
     { key: 'check', header: 'Check', width: 112, cell: (v) => <><span className="block truncate tabular-nums">{v.check || DASH}</span> {v.checkDate && <span className="block truncate text-xs text-ink-2 tabular-nums">{shortDate(v.checkDate)}</span>}</> },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (v) => <span className="font-semibold">{peso(voucherTotal(v))}</span> },
@@ -213,6 +237,7 @@ function Vouchers() {
           rowKey={(v) => v.no}
           onOpen={open}
           actions={actions}
+          bulk={bulk}
           empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={() => document.getElementById('cv-form')?.scrollIntoView({ block: 'start' })}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
         />
         {/* Earlier months' released and void vouchers, folded away, newest month first. */}
@@ -226,7 +251,7 @@ function Vouchers() {
               <span className="text-xs text-ink-2 tabular-nums">{count(m.vouchers.length, 'voucher')} · {peso(m.total)}</span>
             </summary>
             <div className="mt-2">
-              <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} empty={null} />
+              <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} empty={null} />
             </div>
           </details>
         ))}

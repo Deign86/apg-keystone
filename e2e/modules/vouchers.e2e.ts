@@ -128,6 +128,7 @@ test('asks before voiding, a void voucher stays void, and deleting it removes it
 
   await row.getByRole('button', 'Actions for CV-2026-0141').tap();
   await screen.getByRole('menuitem', 'Void voucher…').tap();
+  await screen.getByRole('alertdialog', 'Void CV-2026-0141?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Void CV-2026-0141?').getByRole('button', 'Void voucher').tap();
   await expect(row.getByRole('cell', 'Void')).toBeVisible();
 
@@ -135,11 +136,12 @@ test('asks before voiding, a void voucher stays void, and deleting it removes it
   await expect(screen.getByRole('menuitem', 'Mark approved')).toBeDisabled();
   await expect(screen.getByRole('menuitem', 'Void voucher…')).toBeHidden();
 
-  // Deleting asks too, says when it would have been cleared on its own, and its number is never given out again.
+  // Deleting asks too, and says when it would have been cleared on its own.
   await screen.getByRole('menuitem', 'Delete voucher…').tap();
   const del = screen.getByRole('alertdialog', 'Delete CV-2026-0141?');
 
-  await expect(del.getByText('The void voucher for ₱35,000.00 to Vergara & Associates Law Office is removed from the register now, instead of on Nov 9, 2026. Its number is not used again.')).toBeVisible();
+  await expect(del.getByText('The void voucher for ₱35,000.00 to Vergara & Associates Law Office is removed from the register now, instead of on Nov 9, 2026.')).toBeVisible();
+  await del.getByRole('checkbox', 'I understand this can’t be undone').tap();
   await del.getByRole('button', 'Delete voucher').tap();
   await expect(row).toBeHidden();
 });
@@ -353,6 +355,8 @@ test('adds an account not listed under Others, keeps it for the next voucher, an
   await form.getByRole('button', 'Remove…').tap();
   const confirm = screen.getByRole('alertdialog', 'Remove B-001?');
 
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
+
   await confirm.getByRole('button', 'Remove account').tap();
   await expect(screen.getByRole('dialog', 'B-001 removed.')).toBeVisible();
   await expect(form.getByRole('combobox', 'Bank')).toHaveText('Security Bank · 0000 1111');
@@ -515,6 +519,7 @@ test('logs each edit, approval, release and void, under the Vouchers filter', as
   // The approved CV-2026-0140 is cancelled before its check goes out.
   await register.getByRole('button', 'Actions for CV-2026-0140').tap();
   await screen.getByRole('menuitem', 'Void voucher…').tap();
+  await screen.getByRole('alertdialog', 'Void CV-2026-0140?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Void CV-2026-0140?').getByRole('button', 'Void voucher').tap();
   await expect(register.getByRole('row', /^CV-2026-0140 /).getByRole('cell', 'Void')).toBeVisible();
 
@@ -533,4 +538,32 @@ test('logs each edit, approval, release and void, under the Vouchers filter', as
     'CV-2026-0140 approved by CEO.',
     'CV-2026-0139 released; check 0004509 picked up by Meralco collector.',
   ]);
+});
+
+test('ticks several vouchers and voids, then deletes, them together', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const register = screen.getByRole('table', 'Voucher register');
+
+  await register.getByRole('checkbox', 'Select CV-2026-0140').tap();
+  await register.getByRole('checkbox', 'Select CV-2026-0141').tap();
+  const bar = screen.getByRole('toolbar', 'Voucher register: selected');
+
+  await expect(bar.getByText('2 selected')).toBeVisible();
+  // Each action counts only the vouchers it applies to: 0141 waits for approval, 0140 is approved.
+  await expect(bar.getByRole('button', 'Mark approved (1)')).toBeEnabled();
+  await expect(bar.getByRole('button', 'Delete void (0)…')).toBeDisabled();
+
+  await bar.getByRole('button', 'Void (2)…').tap();
+  await screen.getByRole('alertdialog', 'Void 2 vouchers?').getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await screen.getByRole('alertdialog', 'Void 2 vouchers?').getByRole('button', 'Void vouchers').tap();
+  await expect(register.getByRole('row', /^CV-2026-0140 /).getByRole('cell', 'Void')).toBeVisible();
+  await expect(register.getByRole('row', /^CV-2026-0141 /).getByRole('cell', 'Void')).toBeVisible();
+  await expect(bar).toBeHidden();
+
+  // Ticking every row at once, then deleting the void ones.
+  await register.getByRole('checkbox', 'Select every row in Voucher register').tap();
+  await screen.getByRole('toolbar', 'Voucher register: selected').getByRole('button', 'Delete void (2)…').tap();
+  await screen.getByRole('alertdialog', 'Delete 2 void vouchers?').getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await screen.getByRole('alertdialog', 'Delete 2 void vouchers?').getByRole('button', 'Delete vouchers').tap();
+  await expect(register.getByRole('row', /^CV-2026-014[01] /)).toHaveCount(0);
 });

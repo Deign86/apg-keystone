@@ -151,6 +151,7 @@ test('takes an employee off the payroll only after asking, and a closed cut-off 
 
   await setups.getByRole('button', 'Actions for E-001').tap();
   await screen.getByRole('menuitem', 'Take off payroll…').tap();
+  await screen.getByRole('alertdialog', 'Take Juan Miguel P. Reyes off the payroll?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Take Juan Miguel P. Reyes off the payroll?').getByRole('button', 'Take off payroll').tap();
   await expect(screen.getByRole('dialog', 'Juan Miguel P. Reyes taken off the payroll. Closed cut-offs keep their pay.')).toBeVisible();
   await expect(setups.getByRole('row', /Juan Miguel P\. Reyes/).getByRole('cell', 'Not set up')).toBeVisible();

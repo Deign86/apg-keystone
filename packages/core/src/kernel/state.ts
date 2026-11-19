@@ -48,6 +48,25 @@ export interface Change<T> {
 }
 
 export const today = (ctx: Ctx): ISODate => localDate(ctx.now());
+
+/**
+ * One rule applied to several records in turn, as one change: every one of them, or none if any is refused (the rule's
+ * own sentence is thrown). For the actions a register takes on the rows selected in it.
+ */
+export function changeEach<K, T>(s: TerminalState, keys: readonly K[], one: (s: TerminalState, key: K) => Change<T>, message: (records: T[]) => string): Change<T[]> {
+  const records: T[] = [];
+  let state = s;
+
+  for (const key of keys) {
+    const r = one(state, key);
+
+    state = r.state;
+    records.push(r.record);
+  }
+
+  return { state, record: records, message: message(records) };
+}
+
 export const thisYear = (ctx: Ctx) => ctx.now().getFullYear();
 
 /** Adds a line to the activity log. Domains, modules and connectors all log through this. */

@@ -1,11 +1,15 @@
+import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox';
 import { Menu } from '@base-ui/react/menu';
-import { MoreHorizontal } from 'lucide-react';
+import { Check, Minus, MoreHorizontal } from 'lucide-react';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from './primitives';
 
 // A register: a real <table> with gold header capitals, rows on a 45px pitch split by
 // 1px lines, figures right-aligned in tabular digits, one status per row and one menu
-// at the far right. Clicking a row (or Enter on it) opens the record.
+// at the far right. Clicking a row (or Enter on it) opens the record. A register that takes actions on several rows at
+// once has a box at the end of each row, before its menu, and one over them all (at the end, so a row is still named
+// by what it holds first); with any ticked, a bar over the table names how many
+// and offers the actions for them.
 
 export interface Column<T> {
   key: string;
@@ -61,8 +65,30 @@ export interface RowAction {
   danger?: boolean;
 }
 
+/** A box to tick, named for screen readers, that never opens the row it sits in. */
+function Tick({ checked, mixed, label, onChange }: { checked: boolean; mixed?: boolean; label: string; onChange: (v: boolean) => void }) {
+  return (
+    <BaseCheckbox.Root
+      checked={checked}
+      indeterminate={mixed}
+      onCheckedChange={(v) => onChange(v)}
+      aria-label={label}
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+      className="grid size-4 shrink-0 cursor-pointer place-items-center rounded-[3px] border border-line-bright bg-input data-[checked]:border-gold data-[checked]:bg-gold data-[indeterminate]:border-gold data-[indeterminate]:bg-gold"
+    >
+      <BaseCheckbox.Indicator className="text-gold-ink">
+        {mixed ? <Minus size={11} strokeWidth={3.5} aria-hidden="true" /> : <Check size={11} strokeWidth={3.5} aria-hidden="true" />}
+      </BaseCheckbox.Indicator>
+    </BaseCheckbox.Root>
+  );
+}
+
+/** The box column. */
+const TICK_WIDTH = 36;
+
 export function Register<T>({
-  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, empty, caption,
+  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, bulk, empty, caption,
 }: {
   label: string;
   columns: Column<T>[];
@@ -73,20 +99,62 @@ export function Register<T>({
   onOpen?: (row: T) => void;
   /** The row's ⋯ menu. A row with none gets no menu. */
   actions?: (row: T) => RowAction[];
+  /**
+   * The actions on the rows ticked, shown over the table while any are. Given, each row gets a box to tick. `clear`
+   * unticks them all: call it once an action is done (not when it is cancelled), so the rows stay ticked to try again.
+   */
+  bulk?: (selected: T[], clear: () => void) => RowAction[];
   empty: ReactNode;
   caption?: string;
 }) {
-  const need = columns.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), actions ? MENU_WIDTH : 0);
+  const need = columns.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), (actions ? MENU_WIDTH : 0) + (bulk ? TICK_WIDTH : 0));
   const [box, roomy] = useRoomFor(need);
   const shown = roomy ? columns : columns.filter((c) => !c.detail);
+  const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set());
+  // Only rows still in the register count: one deleted or filtered away drops out of the selection.
+  const selected = bulk ? rows.filter((r) => ticked.has(rowKey(r))) : [];
+  const all = rows.length > 0 && selected.length === rows.length;
+  const clear = () => setTicked(new Set());
+
+  const tick = (key: string, on: boolean) => setTicked((prev) => {
+    const next = new Set(prev);
+
+    if (on) next.add(key);
+    else next.delete(key);
+
+    return next;
+  });
+
+  const bulkActions = bulk && selected.length ? bulk(selected, clear) : [];
 
   return (
     // Relative, so the screen-reader-only caption and header scroll with the table instead of widening a phone's page.
     <div ref={box} className="relative overflow-x-auto">
+      {selected.length > 0 && (
+        <div role="toolbar" aria-label={`${label}: selected`} className="mb-2 flex flex-wrap items-center gap-2 rounded-control border border-gold/40 bg-gold-tint px-3 py-2">
+          <span className="mr-auto text-[13px] font-semibold text-gold-bright tabular-nums" aria-live="polite">{selected.length} selected</span>
+          {bulkActions.map((a) => (
+            <button
+              key={a.label}
+              type="button"
+              disabled={a.disabled}
+              onClick={a.onSelect}
+              className={cn(
+                'h-7 rounded-control border px-2.5 text-[13px] font-semibold whitespace-nowrap disabled:pointer-events-none disabled:opacity-40',
+                a.danger ? 'border-bad/50 text-bad hover:bg-bad/10' : 'border-line-bright text-ink hover:border-gold hover:text-gold-bright',
+              )}
+            >
+              {a.label}
+            </button>
+          ))}
+          <button type="button" onClick={clear} className="h-7 rounded-control px-2.5 text-[13px] text-ink-2 hover:text-ink">Clear</button>
+        </div>
+      )}
       <table className="w-full border-collapse text-[13px]" aria-label={label}>
         {caption && <caption className="sr-only">{caption}</caption>}
         <colgroup>
           {shown.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}
+          {bulk && <col style={{ width: TICK_WIDTH }} />}
           {actions && <col style={{ width: 40 }} />}
         </colgroup>
         <thead>
@@ -100,6 +168,11 @@ export function Register<T>({
                 {c.header}
               </th>
             ))}
+            {bulk && (
+              <th scope="col" className="pl-3">
+                {rows.length > 0 && <Tick checked={all} mixed={!all && selected.length > 0} label={`Select every row in ${label}`} onChange={(on) => setTicked(on ? new Set(rows.map(rowKey)) : new Set())} />}
+              </th>
+            )}
             {actions && <th scope="col"><span className="sr-only">Actions</span></th>}
           </tr>
         </thead>
@@ -110,13 +183,18 @@ export function Register<T>({
               tabIndex={onOpen ? 0 : undefined}
               onClick={onOpen ? () => onOpen(row) : undefined}
               onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(row); } : undefined}
-              className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2')}
+              className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2', ticked.has(rowKey(row)) && 'bg-gold-tint')}
             >
               {shown.map((c) => (
                 <td key={c.key} className={cn('h-[45px] max-w-0 truncate px-2.5', c.align === 'right' && 'text-right tabular-nums')}>
                   {c.cell(row)}
                 </td>
               ))}
+              {bulk && (
+                <td className="pl-3" onClick={(e) => e.stopPropagation()}>
+                  <Tick checked={ticked.has(rowKey(row))} label={`Select ${rowLabel(row)}`} onChange={(on) => tick(rowKey(row), on)} />
+                </td>
+              )}
               {actions && (
                 <td className="px-1 text-right" onClick={(e) => e.stopPropagation()}>
                   {actions(row).length > 0 && <RowMenu label={`Actions for ${rowLabel(row)}`} actions={actions(row)} />}

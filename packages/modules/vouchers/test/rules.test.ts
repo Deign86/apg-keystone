@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
-  clearVoided, copyVoucher, deleteVoucher, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
+  canMoveTo, clearVoided, copyVoucher, freesNumber, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
   voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
@@ -229,20 +229,27 @@ describe('check vouchers', () => {
       expect(setVoucherStatus(state(), 'CV-2026-0139', 'Void', ctx).record.voided).toBe('2026-10-30');
     });
 
-    it('deletes only a void voucher, and never issues its number again', () => {
-      const s = { ...state(), cv: [...state().cv, { ...state().cv[0], no: '888-004', status: 'Void' }] };
+    it('deletes only a void voucher, and numbering closes up behind the last ones deleted', () => {
+      const s = { ...state(), cv: [...state().cv, { ...state().cv[0], no: '888-003', status: 'Void' }, { ...state().cv[0], no: '888-004', status: 'Void' }] };
 
       expect(() => deleteVoucher(s, 'CV-2026-0141', ctx)).toThrow('Only a void voucher can be deleted. Void CV-2026-0141 first.');
       expect(() => deleteVoucher(s, '888-009', ctx)).toThrow('888-009 is not in the register.');
+      expect(nextVoucherNo(s)).toBe('888-005');
+      expect([freesNumber(s, '888-004'), freesNumber(s, '888-003')]).toEqual([true, false]);
       const r = deleteVoucher(s, '888-004', ctx);
 
-      expect(r.state.cv.map((v) => v.no)).toEqual(['CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
       expect(r.state.log[0].text).toBe('888-004 (void, ₱48,230.55) deleted from the register.');
-      expect(nextVoucherNo(r.state)).toBe('888-005');
-      // A lower number deleted later leaves the highest standing.
-      const again = deleteVoucher({ ...r.state, cv: [...r.state.cv, { ...r.state.cv[0], no: '888-002', status: 'Void' }] }, '888-002', ctx).state;
+      expect(nextVoucherNo(r.state)).toBe('888-004');
+      // Every 888- voucher gone: the series starts again.
+      expect(nextVoucherNo(deleteVouchers(s, ['888-003', '888-004'], ctx).state)).toBe('888-001');
+    });
 
-      expect(nextVoucherNo(again)).toBe('888-005');
+    it('drops a number an earlier build held back, from what is already saved', () => {
+      const held = { ...state(), ext: { vouchers: { highest: '888-018' }, banks: { accounts: [] } } };
+
+      expect(nextVoucherNo(held)).toBe('888-001');
+      expect(clearVoided(held, ctx).ext).toEqual({ banks: { accounts: [] } });
+      expect(clearVoided(state(), ctx)).toEqual(state());
     });
 
     it('clears a void voucher on its own seven days after it was voided', () => {
@@ -278,6 +285,27 @@ describe('check vouchers', () => {
       const approved = setVoucherStatus(state(), 'CV-2026-0141', 'Approved', ctx).state;
 
       expect(setVoucherStatus(approved, 'CV-2026-0141', 'Released', ctx).record.released).toBe('2026-10-30');
+    });
+
+    it('acts on several vouchers at once, all of them or none', () => {
+      const s = state();
+      const byNo = (no: string) => s.cv.find((v) => v.no === no)!;
+
+      // 0139 released, 0140 approved, 0141 waiting.
+      expect(['CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141'].map((no) => canMoveTo(byNo(no), 'Approved'))).toEqual([false, false, true]);
+      expect(['CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141'].map((no) => canMoveTo(byNo(no), 'Released'))).toEqual([false, true, false]);
+      expect(['CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141'].map((no) => canMoveTo(byNo(no), 'Void'))).toEqual([true, true, true]);
+
+      const voided = setVouchersStatus(s, ['CV-2026-0140', 'CV-2026-0141'], 'Void', ctx);
+
+      expect(voided.message).toBe('2 vouchers marked void.');
+      expect(voided.state.cv.filter((v) => v.status === 'Void').map((v) => v.no)).toEqual(['CV-2026-0140', 'CV-2026-0141']);
+      const gone = deleteVouchers(voided.state, ['CV-2026-0140', 'CV-2026-0141'], ctx);
+
+      expect(gone.message).toBe('2 void vouchers deleted.');
+      expect(gone.state.cv.map((v) => v.no)).toEqual(['CV-2026-0139']);
+      // One not void: none are deleted.
+      expect(() => deleteVouchers(voided.state, ['CV-2026-0140', 'CV-2026-0139'], ctx)).toThrow('Only a void voucher can be deleted. Void CV-2026-0139 first.');
     });
   });
 });

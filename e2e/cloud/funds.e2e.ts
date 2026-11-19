@@ -102,6 +102,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
 
   await charger.getByRole('textbox', 'Note to the requester').fill('Use the spare in the IT cabinet');
   await charger.getByRole('button', 'Decline').tap();
+  await screen.getByRole('alertdialog', 'Decline RF-2026-0002?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Decline RF-2026-0002?').getByRole('button', 'Decline').tap();
   await expect(screen.getByRole('dialog', 'RF-2026-0002 declined.')).toBeVisible();
   await expect(screen.getByRole('region', 'Waiting for your decision')).toBeHidden();

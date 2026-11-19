@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Reference, type TerminalState } from '@keystone/core';
 import { sampleState } from '@keystone/core/sample';
 import { App, buildRegistry, KeystoneStore, type ModuleDef } from '@keystone/kit';
+import { UNDERSTOOD } from '@keystone/ui';
 import { memoryPlatform } from '@keystone/kit/testing';
 import { directoryModule } from '../src';
 
@@ -52,7 +53,12 @@ describe('the Directory screen and what the modules say they name', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Actions for .*V-001/ }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove…' }));
-    fireEvent.click(within(await screen.findByRole('alertdialog', { name: 'Remove V-001?' })).getByRole('button', { name: 'Remove record' }));
+    const dialog = within(await screen.findByRole('alertdialog', { name: 'Remove V-001?' }));
+
+    // A destructive confirmation works only once it is ticked as understood.
+    expect(dialog.getByRole('button', { name: 'Remove record' })).toBeDisabled();
+    fireEvent.click(dialog.getByRole('checkbox', { name: UNDERSTOOD }));
+    fireEvent.click(dialog.getByRole('button', { name: 'Remove record' }));
     await act(async () => {});
     expect(screen.queryByRole('cell', { name: 'V-001' })).toBeNull();
     expect(screen.getByRole('cell', { name: 'E-001' })).toBeInTheDocument();

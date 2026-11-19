@@ -1,10 +1,10 @@
 import {
   Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, Sheet, StatusPill,
-  TextInput, useConfirm, type Column, type Tone,
+  TextInput, useConfirm, type Column, type RowAction, type Tone,
 } from '@keystone/ui';
 import { useState } from 'react';
 import {
-  DASH, count, halfMonthOf, halfMonthsTo, periodLabel, recordsOf, SERVICES, shortDate, today, weekdayLong, weekdayOf,
+  changeEach, DASH, count, halfMonthOf, halfMonthsTo, periodLabel, recordsOf, SERVICES, shortDate, today, weekdayLong, weekdayOf,
 } from '@keystone/core';
 import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
@@ -213,6 +213,13 @@ function Timekeeping() {
           actions={(h) => [{
             label: 'Remove…', danger: true,
             onSelect: () => confirm({ title: `Remove ${h.name}?`, body: `${shortDate(h.date)} becomes an ordinary day for timekeeping and payroll.`, confirm: 'Remove holiday', danger: true, onConfirm: () => run((s, c) => removeHoliday(s, h.date, c)) }),
+          }]}
+          bulk={(picked, clear): RowAction[] => [{
+            label: `Remove (${picked.length})…`, danger: true,
+            onSelect: () => confirm({
+              title: `Remove ${count(picked.length, 'holiday')}?`, body: `${picked.map((h) => h.name).join(', ')}: each becomes an ordinary day for timekeeping and payroll.`, confirm: 'Remove holidays', danger: true,
+              onConfirm: () => { if (run((s, c) => changeEach(s, picked.map((h) => h.date), (x, date) => removeHoliday(x, date, c), (r) => `${count(r.length, 'holiday')} removed.`)).ok) clear(); },
+            }),
           }]}
           empty={<EmptyState text="No holidays set. Add the ones the office observes." />}
         />
