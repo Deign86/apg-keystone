@@ -2,7 +2,7 @@ import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
 // A release that is not a beta (e2e.stable.config.ts, docs/adr/0017): Home, with the connected systems, Check Vouchers,
-// Requests for Funds (docs/adr/0021), Profile, User Accounts, and Bank Accounts and Company Details, which vouchers print
+// Requests for Funds (docs/adr/0021), Billing Statements and the Directory its clients come from, Profile, User Accounts, and Bank Accounts and Company Details, which vouchers print
 // from (docs/adr/0018), open; every other screen keeps its place in the rail and its tile on Home, marked, and shows
 // behind "Coming soon" (docs/adr/0019).
 
@@ -13,7 +13,8 @@ test('opens Home with every tile, those coming soon marked, and the connected sy
   await expect(tiles.getByRole('listitem')).toHaveCount(9);
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
-  await expect(tiles.getByRole('button', /^Billing Statements Coming soon .* Outstanding/)).toBeVisible();
+  await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding/)).not.toContainText('Coming soon');
+  await expect(tiles.getByRole('button', /^ID Maker Coming soon /)).toBeVisible();
   await expect(screen.getByText('Connected systems')).toBeVisible();
   await expect(screen.getByRole('button', 'Open Attendance Tracker')).toBeVisible();
 });
@@ -22,15 +23,11 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  await rail.getByRole('button', 'Billing Statements, coming soon').tap();
+  await rail.getByRole('button', 'Payroll, coming soon').tap();
 
-  await expect(screen.getByRole('heading', { name: 'Billing Statements', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('heading', { name: 'Payroll', level: 1 })).toBeVisible();
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
   await expect(screen.getByText('This screen hit a problem')).toBeHidden();
-  // The screen shows behind the notice, and nothing on it can be reached.
-  await expect(screen.getByText('Statements issued').first()).toBeVisible();
-  await expect(screen.getByText('New statement').first()).toBeVisible();
-  await expect(screen.getByRole('button', 'New statement')).toBeHidden();
 
   await rail.getByRole('button', 'ID Maker, coming soon').tap();
 
@@ -38,11 +35,11 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 
-test('opens Requests for Funds, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
+test('opens Requests for Funds, Billing Statements, the Directory, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  for (const title of ['Requests for Funds', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
+  for (const title of ['Requests for Funds', 'Billing Statements', 'Directory', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
     await rail.getByRole('button', new RegExp(`${title}$`)).tap();
 
     await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
@@ -76,4 +73,17 @@ test('saves a check voucher as before', async ({ app, screen }) => {
   await form.getByRole('button', 'Save and route for approval').tap();
 
   await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
+});
+
+test('issues a billing statement to a client the Directory keeps', async ({ app, screen }) => {
+  await app.open('/#billing');
+  const form = screen.getByRole('form', 'New statement');
+
+  await form.getByRole('combobox', 'Bill to').tap();
+  await screen.getByRole('option', 'Novatek BPO Solutions Inc. (C-001)').tap();
+  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+
+  await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. .* Sent/)).toBeVisible();
 });
