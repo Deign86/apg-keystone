@@ -33,9 +33,9 @@ describe('which build is a beta', () => {
 describe('a build that is not a beta', () => {
   const stable = buildRegistry(shippedModules(false), connectors);
 
-  it('opens Home, with the connected systems, Check Vouchers, Requests for Funds, Profile, User Accounts, Bank Accounts and Company Details, and nothing else', () => {
+  it('opens Home, with the connected systems, Check Vouchers, Requests for Funds, Billing Statements, the Directory, Profile, User Accounts, Bank Accounts and Company Details, and nothing else', () => {
     expect(stable.refused).toEqual([]);
-    expect(stable.modules.filter((m) => !m.soon).map((m) => m.id)).toEqual(['home', 'vouchers', 'funds', 'profile', 'accounts', 'banks', 'company']);
+    expect(stable.modules.filter((m) => !m.soon).map((m) => m.id)).toEqual(['home', 'vouchers', 'funds', 'billing', 'directory', 'profile', 'accounts', 'banks', 'company']);
     expect(stable.modules.map((m) => m.id)).toEqual(buildRegistry(builtInModules, connectors).modules.map((m) => m.id));
     expect(stable.connectors.length).toBe(connectors.length);
     expect(RELEASED.every((id) => builtInModules.some((m) => m.id === id))).toBe(true);
@@ -79,7 +79,8 @@ describe('a build that is not a beta', () => {
     const main = within(screen.getByRole('main'));
     expect(main.getByRole('button', { name: /^Check Vouchers/ })).not.toHaveTextContent('Coming soon');
     expect(main.getByRole('button', { name: /^Requests for Funds/ })).not.toHaveTextContent('Coming soon');
-    expect(main.getByRole('button', { name: /^Billing Statements Coming soon/ })).toBeInTheDocument();
+    expect(main.getByRole('button', { name: /^Billing Statements/ })).not.toHaveTextContent('Coming soon');
+    expect(main.getByRole('button', { name: /^ID Maker Coming soon/ })).toBeInTheDocument();
     expect(main.getAllByRole('listitem').length).toBeGreaterThan(stable.connectors.length + 1);
     expect(main.getByText('Connected systems')).toBeInTheDocument();
   });
