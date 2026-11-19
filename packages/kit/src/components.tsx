@@ -41,12 +41,22 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { tit
 /**
  * The form on the left, the document it produces on the right; stacked under 1100px. Stacked, the one column is as wide
  * as the screen, never as wide as the paper, so the paper scales down to fit a phone.
+ *
+ * Side by side, the preview is pinned in view while the form scrolls, and is never taller than the window: a paper
+ * taller than that (a full A4 statement, a two-up voucher in a wide or short window) scrolls inside its own box, so its
+ * foot can be read without scrolling to the end of the form. That box can be scrolled from the keyboard too.
  */
 export function Workspace({ form, preview, previewTitle, previewNote = 'Updates as you type' }: { form: ReactNode; preview: ReactNode; previewTitle: string; previewNote?: string }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1100px]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       {form}
-      <section aria-label={previewTitle} className="min-[1100px]:sticky min-[1100px]:top-4">
+      <section
+        aria-label={previewTitle}
+        // A box that scrolls on its own takes focus, so the arrow keys scroll it.
+        tabIndex={0}
+        // The scrollbar's room is kept even when the paper fits, so its coming and going never rescales the paper.
+        className="rounded-control min-[1100px]:sticky min-[1100px]:top-4 min-[1100px]:max-h-[calc(100dvh-2rem)] min-[1100px]:overflow-y-auto min-[1100px]:[scrollbar-gutter:stable]"
+      >
         <div className="mb-2 flex items-center justify-between">
           <SectionLabel>{previewTitle}</SectionLabel>
           <span className="text-xs text-ink-2">{previewNote}</span>

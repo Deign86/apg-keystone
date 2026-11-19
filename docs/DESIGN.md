@@ -63,7 +63,11 @@ And one more from screens that have little to show in a new Keystone:
   - A figure is never cut short. Where a window is too narrow for every column, the register leaves out a breakdown
     shown elsewhere (`detail` columns, such as the parts of gross pay on Payroll's cut-off) and keeps the totals.
   - One status capsule per row and one `⋯` menu at the far right.
-  - Click a row, or press Enter on it, to load the record into the form.
+  - Click a row, or press Enter on it, to load the record into the form. The row open in the form is marked as the
+    rail marks its screen, with a gold line at its edge (and `aria-current`).
+  - A register that grows with use shows ten rows a page (`PAGE_SIZE`), with Previous and Next under it.
+- **Form and document:** side by side, the document preview stays in view while the form scrolls; a paper taller than
+  the window scrolls inside its own box (`Workspace`).
 - **Buttons:** primary is flat gold with dark ink; secondary is outlined; quiet has no outline. They are 36px tall (28px
   small) with radius 6, and scale to 0.97 when pressed.
 - **Documents** (the voucher, the statement, the ID card) are drawn once. The same element is the live preview, the
@@ -112,6 +116,10 @@ once someone has pay set up; before that, where they will be.
 
 Later on 2026-11-15, every screen at 1440 and 1100px, with the allowances above: 0 fails and 0 warnings. Overview's two
 cards end level, and Home's Overview tile shows how many things wait on you (docs/adr/0021).
+
+On 2026-11-19, Check Vouchers on the production build at 1440 and 1100px, with its pinned preview, pages and the
+editable CV No.: 0 fails and 0 warnings. Billing shows 2 warnings (`heavy-borders` on the statement paper,
+`panel-void` inside it), the same with or without that change.
 
 On 2026-11-15, `npm run lint:taste`: 0 fails and 0 warnings. The missing-value dash is one constant, `DASH` in
 `@keystone/core`, not a literal in each screen; overlays, the brand eyebrow and a clock time carry `taste-skill-ignore`

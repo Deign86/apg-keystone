@@ -1,4 +1,4 @@
-import { test } from '@e2e-dev/web';
+import { test, type Browser, type WebApp } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
 import { faintPaperText, paperValueLines, tinyPaperText, voucherColumnLines } from '../support/paper';
@@ -572,4 +572,119 @@ test('ticks several vouchers and voids, then deletes, them together', async ({ a
   await screen.getByRole('alertdialog', 'Delete 2 void vouchers?').getByRole('checkbox', 'I understand this can’t be undone').tap();
   await screen.getByRole('alertdialog', 'Delete 2 void vouchers?').getByRole('button', 'Delete vouchers').tap();
   await expect(register.getByRole('row', /^CV-2026-014[01] /)).toHaveCount(0);
+});
+
+test('offers the next CV No., keeps one typed in, and refuses one already used', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const form = screen.getByRole('form', 'New voucher');
+  const no = form.getByRole('textbox', 'CV No.');
+
+  await expect(no).toHaveValue('888-001');
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('textbox', 'Line 1 description').fill('Power bill');
+  await form.getByRole('textbox', 'Line 1 amount').fill('4200');
+
+  await no.fill('CV-2026-0141');
+  await form.getByRole('button', 'Save and route for approval').tap();
+  await expect(form.getByRole('alert')).toHaveText('CV No. CV-2026-0141 is already used. The next free one is 888-001.');
+
+  // The number typed is the one the voucher prints and saves under, and numbering carries on after it.
+  await no.fill('888-050');
+  await expect(screen.getByRole('article', 'Check voucher 888-050')).toBeVisible();
+  await form.getByRole('button', 'Save and route for approval').tap();
+  await expect(screen.getByRole('dialog', '888-050 saved and routed for approval.')).toBeVisible();
+  const register = screen.getByRole('table', 'Voucher register');
+
+  await expect(register.getByRole('row', /^888-050 Nov 2, 2026 MANILA ELECTRIC COMPANY \(MERALCO\)/)).toBeVisible();
+  await expect(no).toHaveValue('888-051');
+
+  // A saved voucher keeps its number.
+  await register.getByRole('cell', '888-050').tap();
+  await expect(screen.getByRole('form', 'Editing 888-050').getByRole('textbox', 'CV No.')).toHaveAttribute('readonly', '');
+});
+
+test('marks the voucher open in the form in the register, and opens one from its row menu', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  const register = screen.getByRole('table', 'Voucher register');
+  const pending = register.getByRole('row', /^CV-2026-0141 /);
+  const approved = register.getByRole('row', /^CV-2026-0140 /);
+
+  await expect(pending).not.toHaveAttribute('aria-current');
+
+  // Edit for a voucher that can still change, View for one that cannot.
+  await pending.getByRole('button', 'Actions for CV-2026-0141').tap();
+  await screen.getByRole('menuitem', 'Edit voucher').tap();
+  await expect(screen.getByRole('form', 'Editing CV-2026-0141')).toBeVisible();
+  await expect(pending).toHaveAttribute('aria-current', 'true');
+  await expect(approved).not.toHaveAttribute('aria-current');
+
+  await approved.getByRole('cell', 'CV-2026-0140').tap();
+  await expect(approved).toHaveAttribute('aria-current', 'true');
+  await expect(pending).not.toHaveAttribute('aria-current');
+
+  await screen.getByText('October 2026').tap();
+  const october = screen.getByRole('table', 'Vouchers, October 2026');
+
+  await october.getByRole('button', 'Actions for CV-2026-0139').tap();
+  await screen.getByRole('menuitem', 'View voucher').tap();
+  await expect(screen.getByRole('form', 'Viewing CV-2026-0139')).toBeVisible();
+  await expect(october.getByRole('row', /^CV-2026-0139 /)).toHaveAttribute('aria-current', 'true');
+
+  // A new voucher marks none.
+  await screen.getByRole('button', 'New voucher').tap();
+  await expect(october.getByRole('row', /^CV-2026-0139 /)).not.toHaveAttribute('aria-current');
+});
+
+/** The sample records with `n` more vouchers waiting for approval, 888-001 and on, as if saved before this test. */
+async function withMoreVouchers(app: WebApp, browser: Browser, n: number) {
+  await app.open('/');
+  await browser.evaluate((more: number) => {
+    const saved = JSON.parse(localStorage.getItem('keystone-state') ?? '{}');
+    const like = saved.cv.find((v: { no: string }) => v.no === 'CV-2026-0141');
+
+    for (let i = 1; i <= more; i++) saved.cv.push({ ...like, no: `888-${String(i).padStart(3, '0')}`, date: '2026-11-02' });
+    localStorage.setItem('keystone-state', JSON.stringify(saved));
+  }, n);
+  await browser.reload();
+}
+
+test('shows the register ten vouchers to a page, from the keyboard too', async ({ app, screen, browser }) => {
+  await withMoreVouchers(app, browser, 12);
+  await app.open('/#vouchers');
+  const register = screen.getByRole('table', 'Voucher register');
+  const pages = screen.getByRole('navigation', 'Voucher register, pages');
+
+  // 0141, 0140 and 888-012 down to 888-005 on the first page; the heading row too.
+  await expect(register.getByRole('row')).toHaveCount(11);
+  await expect(pages.getByText('1–10 of 14')).toBeVisible();
+  await expect(register.getByRole('row', /^888-004 /)).toBeHidden();
+  await expect(pages.getByRole('button', 'Previous')).toHaveAttribute('aria-disabled', 'true');
+
+  await pages.getByRole('button', 'Next').press('Enter');
+  await expect(pages.getByText('11–14 of 14')).toBeVisible();
+  await expect(register.getByRole('row', /^888-001 /)).toBeVisible();
+  await expect(register.getByRole('row', /^CV-2026-0141 /)).toBeHidden();
+  // At the last page Next is off, and keeps the focus.
+  await expect(pages.getByRole('button', 'Next')).toHaveAttribute('aria-disabled', 'true');
+  await expect(pages.getByRole('button', 'Next')).toBeFocused();
+
+  await pages.getByRole('button', 'Previous').tap();
+  await expect(register.getByRole('row', /^CV-2026-0141 /)).toBeVisible();
+
+  // The box over the rows ticks the page shown.
+  await register.getByRole('checkbox', 'Select every row on this page of Voucher register').tap();
+  await expect(screen.getByRole('toolbar', 'Voucher register: selected').getByText('10 selected')).toBeVisible();
+});
+
+test('opens a voucher from Overview on the page the register shows it', async ({ app, screen, browser }) => {
+  await withMoreVouchers(app, browser, 12);
+  await app.open('/#overview');
+  await screen.getByRole('region', 'Waiting on you').getByRole('button', /^888-002 /).tap();
+
+  await expect(screen.getByRole('form', 'Editing 888-002')).toBeVisible();
+  const row = screen.getByRole('table', 'Voucher register').getByRole('row', /^888-002 /);
+
+  await expect(row).toBeVisible();
+  await expect(row).toHaveAttribute('aria-current', 'true');
+  await expect(screen.getByRole('navigation', 'Voucher register, pages').getByText('11–14 of 14')).toBeVisible();
 });

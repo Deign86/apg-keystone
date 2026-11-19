@@ -1,8 +1,8 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
+  approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
   voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
@@ -152,6 +152,8 @@ function Vouchers() {
   const reapproves = returnsForApproval(state, draft, ctx);
   const approvedNote = editing?.status === 'Approved' && !approvesOnSave(ctx);
   const total = voucherTotal(live);
+  // The number it is saved, printed and exported under.
+  const no = draftNo(state, draft);
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveVoucher(s, draft, c, asNew));
@@ -180,9 +182,13 @@ function Vouchers() {
 
   const register = voucherRegister(state, ctx);
 
-  const open = (v: Voucher) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); };
+  /** Brings the form into view: under the register, it is off screen once the register is long. */
+  const toForm = () => document.getElementById('cv-form')?.scrollIntoView({ block: 'start' });
+
+  const open = (v: Voucher) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); toForm(); };
 
   const actions = (v: Voucher) => [
+    { label: voucherLock(v) ? 'View voucher' : 'Edit voucher', onSelect: () => open(v) },
     ...VOUCHER_STATUSES.filter((s) => s !== 'Void').map((s) => ({ label: `Mark ${s.toLowerCase()}`, disabled: v.status === s || v.status === 'Void', onSelect: () => run((st, c) => setVoucherStatus(st, v.no, s, c)) })),
     v.status === 'Void'
       ? { label: 'Delete voucher…', danger: true, onSelect: () => confirm({ title: `Delete ${v.no}?`, body: `The void voucher for ${peso(voucherTotal(v))} to ${payeeOf(state, v).name} is removed from the register now, instead of on ${shortDate(clearsOn(v))}.${freesNumber(state, v.no) ? ` The next new voucher takes ${v.no} again.` : ''}`, confirm: 'Delete voucher', danger: true, onConfirm: () => remove(v.no) }) }
@@ -219,7 +225,7 @@ function Vouchers() {
         eyebrow="Disbursements"
         title="Check Vouchers"
         line={voucherLine(state)}
-        actions={<Button onClick={() => { setDraft(newVoucher(state, ctx, bank)); setError(null); }}>New voucher</Button>}
+        actions={<Button onClick={() => { setDraft(newVoucher(state, ctx, bank)); setError(null); toForm(); }}>New voucher</Button>}
       />
       <Panel className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
@@ -234,7 +240,9 @@ function Vouchers() {
           onOpen={open}
           actions={actions}
           bulk={bulk}
-          empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={() => document.getElementById('cv-form')?.scrollIntoView({ block: 'start' })}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
+          current={draft.editing}
+          pageSize={PAGE_SIZE}
+          empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={toForm}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
         />
         {/* Earlier months' released and void vouchers, folded away, newest month first. */}
         {register.earlier.map((m) => (
@@ -247,7 +255,7 @@ function Vouchers() {
               <span className="text-xs text-ink-2 tabular-nums">{count(m.vouchers.length, 'voucher')} · {peso(m.total)}</span>
             </summary>
             <div className="mt-2">
-              <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} empty={null} />
+              <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} current={draft.editing} pageSize={PAGE_SIZE} empty={null} />
             </div>
           </details>
         ))}
@@ -264,7 +272,7 @@ function Vouchers() {
             error={error}
             actions={<>
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+              <Button onClick={() => paper.current && savePdf(paper.current, `${no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
               {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
               {!locked && <Button kind="primary" type="submit">{editing ? (reapproves ? 'Save and return for approval' : 'Save changes') : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
@@ -275,7 +283,10 @@ function Vouchers() {
             {/* A disabled fieldset turns every control inside it off at once. */}
             <fieldset disabled={!!locked} className={FIELDS}>
               <FieldRow>
-                <Field label="CV No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
+                {/* The next number, to change if need be; a saved voucher keeps its own. */}
+                <Field label="CV No.">
+                  <TextInput figures readOnly={!!editing} value={draft.typedNo && !editing ? draft.no : no} onChange={(typed) => setDraft({ ...draft, no: typed, typedNo: true })} />
+                </Field>
                 <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
               </FieldRow>
               <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
@@ -314,7 +325,7 @@ function Vouchers() {
             </fieldset>
           </FormCard>
         }
-        preview={<VoucherPaper ref={paper} voucher={{ ...live, no: draft.editing ?? draft.no }} payee={payeeOf(state, live)} company={companyOf(state)} />}
+        preview={<VoucherPaper ref={paper} voucher={{ ...live, no }} payee={payeeOf(state, live)} company={companyOf(state)} />}
       />
     </>
   );
