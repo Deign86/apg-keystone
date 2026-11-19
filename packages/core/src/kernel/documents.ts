@@ -235,3 +235,15 @@ export function diffDocuments(prev: StateDocument[], next: StateDocument[]): Doc
     remove: prev.flatMap(({ collection, id }) => (after.has(refKey({ collection, id })) ? [] : [{ collection, id }])),
   };
 }
+
+/**
+ * The documents with a change applied on top: what one computer saved, put over what the cloud holds now. A document
+ * both changed takes this change (the last save wins); one this change does not name is left as it is.
+ */
+export function applyDocumentChanges(docs: StateDocument[], change: DocumentChanges): StateDocument[] {
+  const gone = new Set(change.remove.map(refKey));
+  const changed = new Map(change.set.map((d) => [refKey(d), d]));
+  const kept = docs.filter((d) => !gone.has(refKey(d)) && !changed.has(refKey(d)));
+
+  return [...kept, ...changed.values()];
+}

@@ -18,6 +18,11 @@ export interface RemoteDocs {
    * before then can lose them, so the cloud platform notes each save on this computer first (pending.ts).
    */
   write(change: DocumentChanges): Promise<void>;
+  /**
+   * Calls `onChange` with every document each time any of them changes, by anyone, this computer's saves included (once
+   * every list has been read); returns the way to stop. Absent where the documents cannot be watched.
+   */
+  watch?(onChange: (docs: StateDocument[]) => void): () => void;
 }
 
 export const NOT_STARTED = 'APG\'s records are not set up in the cloud yet. The CEO signs in first, and Keystone starts them, empty.';
@@ -88,5 +93,15 @@ export function cloudPlatform(
     );
   }
 
-  return { ...local, loadState, saveState, ...(who && { who }) };
+  /**
+   * Live updates: each time the cloud's documents change, they are what the next save is measured from, and the store
+   * gets them as the saved state. Only once the records have been read, so nothing is saved over them before.
+   */
+  const watchState = remote.watch && ((onChange: (json: string) => void) => remote.watch!((docs) => {
+    if (!synced) return;
+    synced = docs;
+    onChange(JSON.stringify(fromDocuments(docs, layout)));
+  }));
+
+  return { ...local, loadState, saveState, ...(watchState && { watchState }), ...(who && { who }) };
 }

@@ -90,10 +90,10 @@ test('releases a voucher only once it is approved and has its check number', asy
 
   // The check is often written after approval: an approved voucher still takes it, and then it is released.
   await row.getByRole('cell', '888-001').tap();
-  const approved = screen.getByRole('form', 'Viewing 888-001');
+  const approved = screen.getByRole('form', 'Editing 888-001');
 
   await approved.getByRole('textbox', 'Check No.').fill('0004530');
-  await approved.getByRole('button', 'Save check').tap();
+  await approved.getByRole('button', 'Save changes').tap();
   await expect(screen.getByRole('dialog', '888-001 updated.')).toBeVisible();
   await row.getByRole('button', 'Actions for 888-001').tap();
   await screen.getByRole('menuitem', 'Mark released').tap();
@@ -162,46 +162,52 @@ test('edits a voucher while it waits for approval, and saves changes in place', 
   await expect(register.getByRole('row')).toHaveCount(3);
 });
 
-test('an approved voucher takes only its check, and copies to a new voucher', async ({ app, screen }) => {
+test('an approved voucher stays open: its check keeps the approval, any other change sends it back', async ({ app, screen }) => {
   await app.open('/#vouchers');
   const register = screen.getByRole('table', 'Voucher register');
 
   await register.getByRole('cell', 'CV-2026-0140').tap();
-  const form = screen.getByRole('form', 'Viewing CV-2026-0140');
+  const form = screen.getByRole('form', 'Editing CV-2026-0140');
 
-  // What was approved is what prints: nothing on it can be typed over but the check, until it is released.
-  await expect(form.getByText('CV-2026-0140 is approved: only its check number and date of check can change until it is released. Copy it to a new voucher to change the rest.')).toBeVisible();
-  await expect(form.getByRole('textbox', 'Line 1 amount')).toBeDisabled();
-  await expect(form.getByRole('textbox', 'Approved by')).toBeDisabled();
-  await expect(form.getByRole('button', 'Save changes')).toBeHidden();
-  await expect(form.getByRole('button', 'Save as new')).toBeHidden();
+  await expect(form.getByText('CV-2026-0140 is approved. The check number and date of check can be written in as it is; any other change sends it back for approval.')).toBeVisible();
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toBeEnabled();
   const paper = screen.getByRole('article', 'Check voucher CV-2026-0140');
 
-  await expect(paper.getByRole('row', 'Printing of lease folders (500 pcs) ₱12,500.00').first()).toBeVisible();
-
+  // The check, written once approved, keeps the approval.
   await form.getByRole('textbox', 'Check No.').fill('0004531');
   await form.getByRole('textbox', 'Date of check').fill('2026-11-03');
   await expect(paper.getByRole('definition').filter({ hasText: '0004531' }).first()).toBeVisible();
-  await form.getByRole('button', 'Save check').tap();
+  await form.getByRole('button', 'Save changes').tap();
   await expect(screen.getByRole('dialog', 'CV-2026-0140 updated.')).toBeVisible();
   await expect(register.getByRole('row', /^CV-2026-0140 .* 0004531 Nov 3, 2026 .*Approved/)).toBeVisible();
 
-  await app.open('/#activity');
-  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('CV-2026-0140 check 0004531 entered, dated Nov 3, 2026.');
-  await app.open('/#vouchers');
+  // A mistake on it is put right in place, and the corrected voucher goes back for approval.
   await register.getByRole('cell', 'CV-2026-0140').tap();
+  await form.getByRole('textbox', 'Line 1 amount').fill('12000');
+  await form.getByRole('button', 'Save and return for approval').tap();
+  await expect(screen.getByRole('dialog', 'CV-2026-0140 updated and returned for approval.')).toBeVisible();
+  await expect(register.getByRole('row', /^CV-2026-0140 .*₱12,650\.00 For Approval/)).toBeVisible();
 
-  await form.getByRole('button', 'Copy to new voucher').tap();
+  await app.open('/#activity');
+  const entries = screen.getByRole('region', 'Entries').getByRole('listitem');
+
+  await expect(entries.first()).toContainText('CV-2026-0140 for JL SANTOS PRINTING SERVICES edited after approval, and returned for approval (₱12,650.00).');
+  await expect(entries.nth(1)).toContainText('CV-2026-0140 check 0004531 entered, dated Nov 3, 2026.');
+});
+
+test('copies a released voucher to a new voucher with no check', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await screen.getByText('October 2026').tap();
+  await screen.getByRole('table', 'Vouchers, October 2026').getByRole('cell', 'CV-2026-0139').tap();
+  await screen.getByRole('form', 'Viewing CV-2026-0139').getByRole('button', 'Copy to new voucher').tap();
   const copy = screen.getByRole('form', 'New voucher');
 
   await expect(copy.getByRole('textbox', 'CV No.')).toHaveValue('888-001');
   await expect(copy.getByRole('textbox', 'Check No.')).toHaveValue('');
-  await expect(copy.getByRole('textbox', 'Line 1 description')).toHaveValue('Printing of lease folders (500 pcs)');
   await copy.getByRole('textbox', 'Check No.').fill('0004521');
   await copy.getByRole('button', 'Save and route for approval').tap();
 
-  await expect(register.getByRole('row', /^888-001 Nov 2, 2026 JL SANTOS PRINTING SERVICES 0004521 .*₱13,150\.00 For Approval/)).toBeVisible();
-  await expect(register.getByRole('row', /^CV-2026-0140 .*Approved/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 Nov 2, 2026 .* 0004521 .*For Approval/)).toBeVisible();
 });
 
 test('a released voucher opens read-only, its check too', async ({ app, screen }) => {

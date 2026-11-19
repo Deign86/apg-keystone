@@ -2,8 +2,8 @@ import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sec
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, freesNumber, newVoucher, payeeOf, saveVoucher, setVoucherStatus, setVouchersStatus, takesCheck, voucherDraftOf, voucherDrafts,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, withCheck, type VoucherStatus, ID, TAG, refersTo,
+  approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
 import { useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -144,17 +144,13 @@ function Vouchers() {
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
   const locked = editing ? voucherLock(editing) : null;
-  const checkOpen = !!editing && takesCheck(editing);
 
-  // A voucher past approval shows, prints and exports exactly as it was saved; an approved one with the check typed since.
-  const shown = useMemo(() => {
-    if (!locked || !editing) return draft;
-    const saved = voucherDraftOf(state, editing);
-
-    return checkOpen ? { ...saved, check: draft.check, checkDate: draft.checkDate } : saved;
-  }, [locked, editing, checkOpen, draft, state]);
-
-  const live = locked && editing ? (checkOpen ? withCheck(editing, shown) : editing) : voucherOf(draft);
+  // A voucher released or void shows, prints and exports exactly as it was saved.
+  const shown = useMemo(() => (locked && editing ? voucherDraftOf(state, editing) : draft), [locked, editing, draft, state]);
+  const live = locked && editing ? editing : voucherOf(draft);
+  // Saving a change to an approved voucher, beyond its check, sends it back for approval unless the CEO saves it.
+  const reapproves = returnsForApproval(state, draft, ctx);
+  const approvedNote = editing?.status === 'Approved' && !approvesOnSave(ctx);
   const total = voucherTotal(live);
 
   const save = useCallback((asNew = false) => {
@@ -271,11 +267,12 @@ function Vouchers() {
               <Button onClick={() => paper.current && savePdf(paper.current, `${live.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
               {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
-              {(!locked || checkOpen) && <Button kind="primary" type="submit">{checkOpen ? 'Save check' : editing ? 'Save changes' : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
+              {!locked && <Button kind="primary" type="submit">{editing ? (reapproves ? 'Save and return for approval' : 'Save changes') : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
             </>}
           >
             {locked && <p className="m-0 text-[13px] text-pretty text-ink-2">{locked}</p>}
-            {/* A disabled fieldset turns every control inside it off at once; the check's stays on while it is approved. */}
+            {approvedNote && <p className="m-0 text-[13px] text-pretty text-ink-2">{editing?.no} is approved. The check number and date of check can be written in as it is; any other change sends it back for approval.</p>}
+            {/* A disabled fieldset turns every control inside it off at once. */}
             <fieldset disabled={!!locked} className={FIELDS}>
               <FieldRow>
                 <Field label="CV No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
@@ -287,7 +284,7 @@ function Vouchers() {
               <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>
               <DrawnOn value={shown.bank} onChange={(b) => setDraft({ ...draft, bank: b })} />
             </fieldset>
-            <fieldset disabled={!!locked && !checkOpen} className={FIELDS}>
+            <fieldset disabled={!!locked} className={FIELDS}>
               <FieldRow>
                 <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
                 <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>

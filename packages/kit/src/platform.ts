@@ -22,6 +22,11 @@ export interface Platform extends SystemBridge {
   /** The saved state as JSON text, or null when there is none yet. Throws when it exists but cannot be read now. */
   loadState(): Promise<string | null>;
   saveState(json: string): Promise<void>;
+  /**
+   * Live updates, where the saved state is shared (the records in the cloud): calls `onChange` with the whole saved
+   * state as JSON text each time it changes, by anyone, and returns the way to stop. Absent where nobody else saves.
+   */
+  watchState?(onChange: (json: string) => void): () => void;
 
   /** Card photos, kept beside the saved state. */
   putPhoto(name: string, bytes: Uint8Array): Promise<void>;
