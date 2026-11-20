@@ -23,8 +23,8 @@ Status: Accepted · Date: 2026-11-19
   with the check voucher's masthead (the Group of Companies logo, the address beside it, the title, number and date)
   rather than the form's title band: Bill to and Attention, the invoice box, Qty · Description · Unit price · Amount
   (before tax), then a totals box with every line shown: Subtotal, VAT (12%), Less: EWT (2% or 5%) and the total amount
-  due, a dash where a tax does not apply. Then payment instructions, notes and the three signatures. It still prints
-  twice on one A4 sheet, as the voucher does.
+  due, a dash where a tax does not apply. Then payment instructions, notes and the three signatures. It prints once, on
+  a whole upright A4 page; the owner wants one copy on one paper, not the voucher's two copies on a sheet cut in two.
 - **A statement keeps who signs it** (`prepared`, `checked`, `approved`, optional). A new one is prepared by whoever is
   signed in; checked and approved as the last statement was, Company Details' names before the first.
 - **A statement keeps its EWT rate** (`ewtRate`, optional), 2 or 5 (`EWT_RATES`), picked on the form once withholding

@@ -30,7 +30,7 @@ test('issues a statement with VAT and withholding from the client', async ({ app
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
   const totals = paper.getByRole('table', 'Totals');
 
-  // The statement prints twice, a copy on each half of the sheet; the first copy is enough.
+  // The statement prints once, on a whole page.
   await expect(paper.getByText('Novatek BPO Solutions Inc.', { exact: true }).first()).toBeVisible();
   await expect(totals.getByRole('row', 'Subtotal ₱20,000.00').first()).toBeVisible();
   await expect(totals.getByRole('row', 'VAT (12%) ₱2,400.00').first()).toBeVisible();
