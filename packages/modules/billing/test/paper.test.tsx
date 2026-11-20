@@ -45,24 +45,16 @@ describe('the billing statement on paper', () => {
     expect(pageRules()).toEqual([]);
   });
 
-  it('prints twice on one A4, and shrinks a copy that runs past half the page so the cut still falls at the middle', () => {
+  it('prints once, a single copy on a whole upright A4 page, not two to cut apart as a check voucher is', () => {
     const b = s.bs[0];
 
     render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
     const paper = screen.getByRole('article', { name: `Billing statement ${b.no}` });
-    const copies = [...paper.querySelectorAll<HTMLElement>('[data-sheet-copy]')];
 
-    expect(copies).toHaveLength(2);
-
-    // A browser lays them out; here each copy is told it is 700px tall.
-    for (const copy of copies) Object.defineProperty(copy, 'scrollHeight', { configurable: true, value: 700 });
-    const print = vi.spyOn(window, 'print').mockImplementation(() => {});
-
-    printElement(paper);
-    expect({ copies: copies.map((c) => ({ zoom: c.style.zoom, height: c.style.height })), page: pageRules() }).toMatchSnapshot('long copies at the printer');
-    window.dispatchEvent(new Event('afterprint'));
-    print.mockRestore();
-    expect(copies.map((c) => [c.style.zoom, c.style.height])).toEqual([['', ''], ['', '']]);
+    expect(paper.querySelectorAll('[data-sheet-copy]')).toHaveLength(0);
+    expect(paper.querySelectorAll('table[aria-label="Totals"]')).toHaveLength(1);
+    expect(paper.hasAttribute('data-print-fit')).toBe(false);
+    expect(paper.hasAttribute('data-print-orientation')).toBe(false);
   });
 
   it('lays out every statement in the sample the same way, with and without tax, and one with no charges', () => {

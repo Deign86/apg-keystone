@@ -9,8 +9,8 @@
   voucher's masthead (the Group of Companies logo, the address beside it, the title, number and date): Bill to and
   Attention, the invoice box (number, invoice and due dates, the late-payment penalty), Qty · Description · Unit price ·
   Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%) and the total amount due, every line shown, a
-  dash where a tax does not apply. Then payment instructions, notes and who signs. It prints twice on one A4 sheet, as
-  the check voucher does (the kit's `TwoUp`): a copy on each half, cut apart along the dashed line.
+  dash where a tax does not apply. Then payment instructions, notes and who signs. It prints once, on a whole upright
+  A4 page (the kit's `Sheet`), not twice on a sheet cut in two as the check voucher does.
 - `src/rules.ts`: its rules (totals with VAT and EWT, numbering, the client typed or from the directory,
   `recordPayment`, overdue on open, the account the payment instructions name) and what it contributes. Tested in
   `test/rules.test.ts`.

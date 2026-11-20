@@ -3,13 +3,12 @@ import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, type ReactNode } from 'react';
 import { DASH, longDate, peso, toCentavos, type Company, type Statement } from '@keystone/core';
 import { ewtRateOf, statementTotals, VAT_RATE } from './rules';
-import { amountColumn, Lines, Masthead, orDash, paperHeading, paperLabel, paperLogo, Signatures, TwoUp } from '@keystone/kit';
+import { amountColumn, Lines, Masthead, orDash, paperHeading, paperLabel, paperLogo, Sheet, Signatures } from '@keystone/kit';
 
 // The company's Billing Statement, laid out as its printed form under the check voucher's masthead: the logo with the
 // address beside it, the title, number and date, who it is billed to, the invoice box with the penalty terms, the
 // charges, then the totals box (subtotal, VAT, the expanded withholding tax taken off, the amount due), how to pay, and
-// who signs. Twice on one A4 sheet, as the check voucher is: once on each half, cut apart along the dashed line across
-// the middle, one copy for the client and one to keep.
+// who signs. Once, on a whole upright A4 page: unlike the check voucher, it is not printed twice on a sheet cut in two.
 
 function Note({ title, text }: { title: string; text?: string }) {
   if (!text?.trim()) return null;
@@ -36,7 +35,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
   const t = statementTotals(b);
 
   return (
-    <TwoUp ref={ref} label={`Billing statement ${b.no}`}>
+    <Sheet ref={ref} label={`Billing statement ${b.no}`}>
       {/* Headed as the check voucher is: the Group of Companies logo, with the company's address right beside it. */}
       <Masthead
         title="Billing Statement"
@@ -93,6 +92,6 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
       <Note title="Payment instructions" text={b.notes} />
       <Note title="Notes" text={b.note} />
       <Signatures names={[[b.prepared ?? '', 'Prepared by'], [b.checked ?? '', 'Checked by'], [b.approved ?? '', 'Approved by']]} />
-    </TwoUp>
+    </Sheet>
   );
 });
