@@ -1,7 +1,10 @@
 # Check Vouchers
 
 ## Owns
-- `src/index.tsx`: the register (Edit voucher, or View voucher once it can no longer change, and status changes from
+- `src/index.tsx`: two tabs, **Voucher register** (shown first, with the count of vouchers) and **Voucher entry** (the
+  form beside the voucher it prints, the tab naming the voucher open in it, or New). Opening a voucher, New voucher, and
+  Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts (`vouchers.view`), so
+  it is the same on coming back. The register (Edit voucher, or View voucher once it can no longer change, and status changes from
   the row menu; void asks first; ten vouchers to a page; the voucher open in the form marked in its row), the form, editing in place while a
   voucher is For Approval or Approved, Save as new, Print, and Export PDF. An approved voucher stays open so a mistake
   on it can be put right: writing in only its Check No. and Date of check keeps the approval; any other change, saved by

@@ -32,6 +32,8 @@ test('has a tile for each screen, with its figure, that opens it', async ({ app,
 
 test('a tile follows the data: a voucher saved shows in its figure', async ({ app, screen }) => {
   await app.open('/#vouchers');
+  // The form is on its own tab, beside the register.
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');

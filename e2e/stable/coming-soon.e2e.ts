@@ -65,6 +65,8 @@ test('asks for funds, listing the expenses to be paid back by transfer', async (
 
 test('saves a check voucher as before', async ({ app, screen }) => {
   await app.open('/#vouchers');
+  // The form is on its own tab, beside the register.
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');

@@ -51,6 +51,8 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await expectHome(screen);
 
   await app.open('/#vouchers');
+  // The form is on its own tab, beside the register.
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
@@ -189,6 +191,7 @@ test('shows what another computer saves as it is saved, without reopening, and k
   await expect(register.getByRole('row', /^CV-2026-0140 /)).toBeHidden({ timeout: 10_000 });
 
   // A save made here after that is written over what the cloud holds now, and brings back nothing deleted elsewhere.
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Water Company');

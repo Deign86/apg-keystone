@@ -1,4 +1,4 @@
-import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, SectionLabel, StatusPill, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, StatusPill, Tabs, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
@@ -10,6 +10,12 @@ import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
 const DRAFT = `${ID}.draft`;
+
+/** The screen's two tabs: the register of vouchers, and the form with the voucher it prints. */
+type View = 'register' | 'entry';
+
+/** Which tab is shown, kept with the drafts so it is the same on coming back; Overview's and Home's actions open the form's. */
+const VIEW = `${ID}.view`;
 
 /** A group of the form's fields, turned off together while the voucher is locked. */
 const FIELDS = 'm-0 flex min-w-0 flex-col gap-3.5 border-0 p-0';
@@ -28,6 +34,7 @@ function Vouchers() {
   const bank = firstBank(app);
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx, bank));
+  const [view, setView] = useDraft<View>(VIEW, () => 'register');
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
@@ -70,8 +77,13 @@ function Vouchers() {
 
   const register = voucherRegister(state, ctx);
 
-  /** Brings the form into view: under the register, it is off screen once the register is long. */
-  const toForm = () => document.getElementById('cv-form')?.scrollIntoView({ block: 'start' });
+  /** Shows the form, bringing the tabs back into view when the register was scrolled past them. */
+  const toForm = () => {
+    setView('entry');
+    const tabs = document.getElementById('cv-tabs');
+
+    if (tabs && tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block: 'start' });
+  };
 
   const open = (v: Voucher) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); toForm(); };
 
@@ -115,113 +127,130 @@ function Vouchers() {
         line={voucherLine(state)}
         actions={<Button onClick={() => { setDraft(newVoucher(state, ctx, bank)); setError(null); toForm(); }}>New voucher</Button>}
       />
-      <Panel className="mb-4">
-        <div className="mb-2 flex items-baseline justify-between">
-          <SectionLabel>Voucher register</SectionLabel>
-          <span className="text-xs text-ink-2">{count(state.cv.length, 'voucher')}</span>
-        </div>
-        <Register
-          label="Voucher register"
-          columns={columns}
-          rows={register.current}
-          rowKey={(v) => v.no}
-          onOpen={open}
-          actions={actions}
-          bulk={bulk}
-          current={draft.editing}
-          pageSize={PAGE_SIZE}
-          empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={toForm}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
-        />
-        {/* Earlier months' released and void vouchers, folded away, newest month first. */}
-        {register.earlier.map((m) => (
-          <details key={m.month} className="group mt-3 border-t border-line pt-3">
-            <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 rounded-control px-1 py-1 hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
-              <span className="flex items-baseline gap-2 font-semibold">
-                <span aria-hidden="true" className="inline-block text-ink-2 transition-transform group-open:rotate-90">›</span>
-                <span>{m.label}</span>
-              </span>
-              <span className="text-xs text-ink-2 tabular-nums">{count(m.vouchers.length, 'voucher')} · {peso(m.total)}</span>
-            </summary>
-            <div className="mt-2">
-              <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} current={draft.editing} pageSize={PAGE_SIZE} empty={null} />
-            </div>
-          </details>
-        ))}
-      </Panel>
-
-      <Workspace
-        previewTitle="Document preview"
-        form={
-          <FormCard
-            id="cv-form"
-            eyebrow="Voucher entry"
-            title={editing ? `${locked ? 'Viewing' : 'Editing'} ${editing.no}` : 'New voucher'}
-            onSubmit={() => save()}
-            error={error}
-            actions={<>
-              <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-              <Button onClick={() => paper.current && savePdf(paper.current, `${no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
-              {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
-              {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
-              {!locked && <Button kind="primary" type="submit">{editing ? (reapproves ? 'Save and return for approval' : 'Save changes') : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
-            </>}
-          >
-            {locked && <p className="m-0 text-[13px] text-pretty text-ink-2">{locked}</p>}
-            {approvedNote && <p className="m-0 text-[13px] text-pretty text-ink-2">{editing?.no} is approved. The check number and date of check can be written in as it is; any other change sends it back for approval.</p>}
-            {/* A disabled fieldset turns every control inside it off at once. */}
-            <fieldset disabled={!!locked} className={FIELDS}>
-              <FieldRow>
-                {/* The next number, to change if need be; a saved voucher keeps its own. */}
-                <Field label="CV No.">
-                  <TextInput figures readOnly={!!editing} value={draft.typedNo && !editing ? draft.no : no} onChange={(typed) => setDraft({ ...draft, no: typed, typedNo: true })} />
-                </Field>
-                <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
-              </FieldRow>
-              <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
-              <Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
-              <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
-              <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>
-              <BankAccountPicker
-                label="Bank"
-                value={shown.bank}
-                onChange={(b) => setDraft({ ...draft, bank: b })}
-                hint="The account the check is drawn on. Others adds one not listed."
-                noneHint="No bank accounts are kept yet: add the one the check is drawn on under Others."
-                after="every voucher after this one"
-                kept="Vouchers already saved keep the bank written on them."
+      <Tabs<View>
+        id="cv-tabs"
+        label="Check vouchers"
+        value={view}
+        onChange={setView}
+        tabs={[
+          {
+            value: 'register',
+            label: 'Voucher register',
+            note: state.cv.length,
+            panel: (
+              <Panel>
+                <Register
+                  label="Voucher register"
+                  columns={columns}
+                  rows={register.current}
+                  rowKey={(v) => v.no}
+                  onOpen={open}
+                  actions={actions}
+                  bulk={bulk}
+                  current={draft.editing}
+                  pageSize={PAGE_SIZE}
+                  empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={toForm}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
+                />
+                {/* Earlier months' released and void vouchers, folded away, newest month first. */}
+                {register.earlier.map((m) => (
+                  <details key={m.month} className="group mt-3 border-t border-line pt-3">
+                    <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 rounded-control px-1 py-1 hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
+                      <span className="flex items-baseline gap-2 font-semibold">
+                        <span aria-hidden="true" className="inline-block text-ink-2 transition-transform group-open:rotate-90">›</span>
+                        <span>{m.label}</span>
+                      </span>
+                      <span className="text-xs text-ink-2 tabular-nums">{count(m.vouchers.length, 'voucher')} · {peso(m.total)}</span>
+                    </summary>
+                    <div className="mt-2">
+                      <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} current={draft.editing} pageSize={PAGE_SIZE} empty={null} />
+                    </div>
+                  </details>
+                ))}
+              </Panel>
+            ),
+          },
+          {
+            value: 'entry',
+            label: 'Voucher entry',
+            note: editing ? editing.no : 'New',
+            panel: (
+              <Workspace
+                previewTitle="Document preview"
+                form={
+                  <FormCard
+                    id="cv-form"
+                    eyebrow="Voucher entry"
+                    title={editing ? `${locked ? 'Viewing' : 'Editing'} ${editing.no}` : 'New voucher'}
+                    onSubmit={() => save()}
+                    error={error}
+                    actions={<>
+                      <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
+                      <Button onClick={() => paper.current && savePdf(paper.current, `${no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+                      {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
+                      {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
+                      {!locked && <Button kind="primary" type="submit">{editing ? (reapproves ? 'Save and return for approval' : 'Save changes') : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
+                    </>}
+                  >
+                    {locked && <p className="m-0 text-[13px] text-pretty text-ink-2">{locked}</p>}
+                    {approvedNote && <p className="m-0 text-[13px] text-pretty text-ink-2">{editing?.no} is approved. The check number and date of check can be written in as it is; any other change sends it back for approval.</p>}
+                    {/* A disabled fieldset turns every control inside it off at once. */}
+                    <fieldset disabled={!!locked} className={FIELDS}>
+                      <FieldRow>
+                        {/* The next number, to change if need be; a saved voucher keeps its own. */}
+                        <Field label="CV No.">
+                          <TextInput figures readOnly={!!editing} value={draft.typedNo && !editing ? draft.no : no} onChange={(typed) => setDraft({ ...draft, no: typed, typedNo: true })} />
+                        </Field>
+                        <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
+                      </FieldRow>
+                      <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
+                      <Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
+                      <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
+                      <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>
+                      <BankAccountPicker
+                        label="Bank"
+                        value={shown.bank}
+                        onChange={(b) => setDraft({ ...draft, bank: b })}
+                        hint="The account the check is drawn on. Others adds one not listed."
+                        noneHint="No bank accounts are kept yet: add the one the check is drawn on under Others."
+                        after="every voucher after this one"
+                        kept="Vouchers already saved keep the bank written on them."
+                      />
+                    </fieldset>
+                    <fieldset disabled={!!locked} className={FIELDS}>
+                      <FieldRow>
+                        <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
+                        <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
+                      </FieldRow>
+                    </fieldset>
+                    <fieldset disabled={!!locked} className={FIELDS}>
+                      <LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
+                      <div className="text-right" aria-live="polite">
+                        <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
+                        <p className="m-0 text-[13px] text-ink-2">{amountInWords(total)}</p>
+                      </div>
+                      {/* Each signatory's name over their position, as the voucher prints them. */}
+                      <FieldRow min={120}>
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} /></Field>
+                          <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
+                        </div>
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} /></Field>
+                          <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
+                        </div>
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} /></Field>
+                          <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
+                        </div>
+                      </FieldRow>
+                    </fieldset>
+                  </FormCard>
+                }
+                preview={<VoucherPaper ref={paper} voucher={{ ...live, no }} payee={payeeOf(state, live)} company={companyOf(state)} />}
               />
-            </fieldset>
-            <fieldset disabled={!!locked} className={FIELDS}>
-              <FieldRow>
-                <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
-                <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
-              </FieldRow>
-            </fieldset>
-            <fieldset disabled={!!locked} className={FIELDS}>
-              <LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
-              <div className="text-right" aria-live="polite">
-                <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
-                <p className="m-0 text-[13px] text-ink-2">{amountInWords(total)}</p>
-              </div>
-              {/* Each signatory's name over their position, as the voucher prints them. */}
-              <FieldRow min={120}>
-                <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} /></Field>
-                  <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
-                </div>
-                <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} /></Field>
-                  <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
-                </div>
-                <div className="flex min-w-0 flex-col gap-2.5">
-                  <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} /></Field>
-                  <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
-                </div>
-              </FieldRow>
-            </fieldset>
-          </FormCard>
-        }
-        preview={<VoucherPaper ref={paper} voucher={{ ...live, no }} payee={payeeOf(state, live)} company={companyOf(state)} />}
+            ),
+          },
+        ]}
       />
     </>
   );
@@ -240,10 +269,14 @@ export const vouchersModule: ModuleDef = {
   openWaiting: (no, app) => {
     const v = app.state.cv.find((x) => x.no === no);
 
-    if (v) app.setDraft(DRAFT, voucherDraftOf(app.state, v));
+    if (v) {
+      app.setDraft(DRAFT, voucherDraftOf(app.state, v));
+      app.setDraft<View>(VIEW, 'entry');
+    }
+
     app.go(ID);
   },
-  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.go(ID); } },
+  create: { label: 'New check voucher', run: (app) => { app.setDraft(DRAFT, newVoucher(app.state, app.ctx, firstBank(app))); app.setDraft<View>(VIEW, 'entry'); app.go(ID); } },
   refersTo,
   onOpen: clearVoided,
   logTags: { [TAG]: 'Vouchers' },

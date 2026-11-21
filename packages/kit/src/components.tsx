@@ -1,8 +1,8 @@
 import { Button, CellInput, EmptyState, Field, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm } from '@keystone/ui';
-import { X } from 'lucide-react';
+import { Pin, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { companyOf, lineDraft, SERVICES, shortDate, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
-import { useConnectorUpdate, useKeystone, useModuleApp, useOpenConnector } from './context';
+import { useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
@@ -38,28 +38,46 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { tit
   );
 }
 
+/** Where Workspace keeps whether the preview is pinned: one choice for every screen's preview, for as long as Keystone is open. */
+const PINNED = 'workspace.pinned';
+
 /**
  * The form on the left, the document it produces on the right; stacked under 1100px. Stacked, the one column is as wide
  * as the screen, never as wide as the paper, so the paper scales down to fit a phone.
  *
- * Side by side, the preview is pinned in view while the form scrolls, and is never taller than the window: a paper
- * taller than that (a full A4 statement, a two-up voucher in a wide or short window) scrolls inside its own box, so its
- * foot can be read without scrolling to the end of the form. That box can be scrolled from the keyboard too.
+ * Side by side, the preview is pinned by default: it stays in view at the right while the form scrolls, and is never
+ * taller than the window, so a paper taller than that (a full A4 statement, a two-up voucher in a wide or short window)
+ * scrolls inside its own box and its foot can be read without scrolling to the end of the form. That box can be
+ * scrolled from the keyboard too. Unpinned, the preview scrolls with the page and shows the whole paper at once.
  */
 export function Workspace({ form, preview, previewTitle, previewNote = 'Updates as you type' }: { form: ReactNode; preview: ReactNode; previewTitle: string; previewNote?: string }) {
+  const [pinned, setPinned] = useDraft(PINNED, () => true);
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1100px]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       {form}
       <section
         aria-label={previewTitle}
         // A box that scrolls on its own takes focus, so the arrow keys scroll it.
-        tabIndex={0}
+        tabIndex={pinned ? 0 : undefined}
         // The scrollbar's room is kept even when the paper fits, so its coming and going never rescales the paper.
-        className="rounded-control min-[1100px]:sticky min-[1100px]:top-4 min-[1100px]:max-h-[calc(100dvh-2rem)] min-[1100px]:overflow-y-auto min-[1100px]:[scrollbar-gutter:stable]"
+        className={cn('rounded-control', pinned && 'min-[1100px]:sticky min-[1100px]:top-4 min-[1100px]:max-h-[calc(100dvh-2rem)] min-[1100px]:overflow-y-auto min-[1100px]:[scrollbar-gutter:stable]')}
       >
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between gap-3">
           <SectionLabel>{previewTitle}</SectionLabel>
-          <span className="text-xs text-ink-2">{previewNote}</span>
+          <span className="ml-auto text-xs text-ink-2">{previewNote}</span>
+          {/* Pinning only means something side by side; stacked, the preview is under the form either way. */}
+          <Button
+            size="sm"
+            kind="quiet"
+            aria-pressed={pinned}
+            title={pinned ? 'Pinned: stays in view while the form scrolls' : 'Not pinned: scrolls with the page'}
+            onClick={() => setPinned(!pinned)}
+            className={cn('hidden min-[1100px]:inline-flex', pinned ? 'border-line-bright bg-surface-2' : 'text-ink-2')}
+          >
+            <Pin size={14} aria-hidden="true" />
+            Pin preview
+          </Button>
         </div>
         {preview}
       </section>

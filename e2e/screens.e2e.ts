@@ -183,6 +183,8 @@ test('on a phone, a menu takes the rail\'s place and opens the screens', async (
 // The store writes a change 250 ms after it is made; leaving the page writes it at once (apps/keystone/src/main.tsx).
 test('keeps a save made just before the page reloads', async ({ app, screen, browser }) => {
   await app.open('/#vouchers');
+  // The form is on its own tab, beside the register.
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
@@ -202,12 +204,15 @@ test('keeps a save made just before the page reloads', async ({ app, screen, bro
 
 test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await app.open('/#vouchers');
+  // The form is on its own tab, beside the register.
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 
   await browser.reload();

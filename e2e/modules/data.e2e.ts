@@ -11,6 +11,7 @@ import { startEmpty } from '../support/sample-records';
 
 /** Saves 888-001 for Meralco. */
 async function saveVoucher(screen: Screen) {
+  await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
@@ -56,6 +57,7 @@ test('restores a backup only after asking, and drops what was saved since', asyn
   await expect(confirm.getByText('It holds 3 vouchers, 3 statements, 3 IDs and 11 directory records. Everything Keystone holds now is replaced.')).toBeVisible();
   await confirm.getByRole('button', 'Cancel').tap();
   await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 
   await app.open('/#data');
@@ -65,6 +67,7 @@ test('restores a backup only after asking, and drops what was saved since', asyn
   await expect(screen.getByRole('dialog', `Restored ${file}.`)).toBeVisible();
 
   await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeHidden();
   // The heading row, 0140 and 0141: the released 0139 is folded under October 2026.
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row')).toHaveCount(3);
@@ -86,6 +89,7 @@ test('brings the work in a backup into a Keystone that starts with no records', 
 
   // Another computer: nothing saved there, so nothing at all, until the backup is restored.
   await startEmpty(app, browser, '/#vouchers');
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeHidden();
   await app.open('/#data');
   const data = screen.getByRole('region', 'Data');
@@ -100,6 +104,7 @@ test('brings the work in a backup into a Keystone that starts with no records', 
 
   // The voucher is back in the register, on Home and in the Activity Log.
   await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 Nov 2, 2026 MANILA ELECTRIC COMPANY \(MERALCO\).*₱1,250\.50 For Approval/)).toBeVisible();
 
   await app.open('/');
@@ -123,6 +128,7 @@ test('refuses a file that is not a Keystone backup, and changes nothing', async 
   await expect(screen.getByRole('alertdialog')).toBeHidden();
 
   await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
 });
 
@@ -147,6 +153,7 @@ test('refuses a backup with a record a screen cannot show, naming the record, an
   await expect(screen.getByRole('alertdialog')).toBeHidden();
 
   await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 /)).toBeVisible();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^CV-2026-0138 /)).toBeHidden();
 });
