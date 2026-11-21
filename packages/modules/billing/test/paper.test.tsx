@@ -57,6 +57,17 @@ describe('the billing statement on paper', () => {
     expect(paper.hasAttribute('data-print-orientation')).toBe(false);
   });
 
+  it('prints each signatory\'s position under their name, and nothing where none is kept', () => {
+    const b = { ...s.bs[0], prepared: 'D. Lazaro', checked: 'Mark Anthony Santos', checkedPos: 'Finance Manager', approved: 'Brian Sy', approvedPos: 'Chief Executive Officer' };
+
+    render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
+    const paper = screen.getByRole('article', { name: `Billing statement ${b.no}` });
+
+    expect(paper.textContent).toMatch(/Mark Anthony SantosFinance ManagerChecked by/);
+    expect(paper.textContent).toMatch(/Brian SyChief Executive OfficerApproved by/);
+    expect(paper.textContent).toMatch(/D\. LazaroPrepared by/);
+  });
+
   it('lays out every statement in the sample the same way, with and without tax, and one with no charges', () => {
     for (const b of [...s.bs.slice(1), { ...s.bs[0], no: 'blank', lines: [], notes: '', note: '' }]) {
       const { unmount } = render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);

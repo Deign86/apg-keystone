@@ -95,6 +95,20 @@ describe('billing statements', () => {
     expect(newStatement(saved.state, ctx)).toMatchObject({ checked: 'Mark Anthony Santos', approved: 'Brian Sy' });
   });
 
+  it('keeps each signatory\'s position as typed, only when there is one, and starts the next statement with them', () => {
+    const s = state();
+    const d = billed(s);
+    // No statement names a position yet.
+    expect(d).toMatchObject({ preparedPos: '', checkedPos: '', approvedPos: '' });
+
+    const saved = saveStatement(s, { ...d, checkedPos: ' Finance Manager ', approvedPos: 'Chief Executive Officer', lines: [lineDraft({ desc: 'Rent', amount: '100' })] }, ctx);
+    expect(saved.record).toMatchObject({ checkedPos: 'Finance Manager', approvedPos: 'Chief Executive Officer' });
+    // A position left blank is not kept at all, as on a statement saved before positions.
+    expect(saved.record).not.toHaveProperty('preparedPos');
+    expect(newStatement(saved.state, ctx)).toMatchObject({ preparedPos: '', checkedPos: 'Finance Manager', approvedPos: 'Chief Executive Officer' });
+    expect(statementDraftOf(saved.record, saved.state)).toMatchObject({ checkedPos: 'Finance Manager', approvedPos: 'Chief Executive Officer' });
+  });
+
   it('is billed to whoever is typed, and a directory client typed by name brings its setup', () => {
     const s = state();
     const d = newStatement(s, ctx);

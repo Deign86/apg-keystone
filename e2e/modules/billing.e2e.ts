@@ -498,10 +498,14 @@ test('prints who prepared, checked and approved the statement', async ({ app, sc
   await expect(form.getByRole('textbox', 'Checked by')).toHaveValue('Accounting');
   await expect(form.getByRole('textbox', 'Approved by')).toHaveValue('CEO');
   await form.getByRole('textbox', 'Checked by').fill('Mark Anthony Santos');
+  await form.getByRole('textbox', "Checker's position").fill('Finance Manager');
   await form.getByRole('textbox', 'Approved by').fill('Brian Sy');
+  await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
 
+  // Each signatory's name prints over their position.
   await expect(paper.getByText('Mark Anthony Santos', { exact: true }).first()).toBeVisible();
-  await expect(paper.getByText('Brian Sy', { exact: true }).first()).toBeVisible();
+  await expect(paper).toContainText(/Mark Anthony Santos\s*Finance Manager\s*Checked by/i);
+  await expect(paper).toContainText(/Brian Sy\s*Chief Executive Officer\s*Approved by/i);
 
   await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
@@ -509,9 +513,11 @@ test('prints who prepared, checked and approved the statement', async ({ app, sc
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
 
-  // The next statement is checked and approved by the same people.
+  // The next statement is checked and approved by the same people, in the same positions.
   await expect(form.getByRole('textbox', 'Checked by')).toHaveValue('Mark Anthony Santos');
+  await expect(form.getByRole('textbox', "Checker's position")).toHaveValue('Finance Manager');
   await expect(form.getByRole('textbox', 'Approved by')).toHaveValue('Brian Sy');
+  await expect(form.getByRole('textbox', "Approver's position")).toHaveValue('Chief Executive Officer');
 });
 
 test('adds an account under Others on a statement, and Bank Accounts keeps it', async ({ app, screen }) => {

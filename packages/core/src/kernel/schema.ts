@@ -118,6 +118,10 @@ export interface Statement {
   prepared?: string;
   checked?: string;
   approved?: string;
+  /** Each signatory's position, printed under their name: "Chief Executive Officer". Kept only when typed in. */
+  preparedPos?: string;
+  checkedPos?: string;
+  approvedPos?: string;
   /** As saved. The statuses a statement goes through belong to the module that keeps statements. */
   status: string;
 }
