@@ -7,7 +7,9 @@
   (`billing.view`). The register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent,
   Print, and Export PDF. **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and
   Attention, and any other name leaves them to be set by hand. **Prepared by** starts as whoever is signed in,
-  **Checked by** and **Approved by** as the last statement's (Company Details' before the first).
+  **Checked by** and **Approved by** as the last statement's (Company Details' before the first). Each signatory has a
+  position under their name (**Preparer's position**, **Checker's position**, **Approver's position**), kept only when
+  typed, printed under the name, and started from the last statement's.
 - `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under the check
   voucher's masthead (the Group of Companies logo, the address beside it, the title, number and date): Bill to and
   Attention, the invoice box (number, invoice and due dates, the late-payment penalty), Qty · Description · Unit price ·

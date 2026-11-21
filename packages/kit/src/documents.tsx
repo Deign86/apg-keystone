@@ -255,12 +255,14 @@ export function Lines({ columns, lines, empty, footer }: { columns: LineColumn[]
 }
 
 /** Lines to sign on: room above a firm line, then who signs, in bold, and their role. */
-export function Signatures({ names }: { names: [string, string][] }) {
+export function Signatures({ names }: { names: ([who: string, role: string] | [who: string, role: string, position: string])[] }) {
   return (
     <div className="mt-10 grid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
-      {names.map(([who, role]) => (
+      {names.map(([who, role, position]) => (
         <div key={role} className="border-t border-paper-ink pt-1 text-[11px]">
           <p className="m-0 min-h-4 font-bold">{who}</p>
+          {/* Under the name, the signatory's position, when the document keeps one. */}
+          {position && <p className="m-0 font-semibold">{position}</p>}
           <p className={`m-0 mt-0.5 ${paperLabel}`}>{role}</p>
         </div>
       ))}

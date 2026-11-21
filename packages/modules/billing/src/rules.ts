@@ -83,12 +83,13 @@ export interface StatementDraft extends Editing {
   no: string; date: string; invoiceDate: string; due: string; client: string; attention: string;
   lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string;
   prepared: string; checked: string; approved: string;
+  preparedPos: string; checkedPos: string; approvedPos: string;
 }
 
 /**
  * A blank statement, from Company Details: its payment instructions, note and days to pay (no due date until set). It
  * is prepared by whoever is signed in; the other signatories start as the last statement's (Company Details' names
- * before the first). With `accounts` (those Bank Accounts keeps), it pays into the account the last statement named,
+ * before the first), and every signatory's position as the last statement's. With `accounts` (those Bank Accounts keeps), it pays into the account the last statement named,
  * as a new voucher is drawn on the last voucher's bank, or else the one Company Details' instructions name, or else
  * the first kept.
  */
@@ -103,6 +104,7 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
     attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
     notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote,
     prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
+    preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
   };
 }
 
@@ -115,13 +117,27 @@ export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft
   attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
   notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote,
   prepared: b.prepared ?? '', checked: b.checked ?? '', approved: b.approved ?? '',
+  preparedPos: b.preparedPos ?? '', checkedPos: b.checkedPos ?? '', approvedPos: b.approvedPos ?? '',
 });
 
-export const statementOf = (d: StatementDraft, status: StatementStatus = 'Sent'): Statement => ({
-  no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client.trim(), attention: d.attention.trim(),
-  lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, note: d.note,
-  prepared: d.prepared.trim(), checked: d.checked.trim(), approved: d.approved.trim(), status,
-});
+/** The signatories' positions, which a statement keeps only when they are typed in. */
+const POSITIONS = ['preparedPos', 'checkedPos', 'approvedPos'] as const;
+
+export function statementOf(d: StatementDraft, status: StatementStatus = 'Sent'): Statement {
+  const b: Statement = {
+    no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client.trim(), attention: d.attention.trim(),
+    lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, note: d.note,
+    prepared: d.prepared.trim(), checked: d.checked.trim(), approved: d.approved.trim(), status,
+  };
+
+  for (const key of POSITIONS) {
+    const value = d[key].trim();
+
+    if (value) b[key] = value;
+  }
+
+  return b;
+}
 
 // ---------- the account a client pays into (when Bank Accounts is installed) ----------
 

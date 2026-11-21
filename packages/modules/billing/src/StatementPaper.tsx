@@ -91,7 +91,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
 
       <Note title="Payment instructions" text={b.notes} />
       <Note title="Notes" text={b.note} />
-      <Signatures names={[[b.prepared ?? '', 'Prepared by'], [b.checked ?? '', 'Checked by'], [b.approved ?? '', 'Approved by']]} />
+      <Signatures names={[[b.prepared ?? '', 'Prepared by', b.preparedPos ?? ''], [b.checked ?? '', 'Checked by', b.checkedPos ?? ''], [b.approved ?? '', 'Approved by', b.approvedPos ?? '']]} />
     </Sheet>
   );
 });

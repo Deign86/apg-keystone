@@ -174,10 +174,20 @@ function Billing() {
                     <PayInto draft={draft} setDraft={setDraft} />
                     <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
                     <Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
-                    <FieldRow min={140}>
-                      <Field label="Prepared by"><TextInput value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
-                      <Field label="Checked by"><TextInput value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
-                      <Field label="Approved by"><TextInput value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                    {/* Each signatory's name over their position, as the statement prints them. */}
+                    <FieldRow min={120}>
+                      <div className="flex min-w-0 flex-col gap-2.5">
+                        <Field label="Prepared by"><TextInput value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
+                        <Field label="Preparer's position"><TextInput value={draft.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2.5">
+                        <Field label="Checked by"><TextInput value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
+                        <Field label="Checker's position"><TextInput value={draft.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2.5">
+                        <Field label="Approved by"><TextInput value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                        <Field label="Approver's position"><TextInput value={draft.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
+                      </div>
                     </FieldRow>
                   </FormCard>
                 }
