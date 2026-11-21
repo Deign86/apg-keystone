@@ -5,3 +5,5 @@ export * from './fields';
 export * from './register';
 
 export * from './overlays';
+
+export * from './tabs';

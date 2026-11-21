@@ -66,8 +66,11 @@ And one more from screens that have little to show in a new Keystone:
   - Click a row, or press Enter on it, to load the record into the form. The row open in the form is marked as the
     rail marks its screen, with a gold line at its edge (and `aria-current`).
   - A register that grows with use shows ten rows a page (`PAGE_SIZE`), with Previous and Next under it.
-- **Form and document:** side by side, the document preview stays in view while the form scrolls; a paper taller than
-  the window scrolls inside its own box (`Workspace`).
+- **Form and document:** side by side, the document preview is pinned: it stays in view while the form scrolls, and a
+  paper taller than the window scrolls inside its own box (`Workspace`). **Pin preview** above it unpins it, to
+  scroll with the page and show the whole paper at once.
+- **Tabs:** a screen whose register and form are each long puts them on two tabs (`Tabs`), the register first, as
+  Check Vouchers does. Opening a record shows the form's tab, and the tab names the record open in it.
 - **Buttons:** primary is flat gold with dark ink; secondary is outlined; quiet has no outline. They are 36px tall (28px
   small) with radius 6, and scale to 0.97 when pressed.
 - **Documents** (the voucher, the statement, the ID card) are drawn once. The same element is the live preview, the
