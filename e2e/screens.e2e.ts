@@ -173,6 +173,8 @@ test('on a phone, a menu takes the rail\'s place and opens the screens', async (
 
   await expect(menu).toBeHidden();
   await expect(screen.getByRole('heading', { name: 'Requests for Funds', level: 1 })).toBeVisible();
+  // The requests show first; the form is on the tab beside them.
+  await screen.getByRole('tab', /^Request entry/).tap();
   await expect(screen.getByRole('form', 'New request')).toBeVisible();
 
   // The brand in the bar goes home.

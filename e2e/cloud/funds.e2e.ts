@@ -38,6 +38,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   // HR asks for the party's venue deposit. The requester is the member signed in, and only the CEO may decide.
   await signInElsewhere(app, screen, hr);
   await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
   const form = screen.getByRole('form', 'New request');
 
   await expect(form.getByRole('textbox', 'Requested by')).toHaveValue('Ana Cruz');
@@ -59,8 +60,9 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   // IT sees none of HR's requests, and its own still takes the next number.
   await signInElsewhere(app, screen, it);
   await app.open('/#funds');
-  await expect(screen.getByRole('heading', { name: 'Your requests', level: 2 })).toBeVisible();
+  await expect(screen.getByRole('tab', /^Your requests/)).toBeVisible();
   await expect(screen.getByText('No requests yet.')).toBeVisible();
+  await screen.getByRole('tab', /^Request entry/).tap();
   const mine = screen.getByRole('form', 'New request');
 
   await mine.getByRole('textbox', 'What it is for').fill('Replacement laptop charger');
@@ -140,6 +142,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // HR lists what the fund paid for and the account it is topped up into. A first request is paid by transfer.
   await signInElsewhere(app, screen, hr);
   await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');

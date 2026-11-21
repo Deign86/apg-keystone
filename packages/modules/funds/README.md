@@ -3,8 +3,10 @@
 ## Owns
 - `src/index.tsx`: the screen. The CEO sees each request waiting for a decision as a card (amount, purpose, each
   expense, the account it is transferred to or the payee of its check, who asked, settle by) with an optional note,
-  Decline and Approve, each asked first; the cards stack on a phone. Below them, the register of requests, and the
-  form to ask for funds: what it is for, the expenses (a description and an amount each, totalled), paid by bank
+  Decline and Approve, each asked first; the cards stack on a phone. The screen has two tabs: **Requests** (**Your
+  requests** for staff signed in), with the cards above the register of requests, and **Request entry**, the form,
+  named for the request open in it, or New. Opening a request, approving one, New request, and Overview's and Home's
+  actions show the entry tab; which tab is shown is kept with the drafts (`funds.view`). The form to ask for funds: what it is for, the expenses (a description and an amount each, totalled), paid by bank
   transfer (bank, branch, account name, account number) or by check (the payee from the directory), and settle ASAP
   or by a date. Signed in, the requester is the member; with nobody signed in, they type their name. A request still
   waiting opens for its requester to edit or withdraw; any other opens read-only, with the CEO's answer and the
