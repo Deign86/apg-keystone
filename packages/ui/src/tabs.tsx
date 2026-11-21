@@ -1,5 +1,5 @@
 import { Tabs as BaseTabs } from '@base-ui/react/tabs';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { cn } from './primitives';
 
 export interface TabDef<T extends string> {
@@ -14,21 +14,32 @@ export interface TabDef<T extends string> {
 /**
  * One screen split into views, one shown at a time: a row of tabs under a 1px line, the shown one marked with a gold
  * line under it, as the rail marks its screen. The arrow keys move between tabs. Every panel stays mounted while
- * hidden, so what is half done in one (a page of a register, a folded month) is as it was on coming back.
+ * hidden, so what is half done in one (a page of a register, a folded month) is as it was on coming back. When the
+ * tab shown changes while the page is scrolled past the tabs (a record opened from far down a register), the tabs are
+ * brought back into view, so the new panel is seen from its top.
  */
-export function Tabs<T extends string>({ label, value, onChange, tabs, id, className }: {
+export function Tabs<T extends string>({ label, value, onChange, tabs, className }: {
   label: string;
   value: T;
   onChange: (value: T) => void;
   tabs: TabDef<T>[];
-  /** The id of the row of tabs, to scroll it into view. */
-  id?: string;
   className?: string;
 }) {
+  const list = useRef<HTMLDivElement>(null);
+  const shown = useRef(value);
+
+  useEffect(() => {
+    if (shown.current === value) return;
+    shown.current = value;
+    const tabs = list.current;
+
+    if (tabs && tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block: 'start' });
+  }, [value]);
+
   return (
     // SAFETY: every tab's value is one of `tabs`' values, all of type T, so the value a tab hands back is a T.
     <BaseTabs.Root value={value} onValueChange={(v) => onChange(v as T)} className={className}>
-      <BaseTabs.List id={id} aria-label={label} className="mb-4 flex scroll-mt-4 gap-1 border-b border-line">
+      <BaseTabs.List ref={list} aria-label={label} className="mb-4 flex scroll-mt-4 gap-1 border-b border-line">
         {tabs.map((t) => (
           <BaseTabs.Tab
             key={t.value}

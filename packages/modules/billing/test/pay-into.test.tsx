@@ -36,6 +36,8 @@ async function openBilling(modules: ModuleDef[]) {
   window.location.hash = '#billing';
   render(<App store={store} registry={buildRegistry(modules, [])} />);
   await act(async () => {});
+  // The form is on its own tab, beside the statements issued.
+  fireEvent.click(screen.getByRole('tab', { name: /^Statement entry/ }));
 
   return {
     form: screen.getByRole('form', { name: 'New statement' }),

@@ -28,6 +28,7 @@ test('adds a vendor, who can then be paid by a request for funds', async ({ app,
   await expect(screen.getByRole('button', 'Vendors 5')).toBeVisible();
 
   await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
   const request = screen.getByRole('form', 'New request');
 
   await request.getByRole('combobox', 'Paid by').tap();
@@ -71,6 +72,7 @@ test('adds a client with the VAT setup Billing Statements then follows', async (
 
   // Billing it by its name takes the Attention and the setup: VAT, but no withholding, unlike Novatek.
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Bill to').fill('Bayside Realty Corp.');

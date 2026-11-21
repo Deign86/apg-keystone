@@ -49,6 +49,7 @@ test('opens Requests for Funds, Billing Statements, the Directory, Profile, User
 
 test('asks for funds, listing the expenses to be paid back by transfer', async ({ app, screen }) => {
   await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');
@@ -79,12 +80,15 @@ test('saves a check voucher as before', async ({ app, screen }) => {
 
 test('issues a billing statement to a client the Directory keeps', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
 
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. .* Sent/)).toBeVisible();
 });

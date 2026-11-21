@@ -70,7 +70,8 @@ And one more from screens that have little to show in a new Keystone:
   paper taller than the window scrolls inside its own box (`Workspace`). **Pin preview** above it unpins it, to
   scroll with the page and show the whole paper at once.
 - **Tabs:** a screen whose register and form are each long puts them on two tabs (`Tabs`), the register first, as
-  Check Vouchers does. Opening a record shows the form's tab, and the tab names the record open in it.
+  Check Vouchers, Billing Statements and Requests for Funds do. Opening a record shows the form's tab, and the tab
+  names the record open in it.
 - **Buttons:** primary is flat gold with dark ink; secondary is outlined; quiet has no outline. They are 36px tall (28px
   small) with radius 6, and scale to 0.97 when pressed.
 - **Documents** (the voucher, the statement, the ID card) are drawn once. The same element is the live preview, the

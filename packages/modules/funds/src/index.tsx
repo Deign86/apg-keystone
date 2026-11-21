@@ -1,4 +1,4 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
 import { FormCard, LineEditor, printElement, savePdf, useDraft, useKeystone, useModuleApp, Workspace, type ModuleDef } from '@keystone/kit';
@@ -12,6 +12,12 @@ import { TransferPaper } from './TransferPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
 const DRAFT = `${ID}.draft`;
+
+/** The screen's two tabs: the requests, and the form with what it prints. */
+type View = 'register' | 'entry';
+
+/** Which tab is shown, kept with the drafts so it is the same on coming back; Overview's and Home's actions open the form's. */
+const VIEW = `${ID}.view`;
 
 const WHEN = [{ value: ASAP, label: 'As soon as possible' }, { value: 'date', label: 'By a date' }];
 
@@ -95,6 +101,7 @@ function Funds() {
   const app = useModuleApp();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newRequest(state, ctx));
+  const [view, setView] = useDraft<View>(VIEW, () => 'register');
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLElement>(null);
   const editing = draft.editing ? requestOf(state, draft.editing) : undefined;
@@ -109,15 +116,15 @@ function Funds() {
   const staff = !!ctx.who && !decides(ctx);
   const setAccount = (patch: Partial<TransferAccount>) => setDraft({ ...draft, account: { ...draft.account, ...patch } });
 
-  /** Opens a request in the form, as the state after its approval holds it, and brings the form into view. */
+  /** Opens a request in the form, as the state after its approval holds it, on the form's tab. */
   const open = useCallback((no: string, after: TerminalState) => {
     const r = requestOf(after, no);
 
     if (!r) return;
     setDraft(requestDraftOf(r));
     setError(null);
-    requestAnimationFrame(() => document.getElementById('rf-form')?.scrollIntoView({ block: 'start' }));
-  }, [setDraft]);
+    setView('entry');
+  }, [setDraft, setView]);
 
   const save = useCallback(() => {
     const r = run((s, c) => fileRequest(s, draft, c));
@@ -212,9 +219,10 @@ function Funds() {
         eyebrow="Disbursements"
         title="Requests for Funds"
         line={fundsLine(state, ctx)}
-        actions={<Button onClick={() => { setDraft(newRequest(state, ctx)); setError(null); }}>New request</Button>}
+        actions={<Button onClick={() => { setDraft(newRequest(state, ctx)); setError(null); setView('entry'); }}>New request</Button>}
       />
 
+      {/* Above the tabs, so what waits for a decision and who may give it show on both. */}
       {waiting.length > 0 && (
         <section aria-labelledby="rf-waiting" className="mb-4">
           <div className="mb-2 flex items-baseline justify-between">
@@ -227,47 +235,63 @@ function Funds() {
         </section>
       )}
 
-      <Panel className="mb-4">
-        <div className="mb-2 flex items-baseline justify-between">
-          <SectionLabel>{staff ? 'Your requests' : 'Requests'}</SectionLabel>
-          <span className="text-xs text-ink-2">{count(requestsNewestFirst(state).length, 'request')}</span>
-        </div>
-        {refusal && <p className="mt-0 mb-2 text-[13px] text-pretty text-ink-2">{refusal}</p>}
-        <Register
-          label="Requests for funds"
-          columns={columns}
-          rows={requestsNewestFirst(state)}
-          rowKey={(r) => r.no}
-          onOpen={(r) => { setDraft(requestDraftOf(r)); setError(null); notify(`${r.no} loaded into the form.`); }}
-          actions={(r) => [
-            { label: 'Edit', disabled: !!requestLock(r, ctx), onSelect: () => { setDraft(requestDraftOf(r)); setError(null); } },
-            { label: 'Withdraw…', danger: true, disabled: !!requestLock(r, ctx), onSelect: () => withdraw(r) },
-          ]}
-          bulk={(picked, clear): RowAction[] => {
-            const open = picked.filter((r) => !requestLock(r, ctx));
+      {refusal && <p className="mt-0 mb-3 text-[13px] text-pretty text-ink-2">{refusal}</p>}
 
-            return [{
-              label: `Withdraw (${open.length})…`, danger: true, disabled: !open.length,
-              onSelect: () => confirm({
-                title: `Withdraw ${count(open.length, 'request')}?`, body: `${open.map((r) => r.no).join(', ')}. They stay on record as withdrawn; to ask again, file a new request.`, confirm: 'Withdraw', danger: true,
-                onConfirm: () => {
-                  const out = run((s, c) => changeEach(s, open.map((r) => r.no), (x, no) => withdrawRequest(x, no, c), (rs) => `${count(rs.length, 'request')} withdrawn.`));
+      <Tabs<View>
+        label="Requests for funds"
+        value={view}
+        onChange={setView}
+        tabs={[
+          {
+            value: 'register',
+            label: staff ? 'Your requests' : 'Requests',
+            note: requestsNewestFirst(state).length,
+            panel: (
+              <Panel>
+                <Register
+                  label="Requests for funds"
+                  columns={columns}
+                  rows={requestsNewestFirst(state)}
+                  rowKey={(r) => r.no}
+                  onOpen={(r) => { setDraft(requestDraftOf(r)); setError(null); notify(`${r.no} loaded into the form.`); setView('entry'); }}
+                  actions={(r) => [
+                    { label: 'Edit', disabled: !!requestLock(r, ctx), onSelect: () => { setDraft(requestDraftOf(r)); setError(null); setView('entry'); } },
+                    { label: 'Withdraw…', danger: true, disabled: !!requestLock(r, ctx), onSelect: () => withdraw(r) },
+                  ]}
+                  bulk={(picked, clear): RowAction[] => {
+                    const open = picked.filter((r) => !requestLock(r, ctx));
 
-                  if (!out.ok) return;
-                  clear();
+                    return [{
+                      label: `Withdraw (${open.length})…`, danger: true, disabled: !open.length,
+                      onSelect: () => confirm({
+                        title: `Withdraw ${count(open.length, 'request')}?`, body: `${open.map((r) => r.no).join(', ')}. They stay on record as withdrawn; to ask again, file a new request.`, confirm: 'Withdraw', danger: true,
+                        onConfirm: () => {
+                          const out = run((s, c) => changeEach(s, open.map((r) => r.no), (x, no) => withdrawRequest(x, no, c), (rs) => `${count(rs.length, 'request')} withdrawn.`));
 
-                  if (open.some((r) => r.no === draft.editing)) setDraft(newRequest(out.state, ctx));
-                },
-              }),
-            }];
-          }}
-          empty={<EmptyState text="No requests yet." action={<Button size="sm" kind="primary" onClick={() => document.getElementById('rf-form')?.scrollIntoView({ block: 'start' })}>Ask for funds</Button>} />}
-        />
-      </Panel>
+                          if (!out.ok) return;
+                          clear();
 
-      {shown.pay === 'transfer'
-        ? <Workspace form={form} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
-        : <div className="max-w-[720px]">{form}</div>}
+                          if (open.some((r) => r.no === draft.editing)) setDraft(newRequest(out.state, ctx));
+                        },
+                      }),
+                    }];
+                  }}
+                  empty={<EmptyState text="No requests yet." action={<Button size="sm" kind="primary" onClick={() => setView('entry')}>Ask for funds</Button>} />}
+                />
+              </Panel>
+            ),
+          },
+          {
+            value: 'entry',
+            label: 'Request entry',
+            note: editing ? editing.no : 'New',
+            // Paid by check, there is nothing to print here: the approval drafts a check voucher instead.
+            panel: shown.pay === 'transfer'
+              ? <Workspace form={form} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
+              : <div className="max-w-[720px]">{form}</div>,
+          },
+        ]}
+      />
     </>
   );
 }
@@ -286,10 +310,14 @@ export const fundsModule: ModuleDef = {
   openWaiting: (no, app) => {
     const r = requestOf(app.state, no);
 
-    if (r) app.setDraft(DRAFT, requestDraftOf(r));
+    if (r) {
+      app.setDraft(DRAFT, requestDraftOf(r));
+      app.setDraft<View>(VIEW, 'entry');
+    }
+
     app.go(ID);
   },
-  create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.go(ID); } },
+  create: { label: 'New request for funds', run: (app) => { app.setDraft(DRAFT, newRequest(app.state, app.ctx)); app.setDraft<View>(VIEW, 'entry'); app.go(ID); } },
   refersTo,
   selects: { Vendor: 'Requests for Funds' },
   logTags: { [TAG]: 'Requests for funds' },

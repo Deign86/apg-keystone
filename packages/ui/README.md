@@ -17,7 +17,8 @@ The APG design system: the look shared with the attendance tracker and the websi
   `test/register.test.tsx`.
 - `src/tabs.tsx`: `Tabs` (one screen split into views shown one at a time, on Base UI's `Tabs`: a row of tabs under a
   1px line, the shown one with a gold line under it, an optional muted note after each name; every panel stays
-  mounted while hidden, so a register's page or a half-filled form is as it was on coming back).
+  mounted while hidden, so a register's page or a half-filled form is as it was on coming back; a change of tab made
+  while the page is scrolled past them brings the tabs back into view).
 - `src/overlays.tsx`: `FeedbackProvider`, `useNotify` (toasts), `useConfirm` (an alert dialog for anything
   destructive), `AlertSheet` (an alert dialog its owner opens and closes, with its own buttons), `Sheet` (dialog).
 

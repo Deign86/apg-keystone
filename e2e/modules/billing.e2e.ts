@@ -10,6 +10,7 @@ import { faintPaperText, tinyPaperText } from '../support/paper';
 
 test('issues a statement with VAT and withholding from the client', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010100-2026');
@@ -47,15 +48,18 @@ test('issues a statement with VAT and withholding from the client', async ({ app
   await screen.getByRole('option', '2%').tap();
 
   await form.getByRole('button', 'Save and mark as sent').tap();
+  // The form is blank again, numbered from the register.
+  await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010101-2026');
 
+  await screen.getByRole('tab', /^Statements issued/).tap();
   const register = screen.getByRole('table', 'Statements issued');
 
   await expect(register.getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. Nov 2, 2026 Nov 17, 2026 ₱22,000\.00 Sent/)).toBeVisible();
-  await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010101-2026');
 });
 
 test('a non-VAT client gets no VAT and no withholding', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Bill to').fill('Dela Cruz, Maria Teresa');
@@ -78,6 +82,7 @@ test('a non-VAT client gets no VAT and no withholding', async ({ app, screen }) 
 
 test('refuses an invoice number already in use and offers the next free one', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Invoice No.').fill('010099-2026');
@@ -91,6 +96,7 @@ test('refuses an invoice number already in use and offers the next free one', as
 
 test('refuses a statement with no charges', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('button', 'Save and mark as sent').tap();
@@ -133,6 +139,7 @@ test('asks before voiding a statement', async ({ app, screen }) => {
 
 test('prints the company billing statement with the payment instructions', async ({ app, screen, browser }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const statement = screen.getByRole('article', 'Billing statement 010100-2026');
 
   await expect(statement).toBeVisible();
@@ -157,6 +164,7 @@ test('pays into the account picked under Pay into, and the saved statement keeps
   await expect(screen.getByRole('dialog', 'B-002 added.')).toBeVisible();
 
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const payInto = form.getByRole('combobox', 'Pay into');
 
@@ -185,6 +193,7 @@ test('pays into the account picked under Pay into, and the saved statement keeps
 
   // The next statement pays into the account the last one named, as a voucher is drawn on the last voucher's bank.
   await expect(screen.getByRole('form', 'New statement').getByRole('combobox', 'Pay into')).toHaveText('Security Bank · 0000 0712 3456');
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await screen.getByRole('table', 'Statements issued').getByRole('cell', '010100-2026').tap();
   const saved = screen.getByRole('form', 'Editing 010100-2026');
 
@@ -194,6 +203,7 @@ test('pays into the account picked under Pay into, and the saved statement keeps
 
 test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const payInto = form.getByRole('combobox', 'Pay into');
   const instructions = form.getByRole('textbox', 'Payment instructions');
@@ -215,6 +225,9 @@ test('opens a sent statement from the register and saves changes to it', async (
 
   await register.getByRole('cell', '010099-2026').tap();
   await expect(screen.getByRole('dialog', '010099-2026 loaded into the form.')).toBeVisible();
+  // It opens on the form's tab, which names it.
+  await expect(screen.getByRole('tab', /^Statement entry/)).toHaveAttribute('aria-selected', 'true');
+  await expect(screen.getByRole('tab', /^Statement entry/)).toHaveText(/010099-2026/);
   const form = screen.getByRole('form', 'Editing 010099-2026');
 
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010099-2026');
@@ -223,8 +236,10 @@ test('opens a sent statement from the register and saves changes to it', async (
   await form.getByRole('button', 'Save changes').tap();
 
   await expect(screen.getByRole('dialog', '010099-2026 updated.')).toBeVisible();
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(register.getByRole('row', /^010099-2026 Harbor Point Logistics Corp\. Oct 25, 2026 Nov 10, 2026 ₱586,627\.50 Sent/)).toBeVisible();
   await expect(register.getByRole('row')).toHaveCount(4);
+  await screen.getByRole('tab', /^Statement entry/).tap();
   await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Invoice No.')).toHaveValue('010100-2026');
 
   await app.open('/#overview');
@@ -250,6 +265,7 @@ test('will not change an overdue statement, and saves the edit as a new statemen
   await form.getByRole('button', 'Save as new').tap();
 
   await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(register.getByRole('row', /^010100-2026 Dela Cruz, Maria Teresa Nov 2, 2026 Nov 17, 2026 ₱91,000\.00 Sent/)).toBeVisible();
   await expect(register.getByRole('row', /^010098-2026 Dela Cruz, Maria Teresa Oct 1, 2026 Oct 10, 2026 ₱91,000\.00 Overdue/)).toBeVisible();
   await expect(screen.getByText('₱768,627.50 outstanding on 3 statements, 1 overdue.')).toBeVisible();
@@ -257,6 +273,7 @@ test('will not change an overdue statement, and saves the edit as a new statemen
 
 test('refuses a charge with no quantity, and a due date before the invoice date', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
@@ -272,6 +289,7 @@ test('refuses a charge with no quantity, and a due date before the invoice date'
   await form.getByRole('button', 'Save and mark as sent').tap();
 
   await expect(form.getByRole('alert')).toHaveText('The due date is before the invoice date.');
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 /)).toBeHidden();
 });
 
@@ -304,6 +322,7 @@ test('marks a statement overdue and back to sent from its row menu, and Home fol
 
 test('unticking VAT or withholding by hand changes the totals', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
@@ -326,12 +345,14 @@ test('unticking VAT or withholding by hand changes the totals', async ({ app, sc
   await expect(paper.getByRole('row', 'Total amount due ₱10,000.00').first()).toBeVisible();
 
   await form.getByRole('button', 'Save and mark as sent').tap();
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 Novatek BPO Solutions Inc\. Nov 2, 2026 Nov 17, 2026 ₱10,000\.00 Sent/)).toBeVisible();
 });
 
 // Keystone marks statements overdue when it opens (the module's onOpen), not while it runs.
 test('a statement past its due date turns overdue the next time Keystone opens', async ({ app, screen, browser }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
@@ -340,6 +361,7 @@ test('a statement past its due date turns overdue the next time Keystone opens',
   await form.getByRole('textbox', 'Invoice date').fill('2026-10-01');
   await form.getByRole('textbox', 'Due date').fill('2026-10-20');
   await form.getByRole('button', 'Save and mark as sent').tap();
+  await screen.getByRole('tab', /^Statements issued/).tap();
   const row = screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 /);
 
   await expect(row).toHaveAccessibleName(/^010100-2026 Novatek BPO Solutions Inc\. Oct 1, 2026 Oct 20, 2026 ₱11,000\.00 Sent/);
@@ -380,6 +402,7 @@ test('paying the overdue statement moves Home and Overview on to the voucher wai
 
 test('exports the statement as a PDF named after its number', async ({ app, screen, browser }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
@@ -398,6 +421,7 @@ test('exports the statement as a PDF named after its number', async ({ app, scre
 
 test('logs each statement sent, paid and voided, under the Billing filter', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const register = screen.getByRole('table', 'Statements issued');
 
@@ -407,6 +431,7 @@ test('logs each statement sent, paid and voided, under the Billing filter', asyn
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
+  await screen.getByRole('tab', /^Statements issued/).tap();
 
   await register.getByRole('button', 'Actions for 010099-2026').tap();
   await screen.getByRole('menuitem', 'Mark paid').tap();
@@ -435,6 +460,7 @@ test('logs each statement sent, paid and voided, under the Billing filter', asyn
 
 test('bills someone not in the directory, typed as the statement prints it', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
@@ -450,9 +476,11 @@ test('bills someone not in the directory, typed as the statement prints it', asy
   await expect(paper.getByRole('row', 'Total amount due ₱235,200.00').first()).toBeVisible();
 
   await form.getByRole('button', 'Save and mark as sent').tap();
+  await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^010100-2026 RACIL REALTY INC Nov 2, 2026 Nov 17, 2026 ₱235,200\.00 Sent/)).toBeVisible();
 
   // A statement needs someone to bill.
+  await screen.getByRole('tab', /^Statement entry/).tap();
   await form.getByRole('textbox', 'Line 1 description').fill('Commercial rental commission');
   await form.getByRole('textbox', 'Line 1 unit price').fill('210000');
   await form.getByRole('button', 'Save and mark as sent').tap();
@@ -461,6 +489,7 @@ test('bills someone not in the directory, typed as the statement prints it', asy
 
 test('prints who prepared, checked and approved the statement', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
@@ -487,6 +516,7 @@ test('prints who prepared, checked and approved the statement', async ({ app, sc
 
 test('adds an account under Others on a statement, and Bank Accounts keeps it', async ({ app, screen }) => {
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const payInto = form.getByRole('combobox', 'Pay into');
 

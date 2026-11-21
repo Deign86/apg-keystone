@@ -77,13 +77,7 @@ function Vouchers() {
 
   const register = voucherRegister(state, ctx);
 
-  /** Shows the form, bringing the tabs back into view when the register was scrolled past them. */
-  const toForm = () => {
-    setView('entry');
-    const tabs = document.getElementById('cv-tabs');
-
-    if (tabs && tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block: 'start' });
-  };
+  const toForm = () => setView('entry');
 
   const open = (v: Voucher) => { setDraft(voucherDraftOf(state, v)); setError(null); notify(`${v.no} loaded into the form.`); toForm(); };
 
@@ -128,7 +122,6 @@ function Vouchers() {
         actions={<Button onClick={() => { setDraft(newVoucher(state, ctx, bank)); setError(null); toForm(); }}>New voucher</Button>}
       />
       <Tabs<View>
-        id="cv-tabs"
         label="Check vouchers"
         value={view}
         onChange={setView}

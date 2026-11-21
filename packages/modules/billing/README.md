@@ -1,7 +1,10 @@
 # Billing Statements
 
 ## Owns
-- `src/index.tsx`: the register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent,
+- `src/index.tsx`: two tabs, **Statements issued** (shown first, with the count) and **Statement entry** (the form
+  beside the statement it prints; the tab names the statement open in it, or New). Opening a statement, New
+  statement, and Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts
+  (`billing.view`). The register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent,
   Print, and Export PDF. **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and
   Attention, and any other name leaves them to be set by hand. **Prepared by** starts as whoever is signed in,
   **Checked by** and **Approved by** as the last statement's (Company Details' before the first).

@@ -69,6 +69,7 @@ test('adds an account, and a statement picks it under Pay into and prints it', a
   await expect(screen.getByText('2 accounts at BPI and BDO.')).toBeVisible();
 
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
@@ -158,6 +159,7 @@ test('removes an account after asking, and offers to add one when none is left',
 
   // With no account to pick, a statement's Pay into names none and offers Others…, as a voucher's Bank does.
   await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await expect(form.getByRole('combobox', 'Pay into')).toHaveText('—');
