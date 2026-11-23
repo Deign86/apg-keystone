@@ -1,7 +1,7 @@
 import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox';
 import { Menu } from '@base-ui/react/menu';
-import { Check, Minus, MoreHorizontal } from 'lucide-react';
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Check, ChevronRight, Minus, MoreHorizontal } from 'lucide-react';
+import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, cn } from './primitives';
 
 // A register: a real <table> with gold header capitals, rows on a 45px pitch split by
@@ -60,6 +60,38 @@ function useRoomFor(need: number) {
   return [box, roomy] as const;
 }
 
+/**
+ * Rows that belong together, such as vouchers to the same payee. Two or more of a kind fold into one row that opens to
+ * show them; a row alone stays a row. The kinds keep the order their first rows have.
+ */
+export interface RowGroup<T> {
+  /** Rows with the same key fold together. */
+  key: (row: T) => string;
+  /** The folded row's name, for screen readers and the box that ticks the group: "MERALCO, 3 vouchers". */
+  label: (rows: T[]) => string;
+  /** What the folded row shows, across the columns. */
+  summary: (rows: T[]) => ReactNode;
+}
+
+/** A row of the register, or a fold of rows that share a group. */
+type Entry<T> = { key: string; rows: T[]; folded: boolean };
+
+/** The rows as entries: in a group, two or more of a kind are one fold, at the place of the first. */
+export function entriesOf<T>(rows: T[], rowKey: (row: T) => string, group?: Pick<RowGroup<T>, 'key'>): Entry<T>[] {
+  if (!group) return rows.map((r) => ({ key: rowKey(r), rows: [r], folded: false }));
+  const kinds = new Map<string, T[]>();
+
+  for (const r of rows) {
+    const k = group.key(r);
+    const kind = kinds.get(k);
+
+    if (kind) kind.push(r);
+    else kinds.set(k, [r]);
+  }
+
+  return [...kinds].map(([k, rs]) => (rs.length > 1 ? { key: `group:${k}`, rows: rs, folded: true } : { key: rowKey(rs[0]), rows: rs, folded: false }));
+}
+
 export interface RowAction {
   label: string;
   onSelect: () => void;
@@ -113,7 +145,7 @@ function PageButton({ children, off, onPress }: { children: ReactNode; off: bool
 }
 
 export function Register<T>({
-  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, bulk, empty, caption, current, pageSize,
+  label, columns, rows, rowKey, rowLabel = rowKey, onOpen, actions, bulk, empty, caption, current, pageSize, group,
 }: {
   label: string;
   columns: Column<T>[];
@@ -135,6 +167,8 @@ export function Register<T>({
   current?: string;
   /** Given, a register longer than this shows that many rows at a time, with Previous and Next under it (PAGE_SIZE suits most). */
   pageSize?: number;
+  /** Given, rows of the same kind fold into one that opens to show them; a page then counts folds, not the rows in them. */
+  group?: RowGroup<T>;
 }) {
   const need = columns.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), (actions ? MENU_WIDTH : 0) + (bulk ? TICK_WIDTH : 0));
   const [box, roomy] = useRoomFor(need);
@@ -144,13 +178,38 @@ export function Register<T>({
   const selected = bulk ? rows.filter((r) => ticked.has(rowKey(r))) : [];
   const clear = () => setTicked(new Set());
 
-  // A row opened from elsewhere (Home, Overview, another page) is brought into view: its page is shown when the register
-  // opens with it current, and whenever it becomes current.
+  const entries = entriesOf(rows, rowKey, group);
+
+  // A row opened from elsewhere (Home, Overview, another page) is brought into view: its page is shown, and the fold it is
+  // in opened, when the register opens with it current, and whenever it becomes current.
+  const entryWith = (key: string | undefined) => (key === undefined ? -1 : entries.findIndex((e) => e.rows.some((r) => rowKey(r) === key)));
+
   const pageWith = (key: string | undefined) => {
-    const i = key === undefined ? -1 : rows.findIndex((r) => rowKey(r) === key);
+    const i = entryWith(key);
 
     return i >= 0 && pageSize ? Math.floor(i / pageSize) : null;
   };
+
+  const foldWith = (key: string | undefined) => {
+    const e = entries[entryWith(key)];
+
+    return e?.folded ? e.key : null;
+  };
+
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => {
+    const f = foldWith(current);
+
+    return new Set(f ? [f] : []);
+  });
+
+  const unfold = (key: string, on: boolean) => setOpened((prev) => {
+    const next = new Set(prev);
+
+    if (on) next.add(key);
+    else next.delete(key);
+
+    return next;
+  });
 
   const [page, setPage] = useState(() => pageWith(current) ?? 0);
   const [seen, setSeen] = useState(current);
@@ -158,14 +217,18 @@ export function Register<T>({
   if (current !== seen) {
     setSeen(current);
     const p = pageWith(current);
+    const f = foldWith(current);
 
     if (p !== null) setPage(p);
+
+    if (f && !opened.has(f)) setOpened(new Set([...opened, f]));
   }
 
-  const paged = pageSize !== undefined && rows.length > pageSize;
-  const at = pageOf(rows.length, pageSize ?? Math.max(1, rows.length), page);
+  const paged = pageSize !== undefined && entries.length > pageSize;
+  const at = pageOf(entries.length, pageSize ?? Math.max(1, entries.length), page);
 
-  const visible = paged ? rows.slice(at.first, at.end) : rows;
+  const shownEntries = paged ? entries.slice(at.first, at.end) : entries;
+  const visible = shownEntries.flatMap((e) => e.rows);
   // The box over the rows ticks those on view: the page shown, or every row when there is one page.
   const all = visible.length > 0 && visible.every((r) => ticked.has(rowKey(r)));
   const some = visible.some((r) => ticked.has(rowKey(r)));
@@ -182,6 +245,40 @@ export function Register<T>({
   });
 
   const bulkActions = bulk && selected.length ? bulk(selected, clear) : [];
+
+  /** One record's row; `inFold` sets it in under the fold it is in. */
+  const row = (r: T, inFold: boolean) => {
+    const key = rowKey(r);
+    const open = key === current;
+
+    return (
+      <tr
+        key={key}
+        tabIndex={onOpen ? 0 : undefined}
+        aria-current={open || undefined}
+        onClick={onOpen ? () => onOpen(r) : undefined}
+        onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(r); } : undefined}
+        className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2', open && 'bg-surface-2', ticked.has(key) && 'bg-gold-tint')}
+      >
+        {shown.map((c, i) => (
+          <td key={c.key} className={cn('h-[45px] max-w-0 truncate px-2.5', c.align === 'right' && 'text-right tabular-nums', i === 0 && 'relative', i === 0 && inFold && 'pl-8')}>
+            {i === 0 && open && <span aria-hidden="true" className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full bg-gold" />}
+            {c.cell(r)}
+          </td>
+        ))}
+        {bulk && (
+          <td className="pl-3" onClick={(e) => e.stopPropagation()}>
+            <Tick checked={ticked.has(key)} label={`Select ${rowLabel(r)}`} onChange={(on) => tick([key], on)} />
+          </td>
+        )}
+        {actions && (
+          <td className="px-1 text-right" onClick={(e) => e.stopPropagation()}>
+            {actions(r).length > 0 && <RowMenu label={`Actions for ${rowLabel(r)}`} actions={actions(r)} />}
+          </td>
+        )}
+      </tr>
+    );
+  };
 
   return (
     // Relative, so the screen-reader-only caption and header scroll with the table instead of widening a phone's page.
@@ -233,36 +330,37 @@ export function Register<T>({
           </tr>
         </thead>
         <tbody>
-          {visible.map((row) => {
-            const key = rowKey(row);
-            const open = key === current;
+          {shownEntries.map((e) => {
+            if (!e.folded || !group) return row(e.rows[0], false);
+            const isOpen = opened.has(e.key);
+            const keys = e.rows.map(rowKey);
+            const allOn = keys.every((k) => ticked.has(k));
+            const anyOn = keys.some((k) => ticked.has(k));
 
             return (
-              <tr
-                key={key}
-                tabIndex={onOpen ? 0 : undefined}
-                aria-current={open || undefined}
-                onClick={onOpen ? () => onOpen(row) : undefined}
-                onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(row); } : undefined}
-                className={cn('border-t border-line', onOpen && 'cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2', open && 'bg-surface-2', ticked.has(key) && 'bg-gold-tint')}
-              >
-                {shown.map((c, i) => (
-                  <td key={c.key} className={cn('h-[45px] max-w-0 truncate px-2.5', c.align === 'right' && 'text-right tabular-nums', i === 0 && 'relative')}>
-                    {i === 0 && open && <span aria-hidden="true" className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full bg-gold" />}
-                    {c.cell(row)}
+              <Fragment key={e.key}>
+                <tr className={cn('border-t border-line', allOn && 'bg-gold-tint')}>
+                  <td colSpan={shown.length} className="h-[45px] max-w-0 p-0">
+                    <button
+                      type="button"
+                      aria-expanded={isOpen}
+                      onClick={() => unfold(e.key, !isOpen)}
+                      className="flex h-[45px] w-full min-w-0 items-center gap-1.5 px-2.5 text-left hover:bg-surface-2 focus-visible:bg-surface-2"
+                    >
+                      <ChevronRight size={14} aria-hidden="true" className={cn('shrink-0 text-ink-2 transition-transform duration-150', isOpen && 'rotate-90')} />
+                      <span className="sr-only">{group.label(e.rows)}</span>
+                      <span aria-hidden="true" className="flex min-w-0 flex-1 items-center gap-3">{group.summary(e.rows)}</span>
+                    </button>
                   </td>
-                ))}
-                {bulk && (
-                  <td className="pl-3" onClick={(e) => e.stopPropagation()}>
-                    <Tick checked={ticked.has(key)} label={`Select ${rowLabel(row)}`} onChange={(on) => tick([key], on)} />
-                  </td>
-                )}
-                {actions && (
-                  <td className="px-1 text-right" onClick={(e) => e.stopPropagation()}>
-                    {actions(row).length > 0 && <RowMenu label={`Actions for ${rowLabel(row)}`} actions={actions(row)} />}
-                  </td>
-                )}
-              </tr>
+                  {bulk && (
+                    <td className="pl-3">
+                      <Tick checked={allOn} mixed={!allOn && anyOn} label={`Select ${group.label(e.rows)}`} onChange={(on) => tick(keys, on)} />
+                    </td>
+                  )}
+                  {actions && <td />}
+                </tr>
+                {isOpen && e.rows.map((r) => row(r, true))}
+              </Fragment>
             );
           })}
         </tbody>
@@ -270,7 +368,7 @@ export function Register<T>({
       {rows.length === 0 && empty}
       {paged && (
         <nav aria-label={`${label}, pages`} className="flex items-center justify-end gap-2 border-t border-line pt-2.5">
-          <span aria-live="polite" className="mr-auto text-xs text-ink-2 tabular-nums">{at.first + 1}–{at.end} of {rows.length}</span>
+          <span aria-live="polite" className="mr-auto text-xs text-ink-2 tabular-nums">{at.first + 1}–{at.end} of {entries.length}</span>
           <PageButton off={at.page === 0} onPress={() => setPage(at.page - 1)}>Previous</PageButton>
           <PageButton off={at.page === at.pages - 1} onPress={() => setPage(at.page + 1)}>Next</PageButton>
         </nav>

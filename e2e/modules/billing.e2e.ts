@@ -2,6 +2,7 @@ import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
 import { faintPaperText, tinyPaperText } from '../support/paper';
+import { typeSignatory } from '../support/signatory';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
 // and 010099-2026 sent (due Nov 5), so a new statement is 010100-2026. Bill to is typed; a directory client's name brings
@@ -494,12 +495,12 @@ test('prints who prepared, checked and approved the statement', async ({ app, sc
   const paper = screen.getByRole('article', 'Billing statement 010100-2026');
 
   // Before any statement names them, the signatories are Company Details'.
-  await expect(form.getByRole('textbox', 'Prepared by')).toHaveValue('D. Lazaro');
-  await expect(form.getByRole('textbox', 'Checked by')).toHaveValue('Accounting');
-  await expect(form.getByRole('textbox', 'Approved by')).toHaveValue('CEO');
-  await form.getByRole('textbox', 'Checked by').fill('Mark Anthony Santos');
+  await expect(form.getByRole('combobox', 'Prepared by')).toHaveText('D. Lazaro');
+  await expect(form.getByRole('combobox', 'Checked by')).toHaveText('Accounting');
+  await expect(form.getByRole('combobox', 'Approved by')).toHaveText('CEO');
+  await typeSignatory(screen, form, 'Checked by', 'Mark Anthony Santos');
   await form.getByRole('textbox', "Checker's position").fill('Finance Manager');
-  await form.getByRole('textbox', 'Approved by').fill('Brian Sy');
+  await typeSignatory(screen, form, 'Approved by', 'Brian Sy');
   await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
 
   // Each signatory's name prints over their position.
@@ -514,9 +515,9 @@ test('prints who prepared, checked and approved the statement', async ({ app, sc
   await expect(screen.getByRole('dialog', '010100-2026 saved and marked as sent.')).toBeVisible();
 
   // The next statement is checked and approved by the same people, in the same positions.
-  await expect(form.getByRole('textbox', 'Checked by')).toHaveValue('Mark Anthony Santos');
+  await expect(form.getByRole('combobox', 'Checked by')).toHaveText('Mark Anthony Santos');
   await expect(form.getByRole('textbox', "Checker's position")).toHaveValue('Finance Manager');
-  await expect(form.getByRole('textbox', 'Approved by')).toHaveValue('Brian Sy');
+  await expect(form.getByRole('combobox', 'Approved by')).toHaveText('Brian Sy');
   await expect(form.getByRole('textbox', "Approver's position")).toHaveValue('Chief Executive Officer');
 });
 

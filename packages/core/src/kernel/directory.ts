@@ -15,6 +15,24 @@ export const nameOf = (s: TerminalState, code: string) => recordOf(s, code)?.nam
 export const payees = (s: TerminalState) => [...recordsOf(s, 'Vendor'), ...recordsOf(s, 'Client'), ...recordsOf(s, 'Employee')];
 
 /**
+ * The names a signatory can be picked from: every employee in the directory, and `others` (names already signing,
+ * such as Company Details' and those on saved documents). Each name once, whatever its capitals or spacing, as first
+ * given; blanks left out; in alphabetical order.
+ */
+export function signatoryNames(s: TerminalState, others: Iterable<string> = []): string[] {
+  const names = new Map<string, string>();
+
+  for (const raw of [...recordsOf(s, 'Employee').map((d) => d.name), ...others]) {
+    const name = raw.trim().replace(/\s+/g, ' ');
+    const key = name.toUpperCase();
+
+    if (name && !names.has(key)) names.set(key, name);
+  }
+
+  return [...names.values()].sort((a, b) => a.localeCompare(b));
+}
+
+/**
  * How a part says that its records name a directory record by code (`ModuleDef.refersTo`). The directory knows no
  * part's records; it asks each installed part.
  */
@@ -132,14 +150,18 @@ export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ct
   };
 }
 
-/** Removes a record that no installed part's records refer to (`references`, from `ModuleDef.refersTo`). */
-export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx, references: readonly Reference[]): Change<DirectoryRecord> {
+/**
+ * Removes a record. One that an installed part's records refer to (`references`, from `ModuleDef.refersTo`) is refused
+ * unless `anyway`, given once the person has been told what names it: those records keep what was saved on them, and
+ * where they name it only by its code, they show the code from then on.
+ */
+export function removeDirectoryRecord(s: TerminalState, code: string, ctx: Ctx, references: readonly Reference[], anyway = false): Change<DirectoryRecord> {
   const d = recordOf(s, code);
 
   if (!d) throw new KeystoneError(`${code} is not in the directory.`);
   const used = usedBy(s, code, references);
 
-  if (used.length) throw new KeystoneError(`${code} is used by ${used.join(', ')} records and cannot be removed.`);
+  if (used.length && !anyway) throw new KeystoneError(`${code} is used by ${used.join(', ')} records and cannot be removed.`);
 
   return {
     state: logged({ ...s, dir: s.dir.filter((x) => x.code !== code) }, DIRECTORY_TAG, `${code} ${d.name} removed from the directory.`, ctx),

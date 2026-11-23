@@ -79,6 +79,18 @@ function Directory() {
   // Each module reads everything it has saved to answer, so they are asked once for a state and the rows look here.
   const used = useMemo(() => usedByCode(state, references), [state, references]);
   const usedBy = (code: string) => used.get(code) ?? [];
+
+  // What removing records does: those nothing names go quietly; for one a document names, say which and what it keeps.
+  const removing = (picked: DirectoryRecord[]) => {
+    const names = picked.map((d) => d.name).join(', ');
+    const inUse = picked.filter((d) => usedBy(d.code).length);
+    const tags = [...new Set(inUse.flatMap((d) => usedBy(d.code)))].join(', ');
+
+    return inUse.length
+      ? `${names} ${picked.length === 1 ? 'is' : 'are'} removed from the directory. ${inUse.length === picked.length && picked.length === 1 ? 'It is' : `${inUse.map((d) => d.code).join(', ')} ${inUse.length === 1 ? 'is' : 'are'}`} named on ${tags} records: they keep what was saved on them, and show the code where they name ${inUse.length === 1 ? 'it' : 'them'} only by code.`
+      : `${names} ${picked.length === 1 ? 'is' : 'are'} removed from the directory. Nothing refers to ${picked.length === 1 ? 'it' : 'them'} yet, so no document changes.`;
+  };
+
   const connector = (id: string) => registry.connectors.find((c) => c.id === id);
   const sourceName = (id: string) => connector(id)?.name ?? id;
 
@@ -154,24 +166,19 @@ function Directory() {
             { label: 'Edit…', onSelect: () => setEditing(directoryDraftOf(d)) },
             { label: 'Copy code', onSelect: () => void navigator.clipboard?.writeText(d.code) },
             {
-              label: 'Remove…', danger: true, disabled: usedBy(d.code).length > 0,
-              onSelect: () => confirm({ title: `Remove ${d.code}?`, body: `${d.name} is removed from the directory. Nothing refers to it yet, so no document changes.`, confirm: 'Remove record', danger: true, onConfirm: () => run((s, c) => removeDirectoryRecord(s, d.code, c, references)) }),
+              label: 'Remove…', danger: true,
+              onSelect: () => confirm({ title: `Remove ${d.code}?`, body: removing([d]), confirm: 'Remove record', danger: true, onConfirm: () => run((s, c) => removeDirectoryRecord(s, d.code, c, references, true)) }),
             },
           ]}
-          bulk={(picked, clear): RowAction[] => {
-            // A record a document names stays: only the ones nothing refers to can go.
-            const free = picked.filter((d) => !usedBy(d.code).length);
-
-            return [{
-              label: `Remove (${free.length})…`, danger: true, disabled: !free.length,
-              onSelect: () => confirm({
-                title: `Remove ${count(free.length, 'record')}?`,
-                body: `${free.map((d) => d.name).join(', ')} ${free.length === 1 ? 'is' : 'are'} removed from the directory.${free.length < picked.length ? ` ${count(picked.length - free.length, 'record')} a document names ${picked.length - free.length === 1 ? 'stays' : 'stay'}.` : ''}`,
-                confirm: 'Remove records', danger: true,
-                onConfirm: () => { if (run((s, c) => changeEach(s, free.map((d) => d.code), (x, code) => removeDirectoryRecord(x, code, c, references), (r) => `${count(r.length, 'record')} removed.`)).ok) clear(); },
-              }),
-            }];
-          }}
+          bulk={(picked, clear): RowAction[] => [{
+            label: `Remove (${picked.length})…`, danger: true,
+            onSelect: () => confirm({
+              title: `Remove ${count(picked.length, 'record')}?`,
+              body: removing(picked),
+              confirm: 'Remove records', danger: true,
+              onConfirm: () => { if (run((s, c) => changeEach(s, picked.map((d) => d.code), (x, code) => removeDirectoryRecord(x, code, c, references, true), (r) => `${count(r.length, 'record')} removed.`)).ok) clear(); },
+            }),
+          }]}
           empty={<EmptyState text={q ? `Nothing matches “${query}”.` : 'No records of this type yet.'} action={q ? <Button size="sm" onClick={() => setQuery('')}>Clear search</Button> : <Button size="sm" kind="primary" onClick={() => setEditing(newDirectoryDraft(filter === 'All' ? 'Vendor' : filter))}>Add one</Button>} />}
         />
       </Panel>

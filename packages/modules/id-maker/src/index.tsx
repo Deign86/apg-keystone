@@ -2,7 +2,7 @@ import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sec
 import { useCallback, useRef, useState } from 'react';
 import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
 import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
-import { useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
+import { SignatoryPicker, useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
 /** The select's value for "no directory record"; Base UI treats an empty value as unselected. */
@@ -141,7 +141,7 @@ function IDMaker() {
               <Field label="Emergency contact"><TextInput placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
               <Field label="Contact number"><TextInput type="tel" placeholder="09XX XXX XXXX" value={draft.iceNo} onChange={(iceNo) => setDraft({ ...draft, iceNo })} /></Field>
             </FieldRow>
-            <Field label="Authorized signatory"><TextInput value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} /></Field>
+            <SignatoryPicker label="Authorized signatory" names={state.ids.map((i) => i.signatory)} value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} />
           </FormCard>
         }
         preview={<div className="overflow-hidden rounded-card border border-line"><IDCardSheet ref={sheet} card={{ ...idOf(draft), no: draft.editing ?? draft.no }} photo={photo} company={companyOf(state)} /></div>}

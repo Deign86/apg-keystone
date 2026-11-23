@@ -189,13 +189,9 @@ test('opens a record from its row, saves it under the same code and type, and lo
   await expect(entries.getByText('V-002 Manila Water Company updated.')).toBeVisible();
 });
 
-test('removes an unused record after asking, and refuses one a document uses', async ({ app, screen }) => {
+test('removes an unused record after asking, and one a document uses after saying which documents name it', async ({ app, screen }) => {
   await app.open('/#directory');
   const directory = screen.getByRole('table', 'Directory');
-
-  await directory.getByRole('button', 'Actions for V-001').tap();
-  await expect(screen.getByRole('menuitem', 'Remove…')).toBeDisabled();
-  await screen.getByRole('menuitem', 'Edit…').press('Escape');
 
   await directory.getByRole('button', 'Actions for V-002').tap();
   await screen.getByRole('menuitem', 'Remove…').tap();
@@ -204,6 +200,18 @@ test('removes an unused record after asking, and refuses one a document uses', a
 
   await expect(directory.getByRole('row', /^V-002 /)).toBeHidden();
   await expect(screen.getByRole('button', 'Vendors 3')).toBeVisible();
+
+  // A voucher names V-001: it can still go, once the person is told what keeps naming it.
+  await directory.getByRole('button', 'Actions for V-001').tap();
+  await screen.getByRole('menuitem', 'Remove…').tap();
+  const used = screen.getByRole('alertdialog', 'Remove V-001?');
+
+  await expect(used.getByText(/It is named on CV records: they keep what was saved on them/)).toBeVisible();
+  await used.getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await used.getByRole('button', 'Remove record').tap();
+  await expect(screen.getByRole('dialog', 'V-001 removed.')).toBeVisible();
+  await expect(directory.getByRole('row', /^V-001 /)).toBeHidden();
+  await expect(screen.getByRole('button', 'Vendors 2')).toBeVisible();
 });
 
 test('says what removing a record does, keeps it on cancel, and logs the removal', async ({ app, screen }) => {

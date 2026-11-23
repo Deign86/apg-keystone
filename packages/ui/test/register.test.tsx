@@ -100,3 +100,42 @@ describe('Register', () => {
     expect(bulk).toHaveBeenLastCalledWith(expect.arrayContaining([expect.objectContaining({ no: '888-001' }), expect.objectContaining({ no: '888-011' })]), expect.any(Function));
   });
 });
+
+describe('Register with rows grouped', () => {
+  const grouped: Row[] = [
+    { no: '888-001', payee: 'MERALCO' }, { no: '888-002', payee: 'PLDT' }, { no: '888-003', payee: 'MERALCO' }, { no: '888-004', payee: 'MERALCO' },
+  ];
+
+  const byPayee = { key: (r: Row) => r.payee, label: (rs: Row[]) => `${rs[0].payee}, ${rs.length} vouchers`, summary: (rs: Row[]) => rs[0].payee };
+
+  it('folds rows of one kind into one row at the place of the first, which opens to show them', () => {
+    const tick = vi.fn();
+
+    render(<Register label="Vouchers" columns={columns} rows={grouped} rowKey={(r) => r.no} group={byPayee} bulk={(picked) => {
+      tick(picked.map((r) => r.no));
+
+      return [];
+    }} empty={null} />);
+    const fold = screen.getByRole('button', { name: 'MERALCO, 3 vouchers' });
+
+    expect(fold.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('cell', { name: '888-003' })).toBeNull();
+    expect(screen.queryByRole('cell', { name: '888-002' })).not.toBeNull();
+
+    fireEvent.click(fold);
+    expect(fold.getAttribute('aria-expanded')).toBe('true');
+    // The fold's own row, then its rows, then the next row.
+    expect(shown().slice(1)).toEqual(['888-001', '888-003', '888-004', '888-002']);
+
+    // The fold's box ticks every row in it.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select MERALCO, 3 vouchers' }));
+    expect(tick).toHaveBeenLastCalledWith(['888-001', '888-003', '888-004']);
+  });
+
+  it('opens the fold that holds the row open beside the register, and pages by folds', () => {
+    render(<Register label="Vouchers" columns={columns} rows={grouped} rowKey={(r) => r.no} group={byPayee} current="888-004" pageSize={1} empty={null} />);
+
+    expect(screen.getByRole('button', { name: 'MERALCO, 3 vouchers' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('navigation', { name: 'Vouchers, pages' }).textContent).toContain('1–1 of 2');
+  });
+});

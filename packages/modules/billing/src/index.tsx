@@ -2,7 +2,7 @@ import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenH
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
 import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
-import { BankAccountPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { BankAccountPicker, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
 const DRAFT = `${ID}.draft`;
@@ -42,6 +42,8 @@ function PayInto({ draft, setDraft }: { draft: StatementDraft; setDraft: (d: Sta
 
 function Billing() {
   const { state, ctx, run, files, notify } = useKeystone();
+  // Everyone who has signed a statement, to pick again.
+  const signed = state.bs.flatMap((b) => [b.prepared ?? '', b.checked ?? '', b.approved ?? '']);
   const app = useModuleApp();
   const accounts = keptAccounts(app);
   const confirm = useConfirm();
@@ -177,15 +179,15 @@ function Billing() {
                     {/* Each signatory's name over their position, as the statement prints them. */}
                     <FieldRow min={120}>
                       <div className="flex min-w-0 flex-col gap-2.5">
-                        <Field label="Prepared by"><TextInput value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} /></Field>
+                        <SignatoryPicker label="Prepared by" names={signed} value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} />
                         <Field label="Preparer's position"><TextInput value={draft.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
                       </div>
                       <div className="flex min-w-0 flex-col gap-2.5">
-                        <Field label="Checked by"><TextInput value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} /></Field>
+                        <SignatoryPicker label="Checked by" names={signed} value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} />
                         <Field label="Checker's position"><TextInput value={draft.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
                       </div>
                       <div className="flex min-w-0 flex-col gap-2.5">
-                        <Field label="Approved by"><TextInput value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} /></Field>
+                        <SignatoryPicker label="Approved by" names={signed} value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} />
                         <Field label="Approver's position"><TextInput value={draft.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
                       </div>
                     </FieldRow>

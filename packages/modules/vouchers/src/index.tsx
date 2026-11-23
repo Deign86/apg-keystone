@@ -1,11 +1,11 @@
-import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, StatusPill, Tabs, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, StatusPill, Tabs, TextInput, useConfirm, type Column, type RowAction, type RowGroup } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
+  approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
   voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
-import { BankAccountPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { BankAccountPicker, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
@@ -76,6 +76,8 @@ function Vouchers() {
   };
 
   const register = voucherRegister(state, ctx);
+  // Everyone who has signed a voucher, to pick again.
+  const signed = useMemo(() => state.cv.flatMap((v) => [v.prepared, v.checked, v.approved]), [state.cv]);
 
   const toForm = () => setView('entry');
 
@@ -113,6 +115,19 @@ function Vouchers() {
     { key: 'status', header: 'Status', width: 150, align: 'right', cell: (v) => <StatusPill status={v.status} tone={voucherTone(v.status)} /> },
   ];
 
+  // Vouchers to the same payee fold into one row that opens to show them, so a payee paid often takes one line.
+  const byPayee: RowGroup<Voucher> = {
+    key: (v) => payeeKey(state, v),
+    label: (vs) => payeeFoldLabel(state, vs),
+    summary: (vs) => (
+      <>
+        <span className="truncate font-semibold">{caps(payeeOf(state, vs[0]).name)}</span>
+        <span className="shrink-0 rounded-full bg-surface-2 px-2 text-xs font-semibold text-ink-2 tabular-nums">{count(vs.length, 'voucher')}</span>
+        <span className="ml-auto shrink-0 font-semibold tabular-nums">{peso(sumCentavos(vs, voucherTotal))}</span>
+      </>
+    ),
+  };
+
   return (
     <>
       <ScreenHeader
@@ -142,6 +157,7 @@ function Vouchers() {
                   bulk={bulk}
                   current={draft.editing}
                   pageSize={PAGE_SIZE}
+                  group={byPayee}
                   empty={<EmptyState text={register.earlier.length ? 'Nothing open and nothing yet this month.' : 'No vouchers yet.'} action={<Button size="sm" kind="primary" onClick={toForm}>Write {register.earlier.length ? 'one' : 'the first one'}</Button>} />}
                 />
                 {/* Earlier months' released and void vouchers, folded away, newest month first. */}
@@ -155,7 +171,7 @@ function Vouchers() {
                       <span className="text-xs text-ink-2 tabular-nums">{count(m.vouchers.length, 'voucher')} · {peso(m.total)}</span>
                     </summary>
                     <div className="mt-2">
-                      <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} current={draft.editing} pageSize={PAGE_SIZE} empty={null} />
+                      <Register label={`Vouchers, ${m.label}`} columns={columns} rows={m.vouchers} rowKey={(v) => v.no} onOpen={open} actions={actions} bulk={bulk} current={draft.editing} pageSize={PAGE_SIZE} group={byPayee} empty={null} />
                     </div>
                   </details>
                 ))}
@@ -224,15 +240,15 @@ function Vouchers() {
                       {/* Each signatory's name over their position, as the voucher prints them. */}
                       <FieldRow min={120}>
                         <div className="flex min-w-0 flex-col gap-2.5">
-                          <Field label="Prepared by"><TextInput value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} /></Field>
+                          <SignatoryPicker label="Prepared by" names={signed} value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} />
                           <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
                         </div>
                         <div className="flex min-w-0 flex-col gap-2.5">
-                          <Field label="Audited by"><TextInput value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} /></Field>
+                          <SignatoryPicker label="Audited by" names={signed} value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} />
                           <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
                         </div>
                         <div className="flex min-w-0 flex-col gap-2.5">
-                          <Field label="Approved by"><TextInput value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} /></Field>
+                          <SignatoryPicker label="Approved by" names={signed} value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} />
                           <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
                         </div>
                       </FieldRow>
