@@ -74,6 +74,14 @@ test('HR sets each employee\'s own pay, and it needs a daily rate', async ({ app
 
   await form.getByRole('button', 'Save pay setup').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter Juan Miguel P. Reyes\'s daily rate.');
+  // The field it is about is marked and has the focus, and typing in it clears the mark.
+  const daily = form.getByRole('textbox', 'Daily rate');
+
+  await expect(daily).toHaveAttribute('aria-invalid', 'true');
+  await expect(daily).toBeFocused();
+  await expect(form.getByRole('textbox', 'Employee no.')).not.toHaveAttribute('aria-invalid', 'true');
+  await daily.fill('760');
+  await expect(daily).not.toHaveAttribute('aria-invalid', 'true');
 
   await fillPay(form, { ...JUAN, SSS: '450' });
   await expect(screen.getByRole('dialog', 'Pay setup saved for Juan Miguel P. Reyes.')).toBeVisible();
@@ -107,6 +115,8 @@ test('edits pay from the row menu, refuses a rate it cannot read and an employee
   await form.getByRole('textbox', 'Daily rate').fill('seven hundred');
   await form.getByRole('button', 'Save pay setup').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the daily rate as an amount in pesos.');
+  await expect(form.getByRole('textbox', 'Daily rate')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Daily rate')).toBeFocused();
 
   await fillPay(form, { ...JUAN, Bank: 'BDO', 'Account no.': '0012-3456-7890' });
   await expect(setups.getByRole('row', /Juan Miguel P\. Reyes/).getByRole('cell', 'BDO')).toBeVisible();
@@ -127,9 +137,13 @@ test('edits pay from the row menu, refuses a rate it cannot read and an employee
   await form.getByRole('textbox', 'Daily rate').fill('900');
   await form.getByRole('button', 'Save pay setup').tap();
   await expect(form.getByRole('alert')).toHaveText('APGCO-0013 is already the employee number of Juan Miguel P. Reyes.');
+  await expect(employeeNo).toHaveAttribute('aria-invalid', 'true');
+  await expect(employeeNo).toBeFocused();
+  await expect(form.getByRole('textbox', 'Daily rate')).not.toHaveAttribute('aria-invalid', 'true');
 
   // Anyone without a bank is paid in cash.
   await employeeNo.fill('APGCO-0021');
+  await expect(employeeNo).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Save pay setup').tap();
   await expect(form).toBeHidden();
   await expect(setups.getByRole('row', /Angelica S\. Bautista/).getByRole('cell', 'Cash')).toBeVisible();

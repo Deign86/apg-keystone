@@ -7,7 +7,8 @@ What each new voucher, statement and ID starts from. The company itself, its nam
 ## Owns
 - `src/rules.ts`: changing what documents start from. Tested in `test/rules.test.ts`.
   - **Saving** keeps each line with single spaces; payment instructions and the closing note keep their lines. Days
-    to pay (0–365) and years an ID is valid (0–10) are whole numbers, blank for not set.
+    to pay (0–365) and years an ID is valid (0–10) are whole numbers, blank for not set; a refusal names the field
+    it is about, which the form marks.
   - **Signed in, only a CEO saves them;** staff see them read-only. firestore.rules hold the same: in the cloud the
     details are one document, `keystone/apg/company/details`, that only a CEO writes. Where nobody signs in (the
     records on one computer), whoever uses it may.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
   canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeFoldLabel, payeeKey, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
@@ -63,8 +64,8 @@ describe('check vouchers', () => {
     // A number outside the series is kept too, and leaves the series' count alone.
     expect(saveVoucher(s, { ...d, no: 'CV-2027-0001', typedNo: true }, ctx).record.no).toBe('CV-2027-0001');
 
-    expect(() => saveVoucher(typed.state, { ...d, no: '888-120', typedNo: true }, ctx)).toThrow('CV No. 888-120 is already used. The next free one is 888-121.');
-    expect(() => saveVoucher(s, { ...d, no: 'CV-2026-0141', typedNo: true }, ctx)).toThrow('CV No. CV-2026-0141 is already used. The next free one is 888-001.');
+    expect(refusalOf(() => saveVoucher(typed.state, { ...d, no: '888-120', typedNo: true }, ctx))).toEqual({ error: 'CV No. 888-120 is already used. The next free one is 888-121.', fields: [] });
+    expect(refusalOf(() => saveVoucher(s, { ...d, no: 'CV-2026-0141', typedNo: true }, ctx))).toEqual({ error: 'CV No. CV-2026-0141 is already used. The next free one is 888-001.', fields: [] });
     // Cleared, it takes the next number.
     expect(saveVoucher(s, { ...d, no: '  ', typedNo: true }, ctx).record.no).toBe('888-001');
   });
@@ -93,7 +94,7 @@ describe('check vouchers', () => {
     expect(r.record).toMatchObject({ payee: 'PASIG OFFICE DEPOT', address: 'Shaw Blvd., Pasig City' });
     expect(payeeOf(r.state, r.record)).toEqual({ name: 'PASIG OFFICE DEPOT', address: 'Shaw Blvd., Pasig City' });
     expect(saveVoucher(state(), { ...d, address: ' ' }, ctx).record).not.toHaveProperty('address');
-    expect(() => saveVoucher(state(), { ...d, payee: ' ' }, ctx)).toThrow('Enter the payee.');
+    expect(refusalOf(() => saveVoucher(state(), { ...d, payee: ' ' }, ctx))).toEqual({ error: 'Enter the payee.', fields: ['payee'] });
   });
 
   it('reads a voucher saved with a directory code through the directory, and loads it into the form as text', () => {
@@ -134,7 +135,7 @@ describe('check vouchers', () => {
   });
 
   it('refuses an empty voucher', () => {
-    expect(() => saveVoucher(state(), newVoucher(state(), ctx), ctx)).toThrow('Add at least one particular with an amount.');
+    expect(refusalOf(() => saveVoucher(state(), newVoucher(state(), ctx), ctx))).toEqual({ error: 'Add at least one particular with an amount.', fields: ['lines.0.amount'] });
   });
 
   it('edits in place while awaiting approval, and copies one already approved', () => {
@@ -242,8 +243,8 @@ describe('check vouchers', () => {
     expect(r.record).not.toHaveProperty('checkDate');
     expect(r.state.cv).toHaveLength(s.cv.length + 1);
     expect(r.state.log[0].text).toBe('888-001 for MANILA WATER COMPANY saved and routed for approval (₱48,230.55).');
-    expect(() => voucherDrafts.draft(s, { payee: 'V-999', amount: 100, particulars: 'Nothing' }, ctx)).toThrow('Choose a payee from the directory.');
-    expect(() => voucherDrafts.draft(s, { payee: 'V-002', amount: 0, particulars: 'Nothing' }, ctx)).toThrow('Add at least one particular with an amount.');
+    expect(refusalOf(() => voucherDrafts.draft(s, { payee: 'V-999', amount: 100, particulars: 'Nothing' }, ctx))).toEqual({ error: 'Choose a payee from the directory.', fields: [] });
+    expect(refusalOf(() => voucherDrafts.draft(s, { payee: 'V-002', amount: 0, particulars: 'Nothing' }, ctx))).toEqual({ error: 'Add at least one particular with an amount.', fields: ['lines.0.amount'] });
     // The CEO's decision drafts it, and accounting still completes it: it waits for approval like any other.
     const ceo: Ctx = { ...ctx, who: { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' } };
     expect(voucherDrafts.draft(s, { payee: 'V-002', amount: 100, particulars: 'Venue deposit' }, ceo).record.status).toBe('For Approval');

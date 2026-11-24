@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { usedBy, type Ctx } from '@keystone/core';
-import { ID_STATUSES, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, refersTo, withEmployee } from '../src/rules';
+import { ID_STATUSES, idDraftOf, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, refersTo, withEmployee } from '../src/rules';
 import { verificationCells } from '../src/verification';
 import { sampleState } from '@keystone/core/sample';
 
@@ -24,6 +25,16 @@ describe('ID maker', () => {
     expect(r.message).toBe('APG-2026-0031 issued and queued for printing.');
     expect(usedBy(s, 'E-004', [refersTo])).toEqual([]);
     expect(usedBy(r.state, 'E-004', [refersTo])).toEqual(['ID']);
+  });
+
+  it('refuses a card it cannot print, naming the field each refusal is about', () => {
+    const s = state();
+    const d = { ...newID(s, ctx), name: 'Paolo R. Santiago' };
+
+    expect(refusalOf(() => issueID(s, { ...d, name: ' ' }, ctx))).toEqual({ error: 'Enter the name to print on the card.', fields: ['name'] });
+    expect(refusalOf(() => issueID(s, { ...d, valid: '' }, ctx))).toEqual({ error: 'Enter the date the card is valid until.', fields: ['valid'] });
+    expect(refusalOf(() => issueID(s, { ...d, valid: d.issued }, ctx))).toEqual({ error: 'The card must be valid past the day it is issued.', fields: ['valid'] });
+    expect(refusalOf(() => issueID(s, idDraftOf(s.ids.find((i) => i.no === 'APG-2026-0028')!), ctx))).toEqual({ error: 'APG-2026-0028 has been printed. Issue a new ID instead.', fields: [] });
   });
 
   it('expires cards on open', () => {

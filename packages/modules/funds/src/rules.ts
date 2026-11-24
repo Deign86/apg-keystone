@@ -263,14 +263,14 @@ function expensesTyped(lines: LineDraft[]): Expense[] {
 
     if (!desc && !l.amount.trim()) return [];
 
-    if (!desc) throw new KeystoneError(`Say what line ${i + 1} is for.`);
+    if (!desc) throw new KeystoneError(`Say what line ${i + 1} is for.`, `lines.${i}.desc`);
 
-    if (amount <= 0) throw new KeystoneError(`Enter the amount for line ${i + 1}, ${desc}.`);
+    if (amount <= 0) throw new KeystoneError(`Enter the amount for line ${i + 1}, ${desc}.`, `lines.${i}.amount`);
 
     return [{ desc, amt: toPesos(amount) }];
   });
 
-  if (!expenses.length) throw new KeystoneError('List the expenses, each with its amount.');
+  if (!expenses.length) throw new KeystoneError('List the expenses, each with its amount.', 'lines.0.desc');
 
   return expenses;
 }
@@ -279,11 +279,11 @@ function expensesTyped(lines: LineDraft[]): Expense[] {
 function accountTyped(a: TransferAccount): TransferAccount {
   const account = { bank: a.bank.trim(), branch: a.branch.trim(), name: a.name.trim(), number: a.number.trim() };
 
-  if (!account.bank) throw new KeystoneError('Enter the bank of the account to transfer to.');
+  if (!account.bank) throw new KeystoneError('Enter the bank of the account to transfer to.', 'account.bank');
 
-  if (!account.name) throw new KeystoneError('Enter the account name, as the bank holds it.');
+  if (!account.name) throw new KeystoneError('Enter the account name, as the bank holds it.', 'account.name');
 
-  if (!/\d/.test(account.number)) throw new KeystoneError('Enter the account number to transfer to.');
+  if (!/\d/.test(account.number)) throw new KeystoneError('Enter the account number to transfer to.', 'account.number');
 
   return account;
 }
@@ -317,17 +317,17 @@ export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change
   const purpose = d.purpose.trim();
   const requester = ctx.who?.name ?? d.requester.trim();
 
-  if (!purpose) throw new KeystoneError('Say what the money is for.');
+  if (!purpose) throw new KeystoneError('Say what the money is for.', 'purpose');
   const lines = expensesTyped(d.lines);
   const account = d.pay === 'transfer' ? accountTyped(d.account) : undefined;
 
-  if (d.pay === 'check' && !recordOf(s, d.payee)) throw new KeystoneError('Choose a payee from the directory.');
+  if (d.pay === 'check' && !recordOf(s, d.payee)) throw new KeystoneError('Choose a payee from the directory.', 'payee');
 
-  if (d.when === 'date' && !isISODate(d.by)) throw new KeystoneError('Choose the date it must be settled by, or ASAP.');
+  if (d.when === 'date' && !isISODate(d.by)) throw new KeystoneError('Choose the date it must be settled by, or ASAP.', 'by');
 
-  if (d.when === 'date' && d.by < today(ctx)) throw new KeystoneError(`${shortDate(d.by)} has passed. Choose a later date, or ASAP.`);
+  if (d.when === 'date' && d.by < today(ctx)) throw new KeystoneError(`${shortDate(d.by)} has passed. Choose a later date, or ASAP.`, 'by');
 
-  if (!requester) throw new KeystoneError('Enter your name, so the CEO knows who is asking.');
+  if (!requester) throw new KeystoneError('Enter your name, so the CEO knows who is asking.', 'requester');
 
   const data = dataOf(s);
   const amount = toPesos(sumCentavos(lines, (l) => toCentavos(l.amt)));

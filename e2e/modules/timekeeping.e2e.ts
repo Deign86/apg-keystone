@@ -115,24 +115,38 @@ test('corrects a day with a note, refuses times it cannot read, and leaves the d
   await timeOut.fill('17:00');
   await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the time in as hours and minutes, like 08:00.');
+  // The field each refusal is about is marked and has the focus, and typing in it clears the mark.
+  await expect(timeIn).toHaveAttribute('aria-invalid', 'true');
+  await expect(timeIn).toBeFocused();
+  await expect(timeOut).not.toHaveAttribute('aria-invalid', 'true');
 
   await timeIn.fill('08:10');
+  await expect(timeIn).not.toHaveAttribute('aria-invalid', 'true');
   await timeOut.fill('5 PM');
   await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the time out as hours and minutes, like 17:00.');
+  await expect(timeOut).toHaveAttribute('aria-invalid', 'true');
+  await expect(timeOut).toBeFocused();
+  await expect(timeIn).not.toHaveAttribute('aria-invalid', 'true');
 
   await timeIn.fill('');
   await timeOut.fill('17:00');
+  await expect(timeOut).not.toHaveAttribute('aria-invalid', 'true');
   await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the time in as well as the time out.');
+  await expect(timeIn).toHaveAttribute('aria-invalid', 'true');
+  await expect(timeIn).toBeFocused();
 
   await timeIn.fill('08:10');
   await overtime.fill('20');
   await save.tap();
   await expect(form.getByRole('alert')).toHaveText('Enter overtime as hours, from 0 to 16.');
+  await expect(overtime).toHaveAttribute('aria-invalid', 'true');
+  await expect(overtime).toBeFocused();
 
   // The note is shown in the day's remarks.
   await overtime.fill('');
+  await expect(overtime).not.toHaveAttribute('aria-invalid', 'true');
   const note = form.getByRole('textbox', 'Note');
 
   await note.fill('Badge reader was down');
@@ -220,6 +234,9 @@ test('refuses a time out before the time in', async ({ app, screen }) => {
   await form.getByRole('textbox', 'Time out').fill('08:00');
   await form.getByRole('button', 'Save day').tap();
   await expect(form.getByRole('alert')).toHaveText('The time out must be after the time in.');
+  await expect(form.getByRole('textbox', 'Time out')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Time out')).toBeFocused();
+  await expect(form.getByRole('textbox', 'Time in')).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('keeps the office\'s holidays', async ({ app, screen }) => {
@@ -242,17 +259,26 @@ test('keeps the office\'s holidays', async ({ app, screen }) => {
 test('needs a holiday\'s date and name, and shows the holiday on today\'s board and in the daily time record', async ({ app, screen }) => {
   await app.open('/#timekeeping');
   const form = screen.getByRole('form', 'Add a holiday');
+  const date = form.getByRole('textbox', 'Date');
+  const name = form.getByRole('textbox', 'Holiday');
 
-  // The date starts at today; the name does not.
+  // The date starts at today; the name does not. The field a refusal is about is marked and has the focus.
   await form.getByRole('button', 'Add holiday').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the holiday\'s name.');
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await expect(name).toBeFocused();
+  await expect(date).not.toHaveAttribute('aria-invalid', 'true');
 
-  await form.getByRole('textbox', 'Date').fill('');
-  await form.getByRole('textbox', 'Holiday').fill('All Souls\' Day');
+  await date.fill('');
+  await name.fill('All Souls\' Day');
+  await expect(name).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Add holiday').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the holiday\'s date.');
+  await expect(date).toHaveAttribute('aria-invalid', 'true');
+  await expect(date).toBeFocused();
 
-  await form.getByRole('textbox', 'Date').fill('2026-11-02');
+  await date.fill('2026-11-02');
+  await expect(date).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('combobox', 'Kind').tap();
   await screen.getByRole('option', 'Special non-working day').tap();
   await form.getByRole('button', 'Add holiday').tap();

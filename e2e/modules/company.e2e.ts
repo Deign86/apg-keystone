@@ -57,9 +57,17 @@ test('a computer with nothing saved still has the company, on Home, in the sideb
   const form = screen.getByRole('form', 'Company details');
 
   await expect(form.getByRole('combobox', 'Audited by')).toHaveText('—');
-  await form.getByRole('textbox', 'Days to pay').fill('two weeks');
+  const days = form.getByRole('textbox', 'Days to pay');
+
+  await days.fill('two weeks');
   await form.getByRole('button', 'Save company details').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the days to pay as a whole number from 0 to 365, or leave it blank.');
+  // The field it is about is marked and has the focus, and typing in it clears the mark.
+  await expect(days).toHaveAttribute('aria-invalid', 'true');
+  await expect(days).toBeFocused();
+  await expect(form.getByRole('textbox', 'Years an ID is valid')).not.toHaveAttribute('aria-invalid', 'true');
+  await days.fill('14');
+  await expect(days).not.toHaveAttribute('aria-invalid', 'true');
 
   // A new voucher's letterhead prints the built-in address beside the logo that names the company.
   await app.open('/#vouchers');

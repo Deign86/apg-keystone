@@ -1,4 +1,4 @@
-import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, StatusPill, Tabs, TextInput, useConfirm, type Column, type RowAction, type RowGroup } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, ScreenHeader, StatusPill, Tabs, TextInput, useConfirm, type Column, type Refusal, type RowAction, type RowGroup } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
@@ -35,7 +35,7 @@ function Vouchers() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx, bank));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
   const locked = editing ? voucherLock(editing) : null;
@@ -52,7 +52,7 @@ function Vouchers() {
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveVoucher(s, draft, c, asNew));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     // Number the next blank voucher from the state after the save.
     if (r.ok) setDraft(newVoucher(r.state, ctx, bank));
@@ -211,7 +211,7 @@ function Vouchers() {
                         </Field>
                         <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
                       </FieldRow>
-                      <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
+                      <Field name="payee" label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
                       <Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
                       <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
                       <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>

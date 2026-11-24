@@ -1,4 +1,4 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
 import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
@@ -49,7 +49,7 @@ function Billing() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newStatement(state, ctx, accounts));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.bs.find((b) => b.no === draft.editing) : undefined;
   const live = statementOf(draft);
@@ -58,7 +58,7 @@ function Billing() {
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveStatement(s, draft, c, asNew));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     if (r.ok) setDraft(newStatement(r.state, ctx, keptAccounts(app, r.state)));
   }, [run, draft, ctx, setDraft, app]);
@@ -147,9 +147,9 @@ function Billing() {
                     </FieldRow>
                     <FieldRow>
                       <Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field>
-                      <Field label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field>
+                      <Field name="due" label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field>
                     </FieldRow>
-                    <Field label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
+                    <Field name="client" label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
                       <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                     </Field>
                     <Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
@@ -160,7 +160,7 @@ function Billing() {
                       <Checkbox checked={draft.ewt} onChange={(ewt) => setDraft({ ...draft, ewt })}>Less {draft.ewtRate}% expanded withholding tax</Checkbox>
                     </div>
                     {draft.ewt && (
-                      <Field label="EWT rate" hint="2% on services; 5% on rentals and professional fees.">
+                      <Field name="ewtRate" label="EWT rate" hint="2% on services; 5% on rentals and professional fees.">
                         <SelectInput
                           value={String(draft.ewtRate)}
                           onChange={(rate) => setDraft({ ...draft, ewtRate: Number(rate) })}

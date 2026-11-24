@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { peso, withModuleData, type AttendanceTally, type Ctx, type EmployeeAttendance } from '@keystone/core';
 import { type PaySetup } from '../src/pay';
 import {
@@ -80,20 +81,20 @@ describe('the pay setup HR keeps', () => {
 
   it('needs a daily rate, sensible amounts and a unique employee number', () => {
     const blank = setupDraftOf(state(), 'E-001');
-    expect(() => saveSetup(state(), blank, ctx)).toThrow('Enter Juan Miguel P. Reyes\'s daily rate.');
-    expect(() => saveSetup(state(), { ...blank, daily: '760', sss: 'some' }, ctx)).toThrow('Enter the SSS employee share as an amount in pesos.');
-    expect(() => saveSetup(state(), { ...blank, daily: '760', advance: '-5' }, ctx)).toThrow('Enter the salary advance as an amount in pesos.');
-    expect(() => saveSetup(state(), { ...blank, daily: '760', monthly: 'a lot' }, ctx)).toThrow('Enter the monthly pay basis as an amount in pesos.');
-    expect(() => saveSetup(state(), { ...blank, emp: 'V-001', daily: '760' }, ctx)).toThrow('Pick an employee from the directory.');
+    expect(refusalOf(() => saveSetup(state(), blank, ctx))).toEqual({ error: 'Enter Juan Miguel P. Reyes\'s daily rate.', fields: ['daily'] });
+    expect(refusalOf(() => saveSetup(state(), { ...blank, daily: '760', sss: 'some' }, ctx))).toEqual({ error: 'Enter the SSS employee share as an amount in pesos.', fields: ['sss'] });
+    expect(refusalOf(() => saveSetup(state(), { ...blank, daily: '760', advance: '-5' }, ctx))).toEqual({ error: 'Enter the salary advance as an amount in pesos.', fields: ['advance'] });
+    expect(refusalOf(() => saveSetup(state(), { ...blank, daily: '760', monthly: 'a lot' }, ctx))).toEqual({ error: 'Enter the monthly pay basis as an amount in pesos.', fields: ['monthly'] });
+    expect(refusalOf(() => saveSetup(state(), { ...blank, emp: 'V-001', daily: '760' }, ctx))).toEqual({ error: 'Pick an employee from the directory.', fields: ['emp'] });
 
     const s = saveSetup(state(), { ...blank, daily: '760', empNo: 'APGCO-0013' }, ctx).state;
-    expect(() => saveSetup(s, { ...setupDraftOf(s, 'E-002'), daily: '700', empNo: 'apgco-0013' }, ctx)).toThrow('apgco-0013 is already the employee number of Juan Miguel P. Reyes.');
+    expect(refusalOf(() => saveSetup(s, { ...setupDraftOf(s, 'E-002'), daily: '700', empNo: 'apgco-0013' }, ctx))).toEqual({ error: 'apgco-0013 is already the employee number of Juan Miguel P. Reyes.', fields: ['empNo'] });
   });
 
   it('takes an employee off the payroll', () => {
     const s = saveSetup(state(), { ...setupDraftOf(state(), 'E-001'), daily: '760' }, ctx).state;
     expect(dataOf(removeSetup(s, 'E-001', ctx).state).setups).toEqual([]);
-    expect(() => removeSetup(state(), 'E-001', ctx)).toThrow('Juan Miguel P. Reyes is not on the payroll.');
+    expect(refusalOf(() => removeSetup(state(), 'E-001', ctx))).toEqual({ error: 'Juan Miguel P. Reyes is not on the payroll.', fields: [] });
   });
 
   it('reads only what it can trust from the saved data', () => {
@@ -208,10 +209,10 @@ describe('closing a cut-off', () => {
   });
 
   it('refuses to close before the cut-off ends, twice, or with nobody on it', () => {
-    expect(() => closeCutoff(withPay(), oct1, undefined, at(2026, 10, 15, 18))).toThrow('The Oct 1–15, 2026 cut-off ends Oct 15, 2026; close it from Oct 16, 2026.');
-    expect(() => closeCutoff(state(), oct1, undefined, after)).toThrow('Set up pay for at least one employee first.');
+    expect(refusalOf(() => closeCutoff(withPay(), oct1, undefined, at(2026, 10, 15, 18)))).toEqual({ error: 'The Oct 1–15, 2026 cut-off ends Oct 15, 2026; close it from Oct 16, 2026.', fields: [] });
+    expect(refusalOf(() => closeCutoff(state(), oct1, undefined, after))).toEqual({ error: 'Set up pay for at least one employee first.', fields: [] });
     const closed = closeCutoff(withPay(), oct1, undefined, after).state;
-    expect(() => closeCutoff(closed, oct1, undefined, after)).toThrow('The Oct 1–15, 2026 payroll was closed on Oct 16, 2026.');
+    expect(refusalOf(() => closeCutoff(closed, oct1, undefined, after))).toEqual({ error: 'The Oct 1–15, 2026 payroll was closed on Oct 16, 2026.', fields: [] });
   });
 
   it('asks for the last cut-off to be closed, and contributes its figures', () => {

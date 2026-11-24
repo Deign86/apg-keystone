@@ -201,7 +201,7 @@ function pesosIn(d: SetupDraft, field: AmountField): number {
   if (!typed) return 0;
   const c = parseAmount(typed);
 
-  if (c === null || c < 0) throw new KeystoneError(`Enter the ${AMOUNT_WORDS[field]} as an amount in pesos.`);
+  if (c === null || c < 0) throw new KeystoneError(`Enter the ${AMOUNT_WORDS[field]} as an amount in pesos.`, field);
 
   return c / 100;
 }
@@ -228,15 +228,15 @@ export function workedOut(d: SetupDraft, p: Period): WorkedOut {
 export function saveSetup(s: TerminalState, d: SetupDraft, ctx: Ctx): Change<PaySetup> {
   const e = recordOf(s, d.emp);
 
-  if (!e || e.type !== 'Employee') throw new KeystoneError('Pick an employee from the directory.');
+  if (!e || e.type !== 'Employee') throw new KeystoneError('Pick an employee from the directory.', 'emp');
   const daily = pesosIn(d, 'daily');
 
-  if (!daily) throw new KeystoneError(`Enter ${e.name}'s daily rate.`);
+  if (!daily) throw new KeystoneError(`Enter ${e.name}'s daily rate.`, 'daily');
   const data = dataOf(s);
   const empNo = d.empNo.trim();
   const clash = empNo && data.setups.find((x) => x.emp !== d.emp && x.empNo.toLowerCase() === empNo.toLowerCase());
 
-  if (clash) throw new KeystoneError(`${empNo} is already the employee number of ${recordOf(s, clash.emp)?.name ?? clash.emp}.`);
+  if (clash) throw new KeystoneError(`${empNo} is already the employee number of ${recordOf(s, clash.emp)?.name ?? clash.emp}.`, 'empNo');
 
   const setup: PaySetup = {
     emp: d.emp, empNo, daily, monthly: ownIn(d, 'monthly'), incentive: pesosIn(d, 'incentive'), housing: pesosIn(d, 'housing'), special: pesosIn(d, 'special'),

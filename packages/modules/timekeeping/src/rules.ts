@@ -182,7 +182,7 @@ export const employeeAttendance: EmployeeAttendance = { tally };
 function employee(s: TerminalState, emp: string) {
   const e = recordOf(s, emp);
 
-  if (!e || e.type !== 'Employee') throw new KeystoneError('Pick an employee from the directory.');
+  if (!e || e.type !== 'Employee') throw new KeystoneError('Pick an employee from the directory.', 'emp');
 
   return e;
 }
@@ -238,23 +238,23 @@ export function dayDraftOf(s: TerminalState, emp: string, date: ISODate): DayDra
 export function saveDay(s: TerminalState, d: DayDraft, ctx: Ctx): Change<TimeDay> {
   const e = employee(s, d.emp);
 
-  if (!isISODate(d.date)) throw new KeystoneError('Enter the date to correct.');
+  if (!isISODate(d.date)) throw new KeystoneError('Enter the date to correct.', 'date');
 
-  if (d.date > today(ctx)) throw new KeystoneError(`${shortDate(d.date)} has not come yet.`);
+  if (d.date > today(ctx)) throw new KeystoneError(`${shortDate(d.date)} has not come yet.`, 'date');
   const tin = d.in.trim();
   const tout = d.out.trim();
   const ot = d.ot.trim() === '' ? 0 : Number(d.ot);
   const remark = d.note.trim();
 
-  if (tin && !isTime(tin)) throw new KeystoneError('Enter the time in as hours and minutes, like 08:00.');
+  if (tin && !isTime(tin)) throw new KeystoneError('Enter the time in as hours and minutes, like 08:00.', 'in');
 
-  if (tout && !isTime(tout)) throw new KeystoneError('Enter the time out as hours and minutes, like 17:00.');
+  if (tout && !isTime(tout)) throw new KeystoneError('Enter the time out as hours and minutes, like 17:00.', 'out');
 
-  if (tout && !tin) throw new KeystoneError('Enter the time in as well as the time out.');
+  if (tout && !tin) throw new KeystoneError('Enter the time in as well as the time out.', 'in');
 
-  if (tin && tout && minutesOf(tout) <= minutesOf(tin)) throw new KeystoneError('The time out must be after the time in.');
+  if (tin && tout && minutesOf(tout) <= minutesOf(tin)) throw new KeystoneError('The time out must be after the time in.', 'out');
 
-  if (!Number.isFinite(ot) || ot < 0 || ot > 16) throw new KeystoneError('Enter overtime as hours, from 0 to 16.');
+  if (!Number.isFinite(ot) || ot < 0 || ot > 16) throw new KeystoneError('Enter overtime as hours, from 0 to 16.', 'ot');
 
   const data = dataOf(s);
   const day: TimeDay = { emp: d.emp, date: d.date, in: tin, out: tout, ot, note: remark };
@@ -286,9 +286,9 @@ export const newHoliday = (ctx: Ctx): HolidayDraft => ({ date: today(ctx), name:
 export function saveHoliday(s: TerminalState, h: HolidayDraft, ctx: Ctx): Change<Holiday> {
   const name = h.name.trim();
 
-  if (!isISODate(h.date)) throw new KeystoneError('Enter the holiday\'s date.');
+  if (!isISODate(h.date)) throw new KeystoneError('Enter the holiday\'s date.', 'date');
 
-  if (!name) throw new KeystoneError('Enter the holiday\'s name.');
+  if (!name) throw new KeystoneError('Enter the holiday\'s name.', 'name');
   const data = dataOf(s);
   const holiday: Holiday = { date: h.date, name, kind: h.kind };
   const holidays = [...data.holidays.filter((x) => x.date !== h.date), holiday].sort((a, b) => a.date.localeCompare(b.date));

@@ -15,7 +15,8 @@ everything that app is built around:
 
 ## Owns
 - `src/rules.ts`: the office day (8:00 AM to 5:00 PM, Monday to Friday, 12:00 to 1:00 PM unpaid), the weekly grace,
-  time in and out, corrections, holidays, the tally payroll prices, and what it contributes. Tested in
+  time in and out, corrections, holidays, the tally payroll prices, and what it contributes. A refused correction or
+  holiday names the field it is about (`in`, `out`, `ot`, `date`, `name`), which the form marks. Tested in
   `test/rules.test.ts`.
 - `src/index.tsx`: the screen. **Today** lists every employee with a Time in or Time out button. **Daily time
   record** shows one employee's cut-off day by day; opening a past day corrects it (a forgotten time-in or

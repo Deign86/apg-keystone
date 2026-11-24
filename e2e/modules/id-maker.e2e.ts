@@ -80,8 +80,15 @@ test('issues an ID typed by hand, and needs the name', async ({ app, screen }) =
 
   await form.getByRole('button', 'Save and issue').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the name to print on the card.');
+  // The field it is about is marked and has the focus, and typing in it clears the mark.
+  const name = form.getByRole('textbox', 'Name on card');
 
-  await form.getByRole('textbox', 'Name on card').fill('Paolo R. Santiago');
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await expect(name).toBeFocused();
+  await expect(form.getByRole('textbox', 'Valid until')).not.toHaveAttribute('aria-invalid', 'true');
+
+  await name.fill('Paolo R. Santiago');
+  await expect(name).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('textbox', 'Position').fill('Security Officer');
   await form.getByRole('button', 'Save and issue').tap();
 
@@ -98,6 +105,13 @@ test('needs the card to be valid past the day it is issued', async ({ app, scree
 
   await expect(form.getByRole('alert')).toHaveText('The card must be valid past the day it is issued.');
   await expect(screen.getByRole('table', 'Issued IDs').getByRole('row', /^APG-2026-0031 /)).toBeHidden();
+  const valid = form.getByRole('textbox', 'Valid until');
+
+  await expect(valid).toHaveAttribute('aria-invalid', 'true');
+  await expect(valid).toBeFocused();
+  await expect(form.getByRole('textbox', 'Date issued')).not.toHaveAttribute('aria-invalid', 'true');
+  await valid.fill('2027-11-01');
+  await expect(valid).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('edits a card before it is printed, from its row', async ({ app, screen }) => {

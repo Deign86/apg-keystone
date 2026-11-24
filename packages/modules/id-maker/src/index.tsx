@@ -1,4 +1,4 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column, type Refusal, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
 import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
@@ -25,7 +25,7 @@ const DRAFT = `${ID}.draft`;
 function IDMaker() {
   const { state, ctx, run, files, photos, notify } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const photo = usePhoto(draft.photo);
   const editing = draft.editing ? state.ids.find((i) => i.no === draft.editing) : undefined;
@@ -33,7 +33,7 @@ function IDMaker() {
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => issueID(s, draft, c, asNew));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     if (r.ok) setDraft(newID(r.state, ctx));
   }, [run, draft, ctx, setDraft]);
@@ -119,14 +119,14 @@ function IDMaker() {
                 <SelectInput value={draft.emp || MANUAL} onChange={(emp) => setDraft(withEmployee(state, draft, emp === MANUAL ? '' : emp))} options={[{ value: MANUAL, label: 'Type details by hand' }, ...employees.map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))]} />
               </Field>
             </FieldRow>
-            <Field label="Name on card"><TextInput capitalize value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field>
+            <Field name="name" label="Name on card"><TextInput capitalize value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field>
             <FieldRow>
               <Field label="Position"><TextInput value={draft.pos} onChange={(pos) => setDraft({ ...draft, pos })} /></Field>
               <Field label="Department"><TextInput value={draft.dept} onChange={(dept) => setDraft({ ...draft, dept })} /></Field>
             </FieldRow>
             <FieldRow min={130}>
               <Field label="Date issued"><TextInput type="date" value={draft.issued} onChange={(issued) => setDraft({ ...draft, issued })} /></Field>
-              <Field label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field>
+              <Field name="valid" label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field>
               <Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={BLOOD_TYPES.map((b) => ({ value: b, label: b }))} /></Field>
             </FieldRow>
             <div className="flex flex-col gap-1.5">

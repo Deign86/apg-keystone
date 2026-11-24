@@ -32,10 +32,10 @@ from Keystone; `npm run check:boundaries` fails on anything else.
 
 1. A screen calls `run(rule)` with a rule from its own package, for example `saveVoucher` from the vouchers module's
    `src/rules.ts`.
-2. The rule returns the new state, the record and the sentence to show, or throws a `KeystoneError` with the reason.
-   It never mutates anything.
+2. The rule returns the new state, the record and the sentence to show, or throws a `KeystoneError` with the reason
+   and the fields it is about. It never mutates anything.
 3. The store saves `state.json` (or the changed records, in the cloud) about 250ms later and shows the sentence. A refusal is written next to the save
-   button and also shown as a toast.
+   button and also shown as a toast, and the fields it names are marked, the first one focused (docs/adr/0042).
 4. No rule lives in a screen.
 
 ## How Overview and Home know what to show

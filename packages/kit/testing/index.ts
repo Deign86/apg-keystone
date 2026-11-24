@@ -1,3 +1,4 @@
+import { KeystoneError } from '@keystone/core';
 import type { Platform } from '../src/platform';
 
 // The kit's stand-ins for tests (`@keystone/kit/testing`), so a part's screen test does not write its own copy of the
@@ -26,4 +27,20 @@ export function memoryPlatform(saved: string | null = null) {
   };
 
   return { platform, files, opened };
+}
+
+/**
+ * What a rule refused with: its sentence and the fields it named (KeystoneError's fields), or null when it did not
+ * refuse. Anything else it throws is thrown on, so a crash never passes for a refusal.
+ */
+export function refusalOf<T>(rule: () => T): { error: string; fields: readonly string[] } | null {
+  try {
+    rule();
+
+    return null;
+  } catch (e) {
+    if (!(e instanceof KeystoneError)) throw e;
+
+    return { error: e.message, fields: e.fields };
+  }
 }

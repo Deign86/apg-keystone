@@ -6,10 +6,18 @@ import type { Company, CompanyDetails, JsonValue, ModuleTag, TerminalState } fro
 // of a change, the activity log, numbering, and loading a saved state. Nothing here
 // knows about vouchers, statements or IDs.
 
+/**
+ * A rule's refusal: the sentence to show, and the fields it is about, if any (docs/adr/0042). A field is named as the
+ * draft names it (`client`, `sqm`), a line's cell as `lines.<index>.<key>` (`lines.0.amount`), so the screen can mark
+ * the field that is wrong or missing. A refusal about no one field (a number already used, a record gone) names none.
+ */
 export class KeystoneError extends Error {
-  constructor(message: string) {
+  readonly fields: readonly string[];
+
+  constructor(message: string, ...fields: string[]) {
     super(message);
     this.name = 'KeystoneError';
+    this.fields = fields;
   }
 }
 
@@ -18,6 +26,9 @@ export class KeystoneError extends Error {
  * some libraries refuse with a plain sentence, not an Error).
  */
 export const sentenceOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
+
+/** The fields a refusal is about: a KeystoneError's, and none for anything else. */
+export const fieldsOf = (cause: unknown): readonly string[] => (cause instanceof KeystoneError ? cause.fields : []);
 
 /** Who is signed in to the company's records in the cloud: their member document (docs/adr/0009, 0010). */
 export interface Member {

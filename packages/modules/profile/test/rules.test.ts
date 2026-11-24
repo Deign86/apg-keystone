@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { emptyState, type Ctx } from '@keystone/core';
 import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN } from '../src/rules';
 
@@ -11,10 +12,10 @@ describe('your profile', () => {
   });
 
   it('refuses a blank name, one too long, and the name you have', () => {
-    expect(() => checkName('   ', ctx)).toThrow('Enter your name, as Keystone should show it.');
-    expect(() => checkName('x'.repeat(MAX_NAME + 1), ctx)).toThrow(`Keep your name to ${MAX_NAME} characters.`);
+    expect(refusalOf(() => checkName('   ', ctx))).toEqual({ error: 'Enter your name, as Keystone should show it.', fields: ['name'] });
+    expect(refusalOf(() => checkName('x'.repeat(MAX_NAME + 1), ctx))).toEqual({ error: `Keep your name to ${MAX_NAME} characters.`, fields: ['name'] });
     expect(checkName('x'.repeat(MAX_NAME), ctx)).toHaveLength(MAX_NAME);
-    expect(() => checkName(' Deign  Lazaro ', ctx)).toThrow('That is already your name.');
+    expect(refusalOf(() => checkName(' Deign  Lazaro ', ctx))).toEqual({ error: 'That is already your name.', fields: ['name'] });
   });
 
   it('has nothing to change with nobody signed in', () => {

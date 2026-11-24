@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { withModuleData, type Ctx, type TerminalState } from '@keystone/core';
 import {
   clock12, dataOf, daysOf, duration, employeeAttendance, missingTimeOuts, removeHoliday, saveDay, saveHoliday, tally, timeIn,
@@ -38,9 +39,9 @@ describe('clocking in and out', () => {
 
   it('refuses a second time-in, a time-out before a time-in, and anyone not an employee', () => {
     const s = timeIn(state(), 'E-001', at(2026, 11, 2, 8)).state;
-    expect(() => timeIn(s, 'E-001', at(2026, 11, 2, 8, 30))).toThrow('Juan Miguel P. Reyes already timed in at 8:00 AM.');
-    expect(() => timeOut(state(), 'E-001', at(2026, 11, 2, 17))).toThrow('Juan Miguel P. Reyes has not timed in today.');
-    expect(() => timeIn(state(), 'V-001', at(2026, 11, 2))).toThrow('Pick an employee from the directory.');
+    expect(refusalOf(() => timeIn(s, 'E-001', at(2026, 11, 2, 8, 30)))).toEqual({ error: 'Juan Miguel P. Reyes already timed in at 8:00 AM.', fields: [] });
+    expect(refusalOf(() => timeOut(state(), 'E-001', at(2026, 11, 2, 17)))).toEqual({ error: 'Juan Miguel P. Reyes has not timed in today.', fields: [] });
+    expect(refusalOf(() => timeIn(state(), 'V-001', at(2026, 11, 2)))).toEqual({ error: 'Pick an employee from the directory.', fields: ['emp'] });
   });
 });
 
@@ -130,18 +131,22 @@ describe('corrections and holidays', () => {
 
   it('refuses times that cannot be right', () => {
     const d = { emp: 'E-001', date: '2026-10-30', in: '08:00', out: '', ot: '', note: '' };
-    expect(() => saveDay(state(), { ...d, date: '2026-11-03' }, ctx)).toThrow('Nov 3, 2026 has not come yet.');
-    expect(() => saveDay(state(), { ...d, in: '8am' }, ctx)).toThrow('Enter the time in as hours and minutes, like 08:00.');
-    expect(() => saveDay(state(), { ...d, out: '07:00' }, ctx)).toThrow('The time out must be after the time in.');
-    expect(() => saveDay(state(), { ...d, in: '', out: '17:00' }, ctx)).toThrow('Enter the time in as well as the time out.');
-    expect(() => saveDay(state(), { ...d, ot: '-1' }, ctx)).toThrow('Enter overtime as hours, from 0 to 16.');
+    expect(refusalOf(() => saveDay(state(), { ...d, date: '2026-11-03' }, ctx))).toEqual({ error: 'Nov 3, 2026 has not come yet.', fields: ['date'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, in: '8am' }, ctx))).toEqual({ error: 'Enter the time in as hours and minutes, like 08:00.', fields: ['in'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, out: '07:00' }, ctx))).toEqual({ error: 'The time out must be after the time in.', fields: ['out'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, in: '', out: '17:00' }, ctx))).toEqual({ error: 'Enter the time in as well as the time out.', fields: ['in'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, ot: '-1' }, ctx))).toEqual({ error: 'Enter overtime as hours, from 0 to 16.', fields: ['ot'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, out: '5 PM' }, ctx))).toEqual({ error: 'Enter the time out as hours and minutes, like 17:00.', fields: ['out'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, date: 'Oct 30' }, ctx))).toEqual({ error: 'Enter the date to correct.', fields: ['date'] });
+    expect(refusalOf(() => saveDay(state(), { ...d, in: '', note: '' }, ctx))).toEqual({ error: 'Juan Miguel P. Reyes has nothing recorded on Oct 30, 2026.', fields: [] });
   });
 
   it('adds and removes holidays', () => {
     const r = saveHoliday(state(), { date: '2026-11-30', name: 'Bonifacio Day', kind: 'Regular' }, ctx);
     expect(r.message).toBe('Nov 30, 2026 set as a regular holiday: Bonifacio Day.');
     expect(dataOf(removeHoliday(r.state, '2026-11-30', ctx).state).holidays).toEqual([]);
-    expect(() => saveHoliday(state(), { date: '2026-11-30', name: ' ', kind: 'Regular' }, ctx)).toThrow('Enter the holiday\'s name.');
+    expect(refusalOf(() => saveHoliday(state(), { date: '2026-11-30', name: ' ', kind: 'Regular' }, ctx))).toEqual({ error: 'Enter the holiday\'s name.', fields: ['name'] });
+    expect(refusalOf(() => saveHoliday(state(), { date: '', name: 'Bonifacio Day', kind: 'Regular' }, ctx))).toEqual({ error: 'Enter the holiday\'s date.', fields: ['date'] });
   });
 
   it('reads only what it can trust from the saved data', () => {

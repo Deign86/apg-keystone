@@ -2,20 +2,100 @@ import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox';
 import { Field as BaseField } from '@base-ui/react/field';
 import { Select } from '@base-ui/react/select';
 import { Check, ChevronDown } from 'lucide-react';
-import { useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from './primitives';
 
 // Labelled controls. Base UI's Field wires the label, description and error to the
 // control (aria-labelledby, aria-describedby, aria-invalid), so every input is named.
 
-export function Field({ label, hint, error, children, className }: { label: string; hint?: string; error?: string; children: ReactNode; className?: string }) {
+/** A refused save: the sentence, and the fields it is about, each by the `name` its Field or CellInput was given. */
+export interface Refusal {
+  error: string;
+  fields?: readonly string[];
+}
+
+/** The refusal a form's fields are marked by, and what a marked field reports back. */
+interface Marks {
+  error: string;
+  /** The id of the refusal's sentence on screen, for a cell too small to show it under itself. */
+  describedBy?: string;
+  marked: (name: string) => boolean;
+  edited: (name: string) => void;
+  place: (name: string, at: HTMLElement | null) => void;
+}
+
+const MarksContext = createContext<Marks | null>(null);
+
+/** The name of the field a control is in, so editing the control clears that field's mark. */
+const NameContext = createContext<string | undefined>(undefined);
+
+const FOCUSABLE = 'input:not([type="hidden"]), textarea, select, button, [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Marks the fields a refusal names: each turns red, says why and is announced as invalid until it is edited. The first
+ * one in the form takes the focus and scrolls into view. A refusal that names no field marks nothing. Each new refusal
+ * marks its fields afresh, even when it is the same sentence again.
+ */
+export function FieldMarks({ refusal, describedBy, children }: { refusal: Refusal | null | undefined; describedBy?: string; children: ReactNode }) {
+  const named = refusal ?? null;
+  // The fields edited since this refusal: their marks are cleared.
+  const [edits, setEdits] = useState<{ of: Refusal | null; names: readonly string[] }>({ of: null, names: [] });
+  const places = useRef(new Map<string, HTMLElement>());
+  const done = edits.of === named ? edits.names : [];
+  const marked = useCallback((name: string) => !!named?.fields?.includes(name) && !done.includes(name), [named, done]);
+  const edited = useCallback((name: string) => { if (marked(name)) setEdits({ of: named, names: [...done, name] }); }, [marked, named, done]);
+  const place = useCallback((name: string, at: HTMLElement | null) => { if (at) places.current.set(name, at); else places.current.delete(name); }, []);
+
+  useEffect(() => {
+    const first = (named?.fields ?? [])
+      .map((name) => places.current.get(name))
+      .filter((at): at is HTMLElement => !!at)
+      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))[0];
+
+    const control = first?.matches(FOCUSABLE) ? first : first?.querySelector<HTMLElement>(FOCUSABLE);
+
+    if (!control) return;
+    control.focus({ preventScroll: true });
+    control.scrollIntoView?.({ block: 'center', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }, [named]);
+
+  return <MarksContext.Provider value={named ? { error: named.error, describedBy, marked, edited, place } : null}>{children}</MarksContext.Provider>;
+}
+
+/** Whether the field named `name` is marked by a refusal, and a ref that says where it is on screen. */
+function useMark(name: string | undefined) {
+  const marks = useContext(MarksContext);
+  const refused = name !== undefined && !!marks?.marked(name);
+  const place = useCallback((at: HTMLElement | null) => { if (name !== undefined) marks?.place(name, at); }, [marks, name]);
+
+  return { refused, error: refused ? marks?.error : undefined, describedBy: refused ? marks?.describedBy : undefined, place };
+}
+
+/** Called when a control is edited: clears the mark on the field it is in. */
+function useEdited() {
+  const marks = useContext(MarksContext);
+  const name = useContext(NameContext);
+
+  return () => { if (name !== undefined) marks?.edited(name); };
+}
+
+/**
+ * A labelled field. `name` is how a refusal names it (KeystoneError's fields): inside FieldMarks, a refusal that names
+ * it marks it until it is edited. `error` marks it from the screen itself.
+ */
+export function Field({ label, hint, error, name, children, className }: { label: string; hint?: string; error?: string; name?: string; children: ReactNode; className?: string }) {
+  const mark = useMark(name);
+  const said = error ?? mark.error;
+
   return (
-    <BaseField.Root invalid={!!error} className={cn('flex min-w-0 flex-col gap-1.5', className)}>
-      <BaseField.Label className="text-[13px] font-medium text-ink">{label}</BaseField.Label>
-      {children}
-      {hint && !error && <BaseField.Description className="m-0 text-[13px] text-ink-2">{hint}</BaseField.Description>}
-      {error && <BaseField.Error match className="m-0 text-[13px] text-bad">{error}</BaseField.Error>}
-    </BaseField.Root>
+    <NameContext.Provider value={name}>
+      <BaseField.Root ref={mark.place} invalid={!!said} className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+        <BaseField.Label className="text-[13px] font-medium text-ink">{label}</BaseField.Label>
+        {children}
+        {hint && !said && <BaseField.Description className="m-0 text-[13px] text-ink-2">{hint}</BaseField.Description>}
+        {said && <BaseField.Error match className="m-0 text-[13px] text-pretty text-bad">{said}</BaseField.Error>}
+      </BaseField.Root>
+    </NameContext.Provider>
   );
 }
 
@@ -29,6 +109,7 @@ type InputProps = {
   type?: 'text' | 'date' | 'email' | 'tel' | 'url' | 'password';
   className?: string;
   'aria-label'?: string;
+  'aria-describedby'?: string;
   autoFocus?: boolean;
   /** What the browser may fill in: `new-password` keeps a saved password out of a field for someone else's. */
   autoComplete?: string;
@@ -62,6 +143,7 @@ export function capitalizeWords(text: string): string {
 
 export function TextInput({ value, onChange, placeholder, readOnly, figures, align = 'left', type = 'text', className, capitalize, ...rest }: InputProps) {
   const input = useRef<HTMLInputElement>(null);
+  const edited = useEdited();
 
   const change = (typed: string) => {
     const next = capitalize ? capitalizeWords(typed) : typed;
@@ -75,6 +157,7 @@ export function TextInput({ value, onChange, placeholder, readOnly, figures, ali
       field.setSelectionRange(selectionStart, selectionEnd);
     }
 
+    edited();
     onChange(next);
   };
 
@@ -93,22 +176,31 @@ export function TextInput({ value, onChange, placeholder, readOnly, figures, ali
   );
 }
 
-/** A bare input with its own name, for cells in a line editor. */
-export function CellInput({ label, ...props }: InputProps & { label: string }) {
+/**
+ * A bare input with its own label, for cells in a line editor. `name` is how a refusal names it, as a Field's is; too
+ * small to say why under itself, a marked cell points at the refusal's sentence instead.
+ */
+export function CellInput({ label, name, ...props }: InputProps & { label: string; name?: string }) {
+  const mark = useMark(name);
+
   return (
-    <BaseField.Root className="min-w-0">
-      <TextInput {...props} aria-label={label} />
-    </BaseField.Root>
+    <NameContext.Provider value={name}>
+      <BaseField.Root ref={mark.place} invalid={mark.refused} className="min-w-0">
+        <TextInput {...props} aria-label={label} aria-describedby={mark.describedBy} />
+      </BaseField.Root>
+    </NameContext.Provider>
   );
 }
 
 export function TextArea({ value, onChange, rows = 3, readOnly }: { value: string; onChange: (v: string) => void; rows?: number; readOnly?: boolean }) {
+  const edited = useEdited();
+
   return (
     <BaseField.Control
       render={<textarea rows={rows} />}
       value={value}
       readOnly={readOnly}
-      onValueChange={(v) => onChange(String(v))}
+      onValueChange={(v) => { edited(); onChange(String(v)); }}
       className={cn('input-chrome min-h-16 resize-y py-2 leading-relaxed', readOnly && 'font-medium text-gold-bright')}
     />
   );
@@ -121,8 +213,10 @@ export interface Option {
 
 /** A dropdown in the same chrome as the text fields. */
 export function SelectInput({ value, onChange, options, label }: { value: string; onChange: (v: string) => void; options: Option[]; label?: string }) {
+  const edited = useEdited();
+
   return (
-    <Select.Root value={value} onValueChange={(v) => v != null && onChange(String(v))} items={options}>
+    <Select.Root value={value} onValueChange={(v) => { if (v != null) { edited(); onChange(String(v)); } }} items={options}>
       <Select.Trigger aria-label={label} className="input-chrome flex cursor-default items-center justify-between gap-2 text-left">
         <Select.Value className="truncate" placeholder="—" />
         <Select.Icon className="text-ink-2">
@@ -156,11 +250,13 @@ export function SelectInput({ value, onChange, options, label }: { value: string
 
 /** Gold square checkbox with its label. */
 export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
+  const edited = useEdited();
+
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] text-ink">
       <BaseCheckbox.Root
         checked={checked}
-        onCheckedChange={(v) => onChange(v)}
+        onCheckedChange={(v) => { edited(); onChange(v); }}
         className="grid size-4 shrink-0 place-items-center rounded-[3px] border border-line-bright bg-input data-[checked]:border-gold data-[checked]:bg-gold"
       >
         <BaseCheckbox.Indicator className="text-gold-ink">

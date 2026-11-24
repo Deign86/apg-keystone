@@ -1,6 +1,6 @@
-import { Button, EmptyState, Field, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column } from '@keystone/ui';
-import { CANNOT_KEEP_GRANT, DASH, sentenceOf, SERVICES, type Accounts, type MemberAccount, type MemberGrant } from '@keystone/core';
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Button, EmptyState, Field, FieldMarks, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column, type Refusal } from '@keystone/ui';
+import { CANNOT_KEEP_GRANT, DASH, fieldsOf, sentenceOf, SERVICES, type Accounts, type MemberAccount, type MemberGrant } from '@keystone/core';
+import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import { memberGrants, useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import {
   accountMade, accountRemoved, accountsLine, checkAccount, grantAction, grantQuestion, grantRefusal, grantSet, grantTitle, hasGrant, checkPasswordChange, checkRemoval, CLOUD_ONLY, makesAccounts, membersInOrder,
@@ -13,7 +13,8 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
 }) {
   const { ctx, run } = useKeystone();
   const [d, setD] = useState(newAccountDraft);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
   const [busy, setBusy] = useState(false);
 
   const make = async (e: FormEvent) => {
@@ -27,25 +28,27 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
       run((s, c) => accountMade(s, made, c));
       onDone(made);
     } catch (err) {
-      setError(sentenceOf(err));
+      setError({ error: sentenceOf(err), fields: fieldsOf(err) });
       setBusy(false);
     }
   };
 
   return (
     <form className="flex flex-col gap-3.5" aria-label="New account" onSubmit={(e) => void make(e)}>
-      <Field label="Name" hint="As Keystone shows them: who asked for funds, who is signed in.">
-        <TextInput capitalize autoFocus autoComplete="off" value={d.name} onChange={(name) => setD({ ...d, name })} />
-      </Field>
-      <Field label="Email" hint="They sign in with it.">
-        <TextInput type="email" autoComplete="off" value={d.email} onChange={(email) => setD({ ...d, email })} />
-      </Field>
-      <Field label="Password" hint={`At least ${MIN_PASSWORD} characters. Give it to them yourself; Keystone does not send it.`}>
-        <TextInput type="password" autoComplete="new-password" value={d.password} onChange={(password) => setD({ ...d, password })} />
-      </Field>
+      <FieldMarks refusal={error} describedBy={said}>
+        <Field name="name" label="Name" hint="As Keystone shows them: who asked for funds, who is signed in.">
+          <TextInput capitalize autoFocus autoComplete="off" value={d.name} onChange={(name) => setD({ ...d, name })} />
+        </Field>
+        <Field name="email" label="Email" hint="They sign in with it.">
+          <TextInput type="email" autoComplete="off" value={d.email} onChange={(email) => setD({ ...d, email })} />
+        </Field>
+        <Field name="password" label="Password" hint={`At least ${MIN_PASSWORD} characters. Give it to them yourself; Keystone does not send it.`}>
+          <TextInput type="password" autoComplete="new-password" value={d.password} onChange={(password) => setD({ ...d, password })} />
+        </Field>
+      </FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {error
-          ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>
+          ? <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error.error}</p>
           : <span className="mr-auto text-xs text-ink-2">A staff account.</span>}
         <Button onClick={onCancel}>Cancel</Button>
         <Button kind="primary" type="submit" disabled={busy}>{busy ? 'Making account…' : 'Make account'}</Button>
@@ -58,7 +61,8 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
 function PasswordForm({ accounts, onDone }: { accounts: Accounts; onDone: () => void }) {
   const { ctx, run } = useKeystone();
   const [d, setD] = useState(newPasswordDraft);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
   const [busy, setBusy] = useState(false);
 
   const change = async (e: FormEvent) => {
@@ -73,26 +77,28 @@ function PasswordForm({ accounts, onDone }: { accounts: Accounts; onDone: () => 
       run((s, c) => passwordChanged(s, c));
       onDone();
     } catch (err) {
-      setError(sentenceOf(err));
+      setError({ error: sentenceOf(err), fields: fieldsOf(err) });
       setBusy(false);
     }
   };
 
   return (
     <form className="flex flex-col gap-3.5" aria-label="Change password" onSubmit={(e) => void change(e)}>
-      <Field label="Current password">
-        <TextInput type="password" autoFocus autoComplete="current-password" value={d.current} onChange={(current) => setD({ ...d, current })} />
-      </Field>
-      <Field label="New password" hint={`At least ${MIN_PASSWORD} characters.`}>
-        <TextInput type="password" autoComplete="new-password" value={d.next} onChange={(next) => setD({ ...d, next })} />
-      </Field>
-      <Field label="New password again">
-        <TextInput type="password" autoComplete="new-password" value={d.again} onChange={(again) => setD({ ...d, again })} />
-      </Field>
+      <FieldMarks refusal={error} describedBy={said}>
+        <Field name="current" label="Current password">
+          <TextInput type="password" autoFocus autoComplete="current-password" value={d.current} onChange={(current) => setD({ ...d, current })} />
+        </Field>
+        <Field name="next" label="New password" hint={`At least ${MIN_PASSWORD} characters.`}>
+          <TextInput type="password" autoComplete="new-password" value={d.next} onChange={(next) => setD({ ...d, next })} />
+        </Field>
+        <Field name="again" label="New password again">
+          <TextInput type="password" autoComplete="new-password" value={d.again} onChange={(again) => setD({ ...d, again })} />
+        </Field>
+      </FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {error
           // Narrower than the other forms' errors, so the longer Change password button keeps to the same row.
-          ? <p role="alert" className="m-0 mr-auto max-w-[30ch] text-xs text-pretty text-bad">{error}</p>
+          ? <p id={said} role="alert" className="m-0 mr-auto max-w-[30ch] text-xs text-pretty text-bad">{error.error}</p>
           : <span className="mr-auto text-xs text-ink-2">You stay signed in here.</span>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit" disabled={busy}>{busy ? 'Changing…' : 'Change password'}</Button>

@@ -94,6 +94,25 @@ test('refuses a voucher with no particulars', async ({ app, screen }) => {
   await form.getByRole('button', 'Save and route for approval').tap();
 
   await expect(form.getByRole('alert')).toHaveText('Add at least one particular with an amount.');
+  // The line's amount is marked and has the focus, and typing in it clears the mark.
+  const amount = form.getByRole('textbox', 'Line 1 amount');
+
+  await expect(amount).toHaveAttribute('aria-invalid', 'true');
+  await expect(amount).toBeFocused();
+  await amount.fill('1500');
+  await expect(amount).not.toHaveAttribute('aria-invalid', 'true');
+
+  // With an amount, the payee is what is missing, and it is the field marked.
+  await form.getByRole('button', 'Save and route for approval').tap();
+  await expect(form.getByRole('alert')).toHaveText('Enter the payee.');
+  const payee = form.getByRole('textbox', 'Payee');
+
+  await expect(payee).toHaveAttribute('aria-invalid', 'true');
+  await expect(payee).toBeFocused();
+  await expect(amount).not.toHaveAttribute('aria-invalid', 'true');
+  await payee.fill('Meralco');
+  await expect(payee).not.toHaveAttribute('aria-invalid', 'true');
+
   await screen.getByRole('tab', REGISTER).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001/)).toBeHidden();
 });

@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, changeEach, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, signatoryNames, signedNames, shortDate,
-  KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
+  fieldsOf, KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -186,6 +186,21 @@ describe('directory (the shared kernel)', () => {
     const add = saveDirectoryRecord(s, { ...newDirectoryDraft('Client'), name: 'Ortigas Dental Clinic' }, ctx);
     expect(add.record).toMatchObject({ code: 'C-004', vat: true, ewt: false });
     expect(() => saveDirectoryRecord(add.state, { ...newDirectoryDraft('Client'), name: 'ortigas dental clinic' }, ctx)).toThrow(/already has that name/);
+
+    // A refusal about the name names the field; one about the type names none.
+    const refusal = (rule: () => void) => {
+      try {
+        rule();
+
+        return null;
+      } catch (e) {
+        return { error: sentenceOf(e), fields: fieldsOf(e) };
+      }
+    };
+
+    expect(refusal(() => saveDirectoryRecord(s, newDirectoryDraft('Vendor'), ctx))).toEqual({ error: 'Enter a name for the record.', fields: ['name'] });
+    expect(refusal(() => saveDirectoryRecord(add.state, { ...newDirectoryDraft('Client'), name: 'ortigas dental clinic' }, ctx))).toEqual({ error: 'C-004 already has that name.', fields: ['name'] });
+    expect(refusal(() => saveDirectoryRecord(s, { ...newDirectoryDraft('Client'), editing: 'V-002', name: 'Manila Water Company' }, ctx))).toEqual({ error: 'V-002 is a vendor; add a new record to change its type.', fields: [] });
     // What a part contributes (ModuleDef.refersTo): its records name V-001.
     const vouchers: Reference = { tag: 'CV', codes: (x) => x.cv.map((v) => v.payee) };
 

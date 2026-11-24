@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
   billingFigure, billingFinding, billingWaiting, EWT_RATE, EWT_RATES, ewtRateOf, markOverdue, newStatement, nextStatementNo, paidInto, withStatementDate, payInto,
@@ -45,7 +46,7 @@ describe('billing statements', () => {
     const d = { ...billed(s), lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', amount: '2,299' })] };
     expect(saveStatement(s, d, ctx).record.no).toBe('888-103026');
     expect(saveStatement(s, { ...d, no: '010150-2026' }, ctx).record.no).toBe('010150-2026');
-    expect(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx)).toThrow('Invoice No. 010099-2026 is already used. The next free one is 888-103026.');
+    expect(refusalOf(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx))).toEqual({ error: 'Invoice No. 010099-2026 is already used. The next free one is 888-103026.', fields: [] });
     expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('888-102526'); // a copy takes the next number for its date
   });
 
@@ -57,7 +58,11 @@ describe('billing statements', () => {
     expect(statementTotals(b)).toEqual({ subtotal: toCentavos(2299), vat: toCentavos(275.88), ewt: 0, due: toCentavos(2574.88) });
     const two = saveStatement(s, { ...d, lines: [lineDraft({ desc: 'Desk', qty: '2', amount: '1,500' })] }, ctx).record;
     expect(statementTotals(two).subtotal).toBe(toCentavos(3000));
-    expect(() => saveStatement(s, { ...d, lines: [lineDraft({ desc: 'Desk', qty: '0', amount: '1,500' })] }, ctx)).toThrow('Enter a quantity above zero on every charge.');
+    expect(refusalOf(() => saveStatement(s, { ...d, lines: [lineDraft({ desc: 'Desk', qty: '0', amount: '1,500' })] }, ctx))).toEqual({ error: 'Enter a quantity above zero on every charge.', fields: ['lines.0.qty'] });
+    // Each charge without a quantity is named by its line on the form, a blank line before it counted.
+    const blank = [lineDraft(), lineDraft({ desc: 'Desk', qty: '0', amount: '1,500' }), lineDraft({ desc: 'Chair', amount: '500' }), lineDraft({ desc: 'Lamp', qty: 'x', amount: '200' })];
+    expect(refusalOf(() => saveStatement(s, { ...d, lines: blank }, ctx))).toEqual({ error: 'Enter a quantity above zero on every charge.', fields: ['lines.1.qty', 'lines.3.qty'] });
+    expect(refusalOf(() => saveStatement(s, { ...d, lines: [lineDraft()] }, ctx))).toEqual({ error: 'Add at least one charge with an amount.', fields: ['lines.0.amount'] });
   });
 
   it('withholds 2% EWT on a new statement, and keeps the 5% an older one withheld', () => {
@@ -84,7 +89,7 @@ describe('billing statements', () => {
     expect(b.ewtRate).toBe(5);
     expect(statementTotals(b)).toEqual({ subtotal: toCentavos(10000), vat: toCentavos(1200), ewt: toCentavos(500), due: toCentavos(10700) });
 
-    expect(() => saveStatement(s, { ...d, ewtRate: 10 }, ctx)).toThrow('Withhold 2% or 5% EWT.');
+    expect(refusalOf(() => saveStatement(s, { ...d, ewtRate: 10 }, ctx))).toEqual({ error: 'Withhold 2% or 5% EWT.', fields: ['ewtRate'] });
     // With nothing withheld, the rate is not asked about.
     expect(saveStatement(s, { ...d, ewt: false, ewtRate: 10 }, ctx).record.ewt).toBe(false);
   });
@@ -131,7 +136,7 @@ describe('billing statements', () => {
     const saved = saveStatement(s, { ...racil, lines: [lineDraft({ desc: 'Commission', amount: '210,000' })] }, ctx);
     expect(saved.record.client).toBe('RACIL REALTY INC');
     expect(saved.state.log[0].text).toBe('888-103026 sent to RACIL REALTY INC (₱235,200.00 due Nov 14, 2026).');
-    expect(() => saveStatement(s, { ...racil, client: '  ', lines: [lineDraft({ desc: 'Commission', amount: '1' })] }, ctx)).toThrow('Enter who the statement is billed to.');
+    expect(refusalOf(() => saveStatement(s, { ...racil, client: '  ', lines: [lineDraft({ desc: 'Commission', amount: '1' })] }, ctx))).toEqual({ error: 'Enter who the statement is billed to.', fields: ['client'] });
     // A statement saved before Bill to was typed names its client by code, and comes back with the name.
     expect(statementDraftOf(s.bs[2], s).client).toBe('Harbor Point Logistics Corp.');
   });
@@ -156,7 +161,8 @@ describe('billing statements', () => {
   it('refuses a statement due before its invoice date', () => {
     const s = state();
     const d = { ...billed(s), due: '2026-10-01', lines: [lineDraft({ desc: 'Rent', amount: '100' })] };
-    expect(() => saveStatement(s, d, ctx)).toThrow('The due date is before the invoice date.');
+    expect(refusalOf(() => saveStatement(s, d, ctx))).toEqual({ error: 'The due date is before the invoice date.', fields: ['due'] });
+    expect(refusalOf(() => saveStatement(s, { ...d, due: '' }, ctx))).toEqual({ error: 'Enter the due date.', fields: ['due'] });
   });
 
   it('settles a statement with a reported payment, never a partial one', () => {

@@ -1,4 +1,4 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column, type Refusal } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, shortDate } from '@keystone/core';
 import { FormCard, printElement, savePdf, useDraft, useKeystone, Workspace, type ModuleDef } from '@keystone/kit';
@@ -14,7 +14,7 @@ function Statements() {
   const { state, ctx, run, files, notify } = useKeystone();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft<SoaDraft>(DRAFT, () => newSoa(state, ctx));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLElement>(null);
   const live = soaOf(draft);
   const rent = monthlyRent(live);
@@ -23,7 +23,7 @@ function Statements() {
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveSoa(s, draft, c, asNew));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     if (r.ok) setDraft(newSoa(r.state, ctx));
   }, [run, draft, ctx, setDraft]);
@@ -89,14 +89,14 @@ function Statements() {
               </Field>
               <Field label="Prepared as of"><TextInput type="date" value={draft.date} onChange={(date) => set({ date })} /></Field>
             </FieldRow>
-            <Field label="Client"><TextInput capitalize placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field>
-            <Field label="Property address"><TextInput value={draft.property} onChange={(property) => set({ property })} /></Field>
+            <Field name="client" label="Client"><TextInput capitalize placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field>
+            <Field name="property" label="Property address"><TextInput value={draft.property} onChange={(property) => set({ property })} /></Field>
             <Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize value={draft.payee} onChange={(payee) => set({ payee })} /></Field>
 
             <SectionLabel>1. Breakdown</SectionLabel>
             <FieldRow>
-              <Field label="Floor area (sqm)"><TextInput figures align="right" value={draft.sqm} onChange={(sqm) => set({ sqm })} /></Field>
-              <Field label="Rate per sqm"><TextInput figures align="right" placeholder="₱ a month" value={draft.rate} onChange={(rate) => set({ rate })} /></Field>
+              <Field name="sqm" label="Floor area (sqm)"><TextInput figures align="right" value={draft.sqm} onChange={(sqm) => set({ sqm })} /></Field>
+              <Field name="rate" label="Rate per sqm"><TextInput figures align="right" placeholder="₱ a month" value={draft.rate} onChange={(rate) => set({ rate })} /></Field>
             </FieldRow>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               <Checkbox checked={draft.vat} onChange={(vat) => set({ vat })}>Add {VAT_RATE}% VAT</Checkbox>
@@ -116,12 +116,12 @@ function Statements() {
               <Field label="Reservation check no."><TextInput placeholder="Cash deposit" value={draft.reservationCheck} onChange={(reservationCheck) => set({ reservationCheck })} /></Field>
             </FieldRow>
             <FieldRow>
-              <Field label="Security deposit (months)" hint="Of base rent."><TextInput figures align="right" value={draft.depositMonths} onChange={(depositMonths) => set({ depositMonths })} /></Field>
+              <Field name="depositMonths" label="Security deposit (months)" hint="Of base rent."><TextInput figures align="right" value={draft.depositMonths} onChange={(depositMonths) => set({ depositMonths })} /></Field>
               <Field label="Deposit coverage"><TextInput value={draft.depositCoverage} onChange={(depositCoverage) => set({ depositCoverage })} /></Field>
               <Field label="Deposit check no."><TextInput value={draft.depositCheck} onChange={(depositCheck) => set({ depositCheck })} /></Field>
             </FieldRow>
             <FieldRow>
-              <Field label="Advance rental (months)" hint="Of the monthly rent."><TextInput figures align="right" value={draft.advanceMonths} onChange={(advanceMonths) => set({ advanceMonths })} /></Field>
+              <Field name="advanceMonths" label="Advance rental (months)" hint="Of the monthly rent."><TextInput figures align="right" value={draft.advanceMonths} onChange={(advanceMonths) => set({ advanceMonths })} /></Field>
               <Field label="Advance coverage"><TextInput placeholder="Jan – Feb 2027" value={draft.advanceCoverage} onChange={(advanceCoverage) => set({ advanceCoverage })} /></Field>
               <Field label="Advance check no."><TextInput value={draft.advanceCheck} onChange={(advanceCheck) => set({ advanceCheck })} /></Field>
             </FieldRow>
@@ -129,21 +129,21 @@ function Statements() {
 
             <SectionLabel>3. Lease term and escalation</SectionLabel>
             <FieldRow>
-              <Field label="Contract commencement"><TextInput type="date" value={draft.commencement} onChange={(commencement) => set({ commencement })} /></Field>
-              <Field label="Term (months)"><TextInput figures align="right" value={draft.termMonths} onChange={(termMonths) => set({ termMonths })} /></Field>
-              <Field label="Escalation a year (%)" hint="From the second year, on the year before’s rent."><TextInput figures align="right" value={draft.escalation} onChange={(escalation) => set({ escalation })} /></Field>
+              <Field name="commencement" label="Contract commencement"><TextInput type="date" value={draft.commencement} onChange={(commencement) => set({ commencement })} /></Field>
+              <Field name="termMonths" label="Term (months)"><TextInput figures align="right" value={draft.termMonths} onChange={(termMonths) => set({ termMonths })} /></Field>
+              <Field name="escalation" label="Escalation a year (%)" hint="From the second year, on the year before’s rent."><TextInput figures align="right" value={draft.escalation} onChange={(escalation) => set({ escalation })} /></Field>
             </FieldRow>
             <Field label="Lease terms" hint="As it prints. Left empty, it prints the term and escalation."><TextInput value={draft.leaseTerms} onChange={(leaseTerms) => set({ leaseTerms })} /></Field>
 
             <SectionLabel>4. Postdated checks</SectionLabel>
             <FieldRow>
-              <Field label="First month paid by check" hint={start ? `Empty: ${monthName(start)}, the month after the advance.` : 'Empty: the month after the advance.'}>
+              <Field name="pdcFirst" label="First month paid by check" hint={start ? `Empty: ${monthName(start)}, the month after the advance.` : 'Empty: the month after the advance.'}>
                 <TextInput figures placeholder={start || 'YYYY-MM'} value={draft.pdcFirst} onChange={(pdcFirst) => set({ pdcFirst })} />
               </Field>
-              <Field label="Number of checks" hint={`Empty: ${pdcTotal({ ...live, pdcCount: 0 })}, the months the advance does not pay.`}>
+              <Field name="pdcCount" label="Number of checks" hint={`Empty: ${pdcTotal({ ...live, pdcCount: 0 })}, the months the advance does not pay.`}>
                 <TextInput figures align="right" value={draft.pdcCount} onChange={(pdcCount) => set({ pdcCount })} />
               </Field>
-              <Field label="Checks dated on" hint="Day of the rent month it pays."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
+              <Field name="pdcDay" label="Checks dated on" hint="Day of the rent month it pays."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
             </FieldRow>
             <FieldRow>
               <Field label="Bank"><TextInput value={draft.bank} onChange={(bank) => set({ bank })} /></Field>
