@@ -40,8 +40,8 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
       <dl className="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
         <dt className={paperLabel}>Bill to</dt>
         <dd className="m-0 font-bold uppercase">{orDash(billTo)}</dd>
-        {/* Bill to's address, under the name; a statement with none typed prints as before. */}
-        {b.address && <dd className="col-start-2 m-0 -mt-1 font-medium">{b.address}</dd>}
+        <dt className={paperLabel}>Address</dt>
+        <dd className="m-0 font-medium">{orDash(b.address)}</dd>
         <dt className={paperLabel}>Attention</dt>
         <dd className="m-0 font-medium whitespace-pre-line">{orDash(b.attention)}</dd>
       </dl>

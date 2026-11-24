@@ -2,18 +2,18 @@
 
 ## Owns
 - `src/index.tsx`: two tabs, **Statements issued** (shown first, with the count) and **Statement entry** (the form
-  beside the statement it prints; the tab names the statement open in it, or New). Opening a statement, New
-  statement, and Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts
-  (`billing.view`). The register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent,
-  Print, and Export PDF. **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and
-  Attention, and any other name leaves them to be set by hand. Its **Address** is typed too (never from the
-  directory), kept only when typed and printed under the name. **Prepared by** starts as whoever is signed in,
+  beside the statement it prints; the tab names the statement open in it, or New). Opening a statement, New statement,
+  and Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts (`billing.view`). The
+  register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent, Print, and Export PDF.
+  **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and Attention, and any other
+  name leaves them to be set by hand. Its **Address** is typed too (never from the directory), kept only when typed and
+  printed as **Address** under Bill to (a dash when none is typed). **Prepared by** starts as whoever is signed in,
   **Checked by** and **Approved by** as the last statement's (Company Details' before the first). Each signatory has a
   position under their name (**Preparer's position**, **Checker's position**, **Approver's position**), kept only when
   typed, printed under the name, and started from the last statement's.
 - `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under every paper's
   letterhead (kit's `Letterhead`: the title across the top, the Group of Companies logo with the address beside it, the
-  number and date): Bill to, its address under it when one is typed, and Attention, the invoice box (number, invoice and
+  number and date): Bill to, Address and Attention (a dash for one not filled in), the invoice box (number, invoice and
   due dates), Qty · Description · Unit price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%)
   and the total amount due, every line shown, a dash where a tax does not apply. Then payment instructions, the
   **Penalty** line (the statement's own, `penalty`, started from Company Details' penalty; one saved before it kept one
