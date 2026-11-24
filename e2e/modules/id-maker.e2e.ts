@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { markedPaperParts, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES } from '../support/paper';
+import { markedPaperParts, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES_A_PAGE } from '../support/paper';
 
 // ID Maker (packages/modules/id-maker). The sample data has APG-2026-0028 to 0030 issued, so a new card is
 // APG-2026-0031. 0028 (Juan) and 0029 (Angelica) are printed and active; 0030 (Rafael) waits to be printed.
@@ -301,8 +301,8 @@ test('puts the emergency contact and blood type on the back, and exports the pri
   const bytes = readFileSync(pdf.absolutePath);
 
   expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
-  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
-  expect(bytes.length).toBeLessThan(PDF_MOST_BYTES);
+  // Drawn at print resolution and compressed: a few hundred kilobytes a page, not the tens of megabytes of raw pixels.
+  expect(bytes.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE);
 });
 
 test('opens a waiting card from Overview, and starts a new one from its button', async ({ app, screen }) => {

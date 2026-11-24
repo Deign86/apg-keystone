@@ -66,12 +66,15 @@ export interface PaperLayout {
   /** Fits the paper to the page just before it prints, and puts it back once the print is done. */
   fit?(paper: HTMLElement): void;
   unfit?(paper: HTMLElement): void;
-  /** The PDF page: which way up, its margin in points, and anything the drawn copy of the paper needs changed. */
-  pdf: { orientation: 'portrait' | 'landscape'; margin: number; style?: Partial<CSSStyleDeclaration> };
+  /**
+   * The PDF page: which way up, its margin in points, and anything the drawn copy of the paper needs changed. A paper
+   * that flows runs onto as many pages as it needs, at the page's width, as it prints; any other is fitted to one page.
+   */
+  pdf: { orientation: 'portrait' | 'landscape'; margin: number; flow?: boolean; style?: Partial<CSSStyleDeclaration> };
 }
 
-/** An upright A4 page inside the print margins: the paper as tall as what it holds. */
-export const UPRIGHT: PaperLayout = { width: PAPER_WIDTH, marks: {}, pdf: { orientation: 'portrait', margin: mmToPt(PAPER.margin) } };
+/** An upright A4 page inside the print margins: the paper as tall as what it holds, on as many pages as that takes. */
+export const UPRIGHT: PaperLayout = { width: PAPER_WIDTH, marks: {}, pdf: { orientation: 'portrait', margin: mmToPt(PAPER.margin), flow: true } };
 
 /**
  * An A4 page turned on its side, for a sheet too wide to stand upright, scaled to a single page however long it is.
@@ -145,13 +148,40 @@ export function pdfPage({ pdf }: PaperLayout) {
 }
 
 /**
- * The pixels to draw for each CSS px of a paper this size, laid out to this layout, so it comes out at PDF_DPI on its
- * PDF page: fitted inside the room there, by its width or, for a paper longer than the page, by its height.
+ * The points on its PDF page for each CSS px of a paper this size: across the room inside the margin for a paper that
+ * flows onto more pages, and for any other fitted to one page, by its width or, if it is longer, its height.
  */
-export function pdfPixelRatio(layout: PaperLayout, paper: { width: number; height: number }) {
+export function pdfScale(layout: PaperLayout, paper: { width: number; height: number }) {
   const { room } = pdfPage(layout);
 
-  return (PDF_DPI / 72) * Math.min(room.w / paper.width, room.h / paper.height);
+  return layout.pdf.flow ? room.w / paper.width : Math.min(room.w / paper.width, room.h / paper.height);
+}
+
+/** The pixels to draw for each CSS px of a paper this size, so it comes out at PDF_DPI on its PDF page. */
+export const pdfPixelRatio = (layout: PaperLayout, paper: { width: number; height: number }) => (PDF_DPI / 72) * pdfScale(layout, paper);
+
+/**
+ * Where a paper `height` CSS px tall is cut into pages `page` CSS px tall: the top of each page, then the paper's foot.
+ * Each cut is as low on its page as it can be without going through a span in `keep` (a table row, a line of text, a
+ * picture, a block that asks to stay whole). A span taller than a page cannot stay whole, so it is cut where the page
+ * ends, as Print would.
+ */
+export function pageCuts(height: number, page: number, keep: [number, number][]): number[] {
+  const whole = keep.filter(([top, bottom]) => bottom - top <= page);
+  // The span a cut would go through, of those that start on the page below `top`: moving the cut to its top keeps it whole.
+  const through = (cut: number, top: number) => whole.find(([a, b]) => a > top && a < cut && b > cut);
+  const cuts = [0];
+
+  // Half a pixel of rounding never makes a page of its own.
+  for (let top = 0; height - top > page + 0.5;) {
+    let cut = top + page;
+
+    for (let span = through(cut, top); span; span = through(cut, top)) cut = span[0];
+    cuts.push(cut);
+    top = cut;
+  }
+
+  return [...cuts, height];
 }
 
 /** The layout a paper was rendered with, read back from the marks it carries. */

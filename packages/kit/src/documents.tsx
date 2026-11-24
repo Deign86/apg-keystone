@@ -260,8 +260,9 @@ export function Signatures({ names, signed }: {
 }) {
   const mark = usePaperPart();
 
+  // Kept on one page, its lines with their names, when a long paper runs onto another (break-inside-avoid).
   return (
-    <div className="mt-14 grid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
+    <div className="mt-14 grid break-inside-avoid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
       {names.map(([who, role, position, part]) => {
         const signature = who ? signed?.(who) : undefined;
 

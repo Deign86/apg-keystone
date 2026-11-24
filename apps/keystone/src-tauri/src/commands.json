@@ -6,5 +6,6 @@
   "launchApp": "launch_app",
   "cpuArch": "cpu_arch",
   "latestRelease": "latest_release",
-  "installFrom": "install_from"
+  "installFrom": "install_from",
+  "printPdf": "print_pdf"
 }
