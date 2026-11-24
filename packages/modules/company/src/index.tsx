@@ -1,4 +1,4 @@
-import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput } from '@keystone/ui';
+import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput, type Refusal } from '@keystone/ui';
 import { useCallback, useState } from 'react';
 import { SERVICES } from '@keystone/core';
 import { FormCard, SignatoryPicker, useKeystone, type ModuleDef } from '@keystone/kit';
@@ -9,21 +9,21 @@ import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, signatureSizes, T
 function CompanyDetailsScreen() {
   const { state, ctx, run } = useKeystone();
   const [d, setD] = useState<CompanyDraft>(() => companyDraftOf(state));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   const editable = canChange(ctx);
   const set = (patch: Partial<CompanyDraft>) => setD({ ...d, ...patch });
 
   const save = useCallback(() => {
     if (!editable) return;
     const r = run((s, c) => saveCompany(s, d, c));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     // The form shows what was saved: single spaces, and days and years as numbers.
     if (r.ok) setD(companyDraftOf(r.state));
   }, [editable, run, d]);
 
   const text = (field: keyof CompanyDraft, label: string, hint?: string) => (
-    <Field label={label} hint={hint}><TextInput readOnly={!editable} value={d[field]} onChange={(v) => set({ [field]: v })} /></Field>
+    <Field name={field} label={label} hint={hint}><TextInput readOnly={!editable} value={d[field]} onChange={(v) => set({ [field]: v })} /></Field>
   );
 
   // A signatory picked from the directory's employees and the names already signing, or typed under Other….

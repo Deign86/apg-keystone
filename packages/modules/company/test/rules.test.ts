@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { COMPANY, companyOf, emptyState, parseState, SERVICES, signatureOf, signatureSizeOf, type Ctx, type Member } from '@keystone/core';
 import { canChange, COMPANY_LINE, companyDraftOf, resizeSignature, saveCompany, setSignature, signatureSizes, type CompanyDraft } from '../src/rules';
 import { companyModule } from '../src';
@@ -49,9 +50,9 @@ describe('company details', () => {
   });
 
   it('need whole numbers of days and years in range', () => {
-    expect(() => saveCompany(emptyState(), { ...blank(), dueInDays: '7.5' }, at(owner))).toThrow('Enter the days to pay as a whole number from 0 to 365, or leave it blank.');
-    expect(() => saveCompany(emptyState(), { ...blank(), dueInDays: '400' }, at(owner))).toThrow('from 0 to 365');
-    expect(() => saveCompany(emptyState(), { ...blank(), idValidYears: '-1' }, at(owner))).toThrow('Enter the years an ID is valid as a whole number from 0 to 10, or leave it blank.');
+    expect(refusalOf(() => saveCompany(emptyState(), { ...blank(), dueInDays: '7.5' }, at(owner)))).toEqual({ error: 'Enter the days to pay as a whole number from 0 to 365, or leave it blank.', fields: ['dueInDays'] });
+    expect(refusalOf(() => saveCompany(emptyState(), { ...blank(), dueInDays: '400' }, at(owner)))).toEqual({ error: 'Enter the days to pay as a whole number from 0 to 365, or leave it blank.', fields: ['dueInDays'] });
+    expect(refusalOf(() => saveCompany(emptyState(), { ...blank(), idValidYears: '-1' }, at(owner)))).toEqual({ error: 'Enter the years an ID is valid as a whole number from 0 to 10, or leave it blank.', fields: ['idValidYears'] });
     expect(saveCompany(emptyState(), blank(), at(owner)).record).toMatchObject({ dueInDays: 0, idValidYears: 0 });
   });
 

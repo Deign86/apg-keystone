@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { emptyState, moduleData, percent, toCentavos, withModuleData, type Ctx } from '@keystone/core';
 import {
   addMonths, baseRentInYear, depositLines, dueOnSigning, leaseSchedule, leaseTermsOf, leaseYearOf, monthlyRent, monthName, newSoa,
@@ -134,16 +135,16 @@ describe('saving', () => {
   it('refuses what cannot be worked out, with the sentence to show', () => {
     const s = emptyState();
 
-    expect(() => saveSoa(s, draft({ client: ' ' }), ctx)).toThrow('Enter the client.');
-    expect(() => saveSoa(s, draft({ sqm: '' }), ctx)).toThrow('Enter the floor area in square metres.');
-    expect(() => saveSoa(s, draft({ rate: 'abc' }), ctx)).toThrow('Enter the rate per square metre.');
-    expect(() => saveSoa(s, draft({ commencement: '' }), ctx)).toThrow('Enter the contract commencement date.');
-    expect(() => saveSoa(s, draft({ termMonths: '12.5' }), ctx)).toThrow('Enter the lease term in whole months.');
-    expect(() => saveSoa(s, draft({ pdcFirst: 'Feb 2027' }), ctx)).toThrow('Enter the first check month as YYYY-MM.');
-    expect(() => saveSoa(s, draft({ pdcDay: '32' }), ctx)).toThrow('Date the checks on a day from 1 to 31.');
+    expect(refusalOf(() => saveSoa(s, draft({ client: ' ' }), ctx))).toEqual({ error: 'Enter the client.', fields: ['client'] });
+    expect(refusalOf(() => saveSoa(s, draft({ sqm: '' }), ctx))).toEqual({ error: 'Enter the floor area in square metres.', fields: ['sqm'] });
+    expect(refusalOf(() => saveSoa(s, draft({ rate: 'abc' }), ctx))).toEqual({ error: 'Enter the rate per square metre.', fields: ['rate'] });
+    expect(refusalOf(() => saveSoa(s, draft({ commencement: '' }), ctx))).toEqual({ error: 'Enter the contract commencement date.', fields: ['commencement'] });
+    expect(refusalOf(() => saveSoa(s, draft({ termMonths: '12.5' }), ctx))).toEqual({ error: 'Enter the lease term in whole months.', fields: ['termMonths'] });
+    expect(refusalOf(() => saveSoa(s, draft({ pdcFirst: 'Feb 2027' }), ctx))).toEqual({ error: 'Enter the first check month as YYYY-MM.', fields: ['pdcFirst'] });
+    expect(refusalOf(() => saveSoa(s, draft({ pdcDay: '32' }), ctx))).toEqual({ error: 'Date the checks on a day from 1 to 31.', fields: ['pdcDay'] });
     const { state } = saveSoa(s, draft(), ctx);
 
-    expect(() => saveSoa(state, draft(), ctx)).toThrow('SOA-2026-001 is already used. The next free one is SOA-2026-002.');
+    expect(refusalOf(() => saveSoa(state, draft(), ctx))).toEqual({ error: 'SOA-2026-001 is already used. The next free one is SOA-2026-002.', fields: [] });
   });
 
   it('keeps nothing until something is saved', () => {
@@ -263,16 +264,17 @@ describe('the saved statements', () => {
     const saved = saveSoa(emptyState(), draft(), ctx);
     const gone = removeSoa(saved.state, 'SOA-2026-001', ctx).state;
 
-    expect(() => saveSoa(gone, soaDraftOf(saved.record), ctx)).toThrow('SOA-2026-001 is no longer saved.');
+    expect(refusalOf(() => saveSoa(gone, soaDraftOf(saved.record), ctx))).toEqual({ error: 'SOA-2026-001 is no longer saved.', fields: [] });
     expect(() => removeSoa(gone, 'SOA-2026-001', ctx)).toThrow('SOA-2026-001 is not saved.');
     expect(moduleData(gone, 'soa')).toEqual({ statements: [] });
   });
 
   it('refuse an escalation below zero, part months of deposit, more than 120 checks, and no property', () => {
-    expect(() => saveSoa(emptyState(), draft({ escalation: '-1' }), ctx)).toThrow('The escalation cannot be below zero.');
-    expect(() => saveSoa(emptyState(), draft({ depositMonths: '1.5' }), ctx)).toThrow('Enter the deposit and advance in whole months.');
-    expect(() => saveSoa(emptyState(), draft({ pdcCount: '121' }), ctx)).toThrow('Enter up to 120 checks.');
-    expect(() => saveSoa(emptyState(), draft({ property: '' }), ctx)).toThrow('Enter the property address.');
+    expect(refusalOf(() => saveSoa(emptyState(), draft({ escalation: '-1' }), ctx))).toEqual({ error: 'The escalation cannot be below zero.', fields: ['escalation'] });
+    expect(refusalOf(() => saveSoa(emptyState(), draft({ depositMonths: '1.5' }), ctx))).toEqual({ error: 'Enter the deposit and advance in whole months.', fields: ['depositMonths'] });
+    expect(refusalOf(() => saveSoa(emptyState(), draft({ depositMonths: '-1', advanceMonths: '0.5' }), ctx))).toEqual({ error: 'Enter the deposit and advance in whole months.', fields: ['depositMonths', 'advanceMonths'] });
+    expect(refusalOf(() => saveSoa(emptyState(), draft({ pdcCount: '121' }), ctx))).toEqual({ error: 'Enter up to 120 checks.', fields: ['pdcCount'] });
+    expect(refusalOf(() => saveSoa(emptyState(), draft({ property: '' }), ctx))).toEqual({ error: 'Enter the property address.', fields: ['property'] });
   });
 });
 

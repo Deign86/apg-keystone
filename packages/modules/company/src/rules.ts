@@ -32,13 +32,13 @@ const line = (x: string) => x.trim().replace(/\s+/g, ' ');
 /** Lines kept as typed, without spaces or blank lines at either end. */
 const lines = (x: string) => x.trim();
 
-/** A whole number from 0 up to `most`, or the sentence that refuses it. Blank is 0: not set. */
-function whole(text: string, most: number, what: string): number {
+/** A whole number from 0 up to `most`, or the sentence that refuses it, naming `field`. Blank is 0: not set. */
+function whole(text: string, most: number, what: string, field: keyof CompanyDraft): number {
   const t = text.trim();
 
   if (!t) return 0;
 
-  if (!/^\d+$/.test(t) || Number(t) > most) throw new KeystoneError(`Enter ${what} as a whole number from 0 to ${most}, or leave it blank.`);
+  if (!/^\d+$/.test(t) || Number(t) > most) throw new KeystoneError(`Enter ${what} as a whole number from 0 to ${most}, or leave it blank.`, field);
 
   return Number(t);
 }
@@ -50,7 +50,7 @@ export function saveCompany(s: TerminalState, d: CompanyDraft, ctx: Ctx): Change
   const details: CompanyDetails = {
     ...COMPANY, preparedBy: line(d.preparedBy), checkedBy: line(d.checkedBy), approvedBy: line(d.approvedBy),
     paymentInstructions: lines(d.paymentInstructions), billingNote: lines(d.billingNote), signatory: line(d.signatory),
-    billingTerms: line(d.billingTerms), dueInDays: whole(d.dueInDays, 365, 'the days to pay'), idValidYears: whole(d.idValidYears, 10, 'the years an ID is valid'),
+    billingTerms: line(d.billingTerms), dueInDays: whole(d.dueInDays, 365, 'the days to pay', 'dueInDays'), idValidYears: whole(d.idValidYears, 10, 'the years an ID is valid', 'idValidYears'),
   };
 
   // The signatures and their sizes are saved one at a time (setSignature, resizeSignature); saving the form keeps them.

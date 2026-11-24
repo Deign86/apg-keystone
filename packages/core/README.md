@@ -10,7 +10,7 @@ numbering, blank lines dropped).
 |---|---|
 | `src/kernel/schema.ts` | The saved-state shape (`dir`, `cv`, `bs`, `ids`, `log`, `ext`), kept compatible with the prototype |
 | `src/kernel/money.ts`, `dates.ts`, `format.ts` | Centavos, Manila dates, weekdays and semi-monthly cut-offs, peso, date and period formats, amount in words, and `DASH`, what a missing value shows as |
-| `src/kernel/state.ts` | `KeystoneError`, `Ctx` (the clock and who is signed in), `Change`, `logged`, `nextNumber`, `parseState` (the saved state, checked for its lists only, so one odd record never stops the rest from opening), `emptyState` (what a new computer or an empty cloud starts from: no records), `COMPANY` (the company itself, built in: name, address, contacts; docs/adr/0023) and `companyOf` (it, with what documents start from as saved, "" or 0 where not filled in; docs/adr/0018); a module's own data under `ext` (`moduleData`, `withModuleData`) and the decoders that read it back (`isJsonObject`, `jsonText`, `jsonNumber`, `jsonObjects`) |
+| `src/kernel/state.ts` | `KeystoneError` (the sentence and the fields it is about) and `fieldsOf`, `Ctx` (the clock and who is signed in), `Change`, `logged`, `nextNumber`, `parseState` (the saved state, checked for its lists only, so one odd record never stops the rest from opening), `emptyState` (what a new computer or an empty cloud starts from: no records), `COMPANY` (the company itself, built in: name, address, contacts; docs/adr/0023) and `companyOf` (it, with what documents start from as saved, "" or 0 where not filled in; docs/adr/0018); a module's own data under `ext` (`moduleData`, `withModuleData`) and the decoders that read it back (`isJsonObject`, `jsonText`, `jsonNumber`, `jsonObjects`) |
 | `src/kernel/backup.ts` | `parseBackup`: a backup to restore, with every record checked for the fields the screens show; one that fails is refused by name and nothing is restored |
 | `src/kernel/lines.ts` | Line-item drafts for documents: an amount per line (vouchers), or a quantity at a unit price (statements) |
 | `src/kernel/insight.ts` | `Figure`, `Finding`, `WaitingItem`, `topFinding` |
@@ -25,7 +25,8 @@ screen.
 ## Rules
 
 - **Shape of a rule:** `(state, …, ctx) => { state, record, message }`. To refuse, throw `KeystoneError('The sentence to
-  show.')`. Never mutate the state you were given.
+  show.')`, naming the draft fields it is about after the sentence (`KeystoneError('Enter the client.', 'client')`,
+  a line's cell as `lines.0.amount`), so the form can mark them (docs/adr/0044). Never mutate the state you were given.
 - **Time:** comes from `ctx.now()`, never `new Date()`, so tests can pin it (they use 30 Oct 2026, 09:05, Manila).
 - **What belongs here:** only what two or more parts need. Something one module needs belongs in that module.
 - **A new service:** add its name to `SERVICES`, its types to `services.ts` and a line to `ServiceContracts` (name →

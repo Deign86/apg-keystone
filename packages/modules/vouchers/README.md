@@ -45,7 +45,8 @@
   that column's left, and the tables keep their borders separate, inside each cell, so none falls half a pixel to one
   side.
 - `src/rules.ts`: its rules (numbering, saving, approving the CEO's own, status changes, the release check number, the
-  lock once released, what an edit does to an approval, copying one) and what it contributes. Tested in
+  lock once released, what an edit does to an approval, copying one) and what it contributes. A refused save names
+  the fields it is about (`payee`, `lines.0.amount`), which the form marks and focuses (docs/adr/0044). Tested in
   `test/rules.test.ts`.
 - Numbering: 888-001, 888-002 and on, with no year (older vouchers keep their CV-2026-… or 8888-… numbers). A new
   voucher's CV No. offers the next number, as the register stands when it is saved, and can be changed, as Billing's

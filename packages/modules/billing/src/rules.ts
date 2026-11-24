@@ -242,18 +242,21 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
   const b = statementOf(d);
   const t = statementTotals(b);
 
-  if (b.lines.some((l) => !l.qty)) throw new KeystoneError('Enter a quantity above zero on every charge.');
+  // Each charge kept with no quantity, by its line on the form: lineItemsOf drops a blank line, so it is read one line at a time.
+  const noQuantity = d.lines.flatMap((l, i) => (lineItemsOf([l], 'unit').some((x) => !x.qty) ? [`lines.${i}.qty`] : []));
 
-  if (!b.lines.length || t.subtotal <= 0) throw new KeystoneError('Add at least one charge with an amount.');
+  if (noQuantity.length) throw new KeystoneError('Enter a quantity above zero on every charge.', ...noQuantity);
 
-  if (!b.client) throw new KeystoneError('Enter who the statement is billed to.');
+  if (!b.lines.length || t.subtotal <= 0) throw new KeystoneError('Add at least one charge with an amount.', 'lines.0.amount');
 
-  if (b.ewt && !EWT_RATES.some((r) => r === b.ewtRate)) throw new KeystoneError(`Withhold ${EWT_RATES.join('% or ')}% EWT.`);
+  if (!b.client) throw new KeystoneError('Enter who the statement is billed to.', 'client');
+
+  if (b.ewt && !EWT_RATES.some((r) => r === b.ewtRate)) throw new KeystoneError(`Withhold ${EWT_RATES.join('% or ')}% EWT.`, 'ewtRate');
 
   // A new statement has no due date until Company Details says how many days clients have to pay.
-  if (!b.due) throw new KeystoneError('Enter the due date.');
+  if (!b.due) throw new KeystoneError('Enter the due date.', 'due');
 
-  if (b.due < (b.invoiceDate ?? b.date)) throw new KeystoneError('The due date is before the invoice date.');
+  if (b.due < (b.invoiceDate ?? b.date)) throw new KeystoneError('The due date is before the invoice date.', 'due');
 
   const original = d.editing ? s.bs.find((x) => x.no === d.editing) : undefined;
 

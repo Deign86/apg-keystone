@@ -116,15 +116,21 @@ describe('store', () => {
     const store = await KeystoneStore.open(memoryPlatform().platform);
     const before = store.state;
     const r = store.run(() => { throw new KeystoneError('The amount must be more than zero.'); });
-    expect(r).toEqual({ ok: false, error: 'The amount must be more than zero.' });
+    expect(r).toEqual({ ok: false, error: 'The amount must be more than zero.', fields: [] });
     expect(store.state).toBe(before);
+  });
+
+  it('passes on the fields a refusal names, for the screen to mark', async () => {
+    const store = await KeystoneStore.open(memoryPlatform().platform);
+    const r = store.run(() => { throw new KeystoneError('Enter the deposit and advance in whole months.', 'depositMonths', 'advanceMonths'); });
+    expect(r).toEqual({ ok: false, error: 'Enter the deposit and advance in whole months.', fields: ['depositMonths', 'advanceMonths'] });
   });
 
   it('turns a crashing rule into a message instead of a crash', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const store = await KeystoneStore.open(memoryPlatform().platform);
     const r = store.run(() => { throw new TypeError('x is undefined'); });
-    expect(r).toEqual({ ok: false, error: 'Something went wrong: x is undefined' });
+    expect(r).toEqual({ ok: false, error: 'Something went wrong: x is undefined', fields: [] });
   });
 
   it('tells listeners about a change and keeps drafts until everything is replaced', async () => {

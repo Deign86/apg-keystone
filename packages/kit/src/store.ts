@@ -7,8 +7,11 @@ import type { Platform } from './platform';
 /** Shown in the rail when the saved state was read but is not a Keystone state. */
 export const DAMAGED = 'Keystone could not open its saved records: they are damaged. It started with none, and keeps the damaged records as they are until you change something.';
 
-/** What a rule did: its record, its sentence and the state after it; or the sentence that refused it. */
-export type Outcome<T> = { ok: true; record: T; message: string; state: TerminalState } | { ok: false; error: string };
+/**
+ * What a rule did: its record, its sentence and the state after it; or the sentence that refused it and the fields that
+ * sentence is about (none when it is about no one field), for the screen to mark.
+ */
+export type Outcome<T> = { ok: true; record: T; message: string; state: TerminalState } | { ok: false; error: string; fields: readonly string[] };
 
 /**
  * Holds the one saved state, applies changes through the core rules and writes them to
@@ -157,7 +160,7 @@ export class KeystoneStore {
     );
   }
 
-  /** Runs a core rule. A refusal comes back as the sentence to show, never as a crash. */
+  /** Runs a core rule. A refusal comes back as the sentence to show and the fields it names, never as a crash. */
   run<T>(rule: (s: TerminalState, ctx: Ctx) => Change<T>): Outcome<T> {
     try {
       const r = rule(this.state, this.ctx);
@@ -166,10 +169,10 @@ export class KeystoneStore {
 
       return { ok: true, record: r.record, message: r.message, state: r.state };
     } catch (e) {
-      if (e instanceof KeystoneError) return { ok: false, error: e.message };
+      if (e instanceof KeystoneError) return { ok: false, error: e.message, fields: e.fields };
       console.error(e);
 
-      return { ok: false, error: `Something went wrong: ${sentenceOf(e)}` };
+      return { ok: false, error: `Something went wrong: ${sentenceOf(e)}`, fields: [] };
     }
   }
 

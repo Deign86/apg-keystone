@@ -131,6 +131,14 @@ test('refuses a statement with no floor area, saying what is missing', async ({ 
 
   await expect(form.getByRole('alert')).toHaveText('Enter the floor area in square metres.');
   await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
+  // The field it is about is marked and has the focus, and typing in it clears the mark.
+  const sqm = form.getByRole('textbox', 'Floor area (sqm)');
+
+  await expect(sqm).toHaveAttribute('aria-invalid', 'true');
+  await expect(sqm).toBeFocused();
+  await expect(form.getByRole('textbox', 'Rate per sqm')).not.toHaveAttribute('aria-invalid', 'true');
+  await sqm.fill('354.4');
+  await expect(sqm).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('changes a check number on the paper itself, and the checks after it follow', async ({ app, screen }) => {

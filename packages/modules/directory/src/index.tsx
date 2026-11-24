@@ -1,5 +1,5 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column, type RowAction } from '@keystone/ui';
-import { useMemo, useState } from 'react';
+import { Button, Checkbox, EmptyState, Field, FieldMarks, FieldRow, Panel, Register, ScreenHeader, SelectInput, Sheet, Tag, TextInput, cn, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
+import { useId, useMemo, useState } from 'react';
 import {
   changeEach, DASH, count, DIRECTORY_TAG, directoryDraftOf, newDirectoryDraft, nextCode, recordsOf, removeDirectoryRecord, RECORD_TYPES, saveDirectoryRecord, usedByCode,
   type DirectoryDraft, type DirectoryRecord, type RecordType, type Figure, type TerminalState,
@@ -9,52 +9,57 @@ import { useKeystone, type ModuleDef } from '@keystone/kit';
 function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => void }) {
   const { state, run, registry } = useKeystone();
   const [d, setD] = useState(draft);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
 
   const save = () => {
     // The screens a new record of this type can be picked on, as the installed modules say.
     const selectableIn = registry.modules.flatMap((m) => m.selects?.[d.type] ?? []);
     const r = run((s, c) => saveDirectoryRecord(s, d, c, selectableIn));
 
-    if (r.ok) onDone(); else setError(r.error);
+    if (r.ok) onDone(); else setError(r);
   };
 
   return (
     <form className="flex flex-col gap-3.5" onSubmit={(e) => { e.preventDefault(); save(); }}>
-      <FieldRow>
-        <Field label="Type">
-          <SelectInput
-            value={d.type}
-            onChange={(t) => {
-              const type = RECORD_TYPES.find((r) => r === t);
+      <FieldMarks refusal={error} describedBy={said}>
+        <FieldRow>
+          <Field label="Type">
+            <SelectInput
+              value={d.type}
+              onChange={(t) => {
+                const type = RECORD_TYPES.find((r) => r === t);
 
-              if (type) setD({ ...d, type, vat: type === 'Client' });
-            }}
-            options={RECORD_TYPES.map((t) => ({ value: t, label: t }))}
-          />
-        </Field>
-        <Field label="TIN"><TextInput figures placeholder="000-000-000-000" value={d.tin} onChange={(tin) => setD({ ...d, tin })} /></Field>
-      </FieldRow>
-      <Field label="Name" error={error ?? undefined}><TextInput capitalize autoFocus value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
-      <FieldRow>
-        <Field label={d.type === 'Employee' ? 'Position' : 'Address'}><TextInput value={d.detail} onChange={(detail) => setD({ ...d, detail })} /></Field>
-        {d.type === 'Employee' && <Field label="Department"><TextInput value={d.dept} onChange={(dept) => setD({ ...d, dept })} /></Field>}
-      </FieldRow>
-      <FieldRow>
-        <Field label="Email"><TextInput type="email" value={d.email} onChange={(email) => setD({ ...d, email })} /></Field>
-        <Field label="Phone"><TextInput type="tel" value={d.phone} onChange={(phone) => setD({ ...d, phone })} /></Field>
-      </FieldRow>
-      {d.type === 'Client' && (
-        <Field label="Attention" hint="Who billing statements are addressed to."><TextInput capitalize placeholder="Contact person" value={d.attention} onChange={(attention) => setD({ ...d, attention })} /></Field>
-      )}
-      {d.type === 'Client' && (
-        <div className="flex flex-wrap gap-x-5 gap-y-2">
-          <Checkbox checked={d.vat} onChange={(vat) => setD({ ...d, vat })}>VAT-registered (statements add 12% VAT)</Checkbox>
-          <Checkbox checked={d.ewt} onChange={(ewt) => setD({ ...d, ewt })}>Withholds EWT</Checkbox>
-        </div>
-      )}
+                if (type) setD({ ...d, type, vat: type === 'Client' });
+              }}
+              options={RECORD_TYPES.map((t) => ({ value: t, label: t }))}
+            />
+          </Field>
+          <Field label="TIN"><TextInput figures placeholder="000-000-000-000" value={d.tin} onChange={(tin) => setD({ ...d, tin })} /></Field>
+        </FieldRow>
+        <Field name="name" label="Name"><TextInput capitalize autoFocus value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
+        <FieldRow>
+          <Field label={d.type === 'Employee' ? 'Position' : 'Address'}><TextInput value={d.detail} onChange={(detail) => setD({ ...d, detail })} /></Field>
+          {d.type === 'Employee' && <Field label="Department"><TextInput value={d.dept} onChange={(dept) => setD({ ...d, dept })} /></Field>}
+        </FieldRow>
+        <FieldRow>
+          <Field label="Email"><TextInput type="email" value={d.email} onChange={(email) => setD({ ...d, email })} /></Field>
+          <Field label="Phone"><TextInput type="tel" value={d.phone} onChange={(phone) => setD({ ...d, phone })} /></Field>
+        </FieldRow>
+        {d.type === 'Client' && (
+          <Field label="Attention" hint="Who billing statements are addressed to."><TextInput capitalize placeholder="Contact person" value={d.attention} onChange={(attention) => setD({ ...d, attention })} /></Field>
+        )}
+        {d.type === 'Client' && (
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <Checkbox checked={d.vat} onChange={(vat) => setD({ ...d, vat })}>VAT-registered (statements add 12% VAT)</Checkbox>
+            <Checkbox checked={d.ewt} onChange={(ewt) => setD({ ...d, ewt })}>Withholds EWT</Checkbox>
+          </div>
+        )}
+      </FieldMarks>
       <div className="flex items-center justify-end gap-2 border-t border-line pt-3">
-        <span className="mr-auto text-xs text-ink-2">{d.editing ? `Keeps code ${d.editing}.` : `Gets code ${nextCode(state, d.type)}.`}</span>
+        {error
+          ? <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error.error}</p>
+          : <span className="mr-auto text-xs text-ink-2">{d.editing ? `Keeps code ${d.editing}.` : `Gets code ${nextCode(state, d.type)}.`}</span>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">{d.editing ? 'Save changes' : 'Add record'}</Button>
       </div>

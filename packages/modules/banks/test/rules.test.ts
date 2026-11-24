@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { emptyState, moduleData, SERVICES, withModuleData, type BankAccount, type Ctx } from '@keystone/core';
 import {
   accountDraftOf, accountLabel, accountsOf, bankAccounts, banksLine, newAccountDraft, nextAccountId, removeAccount, saveAccount,
@@ -44,16 +45,16 @@ describe('bank accounts', () => {
   it('needs the bank, the account name and the account number', () => {
     const d = { ...newAccountDraft(), ...bdo };
 
-    expect(() => saveAccount(state(), { ...d, bank: ' ' }, ctx)).toThrow('Enter the bank.');
-    expect(() => saveAccount(state(), { ...d, name: '' }, ctx)).toThrow('Enter the account name.');
-    expect(() => saveAccount(state(), { ...d, number: ' - ' }, ctx)).toThrow('Enter the account number.');
+    expect(refusalOf(() => saveAccount(state(), { ...d, bank: ' ' }, ctx))).toEqual({ error: 'Enter the bank.', fields: ['bank'] });
+    expect(refusalOf(() => saveAccount(state(), { ...d, name: '' }, ctx))).toEqual({ error: 'Enter the account name.', fields: ['name'] });
+    expect(refusalOf(() => saveAccount(state(), { ...d, number: ' - ' }, ctx))).toEqual({ error: 'Enter the account number.', fields: ['number'] });
     // The branch may be left out.
     expect(saveAccount(state(), { ...d, branch: '' }, ctx).record.branch).toBe('');
   });
 
   it('refuses an account number already in use, however it is spaced, and names the account', () => {
-    expect(() => saveAccount(state(), { ...newAccountDraft(), ...bdo, number: '4011-0258-68' }, ctx))
-      .toThrow('Account number 4011-0258-68 is already saved as B-001 (BPI, Alpha Premier Group of Companies OPC).');
+    expect(refusalOf(() => saveAccount(state(), { ...newAccountDraft(), ...bdo, number: '4011-0258-68' }, ctx)))
+      .toEqual({ error: 'Account number 4011-0258-68 is already saved as B-001 (BPI, Alpha Premier Group of Companies OPC).', fields: ['number'] });
   });
 
   it('edits an account in place, keeping its number, and its own account number is no clash', () => {
@@ -66,7 +67,7 @@ describe('bank accounts', () => {
   });
 
   it('refuses to edit an account that is gone', () => {
-    expect(() => saveAccount(state(), { ...accountDraftOf(bpi), editing: 'B-009' }, ctx)).toThrow('B-009 is no longer in Bank Accounts.');
+    expect(refusalOf(() => saveAccount(state(), { ...accountDraftOf(bpi), editing: 'B-009' }, ctx))).toEqual({ error: 'B-009 is no longer in Bank Accounts.', fields: [] });
   });
 
   it('removes an account and logs it; once the last is gone the list stays empty', () => {
@@ -113,8 +114,8 @@ describe('the bank-accounts service', () => {
     expect(added.record).toEqual({ id: 'B-002', ...bdo });
     expect(bankAccounts.accounts(added.state).map(bankAccounts.label)).toEqual(['BPI · 4011 0258 68', 'BDO · 0012 3456 7890']);
     expect(added.state.log[0]).toMatchObject({ mod: 'BANK', text: 'B-002 BDO · 0012 3456 7890 added, in the name of Alpha Premier Group of Companies OPC.' });
-    expect(() => bankAccounts.add(state(), { ...bdo, number: '4011-0258-68' }, ctx)).toThrow('Account number 4011-0258-68 is already saved as B-001');
-    expect(() => bankAccounts.add(state(), { ...bdo, bank: '' }, ctx)).toThrow('Enter the bank.');
+    expect(refusalOf(() => bankAccounts.add(state(), { ...bdo, number: '4011-0258-68' }, ctx))).toEqual({ error: expect.stringMatching(/^Account number 4011-0258-68 is already saved as B-001 /), fields: ['number'] });
+    expect(refusalOf(() => bankAccounts.add(state(), { ...bdo, bank: '' }, ctx))).toEqual({ error: 'Enter the bank.', fields: ['bank'] });
 
     const removed = bankAccounts.remove(added.state, 'B-001', ctx);
 

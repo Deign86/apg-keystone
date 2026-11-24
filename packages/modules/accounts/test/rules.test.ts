@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { ONLY_OWNER_MAKES, ONLY_OWNER_REMOVES, type Ctx, type Member, type MemberAccount, type MemberGrant } from '@keystone/core';
 import {
   accountMade, accountRemoved, accountsLine, checkAccount, grantAction, grantQuestion, grantRefusal, grantSet, grantTitle, checkPasswordChange, checkRemoval, makesAccounts, membersInOrder,
@@ -71,20 +72,20 @@ describe('making an account', () => {
   });
 
   it('needs a name, an email and a password of at least 8 characters', () => {
-    expect(() => checkAccount({ ...draft, name: '  ' }, members, asOwner)).toThrow('Enter the person\'s name, as Keystone should show it.');
-    expect(() => checkAccount(newAccountDraft(), members, asOwner)).toThrow('Enter the person\'s name');
+    expect(refusalOf(() => checkAccount({ ...draft, name: '  ' }, members, asOwner))).toEqual({ error: 'Enter the person\'s name, as Keystone should show it.', fields: ['name'] });
+    expect(refusalOf(() => checkAccount(newAccountDraft(), members, asOwner))).toEqual({ error: 'Enter the person\'s name, as Keystone should show it.', fields: ['name'] });
 
     for (const email of ['', 'liza', 'liza@alphapremiergroup', 'liza bautista@apg.com', '@apg.com']) {
-      expect(() => checkAccount({ ...draft, email }, members, asOwner)).toThrow('Enter the email they will sign in with, like ana.cruz@alphapremiergroup.com.');
+      expect(refusalOf(() => checkAccount({ ...draft, email }, members, asOwner))).toEqual({ error: 'Enter the email they will sign in with, like ana.cruz@alphapremiergroup.com.', fields: ['email'] });
     }
 
-    expect(() => checkAccount({ ...draft, password: '1234567' }, members, asOwner)).toThrow('The password needs at least 8 characters.');
+    expect(refusalOf(() => checkAccount({ ...draft, password: '1234567' }, members, asOwner))).toEqual({ error: 'The password needs at least 8 characters.', fields: ['password'] });
     expect(checkAccount({ ...draft, password: '12345678' }, members, asOwner).password).toBe('12345678');
   });
 
   it('refuses an email that already has an account, whatever its case, naming whose it is', () => {
-    expect(() => checkAccount({ ...draft, email: 'ANA.CRUZ@alphapremiergroup.com' }, members, asOwner))
-      .toThrow('ana.cruz@alphapremiergroup.com already has an account: Ana Cruz.');
+    expect(refusalOf(() => checkAccount({ ...draft, email: 'ANA.CRUZ@alphapremiergroup.com' }, members, asOwner)))
+      .toEqual({ error: 'ana.cruz@alphapremiergroup.com already has an account: Ana Cruz.', fields: ['email'] });
   });
 
   it('logs who it is for and their email, never the password', () => {
@@ -149,11 +150,11 @@ describe('changing your own password', () => {
 
   it('needs a sign-in, the current password, 8 characters, the same new password twice, and a new one', () => {
     expect(() => checkPasswordChange(good, local)).toThrow(NO_SIGN_IN);
-    expect(() => checkPasswordChange(newPasswordDraft(), asStaff)).toThrow('Enter your current password.');
-    expect(() => checkPasswordChange({ ...good, next: '1234567', again: '1234567' }, asStaff)).toThrow('The new password needs at least 8 characters.');
-    expect(() => checkPasswordChange({ ...good, again: 'new password' }, asStaff)).toThrow('The new password and its repeat do not match.');
-    expect(() => checkPasswordChange({ current: 'same password', next: 'same password', again: 'same password' }, asStaff))
-      .toThrow('Choose a new password, not the one you have now.');
+    expect(refusalOf(() => checkPasswordChange(newPasswordDraft(), asStaff))).toEqual({ error: 'Enter your current password.', fields: ['current'] });
+    expect(refusalOf(() => checkPasswordChange({ ...good, next: '1234567', again: '1234567' }, asStaff))).toEqual({ error: 'The new password needs at least 8 characters.', fields: ['next'] });
+    expect(refusalOf(() => checkPasswordChange({ ...good, again: 'new password' }, asStaff))).toEqual({ error: 'The new password and its repeat do not match.', fields: ['again'] });
+    expect(refusalOf(() => checkPasswordChange({ current: 'same password', next: 'same password', again: 'same password' }, asStaff)))
+      .toEqual({ error: 'Choose a new password, not the one you have now.', fields: ['next'] });
   });
 
   it('logs who changed their password, never the password', () => {

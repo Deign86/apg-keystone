@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { refusalOf } from '@keystone/kit/testing';
 import { CLOUD_LAYOUT, lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
   dataOf, decideRefusal, decideRequest, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
@@ -91,14 +92,14 @@ describe('filing a request', () => {
 
   it('refuses a request it cannot act on, with the sentence to show', () => {
     const s = state();
-    expect(() => fileRequest(s, ask({ purpose: '  ' }), local)).toThrow('Say what the money is for.');
-    expect(() => fileRequest(s, ask({ lines: [lineDraft()] }), local)).toThrow('List the expenses, each with its amount.');
-    expect(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '0']) }), local)).toThrow('Enter the amount for line 1, Venue deposit.');
-    expect(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '48000'], ['', '500']) }), local)).toThrow('Say what line 2 is for.');
-    expect(() => fileRequest(s, ask({ payee: 'V-999' }), local)).toThrow('Choose a payee from the directory.');
-    expect(() => fileRequest(s, ask({ when: 'date', by: '' }), local)).toThrow('Choose the date it must be settled by, or ASAP.');
-    expect(() => fileRequest(s, ask({ when: 'date', by: '2026-11-01' }), local)).toThrow('Nov 1, 2026 has passed. Choose a later date, or ASAP.');
-    expect(() => fileRequest(s, ask({ requester: ' ' }), local)).toThrow('Enter your name, so the CEO knows who is asking.');
+    expect(refusalOf(() => fileRequest(s, ask({ purpose: '  ' }), local))).toEqual({ error: 'Say what the money is for.', fields: ['purpose'] });
+    expect(refusalOf(() => fileRequest(s, ask({ lines: [lineDraft()] }), local))).toEqual({ error: 'List the expenses, each with its amount.', fields: ['lines.0.desc'] });
+    expect(refusalOf(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '0']) }), local))).toEqual({ error: 'Enter the amount for line 1, Venue deposit.', fields: ['lines.0.amount'] });
+    expect(refusalOf(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '48000'], ['', '500']) }), local))).toEqual({ error: 'Say what line 2 is for.', fields: ['lines.1.desc'] });
+    expect(refusalOf(() => fileRequest(s, ask({ payee: 'V-999' }), local))).toEqual({ error: 'Choose a payee from the directory.', fields: ['payee'] });
+    expect(refusalOf(() => fileRequest(s, ask({ when: 'date', by: '' }), local))).toEqual({ error: 'Choose the date it must be settled by, or ASAP.', fields: ['by'] });
+    expect(refusalOf(() => fileRequest(s, ask({ when: 'date', by: '2026-11-01' }), local))).toEqual({ error: 'Nov 1, 2026 has passed. Choose a later date, or ASAP.', fields: ['by'] });
+    expect(refusalOf(() => fileRequest(s, ask({ requester: ' ' }), local))).toEqual({ error: 'Enter your name, so the CEO knows who is asking.', fields: ['requester'] });
   });
 
   it('lets the requester change or withdraw their own request while it waits, and nobody else', () => {
@@ -109,8 +110,8 @@ describe('filing a request', () => {
     expect(edited.state.log[0].text).toBe('RF-2026-0001 edited by Ana Cruz.');
 
     expect(requestLock(mine, at(it2))).toBe('Only Ana Cruz can change RF-2026-0001.');
-    expect(() => fileRequest(s, requestDraftOf(mine), at(it2))).toThrow('Only Ana Cruz can change RF-2026-0001.');
-    expect(() => withdrawRequest(s, 'RF-2026-0001', at(it2))).toThrow('Only Ana Cruz can change RF-2026-0001.');
+    expect(refusalOf(() => fileRequest(s, requestDraftOf(mine), at(it2)))).toEqual({ error: 'Only Ana Cruz can change RF-2026-0001.', fields: [] });
+    expect(refusalOf(() => withdrawRequest(s, 'RF-2026-0001', at(it2)))).toEqual({ error: 'Only Ana Cruz can change RF-2026-0001.', fields: [] });
 
     const withdrawn = withdrawRequest(s, 'RF-2026-0001', at(hr));
     expect(withdrawn.record.status).toBe('Withdrawn');
@@ -133,9 +134,9 @@ describe('a request paid by transfer', () => {
 
   it('refuses an account it could not transfer to', () => {
     const s = state();
-    expect(() => fileRequest(s, topUp({ account: { ...fund, bank: ' ' } }), local)).toThrow('Enter the bank of the account to transfer to.');
-    expect(() => fileRequest(s, topUp({ account: { ...fund, name: '' } }), local)).toThrow('Enter the account name, as the bank holds it.');
-    expect(() => fileRequest(s, topUp({ account: { ...fund, number: 'n/a' } }), local)).toThrow('Enter the account number to transfer to.');
+    expect(refusalOf(() => fileRequest(s, topUp({ account: { ...fund, bank: ' ' } }), local))).toEqual({ error: 'Enter the bank of the account to transfer to.', fields: ['account.bank'] });
+    expect(refusalOf(() => fileRequest(s, topUp({ account: { ...fund, name: '' } }), local))).toEqual({ error: 'Enter the account name, as the bank holds it.', fields: ['account.name'] });
+    expect(refusalOf(() => fileRequest(s, topUp({ account: { ...fund, number: 'n/a' } }), local))).toEqual({ error: 'Enter the account number to transfer to.', fields: ['account.number'] });
     // A check needs no account, and a transfer no payee.
     expect(fileRequest(s, topUp({ payee: 'V-999' }), local).record.payee).toBe('');
     expect(fileRequest(s, ask({ account: { ...fund, bank: '' } }), local).record).not.toHaveProperty('account');

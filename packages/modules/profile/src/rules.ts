@@ -18,11 +18,11 @@ export function checkName(name: string, ctx: Ctx): string {
   if (!ctx.who) throw new KeystoneError(NO_SIGN_IN);
   const next = name.trim().replace(/\s+/g, ' ');
 
-  if (!next) throw new KeystoneError('Enter your name, as Keystone should show it.');
+  if (!next) throw new KeystoneError('Enter your name, as Keystone should show it.', 'name');
 
-  if (next.length > MAX_NAME) throw new KeystoneError(`Keep your name to ${MAX_NAME} characters.`);
+  if (next.length > MAX_NAME) throw new KeystoneError(`Keep your name to ${MAX_NAME} characters.`, 'name');
 
-  if (next === ctx.who.name) throw new KeystoneError('That is already your name.');
+  if (next === ctx.who.name) throw new KeystoneError('That is already your name.', 'name');
 
   return next;
 }

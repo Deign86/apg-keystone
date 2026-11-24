@@ -68,36 +68,58 @@ test('refuses a request it cannot act on, and says why', async ({ app, screen })
 
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Say what the money is for.');
+  // Each refusal marks the field it is about and gives it the focus; typing in it clears the mark.
+  const purpose = form.getByRole('textbox', 'What it is for');
 
-  await form.getByRole('textbox', 'What it is for').fill('Replacement laptop charger');
+  await expect(purpose).toHaveAttribute('aria-invalid', 'true');
+  await expect(purpose).toBeFocused();
+  await purpose.fill('Replacement laptop charger');
+  await expect(purpose).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('List the expenses, each with its amount.');
+  await expect(form.getByRole('textbox', 'Line 1 description')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Line 1 description')).toBeFocused();
 
   await form.getByRole('textbox', 'Line 1 description').fill('Laptop charger');
+  await expect(form.getByRole('textbox', 'Line 1 description')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the amount for line 1, Laptop charger.');
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toBeFocused();
 
   await form.getByRole('textbox', 'Line 1 amount').fill('2,450.50');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the bank of the account to transfer to.');
+  await expect(form.getByRole('textbox', 'Line 1 amount')).not.toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Bank')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Bank')).toBeFocused();
 
   await form.getByRole('textbox', 'Bank').fill('BPI');
   await form.getByRole('textbox', 'Account name').fill('Paolo Santos');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the account number to transfer to.');
+  await expect(form.getByRole('textbox', 'Account number')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Account number')).toBeFocused();
+  await expect(form.getByRole('textbox', 'Bank')).not.toHaveAttribute('aria-invalid', 'true');
 
   await form.getByRole('textbox', 'Account number').fill('4011 0258 68');
+  await expect(form.getByRole('textbox', 'Account number')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('combobox', 'Settle').tap();
   await screen.getByRole('option', 'By a date').tap();
   await form.getByRole('textbox', 'Settle by').fill('2026-10-30');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Oct 30, 2026 has passed. Choose a later date, or ASAP.');
+  await expect(form.getByRole('textbox', 'Settle by')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Settle by')).toBeFocused();
 
   await form.getByRole('textbox', 'Settle by').fill('2026-11-20');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter your name, so the CEO knows who is asking.');
+  await expect(form.getByRole('textbox', 'Requested by')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Requested by')).toBeFocused();
 
   await form.getByRole('textbox', 'Requested by').fill('Paolo Santos');
+  await expect(form.getByRole('textbox', 'Requested by')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Send for approval').tap();
   await screen.getByRole('tab', /^(Your requests|Requests)/).tap();
   await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Bank transfer Paolo Santos ₱2,450\.50 Nov 20, 2026 For Approval/)).toBeVisible();

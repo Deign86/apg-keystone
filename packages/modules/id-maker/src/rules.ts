@@ -103,11 +103,11 @@ export function withEmployee(s: TerminalState, d: IDDraft, emp: string): IDDraft
 export function issueID(s: TerminalState, d: IDDraft, ctx: Ctx, asNew = false): Change<IDRecord> {
   const i = idOf(d);
 
-  if (!i.name) throw new KeystoneError('Enter the name to print on the card.');
+  if (!i.name) throw new KeystoneError('Enter the name to print on the card.', 'name');
 
-  if (!i.valid) throw new KeystoneError('Enter the date the card is valid until.');
+  if (!i.valid) throw new KeystoneError('Enter the date the card is valid until.', 'valid');
 
-  if (i.valid <= i.issued) throw new KeystoneError('The card must be valid past the day it is issued.');
+  if (i.valid <= i.issued) throw new KeystoneError('The card must be valid past the day it is issued.', 'valid');
 
   const original = d.editing ? s.ids.find((x) => x.no === d.editing) : undefined;
 

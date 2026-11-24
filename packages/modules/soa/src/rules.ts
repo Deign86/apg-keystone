@@ -390,27 +390,29 @@ export function saveSoa(s: TerminalState, d: SoaDraft, ctx: Ctx, asNew = false):
   const a = soaOf(d);
   const all = statementsOf(s);
 
-  if (!a.client) throw new KeystoneError('Enter the client.');
+  if (!a.client) throw new KeystoneError('Enter the client.', 'client');
 
-  if (!a.property) throw new KeystoneError('Enter the property address.');
+  if (!a.property) throw new KeystoneError('Enter the property address.', 'property');
 
-  if (a.sqm <= 0) throw new KeystoneError('Enter the floor area in square metres.');
+  if (a.sqm <= 0) throw new KeystoneError('Enter the floor area in square metres.', 'sqm');
 
-  if (a.rate <= 0) throw new KeystoneError('Enter the rate per square metre.');
+  if (a.rate <= 0) throw new KeystoneError('Enter the rate per square metre.', 'rate');
 
-  if (!a.commencement) throw new KeystoneError('Enter the contract commencement date.');
+  if (!a.commencement) throw new KeystoneError('Enter the contract commencement date.', 'commencement');
 
-  if (!whole(a.termMonths) || !a.termMonths) throw new KeystoneError('Enter the lease term in whole months.');
+  if (!whole(a.termMonths) || !a.termMonths) throw new KeystoneError('Enter the lease term in whole months.', 'termMonths');
 
-  if (!whole(a.depositMonths) || !whole(a.advanceMonths)) throw new KeystoneError('Enter the deposit and advance in whole months.');
+  if (!whole(a.depositMonths) || !whole(a.advanceMonths)) {
+    throw new KeystoneError('Enter the deposit and advance in whole months.', ...(whole(a.depositMonths) ? [] : ['depositMonths']), ...(whole(a.advanceMonths) ? [] : ['advanceMonths']));
+  }
 
-  if (a.escalation < 0) throw new KeystoneError('The escalation cannot be below zero.');
+  if (a.escalation < 0) throw new KeystoneError('The escalation cannot be below zero.', 'escalation');
 
-  if (a.pdcFirst && !/^\d{4}-\d{2}$/.test(a.pdcFirst)) throw new KeystoneError('Enter the first check month as YYYY-MM.');
+  if (a.pdcFirst && !/^\d{4}-\d{2}$/.test(a.pdcFirst)) throw new KeystoneError('Enter the first check month as YYYY-MM.', 'pdcFirst');
 
-  if (!whole(a.pdcCount) || a.pdcCount > 120) throw new KeystoneError('Enter up to 120 checks.');
+  if (!whole(a.pdcCount) || a.pdcCount > 120) throw new KeystoneError('Enter up to 120 checks.', 'pdcCount');
 
-  if (!whole(a.pdcDay) || a.pdcDay < 1 || a.pdcDay > 31) throw new KeystoneError('Date the checks on a day from 1 to 31.');
+  if (!whole(a.pdcDay) || a.pdcDay < 1 || a.pdcDay > 31) throw new KeystoneError('Date the checks on a day from 1 to 31.', 'pdcDay');
 
   const original = d.editing && !asNew ? all.find((x) => x.no === d.editing) : undefined;
 

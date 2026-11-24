@@ -61,6 +61,8 @@ describe('the Profile screen', () => {
     await rename('Mark Anthony Santos');
 
     expect(screen.getByRole('alert')).toHaveTextContent('Keystone could not reach APG\'s records.');
+    // Not about the name, so the name is not marked.
+    expect(screen.getByRole('textbox', { name: 'Your name' })).not.toHaveAttribute('aria-invalid', 'true');
     expect(store.ctx.who?.name).toBe('Deign Lazaro');
     expect(store.state.log).toHaveLength(0);
   });
@@ -73,6 +75,13 @@ describe('the Profile screen', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Enter your name, as Keystone should show it.');
     expect(accounts.rename).not.toHaveBeenCalled();
+    // The name field is marked and has the focus; typing in it clears the mark.
+    const name = screen.getByRole('textbox', { name: 'Your name' });
+
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveFocus();
+    fireEvent.change(name, { target: { value: 'Mark' } });
+    expect(name).not.toHaveAttribute('aria-invalid', 'true');
   });
 
   it('with nobody signed in, says there is no profile', async () => {

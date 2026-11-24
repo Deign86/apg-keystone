@@ -114,21 +114,39 @@ test('needs the bank, the account name and the number, and refuses a number alre
   const dialog = screen.getByRole('dialog', 'Add account');
   const add = dialog.getByRole('button', 'Add account');
 
+  // Each refusal marks the field it is about and gives it the focus; typing in it clears the mark.
+  const bank = dialog.getByRole('textbox', 'Bank');
+  const name = dialog.getByRole('textbox', 'Account name');
+  const number = dialog.getByRole('textbox', 'Account number');
+
   await add.tap();
   await expect(dialog.getByRole('alert')).toHaveText('Enter the bank.');
+  await expect(bank).toHaveAttribute('aria-invalid', 'true');
+  await expect(bank).toBeFocused();
+  await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
-  await dialog.getByRole('textbox', 'Bank').fill('Metrobank');
+  await bank.fill('Metrobank');
+  await expect(bank).not.toHaveAttribute('aria-invalid', 'true');
   await add.tap();
   await expect(dialog.getByRole('alert')).toHaveText('Enter the account name.');
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await expect(name).toBeFocused();
+  await expect(bank).not.toHaveAttribute('aria-invalid', 'true');
 
-  await dialog.getByRole('textbox', 'Account name').fill('Alpha Premier Group of Companies OPC');
+  await name.fill('Alpha Premier Group of Companies OPC');
+  await expect(name).not.toHaveAttribute('aria-invalid', 'true');
   await add.tap();
   await expect(dialog.getByRole('alert')).toHaveText('Enter the account number.');
+  await expect(number).toHaveAttribute('aria-invalid', 'true');
+  await expect(number).toBeFocused();
 
   // The same number written with dashes is still the same account.
-  await dialog.getByRole('textbox', 'Account number').fill('4011-0258-68');
+  await number.fill('4011-0258-68');
+  await expect(number).not.toHaveAttribute('aria-invalid', 'true');
   await add.tap();
   await expect(dialog.getByRole('alert')).toHaveText('Account number 4011-0258-68 is already saved as B-001 (BPI, Alpha Premier Group of Companies OPC).');
+  await expect(number).toHaveAttribute('aria-invalid', 'true');
+  await expect(number).toBeFocused();
 
   await dialog.getByRole('button', 'Cancel').tap();
   await expect(dialog).toBeHidden();

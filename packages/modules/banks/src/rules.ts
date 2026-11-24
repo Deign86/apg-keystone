@@ -57,14 +57,14 @@ export function saveAccount(s: TerminalState, d: AccountDraft, ctx: Ctx): Change
   const name = clean(d.name);
   const number = clean(d.number);
 
-  if (!bank) throw new KeystoneError('Enter the bank.');
+  if (!bank) throw new KeystoneError('Enter the bank.', 'bank');
 
-  if (!name) throw new KeystoneError('Enter the account name.');
+  if (!name) throw new KeystoneError('Enter the account name.', 'name');
 
-  if (!numberKey(number)) throw new KeystoneError('Enter the account number.');
+  if (!numberKey(number)) throw new KeystoneError('Enter the account number.', 'number');
   const clash = accounts.find((a) => a.id !== original?.id && numberKey(a.number) === numberKey(number));
 
-  if (clash) throw new KeystoneError(`Account number ${number} is already saved as ${clash.id} (${clash.bank}, ${clash.name}).`);
+  if (clash) throw new KeystoneError(`Account number ${number} is already saved as ${clash.id} (${clash.bank}, ${clash.name}).`, 'number');
 
   const account: BankAccount = {
     id: original?.id ?? nextNumber(accounts.map((a) => a.id), 'B-', 3), bank, branch: clean(d.branch), name, number,

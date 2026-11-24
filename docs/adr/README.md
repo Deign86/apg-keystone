@@ -54,6 +54,7 @@ Consequences**.
 | [0041](0041-forms-save-drafts-kept-with-the-records.md) | Forms save drafts, kept with the records; a request's drafts are kept to their author | Accepted |
 | [0042](0042-the-paper-shows-where-you-are-typing.md) | The paper shows where you are typing | Accepted |
 | [0043](0043-export-pdf-is-the-print-with-its-text.md) | Export PDF is the print, with its text, on as many A4 pages as it takes | Accepted |
+| [0044](0044-a-refusal-names-the-fields-it-is-about.md) | A refusal names the fields it is about, and the form marks them | Accepted |
 | [0045](0045-signatures-trimmed-centred-resizable-and-no-empty-ewt-line.md) | Signatures are trimmed, centred and resizable, a statement prints no empty EWT line, and Enter adds a line | Accepted |
 
 Template:

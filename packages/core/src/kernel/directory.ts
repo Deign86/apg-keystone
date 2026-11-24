@@ -100,10 +100,10 @@ const listed = (names: readonly string[]) => (names.length > 1 ? `${names.slice(
 export function saveDirectoryRecord(s: TerminalState, d: DirectoryDraft, ctx: Ctx, selectableIn: readonly string[] = []): Change<DirectoryRecord> {
   const name = clean(d.name);
 
-  if (!name) throw new KeystoneError('Enter a name for the record.');
+  if (!name) throw new KeystoneError('Enter a name for the record.', 'name');
   const clash = s.dir.find((x) => x.type === d.type && x.code !== d.editing && x.name.toLowerCase() === name.toLowerCase());
 
-  if (clash) throw new KeystoneError(`${clash.code} already has that name.`);
+  if (clash) throw new KeystoneError(`${clash.code} already has that name.`, 'name');
 
   const original = d.editing ? recordOf(s, d.editing) : undefined;
 
