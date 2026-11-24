@@ -133,6 +133,29 @@ test('refuses a statement with no floor area, saying what is missing', async ({ 
   await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
 });
 
+test('changes a check number on the paper itself, and the checks after it follow', async ({ app, screen }) => {
+  await app.open('/#soa');
+  await fillLease(screen);
+  const checks = screen.getByRole('article', 'Statement of account SOA-2026-001').getByRole('table', 'Postdated checks');
+
+  // Checks 1 to 4 are in order; a new checkbook starts at check 5.
+  await checks.getByRole('button', '6000325753').tap();
+  await checks.getByRole('textbox', 'Check 5 number').fill('7000000001');
+  await checks.getByRole('textbox', 'Check 5 number').press('Enter');
+
+  await expect(checks.getByRole('row', /^4 .* 6000325752 /)).toBeVisible();
+  await expect(checks.getByRole('row', /^5 .* 7000000001 /)).toBeVisible();
+  await expect(checks.getByRole('row', /^6 .* 7000000002 /)).toBeVisible();
+});
+
+test('prints the payee under its own title, such as Lessor', async ({ app, screen }) => {
+  await app.open('/#soa');
+  const form = await fillLease(screen);
+
+  await form.getByRole('textbox', 'Payee’s title').fill('Lessor');
+  await expect(screen.getByRole('article', 'Statement of account SOA-2026-001').getByText('Lessor', { exact: true })).toBeVisible();
+});
+
 // Save draft (docs/adr/0041): a statement's work kept with the records and listed under Drafts above the saved ones,
 // and opened again to be finished. Saved for real, it takes the next number and the draft leaves the list.
 test('saves a draft, opens it again from Drafts, and takes it away once the statement is saved', async ({ app, screen }) => {

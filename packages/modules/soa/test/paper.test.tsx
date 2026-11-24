@@ -143,6 +143,25 @@ describe('the statement of account on paper', () => {
     expect(within(paper).getAllByText('—').length).toBeGreaterThan(0);
   });
 
+  it('prints the payee under its own title, the floor area when chosen, and the details added', () => {
+    const paper = paperOf({ payeeLabel: 'Lessor', showSqm: true, details: [{ label: 'Floor', value: '3rd floor, Room 7' }] });
+    const facts = [...paper.querySelectorAll('dt')].map((dt) => [dt.textContent, dt.nextElementSibling?.textContent]);
+
+    expect(facts).toEqual([
+      ['Client', 'Northwind Retail Corp.'],
+      ['Property address', 'Unit 5, Ortigas Avenue, Pasig'],
+      ['Floor area', '354.4 sqm'],
+      ['Lease terms', '2 years, 5% escalation a year from the second year'],
+      ['Lessor', 'Juan Dela Cruz'],
+      ['Contract commencement', 'January 1, 2027'],
+      ['Floor', '3rd floor, Room 7'],
+    ]);
+  });
+
+  it('prints the check numbers as text, with nothing to change them, when it is not given a way to', () => {
+    expect(within(paperOf()).queryAllByRole('button')).toEqual([]);
+  });
+
   it('prints the notes when there are some', () => {
     expect(within(paperOf()).getByRole('heading', { name: 'Notes' }).nextElementSibling?.textContent).toBe('Checks are payable to the lessor.');
   });

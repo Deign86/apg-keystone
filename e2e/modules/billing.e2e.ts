@@ -71,13 +71,13 @@ test('a non-VAT client gets no VAT and no withholding', async ({ app, screen }) 
   await form.getByRole('textbox', 'Line 1 description').fill('Unit rental, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('45500');
 
-  // No VAT or withholding on the form; the printed statement's totals box shows a dash on both lines.
+  // No VAT or withholding on the form; the printed statement's totals box dashes VAT and has no EWT line at all.
   await expect(form.getByText('Subtotal ₱45,500.00')).toBeVisible();
   const paper = screen.getByRole('article', 'Billing statement 888-110226');
 
   await expect(paper.getByRole('row', 'Total amount due ₱45,500.00').first()).toBeVisible();
   await expect(paper.getByRole('row', 'VAT (12%) —').first()).toBeVisible();
-  await expect(paper.getByRole('row', 'Less: EWT (2%) —').first()).toBeVisible();
+  await expect(paper.getByRole('row', /^Less: EWT/)).toHaveCount(0);
   await expect(paper.getByRole('row', 'Qty Description Unit price Amount').first()).toBeVisible();
 });
 

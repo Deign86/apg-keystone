@@ -318,10 +318,6 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">VAT (12%)</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
 </tr>
-<tr class="border-t border-paper-line ">
-<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Less: EWT (5%)</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
-</tr>
 <tr class="border-t border-paper-line bg-paper-tint">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total amount due</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums text-sm font-bold">₱91,000.00</td>

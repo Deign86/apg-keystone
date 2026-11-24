@@ -16,12 +16,19 @@ What each new voucher, statement and ID starts from. The company itself, its nam
 - `src/Signatures.tsx`: **Signatures** under the form (docs/adr/0038). The CEO picks whose signature it is and uploads
   a scan or photo (scaled to fit 480 × 160, its paper made see-through) or draws it in a box; `setSignature` keeps it
   in `state.company.signatures` by the name in capitals, and replaces or removes it, each a log line. Every voucher,
-  statement and request then prints it above the name of whoever signs. Saving the form keeps them.
+  statement and request then prints it above the name of whoever signs. Saving the form keeps them. A signature is kept
+  trimmed to its ink (kit's `trimSignature`), so every one is drawn the same size; `resizeSignature` keeps a size for
+  one signatory (`state.company.signatureSizes`, half to twice the standard height), only by the CEO (docs/adr/0045).
 - The data itself is the kernel's: `state.company` (`CompanyDetails` in core), read everywhere with `companyOf`, which
   gives the built-in company and "" (or 0) for anything not filled in.
 
 ## Contributes
-- **Activity:** log tag `CO` (filter "Company Details"): each save.
+- **Activity:** log tag `CO` (filter "Company Details"): each save, and each signature added, replaced, removed or resized.
+
+## Provides
+`company.signature-sizes` (`SERVICES.signatureSizes`, typed `SignatureSizes` in core): whether whoever is signed in may
+resize signatures, and resizing one, by the same rules as the screen. The kit's signature on a paper uses it for its
+resize handle; without this module a signature is drawn at the standard size and cannot be resized.
 
 ## Needs
 Nothing. Vouchers, Billing, ID Maker and Payroll read the details through core, not through this module.
