@@ -51,7 +51,7 @@ test('the rail marks the screen that is open, and its brand goes home', async ({
   await expect(rail.getByRole('button', /Payroll$/)).toHaveAttribute('aria-current', 'page');
   await expect(rail.getByRole('button', /Home$/)).not.toHaveAttribute('aria-current');
 
-  await rail.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig').tap();
+  await rail.getByRole('button', 'ALPHA PREMIER KEYSTONE').tap();
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
   await expect(rail.getByRole('button', /Home$/)).toHaveAttribute('aria-current', 'page');
   await expect(rail.getByRole('button', /Payroll$/)).not.toHaveAttribute('aria-current');
@@ -179,7 +179,7 @@ test('on a phone, a menu takes the rail\'s place and opens the screens', async (
   await expect(screen.getByRole('form', 'New request')).toBeVisible();
 
   // The brand in the bar goes home.
-  await screen.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig').tap();
+  await screen.getByRole('button', 'ALPHA PREMIER KEYSTONE').tap();
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
 });
 
