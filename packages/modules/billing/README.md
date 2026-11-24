@@ -6,18 +6,20 @@
   statement, and Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts
   (`billing.view`). The register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent,
   Print, and Export PDF. **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and
-  Attention, and any other name leaves them to be set by hand. **Prepared by** starts as whoever is signed in,
+  Attention, and any other name leaves them to be set by hand. Its **Address** is typed too (never from the
+  directory), kept only when typed and printed under the name. **Prepared by** starts as whoever is signed in,
   **Checked by** and **Approved by** as the last statement's (Company Details' before the first). Each signatory has a
   position under their name (**Preparer's position**, **Checker's position**, **Approver's position**), kept only when
   typed, printed under the name, and started from the last statement's.
 - `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under every paper's
   letterhead (kit's `Letterhead`: the title across the top, the Group of Companies logo with the address beside it, the
-  number and date): Bill to and Attention, the invoice box (number, invoice and due dates), Qty · Description · Unit
-  price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%) and the total amount due, every line
-  shown, a dash where a tax does not apply. Then payment instructions, the **Penalty** line (the statement's own,
-  `penalty`, started from Company Details' penalty; one saved before it kept one prints Company Details'), notes and
-  who signs, each with the signature Company Details keeps for them (docs/adr/0038). It prints once, on a whole upright
-  A4 page (the kit's `Sheet`), not twice on a sheet cut in two as the check voucher does.
+  number and date): Bill to, its address under it when one is typed, and Attention, the invoice box (number, invoice and
+  due dates), Qty · Description · Unit price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%)
+  and the total amount due, every line shown, a dash where a tax does not apply. Then payment instructions, the
+  **Penalty** line (the statement's own, `penalty`, started from Company Details' penalty; one saved before it kept one
+  prints Company Details'), notes and who signs, each with the signature Company Details keeps for them (docs/adr/0038).
+  It prints once, on a whole upright A4 page (the kit's `Sheet`), not twice on a sheet cut in two as the check voucher
+  does.
 - `src/rules.ts`: its rules (totals with VAT and EWT, numbering, the client typed or from the directory,
   `recordPayment`, overdue on open, the account the payment instructions name) and what it contributes. Tested in
   `test/rules.test.ts`.

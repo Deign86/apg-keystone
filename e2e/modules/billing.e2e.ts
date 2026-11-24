@@ -202,6 +202,33 @@ test('pays into the account picked under Pay into, and the saved statement keeps
   await expect(screen.getByRole('article', 'Billing statement 888-110226').getByText('Bank: Security Bank', { exact: false }).first()).toBeVisible();
 });
 
+test('prints Bill to\'s address under the name, as typed, and keeps it with the statement', async ({ app, screen }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+  const paper = screen.getByRole('article', 'Billing statement 888-110226');
+
+  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
+  await expect(form.getByRole('textbox', 'Address')).toHaveValue('');
+  await form.getByRole('textbox', 'Address').fill('12 Evergreen Terrace, Springfield, Pasig City');
+
+  await expect(paper.getByText('Springfield Properties Inc.', { exact: true })).toBeVisible();
+  await expect(paper.getByText('12 Evergreen Terrace, Springfield, Pasig City', { exact: true })).toBeVisible();
+
+  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', '888-110226 saved and marked as sent.')).toBeVisible();
+  // The next statement starts with no address.
+  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Address')).toHaveValue('');
+
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await screen.getByRole('table', 'Statements issued').getByRole('cell', '888-110226').tap();
+
+  await expect(screen.getByRole('form', 'Editing 888-110226').getByRole('textbox', 'Address')).toHaveValue('12 Evergreen Terrace, Springfield, Pasig City');
+  await expect(paper.getByText('12 Evergreen Terrace, Springfield, Pasig City', { exact: true })).toBeVisible();
+});
+
 test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();

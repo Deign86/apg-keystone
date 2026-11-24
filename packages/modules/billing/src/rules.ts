@@ -98,7 +98,7 @@ export const overdue = (s: TerminalState) => s.bs.filter((b) => b.status === 'Ov
 export const outstandingTotal = (s: TerminalState) => sumCentavos(outstanding(s), (b) => statementTotals(b).due);
 
 export interface StatementDraft extends Editing {
-  no: string; date: string; invoiceDate: string; due: string; client: string; attention: string;
+  no: string; date: string; invoiceDate: string; due: string; client: string; address: string; attention: string;
   lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string; penalty: string;
   prepared: string; checked: string; approved: string;
   preparedPos: string; checkedPos: string; approvedPos: string;
@@ -119,7 +119,7 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
 
   return {
     no: nextStatementNo(s, t), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: '',
-    attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
+    address: '', attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
     notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote, penalty: d.billingTerms,
     prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
     preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
@@ -132,7 +132,7 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
  */
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
   editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: nameOf(s, b.client),
-  attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
+  address: b.address ?? '', attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
   notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote, penalty: b.penalty ?? companyOf(s).billingTerms,
   prepared: b.prepared ?? '', checked: b.checked ?? '', approved: b.approved ?? '',
   preparedPos: b.preparedPos ?? '', checkedPos: b.checkedPos ?? '', approvedPos: b.approvedPos ?? '',
@@ -153,6 +153,10 @@ export function statementOf(d: StatementDraft, status: StatementStatus = 'Sent')
 
     if (value) b[key] = value;
   }
+
+  const address = d.address.trim();
+
+  if (address) b.address = address;
 
   return b;
 }
