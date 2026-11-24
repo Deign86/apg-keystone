@@ -173,6 +173,9 @@ export function Register<T>({
   const need = columns.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), (actions ? MENU_WIDTH : 0) + (bulk ? TICK_WIDTH : 0));
   const [box, roomy] = useRoomFor(need);
   const shown = roomy ? columns : columns.filter((c) => !c.detail);
+  // Never narrower than its columns need: on a phone the register scrolls sideways in its box instead of cutting every
+  // value down to a letter.
+  const least = shown.reduce((sum, c) => sum + (c.width ?? IDENTITY_ROOM), (actions ? MENU_WIDTH : 0) + (bulk ? TICK_WIDTH : 0));
   const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set());
   // Only rows still in the register count: one deleted or filtered away drops out of the selection.
   const selected = bulk ? rows.filter((r) => ticked.has(rowKey(r))) : [];
@@ -303,11 +306,11 @@ export function Register<T>({
           <button type="button" onClick={clear} className="h-7 rounded-control px-2.5 text-[13px] text-ink-2 hover:text-ink">Clear</button>
         </div>
       )}
-      <table className="w-full border-collapse text-[13px]" aria-label={label}>
+      <table className="w-full border-collapse text-[13px]" style={{ minWidth: least }} aria-label={label}>
         {caption && <caption className="sr-only">{caption}</caption>}
         <colgroup>
           {shown.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}
-          {bulk && <col style={{ width: TICK_WIDTH }} />}
+          {bulk && <col data-tick-col="" style={{ width: TICK_WIDTH }} />}
           {actions && <col style={{ width: 40 }} />}
         </colgroup>
         <thead>

@@ -57,7 +57,8 @@ Consequences**.
 | [0044](0044-a-refusal-names-the-fields-it-is-about.md) | A refusal names the fields it is about, and the form marks them | Accepted |
 | [0045](0045-signatures-trimmed-centred-resizable-and-no-empty-ewt-line.md) | Signatures are trimmed, centred and resizable, a statement prints no empty EWT line, and Enter adds a line | Accepted |
 | [0046](0046-the-id-maker-screen-is-not-installed.md) | The ID Maker screen is not installed; the ID Maker desktop app makes the IDs | Accepted |
-| [0047](0047-every-pdf-is-drawn-as-text.md) | Every PDF is text, on every platform: Keystone draws the paper as text, shapes and its real pictures | Accepted |
+| [0047](0047-keystone-is-also-a-web-app-for-phones-and-tablets.md) | Keystone is also a web app, installable on phones and tablets, served from Vercel | Accepted |
+| [0048](0048-every-pdf-is-drawn-as-text.md) | Every PDF is text, on every platform: Keystone draws the paper as text, shapes and its real pictures | Accepted |
 
 Template:
 

@@ -404,6 +404,8 @@ type Drag =
  * move it anywhere about its line, a correction where trimming left it off; drag the square at the frame's top right
  * corner to resize it from where it sits; or use the arrow keys to resize, Shift and the arrow keys to move, and Home
  * for the standard size and place. Size and place are kept for that signatory, on every paper. The frame never prints.
+ * A finger has no hover: on a touch screen the frame always shows (never in an exported PDF), and the corner takes a
+ * press from well around it.
  */
 export function SignatureImage({ src, who }: { src: string; who: string }) {
   const shown = useTrimmed(src);
@@ -448,7 +450,7 @@ export function SignatureImage({ src, who }: { src: string; who: string }) {
           aria-valuenow={Math.round(live * 100)}
           aria-valuetext={`${Math.round(live * 100)}%${at.x || at.y ? ', moved' : ''}`}
           title="Drag to move this signature; drag the corner to resize it. On every paper."
-          className="absolute inset-0 cursor-move touch-none outline-1 outline-offset-2 outline-paper-mark outline-dashed opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden"
+          className="absolute inset-0 cursor-move touch-none outline-1 outline-offset-2 outline-paper-mark outline-dashed opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden [[data-pdf-drawing]_&]:hidden [[data-touch]_&]:opacity-100"
           onPointerDown={(e) => {
             const box = e.currentTarget.getBoundingClientRect();
 
@@ -490,7 +492,7 @@ export function SignatureImage({ src, who }: { src: string; who: string }) {
         >
           <span
             aria-hidden="true"
-            className="absolute -top-1.5 -right-1.5 size-2.5 cursor-nesw-resize touch-none border border-paper-mark bg-paper"
+            className="absolute -top-1.5 -right-1.5 size-2.5 cursor-nesw-resize touch-none border border-paper-mark bg-paper [[data-touch]_&]:after:absolute [[data-touch]_&]:after:-inset-5 [[data-touch]_&]:after:content-['']"
             onPointerDown={(e) => {
               const box = e.currentTarget.parentElement?.getBoundingClientRect();
 

@@ -194,7 +194,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
   // Drawn as text and shapes: a few hundred kilobytes a page, not the tens of megabytes of raw pixels.
   expect(bytes.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE);
-  // Its expense and amount are text a PDF reader finds (docs/adr/0047), not a picture of the page.
+  // Its expense and amount are text a PDF reader finds (docs/adr/0048), not a picture of the page.
   const read = (await readPdf(bytes)).map((p) => p.text).join(' ');
 
   expect(read).toContain('Pantry groceries');

@@ -5,8 +5,11 @@ The APG design system: the look shared with the attendance tracker and the websi
 - `src/theme.css`: **generated** from `shared/design/tokens.json` by `npm run sync` (Tailwind `@theme` plus Orbitron,
   Poppins, and Keystone Peso, the peso sign Poppins lacks, from `scripts/build-peso-font.py`). Never edit it by
   hand.
-- `src/styles.css`: base styles, the brand's eyebrow and input chrome, the print stylesheet, and the fixed z-index
-  scale.
+- `src/styles.css`: base styles, the brand's eyebrow and input chrome, the print stylesheet, the fixed z-index
+  scale, and the touch sizes: under `data-touch` every control is 44px each way, a text field's text 16px, and a box to
+  tick takes a tap across 44px (docs/adr/0047).
+- `src/touch.ts`: `watchTouch` marks the page `data-touch` while its main pointer is coarse (a phone, a tablet). Tested
+  in `test/touch.test.ts`.
 - `src/primitives.tsx`: `Button`, `Panel`, `ScreenHeader`, `Eyebrow`, `SectionLabel`, `KeyBadge`, `StatusPill`, `Tag`,
   `EmptyState`, `FigureStrip`, `cn`.
 - `src/fields.tsx`: `Field`, `TextInput`, `CellInput`, `TextArea`, `SelectInput`, `Checkbox`, `FieldRow`, all built
@@ -17,12 +20,13 @@ The APG design system: the look shared with the attendance tracker and the websi
   can do without, is left out while the table is too narrow to show every column whole; `current` marks the row open
   in the form beside it, `aria-current` and a gold line at its edge; `pageSize`, `PAGE_SIZE` for most, shows a long
   register a page at a time with Previous and Next, on the page of the current row; `group` folds two or more rows of
-  one kind, such as vouchers to one payee, into a row that opens to show them, a page then counting folds) and `RowMenu`. Tested in
+  one kind, such as vouchers to one payee, into a row that opens to show them, a page then counting folds; never
+  narrower than its columns, so on a phone it scrolls sideways in its own box) and `RowMenu`. Tested in
   `test/register.test.tsx`.
 - `src/tabs.tsx`: `Tabs` (one screen split into views shown one at a time, on Base UI's `Tabs`: a row of tabs under a
   1px line, the shown one with a gold line under it, an optional muted note after each name; every panel stays
   mounted while hidden, so a register's page or a half-filled form is as it was on coming back; a change of tab made
-  while the page is scrolled past them brings the tabs back into view).
+  while the page is scrolled past them brings the tabs back into view; narrower than its tabs, the row scrolls sideways).
 - `src/overlays.tsx`: `FeedbackProvider`, `useNotify` (toasts), `useConfirm` (an alert dialog for anything
   destructive), `AlertSheet` (an alert dialog its owner opens and closes, with its own buttons), `Sheet` (dialog).
 

@@ -45,14 +45,15 @@ function Overview() {
                     type="button"
                     disabled={!w.owner.openWaiting}
                     onClick={() => w.owner.openWaiting?.(w.no, app)}
-                    className="grid min-h-[48px] w-full grid-cols-[minmax(0,1fr)_auto_140px] items-center gap-3 py-1.5 text-left enabled:hover:bg-surface-2"
+                    // On a phone the status goes under the record and its amount.
+                    className="grid min-h-[48px] w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-1.5 text-left enabled:hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_auto_140px]"
                   >
                     <span className="min-w-0">
                       <span className="block font-semibold text-gold-bright tabular-nums">{w.no}</span>
                       <span className="block truncate text-xs text-ink-2">{w.who}</span>
                     </span>
                     <span className="font-semibold tabular-nums">{w.amount === null ? '' : peso(w.amount)}</span>
-                    <span className="text-right"><StatusPill status={w.status} tone={w.tone} /></span>
+                    <span className="max-sm:col-span-2 sm:text-right"><StatusPill status={w.status} tone={w.tone} /></span>
                   </button>
                 </li>
               ))}

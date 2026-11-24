@@ -22,7 +22,8 @@ Alpha Premier Group's admin app: check vouchers, requests for funds, billing sta
 activity log, and employee timekeeping and payroll. It connects to the other APG systems: the attendance tracker (`Deign86/alpha-premier-attendance`),
 the Alpha Premier ID Maker (`Deign86/apg-id-creator`), which makes the employee IDs (docs/adr/0046), Alpha Branding
 Studio (`Deign86/Alpha_Branding`) and the website (`Deign86/apg-website`). It is one Tauri 2 + React 18
-+ TypeScript codebase for macOS and Windows.
++ TypeScript codebase for macOS and Windows, which is also a web app for phones, tablets and browsers, served from
+Vercel (docs/adr/0047, docs/WEB.md).
 
 ## The map: a fixed kernel and removable packages
 
@@ -151,6 +152,7 @@ regression suites that guard the architecture live in the composition root:
 | Services | `apps/keystone/src/test/services.test.tsx` | Billing provides the statement-payments service, timekeeping the employee-attendance service, banks the bank-accounts service and vouchers the voucher-drafts service as shipped, and each one's absence refuses nothing |
 | End to end | `e2e/` (`npm run test:e2e`), in Chromium against the dev server | `screens.e2e.ts`: every screen the rail lists opens without the error panel, the shortcuts, saved work surviving a reload. `modules/<id>.e2e.ts` and `connectors/<id>.e2e.ts`, one per installed part (`npm run check:e2e`): what a person does on that screen or shortcut and what it shows after, including what it contributes to Home, Overview and the Activity Log |
 | Released | `apps/keystone/src/test/released.test.tsx`, and `e2e/stable/` (`npm run test:e2e:stable`, part of `npm run test:e2e`) in Chromium against a stable dev server | A release opens only the screens in `RELEASED` and the connected systems; the others are marked in the rail and on Home and show behind "Coming soon", and keep the same record layout and services as a beta |
+| Mobile end to end | `e2e/mobile/` (`npm run test:e2e:mobile`, part of `npm run test:e2e`) in Chromium as an iPhone and an Android tablet, worked by touch | Every screen and tab at every phone and tablet size, upright and on its side: nothing scrolls sideways and every control takes a finger (44 px); the shell, the forms, drafts, papers, Print, Export PDF, signatures, pickers, dialogs and files by touch |
 | Cloud end to end | `e2e/cloud/` (`npm run test:e2e:cloud`, part of `npm run test:e2e`), the cloud build against the Firebase Auth and Firestore emulators | Signing in and its refusals, the CEO's first sign-in starting the records empty with nothing copied in from the computer, each change written to Firestore under `firestore.rules`, even one made just before a reload, and another computer opening the same records; requests for funds that only the CEO decides and only their requester reads; accounts that only the CEO makes and removes; changing your password, and resetting a forgotten one by its emailed link; never a real project or account |
 
 A new rule gets a test in its package. A new screen, button or flow gets an end-to-end test in its part's
@@ -208,6 +210,9 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
   in `.claude/skills/`, and the Taste Skill (`design-taste-frontend`) in `.agents/skills/`.
 - **Inspector:** run `inspect.mjs --app` on the screens you changed and look at the screenshots.
 - **Look:** follow the APG house style; it lives in `shared/design/tokens.json`.
+- **Fingers:** a screen works on a 320px phone and by touch. Use the shared controls, which are 44px under `data-touch`
+  (docs/adr/0047); a new screen joins `e2e/mobile/layout.e2e.ts` by being on the rail (add its address to
+  `e2e/support/mobile.ts › SCREENS`).
 
 ## Pull requests
 
@@ -239,8 +244,9 @@ This relies on two repository settings, **Allow auto-merge** and **Automatically
   themselves. The one sign-in is to the company's records in the cloud (docs/adr/0009): the password goes to Firebase
   and is never stored, and the Firebase SDK keeps the session on that computer. The project's web config is not a
   secret, but it still comes from build variables (`apps/keystone/.env.example`), never from the code.
-- **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/` and
-  `packages/core/sample/sample.json` are regenerated from `shared/` by `npm run sync`.
+- **Don't edit generated files:** `packages/ui/src/theme.css`, `packages/ui/src/assets/`,
+  `packages/core/sample/sample.json` and `apps/keystone/public/manifest.webmanifest` are regenerated from `shared/` by
+  `npm run sync`.
 - **Nothing hardcoded (docs/adr/0018):** Keystone shows only what was saved, in the cloud for a signed-in build. No
   records, company details, signatories or bank accounts in the code: a new one starts empty, a document leaves a
   field blank until Company Details fills it, and nothing a computer holds is copied into the cloud. The one exception is

@@ -1,4 +1,4 @@
-# 0047. Every PDF is text, on every platform: Keystone draws the paper as text, shapes and its real pictures
+# 0048. Every PDF is text, on every platform: Keystone draws the paper as text, shapes and its real pictures
 
 Status: Accepted · Date: 2026-11-25
 
