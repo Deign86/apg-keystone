@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
+import { deafToLeaving } from '../support/force-close';
 import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES_A_PAGE, pdfPages, tinyPaperText } from '../support/paper';
 import { typeSignatory } from '../support/signatory';
 
@@ -690,7 +691,6 @@ test('saves a draft again over itself, and deletes one only once asked', async (
   await form.getByRole('button', 'Save draft').tap();
   await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc. (Unit 5)');
   await form.getByRole('button', 'Save draft').tap();
-  await expect(screen.getByRole('dialog', 'Draft saved again.')).toBeVisible();
 
   await screen.getByRole('tab', /^Statements issued/).tap();
   const drafts = screen.getByRole('list', 'Drafts');
@@ -764,4 +764,24 @@ test('keeps what is typed as a draft by itself, even when Keystone is closed str
 
   await draft.getByRole('button', 'Open').tap();
   await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Address')).toHaveValue('12 Evergreen Terrace, Pasig City');
+});
+
+// A force close (taskkill /F, Force Quit, or the desktop window destroyed) warns the page of nothing: no pagehide, no
+// visibilitychange. So a draft is written while the person types, at most a second after an edit, and killing Keystone
+// mid-typing loses no more than that second.
+test('keeps what is typed when Keystone is killed mid-typing, with no warning to the page', async ({ app, screen, browser }) => {
+  // Killed, the page hears nothing (e2e/support/force-close.ts).
+  await deafToLeaving(browser);
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  // Typed steadily for about three seconds, never resting, and killed straight after the last key.
+  await form.getByRole('textbox', 'Bill to').pressSequentially('Springfield Properties Inc.', { delay: 110 });
+  await browser.evaluate(() => { location.reload(); });
+
+  // All but the last second or so of it is there.
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await screen.getByRole('list', 'Drafts').getByRole('listitem', /^Springfield Prop/).getByRole('button', 'Open').tap();
+  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Bill to')).toHaveValue(/^Springfield Prop/);
 });

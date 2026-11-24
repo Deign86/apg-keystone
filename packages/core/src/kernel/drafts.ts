@@ -106,7 +106,8 @@ export function saveDraft(s: TerminalState, d: DraftToSave, ctx: Ctx): Change<Sa
   if (d.private && (original?.uid ?? ctx.who?.uid)) draft.uid = original?.uid ?? ctx.who?.uid;
   const items = original ? list.map((x) => (x.id === original.id ? draft : x)) : [...list, draft];
 
-  return { state: withList(s, key, items), record: draft, message: original ? 'Draft saved again.' : 'Draft saved. Open it again from Drafts.' };
+  // One sentence either way: a draft saves itself as it is typed, so whether this one was saved before says nothing.
+  return { state: withList(s, key, items), record: draft, message: 'Draft saved. Open it again from Drafts.' };
 }
 
 /** Takes a saved draft away: deleted, or finished and saved for real. Gone already is no change. */

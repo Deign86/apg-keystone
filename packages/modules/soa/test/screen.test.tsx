@@ -170,7 +170,7 @@ describe('drafts that save themselves', () => {
   const rest = () => act(() => new Promise<void>((r) => { setTimeout(r, AUTOSAVE_MS + 150); }));
   const draftsOf = (store: KeystoneStore) => savedDrafts(store.state, 'soa', store.ctx).map((d) => d.title);
 
-  it('keeps what is typed once typing rests, saying nothing, and saves over it as typing goes on', async () => {
+  it('keeps what is typed within a second, saying nothing, and saves over it as typing goes on', async () => {
     const store = await open();
 
     type('Client', 'Northwind Retail Corp.');

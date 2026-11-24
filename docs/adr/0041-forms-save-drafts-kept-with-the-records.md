@@ -39,11 +39,16 @@ Status: Accepted · Date: 2026-11-24
   opened or a draft opened is another form with another id. Saving to an id with no draft yet makes it, so a shared
   draft someone deleted while it was open is saved again rather than lost. Saved for real, the form's draft is finished
   and leaves the list.
-- **Drafts save themselves, quietly** (`AUTOSAVE_MS`, 0.8 s): an edit is kept once typing rests; leaving the form for
-  another, leaving the screen, or Keystone hidden or closing (`pagehide`, `visibilitychange`) keeps what is waiting at
-  once and writes the records then, since the app's own write on leaving runs before a form's. A blank form saves
+- **Drafts save themselves, quietly, at most a second after an edit, and are written at once** (`AUTOSAVE_MS`, 1 s):
+  the first edit not kept yet starts the clock and typing on does not restart it, and each keep writes the records
+  straight away instead of after the store's 250 ms. A force close (taskkill /F, Force Quit, the desktop window
+  destroyed) warns the page of nothing, so this, not leaving, is what keeps the work: killing Keystone mid-typing loses
+  at most the last second. Changed the same day: the first version waited for typing to rest 0.8 s, so steady typing
+  kept nothing until a pause, and a force close lost it all. Leaving the form for another, leaving the screen, or
+  Keystone hidden or closing (`pagehide`, `visibilitychange`) still keeps what is waiting at once. A blank form saves
   nothing, and a form emptied takes its draft away. Save draft still saves at once and says so; the form says when its
-  draft was last saved.
+  draft was last saved. In the desktop build the records file is written whole and renamed into place, so a kill mid-
+  write leaves the last one; in the cloud a write goes to Firestore's copy on this computer (IndexedDB) and the cloud.
 - **A draft goes back in its form over a fresh one,** so a field an older Keystone did not save starts as a new form's,
   its lines get new ids, and a new document takes the next free number then, not the one free when it was saved. A
   draft of an edit to a saved record goes back to editing that record.

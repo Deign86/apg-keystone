@@ -1,5 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
+import { deafToLeaving } from '../support/force-close';
 import { asMember, deleteAsMember, documentIds, emptyCloud, expectHome, field, idToken, makeAccount, recordsInCloud, signIn } from './emulators';
 
 // Saved drafts in the cloud (docs/adr/0041): a voucher's draft is shared with every member, like the vouchers
@@ -114,4 +115,27 @@ test('firestore.rules keep a private draft to its author and the CEO, and share 
   expect(await asMember(itToken, shared)).toBe(200);
   expect(await asMember(itToken, shared, body)).toBe(200);
   expect(await deleteAsMember(itToken, shared)).toBe(200);
+});
+
+// A force close warns the page of nothing. In the cloud the draft kept while typing goes to Firestore's copy on this
+// computer and to the cloud at once, and Keystone opened again reads it back under Drafts.
+test('a draft typed steadily, with Keystone killed straight after, comes back from the cloud', async ({ app, screen, browser }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+
+  await recordsInCloud();
+  await app.open('/');
+  await signIn(screen, owner);
+  await expectHome(screen);
+  await signInElsewhere(app, screen, hr);
+
+  // Killed, the page hears nothing (e2e/support/force-close.ts).
+  await deafToLeaving(browser);
+  await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher entry/).tap();
+  await screen.getByRole('form', 'New voucher').getByRole('textbox', 'Payee').pressSequentially('Manila Water Company', { delay: 110 });
+  await browser.evaluate(() => { location.reload(); });
+
+  await expect(screen.getByRole('list', 'Drafts').getByRole('listitem', /^MANILA WATER/)).toContainText('by Ana Cruz');
+  await expect.poll(() => documentIds('drafts'), { timeout: 10_000 }).toEqual([`${hr.uid}-vouchers-1`]);
 });
