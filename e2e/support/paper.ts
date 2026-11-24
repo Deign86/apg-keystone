@@ -1,3 +1,4 @@
+import { inflateSync } from 'node:zlib';
 import type { Browser } from '@e2e-dev/web';
 
 /**
@@ -192,4 +193,67 @@ export const PDF_MOST_BYTES_A_PAGE = 700_000;
 /** The pages of a saved PDF, each as its width and height in points. */
 export function pdfPages(pdf: Buffer) {
   return [...pdf.toString('latin1').matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map(([, w, h]) => ({ w: Number(w), h: Number(h) }));
+}
+
+/**
+ * Where a drawn PDF puts the paper on each page, in points from the page's bottom left: each page's size and the
+ * picture on it (jsPDF places a picture with `w 0 0 h x y cm` before drawing it).
+ */
+export function pdfPlacements(pdf: Buffer) {
+  const text = pdf.toString('latin1');
+  const pages = pdfPages(pdf);
+  const placed: { x: number; y: number; w: number; h: number }[] = [];
+
+  for (const m of text.matchAll(/<<([^]*?)>>\s*stream\r?\n/g)) {
+    const length = Number(/\/Length (\d+)/.exec(m[1])?.[1] ?? 0);
+
+    if (/\/Subtype \/Image/.test(m[1])) continue;
+
+    const start = (m.index ?? 0) + m[0].length;
+    const raw = pdf.subarray(start, start + length);
+    const content = (/FlateDecode/.test(m[1]) ? inflateSync(raw) : raw).toString('latin1');
+    const at = /([\d.]+) 0 0 ([\d.]+) ([\d.]+) ([\d.]+) cm\s*\/I\d+ Do/.exec(content);
+
+    if (at) placed.push({ w: Number(at[1]), h: Number(at[2]), x: Number(at[3]), y: Number(at[4]) });
+  }
+
+  return pages.map((page, i) => ({ page, paper: placed[i] }));
+}
+
+/**
+ * The paper named `label` laid out as Print lays it out: the page's @media print rules applied while it is the print
+ * root, as kit's preparePrint makes it, in this window. How far it sits from the middle of the window (on a page it is
+ * as wide as the page, so 0 there means it starts at the page's edge), its width and its own laid-out width, and
+ * anything else that still takes room, which would make the browser shrink the whole print to fit it.
+ */
+export function paperAsPrinted(browser: Browser, label: string) {
+  return browser.evaluate((label) => {
+    const paper = [...document.querySelectorAll<HTMLElement>('[data-ui="document"]')].find((p) => (p.getAttribute('aria-label') ?? '').startsWith(label));
+
+    if (!paper) return null;
+
+    const printRules = (list: CSSRuleList): string[] => [...list].flatMap((r) => {
+      if (r instanceof CSSMediaRule) return r.conditionText.includes('print') ? [...r.cssRules].flatMap((c) => (c instanceof CSSPageRule ? [] : [c.cssText])) : printRules(r.cssRules);
+
+      return 'cssRules' in r && r.cssRules instanceof CSSRuleList ? printRules(r.cssRules) : [];
+    });
+
+    const asPrint = document.createElement('style');
+
+    asPrint.textContent = [...document.styleSheets].flatMap((sheet) => printRules(sheet.cssRules)).join(' ');
+    paper.setAttribute('data-print-root', '');
+    document.head.append(asPrint);
+
+    // Anything but the paper, or what holds it, that still takes room in the print.
+    const taking = (e: HTMLElement) => !paper.contains(e) && !e.contains(paper) && e.getBoundingClientRect().width > 0;
+    const others = [...document.querySelectorAll<HTMLElement>('body *')].flatMap((e) => (taking(e) ? [`${e.tagName.toLowerCase()} ${Math.round(e.getBoundingClientRect().width)}px`] : []));
+    const box = paper.getBoundingClientRect();
+    const offCentre = Math.round(box.left - (document.documentElement.clientWidth - box.width) / 2);
+    const printed = { offCentre, width: Math.round(box.width), laidOut: paper.offsetWidth, others: others.slice(0, 5) };
+
+    asPrint.remove();
+    paper.removeAttribute('data-print-root');
+
+    return printed;
+  }, label);
 }

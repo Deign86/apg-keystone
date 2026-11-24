@@ -1,6 +1,6 @@
 import { toSvg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { layoutOf, MARKS, pageCuts, pdfPage, pdfScale, PDF_DPI } from './paper';
+import { layoutOf, MARKS, pageCuts, pdfAcross, pdfPage, pdfScale, PDF_DPI } from './paper';
 import type { Files } from './context';
 
 const PDF_FILES = [{ name: 'PDF', extensions: ['pdf'] }];
@@ -29,6 +29,7 @@ async function drawnPdf(node: HTMLElement): Promise<Uint8Array> {
   const { orientation, margin, style } = layout.pdf;
   const paper = { width: node.offsetWidth, height: node.offsetHeight };
   const scale = pdfScale(layout, paper);
+  const across = pdfAcross(layout, paper);
   const ratio = (PDF_DPI / 72) * scale;
   const background = getComputedStyle(node).backgroundColor || '#ffffff';
   const cuts = layout.pdf.flow ? pageCuts(paper.height, pdfPage(layout).room.h / scale, keepWhole(node)) : [0, paper.height];
@@ -49,7 +50,7 @@ async function drawnPdf(node: HTMLElement): Promise<Uint8Array> {
 
     if (i > 1) pdf.addPage('a4', orientation);
     // Without a compression jsPDF stores the PNG's pixels raw: 43 MB for a two-up voucher.
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, paper.width * scale, (bottom - top) * scale, undefined, 'SLOW');
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', across.x, margin, across.width, (bottom - top) * scale, undefined, 'SLOW');
   }
 
   return new Uint8Array(pdf.output('arraybuffer'));

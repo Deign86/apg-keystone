@@ -28,7 +28,7 @@ describe('saved drafts', () => {
     const first = saveDraft(emptyState(), { module: 'billing', title: 'One', body: 1 }, as(ana, 9));
     const again = saveDraft(first.state, { module: 'billing', id: first.record.id, title: '  ', body: 2 }, as(ben, 10));
 
-    expect(again.message).toBe('Draft saved again.');
+    expect(again.message).toBe('Draft saved. Open it again from Drafts.');
     expect(savedDrafts(again.state, 'billing', as(ana))).toEqual([{ ...first.record, title: 'Untitled draft', saved: '2026-11-24 10:00', by: 'Ben Reyes', body: 2 }]);
     const second = saveDraft(again.state, { module: 'billing', title: 'Two', body: 3 }, as(ana, 11));
 

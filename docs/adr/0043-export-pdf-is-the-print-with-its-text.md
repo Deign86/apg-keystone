@@ -37,7 +37,13 @@ Status: Accepted · Date: 2026-11-24
     12 mm margins. It is cut where no table row, line of text, picture or block that asks to stay whole is cut
     (`pageCuts`).
   - One page-sized picture is drawn at a time, from one SVG of the paper, so no canvas is larger than a page.
-- **A two-up voucher and a landscape sheet still fit one page,** as they print: their layouts do not flow.
+- **A two-up voucher and a landscape sheet still fit one page,** as they print: their layouts do not flow. One shrunk
+  to fit is centred on its page.
+- **Every paper fills its A4 page, in Print and in both PDFs** (changed 2026-11-24, from the user: "all types of
+  export to pdfs should take an a4 format and make full use of it"). While a paper prints, the print stylesheet takes
+  everything else on the screen out of the layout, not only out of sight, and what holds the paper takes no room. A
+  screen's wide table had made the browser shrink the whole print: a payslip printed at 71% of the page's width.
+  `e2e/papers.e2e.ts` measures each paper on its A4 page.
 - **The signature block stays on one page** when a paper runs onto another (`break-inside: avoid`), in Print and in
   both PDFs.
 - **This amends docs/adr/0040:** a statement of account is upright on A4, on a second page when its checks run past
