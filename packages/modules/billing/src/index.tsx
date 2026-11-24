@@ -2,7 +2,7 @@ import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenH
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
 import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, statementDraftBlank, statementDraftFrom, statementDraftTitle, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
-import { BankAccountPicker, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { BankAccountPicker, Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
 const DRAFT = `${ID}.draft`;
@@ -147,58 +147,72 @@ function Billing() {
                     </>}
                   >
                     <FieldRow>
-                      <Field label="Invoice No." hint={editing ? undefined : 'The next number; change it if you need to.'}>
-                        <TextInput figures readOnly={!!editing} value={draft.editing ?? draft.no} onChange={(no) => setDraft({ ...draft, no })} />
-                      </Field>
-                      <Field label="Date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft(withStatementDate(state, draft, date))} /></Field>
+                      <Fills part="no">
+                        <Field label="Invoice No." hint={editing ? undefined : 'The next number; change it if you need to.'}>
+                          <TextInput figures readOnly={!!editing} value={draft.editing ?? draft.no} onChange={(no) => setDraft({ ...draft, no })} />
+                        </Field>
+                      </Fills>
+                      <Fills part="date"><Field label="Date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft(withStatementDate(state, draft, date))} /></Field></Fills>
                     </FieldRow>
                     <FieldRow>
-                      <Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field>
-                      <Field label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field>
+                      <Fills part="invoiceDate"><Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field></Fills>
+                      <Fills part="due"><Field label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field></Fills>
                     </FieldRow>
-                    <Field label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
-                      <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
-                    </Field>
-                    <Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
-                    <Field label="Attention"><TextInput capitalize placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field>
-                    <LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
-                    <div className="flex flex-wrap gap-x-5 gap-y-2">
-                      <Checkbox checked={draft.vat} onChange={(vat) => setDraft({ ...draft, vat })}>Add 12% VAT</Checkbox>
-                      <Checkbox checked={draft.ewt} onChange={(ewt) => setDraft({ ...draft, ewt })}>Less {draft.ewtRate}% expanded withholding tax</Checkbox>
-                    </div>
-                    {draft.ewt && (
-                      <Field label="EWT rate" hint="2% on services; 5% on rentals and professional fees.">
-                        <SelectInput
-                          value={String(draft.ewtRate)}
-                          onChange={(rate) => setDraft({ ...draft, ewtRate: Number(rate) })}
-                          options={EWT_RATES.map((r) => ({ value: String(r), label: `${r}%` }))}
-                        />
+                    <Fills part="billTo">
+                      <Field label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
+                        <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                       </Field>
-                    )}
+                    </Fills>
+                    <Fills part="address"><Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field></Fills>
+                    <Fills part="attention"><Field label="Attention"><TextInput capitalize placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field></Fills>
+                    <Fills part="lines"><LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
+                    <Fills part="totals">
+                      <div className="flex flex-wrap gap-x-5 gap-y-2">
+                        <Checkbox checked={draft.vat} onChange={(vat) => setDraft({ ...draft, vat })}>Add 12% VAT</Checkbox>
+                        <Checkbox checked={draft.ewt} onChange={(ewt) => setDraft({ ...draft, ewt })}>Less {draft.ewtRate}% expanded withholding tax</Checkbox>
+                      </div>
+                      {draft.ewt && (
+                        <Field label="EWT rate" hint="2% on services; 5% on rentals and professional fees.">
+                          <SelectInput
+                            value={String(draft.ewtRate)}
+                            onChange={(rate) => setDraft({ ...draft, ewtRate: Number(rate) })}
+                            options={EWT_RATES.map((r) => ({ value: String(r), label: `${r}%` }))}
+                          />
+                        </Field>
+                      )}
+                    </Fills>
                     <div className="text-right" aria-live="polite">
                       <p className="m-0 text-[13px] text-ink-2 tabular-nums">
                         Subtotal {peso(t.subtotal)}{draft.vat ? ` · VAT ${peso(t.vat)}` : ''}{draft.ewt ? ` · EWT (${peso(t.ewt)})` : ''}
                       </p>
                       <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(t.due)}</p>
                     </div>
-                    <PayInto draft={draft} setDraft={setDraft} />
-                    <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
-                    <Field label="Penalty" hint="The late-payment penalty, printed under the payment instructions."><TextArea rows={2} value={draft.penalty} onChange={(penalty) => setDraft({ ...draft, penalty })} /></Field>
-                    <Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
+                    <Fills part="notes">
+                      <PayInto draft={draft} setDraft={setDraft} />
+                      <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
+                    </Fills>
+                    <Fills part="penalty"><Field label="Penalty" hint="The late-payment penalty, printed under the payment instructions."><TextArea rows={2} value={draft.penalty} onChange={(penalty) => setDraft({ ...draft, penalty })} /></Field></Fills>
+                    <Fills part="note"><Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field></Fills>
                     {/* Each signatory's name over their position, as the statement prints them. */}
                     <FieldRow min={120}>
-                      <div className="flex min-w-0 flex-col gap-2.5">
-                        <SignatoryPicker label="Prepared by" names={signed} value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} />
-                        <Field label="Preparer's position"><TextInput value={draft.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
-                      </div>
-                      <div className="flex min-w-0 flex-col gap-2.5">
-                        <SignatoryPicker label="Checked by" names={signed} value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} />
-                        <Field label="Checker's position"><TextInput value={draft.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
-                      </div>
-                      <div className="flex min-w-0 flex-col gap-2.5">
-                        <SignatoryPicker label="Approved by" names={signed} value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} />
-                        <Field label="Approver's position"><TextInput value={draft.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
-                      </div>
+                      <Fills part="prepared">
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          <SignatoryPicker label="Prepared by" names={signed} value={draft.prepared} onChange={(prepared) => setDraft({ ...draft, prepared })} />
+                          <Field label="Preparer's position"><TextInput value={draft.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
+                        </div>
+                      </Fills>
+                      <Fills part="checked">
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          <SignatoryPicker label="Checked by" names={signed} value={draft.checked} onChange={(checked) => setDraft({ ...draft, checked })} />
+                          <Field label="Checker's position"><TextInput value={draft.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
+                        </div>
+                      </Fills>
+                      <Fills part="approved">
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          <SignatoryPicker label="Approved by" names={signed} value={draft.approved} onChange={(approved) => setDraft({ ...draft, approved })} />
+                          <Field label="Approver's position"><TextInput value={draft.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
+                        </div>
+                      </Fills>
                     </FieldRow>
                   </FormCard>
                 }

@@ -130,6 +130,9 @@ describe('the Statements of Account screen', () => {
 // for another, the screen left, or Keystone hidden or closed keeps it at once; a form emptied, or saved for real,
 // takes its draft away. Real timers wait out the pause; only the date is fixed.
 describe('drafts that save themselves', () => {
+  /** Time for the pauses a test waits out in real time, under a full run's load. */
+  const PAUSES = 20_000;
+
   /** Typing rests long enough for the draft to save itself. */
   const rest = () => act(() => new Promise<void>((r) => { setTimeout(r, AUTOSAVE_MS + 150); }));
   const draftsOf = (store: KeystoneStore) => savedDrafts(store.state, 'soa', store.ctx).map((d) => d.title);
@@ -149,7 +152,7 @@ describe('drafts that save themselves', () => {
     type('Property address', 'Unit 5, Ortigas Avenue, Pasig');
     await rest();
     expect(draftsOf(store)).toEqual(['Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig']);
-  });
+  }, PAUSES);
 
   it('keeps the form left for a new one at once, and saves nothing of the blank form', async () => {
     const store = await open();
@@ -161,7 +164,7 @@ describe('drafts that save themselves', () => {
     expect(form().getByRole('textbox', { name: 'Client' })).toHaveValue('');
     await rest();
     expect(draftsOf(store)).toEqual(['Northwind Retail Corp.']);
-  });
+  }, PAUSES);
 
   it('keeps what was typed when the screen is left, or Keystone is hidden, before typing rests', async () => {
     const first = await open();
@@ -182,7 +185,7 @@ describe('drafts that save themselves', () => {
     // Kept and written at once: the window may be gone before a later save.
     expect(draftsOf(store)).toEqual(['Harbor Point Logistics Corp.']);
     expect(platform.files.state).toContain('Harbor Point Logistics Corp.');
-  });
+  }, PAUSES);
 
   it('takes the draft away when the form is emptied, and when the statement is saved for real', async () => {
     const store = await open();
@@ -201,5 +204,5 @@ describe('drafts that save themselves', () => {
     await rest();
     expect(statementsOf(store.state).map((a) => a.no)).toEqual(['SOA-2026-001']);
     expect(draftsOf(store)).toEqual([]);
-  });
+  }, PAUSES);
 });
