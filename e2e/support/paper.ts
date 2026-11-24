@@ -57,6 +57,72 @@ export function faintPaperText(browser: Browser) {
 }
 
 /**
+ * The parts of the papers on screen marked for the field with focus (kit's Workspace), each as its text and the ring
+ * drawn around it: "PAYEE MANILA ELECTRIC COMPANY · solid 2px". A two-up sheet gives each part twice, once a copy.
+ * Empty when nothing is marked.
+ */
+export function markedPaperParts(browser: Browser) {
+  return browser.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-ui="document"] [data-paper-active]')].map((e) => {
+    const { outlineStyle, outlineWidth } = getComputedStyle(e);
+
+    return `${e.innerText.replace(/\s+/g, ' ').trim()} · ${outlineStyle} ${outlineWidth}`;
+  }));
+}
+
+/**
+ * The media the page's stylesheets draw a marked part for: ["screen"] when the ring shows on screen and never in print.
+ * Each rule that names the mark, by the @media it sits in ("all" for none).
+ */
+export function paperMarkMedia(browser: Browser) {
+  return browser.evaluate(() => {
+    const rules = (list: CSSRuleList, media: string): string[] => [...list].flatMap((r) => {
+      if (r instanceof CSSMediaRule) return rules(r.cssRules, r.conditionText);
+
+      if (r instanceof CSSStyleRule && r.selectorText.includes('data-paper-active')) return [media];
+
+      return 'cssRules' in r && r.cssRules instanceof CSSRuleList ? rules(r.cssRules, media) : [];
+    });
+
+    return [...document.styleSheets].flatMap((sheet) => rules(sheet.cssRules, 'all'));
+  });
+}
+
+/**
+ * The marked parts of the papers on screen as Export PDF draws them (the paper carries `data-pdf-drawing` while it
+ * does), each as its ring: "none" when the PDF leaves it out.
+ */
+export function markedPaperPartsDrawn(browser: Browser) {
+  return browser.evaluate(() => {
+    const papers = [...document.querySelectorAll<HTMLElement>('[data-ui="document"]')];
+
+    papers.forEach((p) => p.setAttribute('data-pdf-drawing', ''));
+
+    const rings = [...document.querySelectorAll<HTMLElement>('[data-ui="document"] [data-paper-active]')].map((e) => {
+      return getComputedStyle(e).outlineStyle;
+    });
+
+    papers.forEach((p) => p.removeAttribute('data-pdf-drawing'));
+
+    return rings;
+  });
+}
+
+/** Each paper on screen as laid out ("703×1062"), so a test can show that marking a part of it moves nothing. */
+export function paperSizes(browser: Browser) {
+  return browser.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-ui="document"]')].map((e) => `${e.offsetWidth}×${e.offsetHeight}`));
+}
+
+/** Whether the first marked part lies wholly inside the preview beside the form (`label` names it), as scrolled. */
+export function markedPartInView(browser: Browser, label: string) {
+  return browser.evaluate((name: string) => {
+    const part = document.querySelector('[data-ui="document"] [data-paper-active]')?.getBoundingClientRect();
+    const box = document.querySelector(`section[aria-label="${name}"]`)?.getBoundingClientRect();
+
+    return !!part && !!box && part.top >= box.top && part.bottom <= box.bottom;
+  }, label);
+}
+
+/**
  * How many lines a filled-in value on a paper takes (the first box whose value is exactly `text`): 1 when it fits
  * beside its label, 0 when no box holds it. Measured once the paper's fonts have loaded, in laid-out sizes, so a
  * preview scaled down to fit its column counts the same.

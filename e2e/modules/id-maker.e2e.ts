@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
+import { markedPaperParts, paperSizes } from '../support/paper';
 
 // ID Maker (packages/modules/id-maker). The sample data has APG-2026-0028 to 0030 issued, so a new card is
 // APG-2026-0031. 0028 (Juan) and 0029 (Angelica) are printed and active; 0030 (Rafael) waits to be printed.
@@ -299,4 +300,23 @@ test('opens a waiting card from Overview, and starts a new one from its button',
 
   await expect(screen.getByRole('heading', { name: 'ID Maker', level: 1 })).toBeVisible();
   await expect(screen.getByRole('form', 'New ID').getByRole('textbox', 'ID No.')).toHaveValue('APG-2026-0031');
+});
+
+test('marks on the card where the field being typed in shows, front or back, and moves nothing', async ({ app, screen, browser }) => {
+  await app.open('/#id-maker');
+  const form = screen.getByRole('form', 'New ID');
+  const sizes = await paperSizes(browser);
+
+  await form.getByRole('textbox', 'Name on card').fill('Kristine Joy L. Villanueva');
+  expect(await markedPaperParts(browser)).toEqual(['Kristine Joy L. Villanueva · solid 2px']);
+  expect(await paperSizes(browser)).toEqual(sizes);
+  await form.getByRole('textbox', 'Position').fill('Accounting Staff');
+  expect(await markedPaperParts(browser)).toEqual(['Accounting Staff · solid 2px']);
+
+  // The emergency contact is on the back.
+  await form.getByRole('textbox', 'Emergency contact').fill('Maria Villanueva');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^Maria Villanueva Blood type: .* · solid 2px$/);
+
+  await screen.getByRole('heading', { name: 'ID Maker', level: 1 }).tap();
+  expect(await markedPaperParts(browser)).toEqual([]);
 });

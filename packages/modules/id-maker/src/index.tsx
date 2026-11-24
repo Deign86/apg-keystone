@@ -2,7 +2,7 @@ import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sec
 import { useCallback, useRef, useState } from 'react';
 import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
 import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
-import { SignatoryPicker, useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
+import { Fills, SignatoryPicker, useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
 /** The select's value for "no directory record"; Base UI treats an empty value as unselected. */
@@ -114,34 +114,38 @@ function IDMaker() {
             </>}
           >
             <FieldRow>
-              <Field label="ID No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
+              <Fills part="no"><Field label="ID No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field></Fills>
               <Field label="Employee">
                 <SelectInput value={draft.emp || MANUAL} onChange={(emp) => setDraft(withEmployee(state, draft, emp === MANUAL ? '' : emp))} options={[{ value: MANUAL, label: 'Type details by hand' }, ...employees.map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))]} />
               </Field>
             </FieldRow>
-            <Field label="Name on card"><TextInput value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field>
+            <Fills part="name"><Field label="Name on card"><TextInput value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field></Fills>
             <FieldRow>
-              <Field label="Position"><TextInput value={draft.pos} onChange={(pos) => setDraft({ ...draft, pos })} /></Field>
-              <Field label="Department"><TextInput value={draft.dept} onChange={(dept) => setDraft({ ...draft, dept })} /></Field>
+              <Fills part="pos"><Field label="Position"><TextInput value={draft.pos} onChange={(pos) => setDraft({ ...draft, pos })} /></Field></Fills>
+              <Fills part="dept"><Field label="Department"><TextInput value={draft.dept} onChange={(dept) => setDraft({ ...draft, dept })} /></Field></Fills>
             </FieldRow>
             <FieldRow min={130}>
               <Field label="Date issued"><TextInput type="date" value={draft.issued} onChange={(issued) => setDraft({ ...draft, issued })} /></Field>
-              <Field label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field>
-              <Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={BLOOD_TYPES.map((b) => ({ value: b, label: b }))} /></Field>
+              <Fills part="valid"><Field label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field></Fills>
+              <Fills part="ice"><Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={BLOOD_TYPES.map((b) => ({ value: b, label: b }))} /></Field></Fills>
             </FieldRow>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[12.5px] font-medium">Photo</span>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <Button size="sm" onClick={choosePhoto}>{draft.photo ? 'Replace photo…' : 'Choose photo…'}</Button>
-                {draft.photo && <Button size="sm" kind="quiet" onClick={() => setDraft({ ...draft, photo: undefined })}>Remove</Button>}
-                <span className="text-xs text-ink-2">Cropped square from the centre.</span>
+            <Fills part="photo">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[12.5px] font-medium">Photo</span>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button size="sm" onClick={choosePhoto}>{draft.photo ? 'Replace photo…' : 'Choose photo…'}</Button>
+                  {draft.photo && <Button size="sm" kind="quiet" onClick={() => setDraft({ ...draft, photo: undefined })}>Remove</Button>}
+                  <span className="text-xs text-ink-2">Cropped square from the centre.</span>
+                </div>
               </div>
-            </div>
+            </Fills>
             <FieldRow>
-              <Field label="Emergency contact"><TextInput placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
-              <Field label="Contact number"><TextInput type="tel" placeholder="09XX XXX XXXX" value={draft.iceNo} onChange={(iceNo) => setDraft({ ...draft, iceNo })} /></Field>
+              <Fills part="ice">
+                <Field label="Emergency contact"><TextInput placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
+                <Field label="Contact number"><TextInput type="tel" placeholder="09XX XXX XXXX" value={draft.iceNo} onChange={(iceNo) => setDraft({ ...draft, iceNo })} /></Field>
+              </Fills>
             </FieldRow>
-            <SignatoryPicker label="Authorized signatory" names={state.ids.map((i) => i.signatory)} value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} />
+            <Fills part="signatory"><SignatoryPicker label="Authorized signatory" names={state.ids.map((i) => i.signatory)} value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} /></Fills>
           </FormCard>
         }
         preview={<div className="overflow-hidden rounded-card border border-line"><IDCardSheet ref={sheet} card={{ ...idOf(draft), no: draft.editing ?? draft.no }} photo={photo} company={companyOf(state)} /></div>}

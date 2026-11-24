@@ -5,7 +5,7 @@ import {
   approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
   voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
-import { BankAccountPicker, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { BankAccountPicker, Fills, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
@@ -206,51 +206,61 @@ function Vouchers() {
                     <fieldset disabled={!!locked} className={FIELDS}>
                       <FieldRow>
                         {/* The next number, to change if need be; a saved voucher keeps its own. */}
-                        <Field label="CV No.">
-                          <TextInput figures readOnly={!!editing} value={draft.typedNo && !editing ? draft.no : no} onChange={(typed) => setDraft({ ...draft, no: typed, typedNo: true })} />
-                        </Field>
-                        <Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
+                        <Fills part="no">
+                          <Field label="CV No.">
+                            <TextInput figures readOnly={!!editing} value={draft.typedNo && !editing ? draft.no : no} onChange={(typed) => setDraft({ ...draft, no: typed, typedNo: true })} />
+                          </Field>
+                        </Fills>
+                        <Fills part="date"><Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field></Fills>
                       </FieldRow>
-                      <Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field>
-                      <Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
-                      <Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field>
-                      <Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field>
-                      <BankAccountPicker
-                        label="Bank"
-                        value={shown.bank}
-                        onChange={(b) => setDraft({ ...draft, bank: b })}
-                        hint="The account the check is drawn on. Others adds one not listed."
-                        noneHint="No bank accounts are kept yet: add the one the check is drawn on under Others."
-                        after="every voucher after this one"
-                        kept="Vouchers already saved keep the bank written on them."
-                      />
+                      <Fills part="payee"><Field label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field></Fills>
+                      <Fills part="address"><Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field></Fills>
+                      <Fills part="tin"><Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field></Fills>
+                      <Fills part="issuer"><Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field></Fills>
+                      <Fills part="bank">
+                        <BankAccountPicker
+                          label="Bank"
+                          value={shown.bank}
+                          onChange={(b) => setDraft({ ...draft, bank: b })}
+                          hint="The account the check is drawn on. Others adds one not listed."
+                          noneHint="No bank accounts are kept yet: add the one the check is drawn on under Others."
+                          after="every voucher after this one"
+                          kept="Vouchers already saved keep the bank written on them."
+                        />
+                      </Fills>
                     </fieldset>
                     <fieldset disabled={!!locked} className={FIELDS}>
                       <FieldRow>
-                        <Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field>
-                        <Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field>
+                        <Fills part="check"><Field label="Check No." hint="Needed before the voucher is released."><TextInput figures placeholder="0004512" value={shown.check} onChange={(check) => setDraft({ ...draft, check })} /></Field></Fills>
+                        <Fills part="checkDate"><Field label="Date of check"><TextInput type="date" value={shown.checkDate} onChange={(checkDate) => setDraft({ ...draft, checkDate })} /></Field></Fills>
                       </FieldRow>
                     </fieldset>
                     <fieldset disabled={!!locked} className={FIELDS}>
-                      <LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
+                      <Fills part="lines"><LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
                       <div className="text-right" aria-live="polite">
                         <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
                         <p className="m-0 text-[13px] text-ink-2">{amountInWords(total)}</p>
                       </div>
                       {/* Each signatory's name over their position, as the voucher prints them. */}
                       <FieldRow min={120}>
-                        <div className="flex min-w-0 flex-col gap-2.5">
-                          <SignatoryPicker label="Prepared by" names={signed} value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} />
-                          <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
-                        </div>
-                        <div className="flex min-w-0 flex-col gap-2.5">
-                          <SignatoryPicker label="Audited by" names={signed} value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} />
-                          <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
-                        </div>
-                        <div className="flex min-w-0 flex-col gap-2.5">
-                          <SignatoryPicker label="Approved by" names={signed} value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} />
-                          <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
-                        </div>
+                        <Fills part="prepared">
+                          <div className="flex min-w-0 flex-col gap-2.5">
+                            <SignatoryPicker label="Prepared by" names={signed} value={shown.prepared} onChange={(prepared) => setDraft({ ...draft, prepared: caps(prepared) })} />
+                            <Field label="Preparer's position"><TextInput value={shown.preparedPos} onChange={(preparedPos) => setDraft({ ...draft, preparedPos })} /></Field>
+                          </div>
+                        </Fills>
+                        <Fills part="checked">
+                          <div className="flex min-w-0 flex-col gap-2.5">
+                            <SignatoryPicker label="Audited by" names={signed} value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked: caps(checked) })} />
+                            <Field label="Auditor's position"><TextInput value={shown.checkedPos} onChange={(checkedPos) => setDraft({ ...draft, checkedPos })} /></Field>
+                          </div>
+                        </Fills>
+                        <Fills part="approved">
+                          <div className="flex min-w-0 flex-col gap-2.5">
+                            <SignatoryPicker label="Approved by" names={signed} value={shown.approved} onChange={(approved) => setDraft({ ...draft, approved: caps(approved) })} />
+                            <Field label="Approver's position"><TextInput value={shown.approvedPos} onChange={(approvedPos) => setDraft({ ...draft, approvedPos })} /></Field>
+                          </div>
+                        </Fills>
                       </FieldRow>
                     </fieldset>
                   </FormCard>

@@ -1,5 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
+import { markedPaperParts, paperSizes } from '../support/paper';
 
 // Statements of Account (packages/modules/soa). The tests' sample records keep none, so a new one is SOA-2026-001. The
 // lease filled in below is the company's form: 354.4 sqm at ₱600 a month, two months' deposit and two months' advance,
@@ -100,4 +101,25 @@ test('refuses a statement with no floor area, saying what is missing', async ({ 
 
   await expect(form.getByRole('alert')).toHaveText('Enter the floor area in square metres.');
   await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
+});
+
+test('marks on the statement where the field being typed in prints, part by part, and moves nothing', async ({ app, screen, browser }) => {
+  await app.open('/#soa');
+  const form = screen.getByRole('form', 'New statement of account');
+  const sizes = await paperSizes(browser);
+
+  await form.getByRole('textbox', 'Client').fill('Northwind Retail Corp.');
+  expect(await markedPaperParts(browser)).toEqual(['NORTHWIND RETAIL CORP. · solid 2px']);
+  expect(await paperSizes(browser)).toEqual(sizes);
+
+  // The floor area fills the first part, the breakdown of the monthly rent.
+  await form.getByRole('textbox', 'Floor area (sqm)').fill('354.4');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^1\. BREAKDOWN OF THE MONTHLY RENT .* · solid 2px$/);
+  await form.getByRole('textbox', 'Term (months)').fill('24');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^3\. LEASE TERM AND ESCALATION .* · solid 2px$/);
+  await form.getByRole('textbox', 'Number of checks').fill('12');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^4\. POSTDATED CHECKS \(PDC\): RENTAL SCHEDULE .* · solid 2px$/);
+
+  await screen.getByRole('heading', { name: 'Statements of Account', level: 1 }).tap();
+  expect(await markedPaperParts(browser)).toEqual([]);
 });

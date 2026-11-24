@@ -1,6 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { faintPaperText, tinyPaperText } from '../support/paper';
+import { faintPaperText, markedPaperParts, paperSizes, tinyPaperText } from '../support/paper';
 
 // Requests for Funds (packages/modules/funds, docs/adr/0011, 0021). This suite runs the build that keeps its records on
 // the computer, where nobody signs in: requests are filed, edited and withdrawn here, and never decided. The CEO's
@@ -218,4 +218,33 @@ test('shows a waiting request on Home and Overview, opens it from there, and log
   await expect(entries).toHaveCount(1);
   // The log, which everyone reads, names who asked but not what for or how much.
   await expect(entries.first()).toContainText('RF RF-2026-0001 filed by Paolo Santos.');
+});
+
+test('marks on the fund transfer request where the field being typed in prints, and moves nothing', async ({ app, screen, browser }) => {
+  await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
+  const form = screen.getByRole('form', 'New request');
+  const sizes = await paperSizes(browser);
+
+  await form.getByRole('textbox', 'What it is for').fill('Christmas party: venue deposit');
+  expect(await markedPaperParts(browser)).toEqual(['Christmas party: venue deposit · solid 2px']);
+  expect(await paperSizes(browser)).toEqual(sizes);
+
+  // The expenses fill the amount box and the list under it.
+  await form.getByRole('textbox', 'Line 1 description').fill('Venue deposit');
+  await form.getByRole('textbox', 'Line 1 amount').fill('48000');
+  expect(await markedPaperParts(browser)).toEqual([
+    'AMOUNT ₱48,000.00 Forty-Eight Thousand Pesos Only · solid 2px',
+    'EXPENSE AMOUNT Venue deposit ₱48,000.00 TOTAL ₱48,000.00 · solid 2px',
+  ]);
+
+  await form.getByRole('textbox', 'Account number').fill('0012 3456 7890');
+  expect(await markedPaperParts(browser)).toEqual(['0012 3456 7890 · solid 2px']);
+
+  // Who asks prints twice: beside Requested by, and over their line.
+  await form.getByRole('textbox', 'Requested by').fill('Ana Cruz');
+  expect(await markedPaperParts(browser)).toEqual(['Ana Cruz · solid 2px', 'Ana Cruz REQUESTED BY · solid 2px']);
+
+  await screen.getByRole('heading', { name: 'Requests for Funds', level: 1 }).tap();
+  expect(await markedPaperParts(browser)).toEqual([]);
 });

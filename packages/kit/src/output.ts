@@ -10,7 +10,13 @@ import type { Files } from './context';
  */
 export async function savePdf(node: HTMLElement, name: string, files: Pick<Files, 'save'>): Promise<string | null> {
   const { orientation, margin, style } = layoutOf(node).pdf;
-  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style });
+
+  // Drawn with no part of it marked, whatever field has focus meanwhile (the stylesheet leaves a drawn paper's mark out).
+  node.setAttribute(MARKS.drawing, '');
+
+  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style })
+    .finally(() => node.removeAttribute(MARKS.drawing));
+
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation });
   const page = { w: pdf.internal.pageSize.getWidth(), h: pdf.internal.pageSize.getHeight() };
   const room = { w: page.w - margin * 2, h: page.h - margin * 2 };
