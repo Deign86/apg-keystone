@@ -13,7 +13,13 @@ export async function savePdf(node: HTMLElement, name: string, files: Pick<Files
   const layout = layoutOf(node);
   const { orientation, margin, style } = layout.pdf;
   const pixelRatio = pdfPixelRatio(layout, { width: node.offsetWidth, height: node.offsetHeight });
-  const png = await toPng(node, { pixelRatio, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style });
+
+  // Drawn with no part of it marked, whatever field has focus meanwhile (the stylesheet leaves a drawn paper's mark out).
+  node.setAttribute(MARKS.drawing, '');
+
+  const png = await toPng(node, { pixelRatio, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style })
+    .finally(() => node.removeAttribute(MARKS.drawing));
+
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation, compress: true });
   const { room } = pdfPage(layout);
   const img = pdf.getImageProperties(png);
