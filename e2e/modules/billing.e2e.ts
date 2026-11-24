@@ -213,6 +213,8 @@ test('prints Bill to\'s address under the name, as typed, and keeps it with the 
   await form.getByRole('textbox', 'Address').fill('12 Evergreen Terrace, Springfield, Pasig City');
 
   await expect(paper.getByText('Springfield Properties Inc.', { exact: true })).toBeVisible();
+  // Labelled Address, on its own line under Bill to, as Attention is under it.
+  await expect(paper.getByRole('term').filter({ hasText: 'Address' })).toBeVisible();
   await expect(paper.getByText('12 Evergreen Terrace, Springfield, Pasig City', { exact: true })).toBeVisible();
 
   await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');

@@ -22,6 +22,8 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <dl class="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
 </dl>
@@ -138,6 +140,8 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <dl class="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
 </dl>
@@ -253,6 +257,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dl class="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Dela Cruz, Maria Teresa</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">—</dd>
 </dl>
@@ -364,6 +370,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dl class="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Harbor Point Logistics Corp.</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Liza Tan</dd>
 </dl>
@@ -475,6 +483,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dl class="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
 </dl>
