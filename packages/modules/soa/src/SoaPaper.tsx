@@ -1,7 +1,7 @@
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, Fragment, useState, type ReactNode } from 'react';
 import { DASH, longDate, peso, shortDate, sumCentavos, toCentavos, type Company } from '@keystone/core';
 import {
-  depositLines, dueOnSigning, EWT_RATE, leaseSchedule, leaseTermsOf, monthlyRent, monthName, pdcSchedule, VAT_RATE, type Soa,
+  depositLines, dueOnSigning, EWT_RATE, leaseSchedule, monthlyRent, monthName, pdcSchedule, sqmFigure, topDetails, VAT_RATE, type Soa,
 } from './rules';
 import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet } from '@keystone/kit';
 
@@ -10,8 +10,7 @@ import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet } from
 // the open so a lessee can follow it: (1) the monthly rent from the floor area and rate, with VAT and EWT, (2) the deposit and advance due on
 // signing, less the reservation, (3) the rent in each lease year after escalation, (4) the postdated checks. Then notes.
 
-/** A number of square metres or a rate, with its decimals only when it has them. */
-const figure = (n: number) => n.toLocaleString('en-PH', { maximumFractionDigits: 2 });
+const figure = sqmFigure;
 
 /** A column of a part's table: its heading, and whether it holds figures (right-aligned, in tabular digits). */
 interface Column { header: string; figure?: boolean }
@@ -63,7 +62,39 @@ function Part({ n, title, children }: { n: number; title: string; children: Reac
 /** A taken-off amount, in brackets. */
 const less = (c: number) => `(${peso(c)})`;
 
-export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(function SoaPaper({ soa: a, company }, ref) {
+/**
+ * A check's number where it is on the paper, changed by clicking it, for a checkbook that is not in order. It reads as
+ * the number, with nothing to show it can be changed, so the paper prints and saves as it always has; the form says so.
+ */
+function CheckNumber({ no, value, onChange }: { no: number; value: string; onChange: (check: string) => void }) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <input
+        aria-label={`Check ${no} number`}
+        autoFocus
+        defaultValue={value}
+        className="w-full min-w-0 border-0 bg-paper p-0 font-[inherit] text-[length:inherit] text-paper-ink tabular-nums outline-1 outline-paper-gold outline-solid"
+        onBlur={(e) => { onChange(e.currentTarget.value); setEditing(false); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+
+          if (e.key === 'Escape') { e.currentTarget.value = value; e.currentTarget.blur(); }
+        }}
+      />
+    );
+  }
+
+  return (
+    // Named by the number it shows, so the row reads as it prints; what a click does is its description.
+    <button type="button" title={`Change check ${no}’s number`} className="w-full cursor-text text-left hover:bg-paper-tint" onClick={() => setEditing(true)}>
+      {orDash(value)}
+    </button>
+  );
+}
+
+export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; onCheckNumber?: (no: number, check: string) => void }>(function SoaPaper({ soa: a, company, onCheckNumber }, ref) {
   const rent = monthlyRent(a);
   const deposit = depositLines(a);
   const years = leaseSchedule(a);
@@ -76,16 +107,12 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
       <Letterhead company={company} title="Statement of Account" no={a.no} date={`Prepared as of: ${a.date ? longDate(a.date) : DASH}`} />
 
       <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
-        <dt className={paperLabel}>Client</dt>
-        <dd className="m-0 font-bold uppercase">{orDash(a.client)}</dd>
-        <dt className={paperLabel}>Property address</dt>
-        <dd className="m-0 font-medium">{orDash(a.property)}</dd>
-        <dt className={paperLabel}>Lease terms</dt>
-        <dd className="m-0 font-medium">{orDash(leaseTermsOf(a))}</dd>
-        <dt className={paperLabel}>Payee</dt>
-        <dd className="m-0 font-medium">{orDash(a.payee)}</dd>
-        <dt className={paperLabel}>Contract commencement</dt>
-        <dd className="m-0 font-medium tabular-nums">{a.commencement ? longDate(a.commencement) : DASH}</dd>
+        {topDetails(a).map((d, i) => (
+          <Fragment key={i}>
+            <dt className={paperLabel}>{orDash(d.label)}</dt>
+            <dd className={`m-0 ${i ? 'font-medium' : 'font-bold uppercase'}${d.figure ? ' tabular-nums' : ''}`}>{orDash(d.value)}</dd>
+          </Fragment>
+        ))}
       </dl>
 
       <Part n={1} title="Breakdown of the monthly rent">
@@ -133,7 +160,11 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
         <Table
           label="Postdated checks"
           columns={[{ header: 'No.', figure: true }, { header: 'Check date' }, { header: 'Bank' }, { header: 'Check number' }, { header: 'Amount', figure: true }, { header: 'Payment for' }]}
-          rows={checks.map((c) => [String(c.no), longDate(c.date), orDash(c.bank), orDash(c.check), peso(c.amount), `${monthName(c.month)} Rent`])}
+          rows={checks.map((c) => [
+            String(c.no), longDate(c.date), orDash(c.bank),
+            onCheckNumber ? <CheckNumber no={c.no} value={c.check} onChange={(check) => onCheckNumber(c.no, check)} /> : orDash(c.check),
+            peso(c.amount), `${monthName(c.month)} Rent`,
+          ])}
           empty="Enter the commencement date to schedule the checks."
         />
         {checks.length > 0 && (
