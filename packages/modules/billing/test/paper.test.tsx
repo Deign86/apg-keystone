@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { companyOf, nameOf } from '@keystone/core';
 import { printElement } from '@keystone/kit';
@@ -55,6 +55,23 @@ describe('the billing statement on paper', () => {
     expect(paper.querySelectorAll('table[aria-label="Totals"]')).toHaveLength(1);
     expect(paper.hasAttribute('data-print-fit')).toBe(false);
     expect(paper.hasAttribute('data-print-orientation')).toBe(false);
+  });
+
+  it('prints an EWT line only on a statement that withholds it', () => {
+    const b = s.bs[0];
+
+    const totals = (ewt: boolean) => {
+      render(<StatementPaper statement={{ ...b, ewt, ewtRate: 2 }} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
+
+      const rows = [...screen.getByRole('table', { name: 'Totals' }).querySelectorAll('th')].map((th) => th.textContent);
+
+      cleanup();
+
+      return rows;
+    };
+
+    expect(totals(false)).toEqual(['Subtotal', 'VAT (12%)', 'Total amount due']);
+    expect(totals(true)).toEqual(['Subtotal', 'VAT (12%)', 'Less: EWT (2%)', 'Total amount due']);
   });
 
   it('prints each signatory\'s position under their name, and nothing where none is kept', () => {

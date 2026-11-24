@@ -2,7 +2,7 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { DEADLINES, SERVICES, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
+import { companyOf, DEADLINES, SERVICES, signatureOf, signatureSizeOf, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
@@ -167,6 +167,35 @@ export function useModuleApp(): ModuleApp {
     state,
     ctx: store.ctx,
   }), [go, registry, offered, store, state]);
+}
+
+const noSubscribe = () => () => {};
+const noState = () => null;
+
+export interface SignatureSize {
+  /** A share of the standard height: 1 unless it was resized. */
+  size: number;
+  /** Keeps a new size for this signatory, on every paper; missing where whoever is signed in may not. */
+  resize?: (size: number) => void;
+}
+
+/**
+ * How large a signatory's signature is drawn (a share of the standard height), and, where whoever is signed in may
+ * resize it, a way to (the company module's `SERVICES.signatureSizes`). Outside the app, as a paper in a test, the
+ * standard size and no way to resize.
+ */
+export function useSignatureSize(who: string): SignatureSize {
+  const v = useContext(KeystoneContext);
+  const state = useSyncExternalStore(v?.store.subscribe ?? noSubscribe, v?.store.getState ?? noState);
+
+  if (!v || !state) return { size: 1 };
+  const company = companyOf(state);
+  const size = signatureSizeOf(company, who);
+  const sizes = findService(v.registry.modules, SERVICES.signatureSizes);
+
+  if (!sizes?.canResize(v.store.ctx) || !signatureOf(company, who)) return { size };
+
+  return { size, resize: (next) => { v.store.run((s, c) => sizes.resize(s, who, next, c)); } };
 }
 
 /** A form draft that survives switching screens. */
