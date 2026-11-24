@@ -35,7 +35,7 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
         </Field>
         <Field label="TIN"><TextInput figures placeholder="000-000-000-000" value={d.tin} onChange={(tin) => setD({ ...d, tin })} /></Field>
       </FieldRow>
-      <Field label="Name" error={error ?? undefined}><TextInput autoFocus value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
+      <Field label="Name" error={error ?? undefined}><TextInput capitalize autoFocus value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
       <FieldRow>
         <Field label={d.type === 'Employee' ? 'Position' : 'Address'}><TextInput value={d.detail} onChange={(detail) => setD({ ...d, detail })} /></Field>
         {d.type === 'Employee' && <Field label="Department"><TextInput value={d.dept} onChange={(dept) => setD({ ...d, dept })} /></Field>}
@@ -45,7 +45,7 @@ function RecordForm({ draft, onDone }: { draft: DirectoryDraft; onDone: () => vo
         <Field label="Phone"><TextInput type="tel" value={d.phone} onChange={(phone) => setD({ ...d, phone })} /></Field>
       </FieldRow>
       {d.type === 'Client' && (
-        <Field label="Attention" hint="Who billing statements are addressed to."><TextInput placeholder="Contact person" value={d.attention} onChange={(attention) => setD({ ...d, attention })} /></Field>
+        <Field label="Attention" hint="Who billing statements are addressed to."><TextInput capitalize placeholder="Contact person" value={d.attention} onChange={(attention) => setD({ ...d, attention })} /></Field>
       )}
       {d.type === 'Client' && (
         <div className="flex flex-wrap gap-x-5 gap-y-2">
