@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { emptyState, moduleData, toCentavos, type Ctx } from '@keystone/core';
+import { emptyState, moduleData, percent, toCentavos, withModuleData, type Ctx } from '@keystone/core';
 import {
-  addMonths, depositLines, dueOnSigning, leaseSchedule, leaseTermsOf, monthlyRent, newSoa, pdcSchedule, pdcStart, removeSoa, saveSoa,
-  soaDraftOf, soaLine, soaOf, statementsOf, type SoaDraft,
+  addMonths, baseRentInYear, depositLines, dueOnSigning, leaseSchedule, leaseTermsOf, leaseYearOf, monthlyRent, monthName, newSoa,
+  pdcSchedule, pdcStart, pdcTotal, removeSoa, rentOn, saveSoa, soaDraftOf, soaLine, soaOf, statementsNewestFirst, statementsOf,
+  type SoaDraft,
 } from '../src/rules';
+import { soaModule } from '../src';
 
 /** 24 Nov 2026, 09:05 in Manila. */
 const ctx: Ctx = { now: () => new Date(2026, 10, 24, 9, 5) };
@@ -145,5 +147,140 @@ describe('saving', () => {
   it('keeps nothing until something is saved', () => {
     expect(statementsOf(emptyState())).toEqual([]);
     expect(soaLine(emptyState())).toMatch(/^No statements of account yet\./);
+  });
+});
+
+describe('the arithmetic, for any lease', () => {
+  // A small, seeded generator, so a failure names the same lease every run.
+  let seed = 86;
+  const next = () => (seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31;
+
+  it('is always base + VAT − EWT, each rounded to the centavo on the base rent', () => {
+    for (let i = 0; i < 500; i += 1) {
+      const sqm = Math.round(next() * 200000) / 100;
+      const rate = Math.round(next() * 300000) / 100;
+      const a = soaOf(draft({ sqm: String(sqm), rate: String(rate), vat: next() < 0.5, ewt: next() < 0.5 }));
+      const r = monthlyRent(a);
+
+      expect(r.base).toBe(toCentavos(sqm * rate));
+      expect(r.vat).toBe(a.vat ? percent(r.base, 12) : 0);
+      expect(r.ewt).toBe(a.ewt ? percent(r.base, 5) : 0);
+      expect(r.net).toBe(r.base + r.vat - r.ewt);
+      expect(Number.isInteger(r.net)).toBe(true);
+    }
+  });
+
+  it('never lowers the rent from one lease year to the next, and keeps it flat with no escalation', () => {
+    for (let i = 0; i < 100; i += 1) {
+      const escalation = Math.round(next() * 15);
+      const sqm = Math.round(next() * 50000) / 100 + 1;
+      const a = soaOf(draft({ sqm: String(sqm), rate: String(Math.round(next() * 2000) + 1), escalation: String(escalation), termMonths: '60' }));
+      const bases = leaseSchedule(a).map((y) => y.base);
+
+      expect(bases).toHaveLength(5);
+      bases.slice(1).forEach((b, y) => expect(escalation ? b > bases[y] : b === bases[y]).toBe(true));
+      bases.forEach((b, y) => expect(baseRentInYear(a, y + 1)).toBe(b));
+    }
+  });
+
+  it('pays each check the rent of the lease year its month falls in', () => {
+    const a = soaOf(draft({ commencement: '2027-03-15', pdcFirst: '2027-04', pdcCount: '30', termMonths: '36' }));
+
+    for (const c of pdcSchedule(a)) expect(c.amount).toBe(rentOn(a, baseRentInYear(a, leaseYearOf(a, c.month))).net);
+    expect([leaseYearOf(a, '2028-02'), leaseYearOf(a, '2028-03'), leaseYearOf(a, '2029-03')]).toEqual([1, 2, 3]);
+  });
+});
+
+describe('the edges of a lease', () => {
+  it('asks for nothing on signing when there is no deposit, advance or reservation', () => {
+    const a = soaOf(draft({ reservation: '', depositMonths: '0', advanceMonths: '0' }));
+
+    expect(depositLines(a)).toEqual([]);
+    expect(dueOnSigning(a)).toBe(0);
+    // No advance: the checks start in the commencement month, one for every month of the term.
+    expect(pdcStart({ ...a, pdcFirst: '' })).toBe('2027-01');
+    expect(pdcTotal({ ...a, pdcCount: 0 })).toBe(24);
+  });
+
+  it('writes no more than 120 checks, and none when the advance pays the whole term', () => {
+    expect(pdcSchedule(soaOf(draft({ pdcCount: '', termMonths: '600' })))).toHaveLength(120);
+    expect(pdcSchedule(soaOf(draft({ pdcCount: '', termMonths: '2' })))).toEqual([]);
+  });
+
+  it('numbers a check that is not all digits only on the first, and leaves the rest to be written in', () => {
+    expect(pdcSchedule(soaOf(draft({ firstCheck: 'A-100', pdcCount: '3' }))).map((c) => c.check)).toEqual(['A-100', '', '']);
+    expect(pdcSchedule(soaOf(draft({ firstCheck: '', pdcCount: '2' }))).map((c) => c.check)).toEqual(['', '']);
+  });
+
+  it('counts months back across a year, and names them', () => {
+    expect(addMonths('2027-01', -1)).toBe('2026-12');
+    expect(addMonths('2027-12', 1)).toBe('2028-01');
+    expect(monthName('2027-02')).toBe('February 2027');
+  });
+
+  it('reads the lease terms from the term alone when there is one year or no escalation', () => {
+    expect(leaseTermsOf(soaOf(draft({ termMonths: '12' })))).toBe('1 year');
+    expect(leaseTermsOf(soaOf(draft({ termMonths: '18' })))).toBe('18 months, 5% escalation a year from the second year');
+    expect(leaseTermsOf(soaOf(draft({ termMonths: '36', escalation: '0' })))).toBe('3 years');
+    expect(leaseTermsOf(soaOf(draft({ termMonths: '' })))).toBe('');
+  });
+
+  it('reads amounts as typed, with commas, a peso sign or spaces, and anything else as nothing', () => {
+    expect(soaOf(draft({ rate: '₱ 1,250.50', reservation: 'none', sqm: ' 42 ' }))).toMatchObject({ rate: 1250.5, reservation: 0, sqm: 42 });
+  });
+});
+
+describe('the saved statements', () => {
+  it('read back field by field, a damaged one with its gaps empty, zero or off, and anything else left out', () => {
+    const s = withModuleData(emptyState(), 'soa', { statements: [{ no: 'SOA-2026-009', client: 'Harbor Point Logistics Corp.', sqm: 'lots', vat: 'yes', ewt: true }, 'junk', { client: 'No number' }] });
+    const [a, ...rest] = statementsOf(s);
+
+    expect(rest).toEqual([]);
+    expect(a).toMatchObject({ no: 'SOA-2026-009', client: 'Harbor Point Logistics Corp.', sqm: 0, rate: 0, vat: false, ewt: true, property: '', commencement: '', pdcCount: 0 });
+    expect(statementsOf(withModuleData(emptyState(), 'soa', 'not a list'))).toEqual([]);
+  });
+
+  it('number on within the year, and start again at 001 in a new one', () => {
+    const { state } = saveSoa(emptyState(), draft(), ctx);
+    const january: Ctx = { now: () => new Date(2027, 0, 4, 9, 0) };
+
+    expect(newSoa(state, ctx).no).toBe('SOA-2026-002');
+    expect(newSoa(state, january).no).toBe('SOA-2027-001');
+  });
+
+  it('list the newest first, and say how many clients they are for', () => {
+    const one = saveSoa(emptyState(), draft(), ctx).state;
+    const two = saveSoa(one, draft({ no: 'SOA-2026-002' }), ctx).state;
+    const three = saveSoa(two, draft({ no: 'SOA-2026-003', client: 'Harbor Point Logistics Corp.' }), ctx).state;
+
+    expect(statementsNewestFirst(three).map((a) => a.no)).toEqual(['SOA-2026-003', 'SOA-2026-002', 'SOA-2026-001']);
+    expect(soaLine(three)).toBe('3 statements of account saved, for 2 clients.');
+  });
+
+  it('refuse to edit or remove one that is gone', () => {
+    const saved = saveSoa(emptyState(), draft(), ctx);
+    const gone = removeSoa(saved.state, 'SOA-2026-001', ctx).state;
+
+    expect(() => saveSoa(gone, soaDraftOf(saved.record), ctx)).toThrow('SOA-2026-001 is no longer saved.');
+    expect(() => removeSoa(gone, 'SOA-2026-001', ctx)).toThrow('SOA-2026-001 is not saved.');
+    expect(moduleData(gone, 'soa')).toEqual({ statements: [] });
+  });
+
+  it('refuse an escalation below zero, part months of deposit, more than 120 checks, and no property', () => {
+    expect(() => saveSoa(emptyState(), draft({ escalation: '-1' }), ctx)).toThrow('The escalation cannot be below zero.');
+    expect(() => saveSoa(emptyState(), draft({ depositMonths: '1.5' }), ctx)).toThrow('Enter the deposit and advance in whole months.');
+    expect(() => saveSoa(emptyState(), draft({ pdcCount: '121' }), ctx)).toThrow('Enter up to 120 checks.');
+    expect(() => saveSoa(emptyState(), draft({ property: '' }), ctx)).toThrow('Enter the property address.');
+  });
+});
+
+describe('what the module contributes', () => {
+  it('is Statements of Account at #soa, on Home with how many are saved, logged as SOA, with a New button', () => {
+    const saved = saveSoa(emptyState(), draft(), ctx).state;
+
+    expect(soaModule).toMatchObject({ id: 'soa', title: 'Statements of Account', onHome: true, logTags: { SOA: 'Statements of Account' } });
+    expect(soaModule.stat?.(emptyState(), ctx, [soaModule])).toEqual(['Saved', '0']);
+    expect(soaModule.stat?.(saved, ctx, [soaModule])).toEqual(['Saved', '1']);
+    expect(soaModule.create?.label).toBe('New statement of account');
   });
 });

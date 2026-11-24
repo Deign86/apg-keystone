@@ -1,0 +1,570 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the statement of account on paper > is laid out, and prints, exactly as it has > at the printer 1`] = `
+{
+  "page": [],
+  "paper": "<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Statement of account SOA-2026-001" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Statement of Account</p>
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">SOA-2026-001</p>
+<p class="m-0 text-xs font-medium tabular-nums">Prepared as of: November 24, 2026</p>
+</div>
+</div>
+</header>
+<dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Client</dt>
+<dd class="m-0 font-bold uppercase">Northwind Retail Corp.</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Property address</dt>
+<dd class="m-0 font-medium">Unit 5, Ortigas Avenue, Pasig</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Lease terms</dt>
+<dd class="m-0 font-medium">2 years, 5% escalation a year from the second year</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 font-medium">Juan Dela Cruz</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Contract commencement</dt>
+<dd class="m-0 font-medium tabular-nums">January 1, 2027</dd>
+</dl>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">1. Breakdown of the monthly rent</h2>
+<table aria-label="Breakdown" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1   font-semibold">Particulars</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Sqm</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Rate</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Computation</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Base rent</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">354.4</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱600.00</td>
+<td class="px-2 py-1 border-l border-paper-line ">354.4 sqm × ₱600.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  ">12% VAT</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">₱212,640.00 × 12%</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱25,516.80</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Less: 5% EWT</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">₱212,640.00 × 5%</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱10,632.00)</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="4" class="px-2 py-1 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Monthly rent: base + VAT − EWT</td>
+<td class="border-l border-paper-line px-2 py-1 text-right text-[12.5px] font-bold whitespace-nowrap tabular-nums">₱227,524.80</td>
+</tr>
+</tfoot>
+</table>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">2. Deposit and advance</h2>
+<table aria-label="Deposit and advance" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1   font-semibold">Description</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Total amount</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Coverage</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Check no.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Less: Reservation</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱212,640.00)</td>
+<td class="px-2 py-1 border-l border-paper-line ">1 month deductible to advance rental</td>
+<td class="px-2 py-1 border-l border-paper-line ">CASH DEPOSIT</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  ">Security deposit (2 months base rent)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">2</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱425,280.00</td>
+<td class="px-2 py-1 border-l border-paper-line ">Remaining 1 month</td>
+<td class="px-2 py-1 border-l border-paper-line ">—</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Advance rental (2 months)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">2</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱455,049.60</td>
+<td class="px-2 py-1 border-l border-paper-line ">Jan – Feb 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">—</td>
+</tr>
+</tbody>
+</table>
+<p class="m-0 mt-1.5 flex justify-end gap-3 text-right">
+<span class="text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total due on signing</span>
+<span class="text-[12.5px] font-bold tabular-nums">₱667,689.60</span>
+</p>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">3. Lease term and escalation</h2>
+<table aria-label="Lease term and escalation" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1   font-semibold">Year</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Period</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Escalation</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Base rent</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">VAT</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">EWT</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Monthly rent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">1</td>
+<td class="px-2 py-1 border-l border-paper-line ">Jan 1, 2027 – Dec 31, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">—</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱25,516.80</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱10,632.00)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  ">2</td>
+<td class="px-2 py-1 border-l border-paper-line ">Jan 1, 2028 – Dec 31, 2028</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">5%</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱223,272.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱26,792.64</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱11,163.60)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱238,901.04</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">4. Postdated checks (PDC): rental schedule</h2>
+<table aria-label="Postdated checks" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1  text-right whitespace-nowrap tabular-nums font-semibold">No.</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Check date</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Bank</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Check number</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Payment for</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2 py-1 border-l border-paper-line ">January 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325749</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">February 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">2</td>
+<td class="px-2 py-1 border-l border-paper-line ">February 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325750</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">March 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">3</td>
+<td class="px-2 py-1 border-l border-paper-line ">March 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325751</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">April 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">4</td>
+<td class="px-2 py-1 border-l border-paper-line ">April 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325752</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">May 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">5</td>
+<td class="px-2 py-1 border-l border-paper-line ">May 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325753</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">June 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">6</td>
+<td class="px-2 py-1 border-l border-paper-line ">June 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325754</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">July 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">7</td>
+<td class="px-2 py-1 border-l border-paper-line ">July 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325755</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">August 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">8</td>
+<td class="px-2 py-1 border-l border-paper-line ">August 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325756</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">September 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">9</td>
+<td class="px-2 py-1 border-l border-paper-line ">September 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325757</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">October 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">10</td>
+<td class="px-2 py-1 border-l border-paper-line ">October 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325758</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">November 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">11</td>
+<td class="px-2 py-1 border-l border-paper-line ">November 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325759</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">December 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">12</td>
+<td class="px-2 py-1 border-l border-paper-line ">December 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325760</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱238,901.04</td>
+<td class="px-2 py-1 border-l border-paper-line ">January 2028 Rent</td>
+</tr>
+</tbody>
+</table>
+<p class="m-0 mt-1.5 flex justify-end gap-3 text-right">
+<span class="text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total of 12 checks</span>
+<span class="text-[12.5px] font-bold tabular-nums">₱2,741,673.84</span>
+</p>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Notes</h2>
+<p class="m-0 mt-1 text-[11px] whitespace-pre-line">Checks are payable to the lessor.</p>
+</section>
+</article>
+</div>
+</div>",
+}
+`;
+
+exports[`the statement of account on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
+"<div data-sheet-frame="" class="overflow-hidden">
+<div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
+<article data-ui="document" aria-label="Statement of account SOA-2026-001" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Statement of Account</p>
+<div class="flex items-center justify-between gap-4">
+<div class="flex min-w-0 items-center gap-4">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
+</div>
+<div class="shrink-0 text-right">
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">SOA-2026-001</p>
+<p class="m-0 text-xs font-medium tabular-nums">Prepared as of: November 24, 2026</p>
+</div>
+</div>
+</header>
+<dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Client</dt>
+<dd class="m-0 font-bold uppercase">Northwind Retail Corp.</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Property address</dt>
+<dd class="m-0 font-medium">Unit 5, Ortigas Avenue, Pasig</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Lease terms</dt>
+<dd class="m-0 font-medium">2 years, 5% escalation a year from the second year</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
+<dd class="m-0 font-medium">Juan Dela Cruz</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Contract commencement</dt>
+<dd class="m-0 font-medium tabular-nums">January 1, 2027</dd>
+</dl>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">1. Breakdown of the monthly rent</h2>
+<table aria-label="Breakdown" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1   font-semibold">Particulars</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Sqm</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Rate</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Computation</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Base rent</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">354.4</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱600.00</td>
+<td class="px-2 py-1 border-l border-paper-line ">354.4 sqm × ₱600.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  ">12% VAT</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">₱212,640.00 × 12%</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱25,516.80</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Less: 5% EWT</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">₱212,640.00 × 5%</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱10,632.00)</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t border-paper-ink bg-paper-tint">
+<td colspan="4" class="px-2 py-1 text-right text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Monthly rent: base + VAT − EWT</td>
+<td class="border-l border-paper-line px-2 py-1 text-right text-[12.5px] font-bold whitespace-nowrap tabular-nums">₱227,524.80</td>
+</tr>
+</tfoot>
+</table>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">2. Deposit and advance</h2>
+<table aria-label="Deposit and advance" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1   font-semibold">Description</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Total amount</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Coverage</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Check no.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Less: Reservation</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱212,640.00)</td>
+<td class="px-2 py-1 border-l border-paper-line ">1 month deductible to advance rental</td>
+<td class="px-2 py-1 border-l border-paper-line ">CASH DEPOSIT</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  ">Security deposit (2 months base rent)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">2</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱425,280.00</td>
+<td class="px-2 py-1 border-l border-paper-line ">Remaining 1 month</td>
+<td class="px-2 py-1 border-l border-paper-line ">—</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">Advance rental (2 months)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">2</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱455,049.60</td>
+<td class="px-2 py-1 border-l border-paper-line ">Jan – Feb 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">—</td>
+</tr>
+</tbody>
+</table>
+<p class="m-0 mt-1.5 flex justify-end gap-3 text-right">
+<span class="text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total due on signing</span>
+<span class="text-[12.5px] font-bold tabular-nums">₱667,689.60</span>
+</p>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">3. Lease term and escalation</h2>
+<table aria-label="Lease term and escalation" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1   font-semibold">Year</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Period</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Escalation</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Base rent</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">VAT</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">EWT</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Monthly rent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  ">1</td>
+<td class="px-2 py-1 border-l border-paper-line ">Jan 1, 2027 – Dec 31, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">—</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱25,516.80</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱10,632.00)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  ">2</td>
+<td class="px-2 py-1 border-l border-paper-line ">Jan 1, 2028 – Dec 31, 2028</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">5%</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱223,272.00</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱26,792.64</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱11,163.60)</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱238,901.04</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">4. Postdated checks (PDC): rental schedule</h2>
+<table aria-label="Postdated checks" class="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
+<thead>
+<tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
+<th class="px-2 py-1  text-right whitespace-nowrap tabular-nums font-semibold">No.</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Check date</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Bank</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Check number</th>
+<th class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
+<th class="px-2 py-1 border-l border-paper-line  font-semibold">Payment for</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2 py-1 border-l border-paper-line ">January 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325749</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">February 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">2</td>
+<td class="px-2 py-1 border-l border-paper-line ">February 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325750</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">March 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">3</td>
+<td class="px-2 py-1 border-l border-paper-line ">March 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325751</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">April 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">4</td>
+<td class="px-2 py-1 border-l border-paper-line ">April 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325752</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">May 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">5</td>
+<td class="px-2 py-1 border-l border-paper-line ">May 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325753</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">June 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">6</td>
+<td class="px-2 py-1 border-l border-paper-line ">June 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325754</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">July 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">7</td>
+<td class="px-2 py-1 border-l border-paper-line ">July 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325755</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">August 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">8</td>
+<td class="px-2 py-1 border-l border-paper-line ">August 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325756</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">September 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">9</td>
+<td class="px-2 py-1 border-l border-paper-line ">September 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325757</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">October 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">10</td>
+<td class="px-2 py-1 border-l border-paper-line ">October 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325758</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">November 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">11</td>
+<td class="px-2 py-1 border-l border-paper-line ">November 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325759</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
+<td class="px-2 py-1 border-l border-paper-line ">December 2027 Rent</td>
+</tr>
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
+<td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">12</td>
+<td class="px-2 py-1 border-l border-paper-line ">December 28, 2027</td>
+<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">6000325760</td>
+<td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱238,901.04</td>
+<td class="px-2 py-1 border-l border-paper-line ">January 2028 Rent</td>
+</tr>
+</tbody>
+</table>
+<p class="m-0 mt-1.5 flex justify-end gap-3 text-right">
+<span class="text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Total of 12 checks</span>
+<span class="text-[12.5px] font-bold tabular-nums">₱2,741,673.84</span>
+</p>
+</section>
+<section class="mt-4">
+<h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Notes</h2>
+<p class="m-0 mt-1 text-[11px] whitespace-pre-line">Checks are payable to the lessor.</p>
+</section>
+</article>
+</div>
+</div>"
+`;
