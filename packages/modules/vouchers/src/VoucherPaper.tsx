@@ -2,7 +2,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { amountInWords, longDate, peso, signatureOf, toCentavos, type Company, type CompanyDetails, type Voucher } from '@keystone/core';
 import { caps, voucherTotal, type Payee } from './rules';
-import { Letterhead, paperHeading as heading, paperLabel, SignatureImage, TwoUp } from '@keystone/kit';
+import { Letterhead, paperHeading as heading, paperLabel, paperStripe, SignatureImage, TwoUp } from '@keystone/kit';
 
 // The company's Check Voucher, twice on one A4 sheet: once on each half, cut apart along the dashed line across the
 // middle. Ruled into boxes as the printed cash voucher is, out to near the paper's edges: who and where on the left, the
@@ -65,7 +65,7 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
             </thead>
             <tbody>
               {v.lines.map((l, i) => (
-                <tr key={i} className="align-top font-bold">
+                <tr key={i} className={`align-top font-bold ${paperStripe(i)}`}>
                   <td className="border-b border-paper-rule px-2.5 py-1.5">{l.desc}</td>
                   <td className="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">{peso(toCentavos(l.amt))}</td>
                 </tr>

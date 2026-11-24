@@ -62,6 +62,16 @@ describe('the check voucher on paper', () => {
     expect(copies.map((c) => [c.style.zoom, c.style.height])).toEqual([['', ''], ['', '']]);
   });
 
+  it('bands its particulars white, gold, white, gold, a line at a time', () => {
+    const lines = ['Rent', 'Water', 'Power', 'Internet'].map((desc, i) => ({ desc, amt: 100 * (i + 1) }));
+
+    render(<VoucherPaper voucher={{ ...v, lines }} payee={payeeOf(s, v)} company={companyOf(s)} />);
+    const paper = screen.getByRole('article', { name: `Check voucher ${v.no}` });
+    const rows = ['Rent', 'Water', 'Power', 'Internet'].map((d) => [...paper.querySelectorAll('td')].find((td) => td.textContent === d)?.closest('tr'));
+
+    expect(rows.map((r) => (r?.className.includes('bg-paper-tint') ? 'gold' : 'white'))).toEqual(['white', 'gold', 'white', 'gold']);
+  });
+
   it('prints a voucher with nothing filled in yet the same way', () => {
     render(<VoucherPaper voucher={{ ...v, payee: '', address: '', tin: '', bank: '', issuer: '', check: '', checkDate: undefined, lines: [], prepared: '', checked: '', approved: '' }} payee={{ name: '', address: '' }} company={{ ...companyOf(s), address: '' }} />);
 

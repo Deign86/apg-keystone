@@ -51,7 +51,7 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 </tr>
 </thead>
 <tbody>
-<tr class="border-b border-paper-rule">
+<tr class="border-b border-paper-rule bg-paper">
 <td class="px-1 py-1.5 whitespace-nowrap  ">—</td>
 <td class="px-1 py-1.5 whitespace-nowrap  ">Angelica S. Bautista</td>
 <td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,700.00</td>
@@ -76,7 +76,7 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 <td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums min-w-20">
 </td>
 </tr>
-<tr class="border-b border-paper-rule">
+<tr class="border-b border-paper-rule bg-paper-tint">
 <td class="px-1 py-1.5 whitespace-nowrap  ">APGCO-0013</td>
 <td class="px-1 py-1.5 whitespace-nowrap  ">Juan Miguel P. Reyes</td>
 <td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">8,360.00</td>
@@ -206,7 +206,7 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 </tr>
 </thead>
 <tbody>
-<tr class="border-b border-paper-rule">
+<tr class="border-b border-paper-rule bg-paper">
 <td class="px-1 py-1.5 whitespace-nowrap  ">—</td>
 <td class="px-1 py-1.5 whitespace-nowrap  ">Angelica S. Bautista</td>
 <td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">7,700.00</td>
@@ -231,7 +231,7 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 <td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums min-w-20">
 </td>
 </tr>
-<tr class="border-b border-paper-rule">
+<tr class="border-b border-paper-rule bg-paper-tint">
 <td class="px-1 py-1.5 whitespace-nowrap  ">APGCO-0013</td>
 <td class="px-1 py-1.5 whitespace-nowrap  ">Juan Miguel P. Reyes</td>
 <td class="px-1 py-1.5 whitespace-nowrap text-right tabular-nums ">8,360.00</td>
