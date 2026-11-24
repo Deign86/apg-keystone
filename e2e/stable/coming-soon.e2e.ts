@@ -10,7 +10,7 @@ test('opens Home with every tile, those coming soon marked, and the connected sy
   await app.open('/');
   const tiles = screen.getByRole('main').getByRole('list').first();
 
-  await expect(tiles.getByRole('listitem')).toHaveCount(9);
+  await expect(tiles.getByRole('listitem')).toHaveCount(10);
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding/)).not.toContainText('Coming soon');

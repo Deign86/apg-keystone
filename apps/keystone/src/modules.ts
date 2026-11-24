@@ -12,6 +12,7 @@ import { idMakerModule } from '@keystone/module-id-maker';
 import { overviewModule } from '@keystone/module-overview';
 import { payrollModule } from '@keystone/module-payroll';
 import { profileModule } from '@keystone/module-profile';
+import { soaModule } from '@keystone/module-soa';
 import { timekeepingModule } from '@keystone/module-timekeeping';
 import { vouchersModule } from '@keystone/module-vouchers';
 
@@ -21,7 +22,7 @@ import { vouchersModule } from '@keystone/module-vouchers';
  * tile, Overview figure, finding, waiting items, log filter and services go with it.
  */
 export const builtInModules: ModuleDef[] = [
-  homeModule, overviewModule, vouchersModule, fundsModule, billingModule, idMakerModule, directoryModule, activityModule, timekeepingModule,
+  homeModule, overviewModule, vouchersModule, fundsModule, billingModule, soaModule, idMakerModule, directoryModule, activityModule, timekeepingModule,
   payrollModule, profileModule, accountsModule, dataModule, banksModule, companyModule,
 ];
 

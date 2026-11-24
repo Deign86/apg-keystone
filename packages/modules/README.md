@@ -10,6 +10,7 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `vouchers/` | 2 | Check vouchers, their rules and the voucher document | figure, finding, waiting, create, stat, log tag `CV` | `vouchers.drafts` |
 | `funds/` | 3 | Requests for funds: filing, the CEO's decision, and the voucher an approval drafts | figure, finding, waiting, create, stat, log tag `RF`, its requests as cloud documents of their own | |
 | `billing/` | 4 | Billing statements, their rules (VAT, EWT, payments) and the statement document | figure (lead), finding, waiting, create, stat, log tag `BS`, overdue on open | `billing.statement-payments` |
+| `soa/` | 4, after Billing | Statements of account for leases: rent from area and rate, VAT, EWT, deposit, escalation, postdated checks | create, stat, log tag `SOA` | |
 | `id-maker/` | 5 | Employee ID cards, their rules and the verification pattern | figure, finding, waiting, create, stat, log tag `ID`, expiry on open | |
 | `directory/` | 6 | The directory screen (the records themselves are shared kernel, in core) | figure, stat, log tag `DIR` | |
 | `activity/` | 7 | The audit trail | Nothing; its filters come from every module's `logTags` | |
