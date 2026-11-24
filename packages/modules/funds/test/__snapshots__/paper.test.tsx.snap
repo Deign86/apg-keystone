@@ -55,11 +55,11 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </tr>
 </thead>
 <tbody>
-<tr class="border-b border-paper-rule align-top">
+<tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2.5 py-1.5  ">Venue deposit</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱30,000.00</td>
 </tr>
-<tr class="border-b border-paper-rule align-top">
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2.5 py-1.5  ">Catering, 60 persons</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱18,230.55</td>
 </tr>
@@ -141,11 +141,11 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </tr>
 </thead>
 <tbody>
-<tr class="border-b border-paper-rule align-top">
+<tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2.5 py-1.5  ">Venue deposit</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱30,000.00</td>
 </tr>
-<tr class="border-b border-paper-rule align-top">
+<tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2.5 py-1.5  ">Catering, 60 persons</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱18,230.55</td>
 </tr>
@@ -226,7 +226,7 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 </tr>
 </thead>
 <tbody>
-<tr class="border-b border-paper-rule align-top">
+<tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2.5 py-1.5  ">Christmas party venue and catering</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>

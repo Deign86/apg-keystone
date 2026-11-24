@@ -3,7 +3,7 @@ import { DASH, longDate, peso, shortDate, sumCentavos, toCentavos, type Company 
 import {
   depositLines, dueOnSigning, EWT_RATE, leaseSchedule, leaseTermsOf, monthlyRent, monthName, pdcSchedule, VAT_RATE, type Soa,
 } from './rules';
-import { Letterhead, orDash, paperHeading, paperLabel, Sheet } from '@keystone/kit';
+import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet } from '@keystone/kit';
 
 // The company's Statement of Account, on an upright A4 page (the form it follows is drawn on its side). Under the
 // letterhead every paper carries (docs/adr/0038): who and what the lease is for, then four parts, each worked out in
@@ -18,7 +18,8 @@ interface Column { header: string; figure?: boolean }
 
 /**
  * A part's table, ruled as the statement's lines are: a firm line around it, light ones between columns and rows, the
- * headings on a pale gold band, and its total, if it has one, on another.
+ * headings on a pale gold band, the lines banded white and gold (docs/adr/0039), and its total, if it has one, on a
+ * band.
  */
 function Table({ label, columns, rows, total, empty }: { label: string; columns: Column[]; rows: ReactNode[][]; total?: [string, ReactNode]; empty: string }) {
   const cell = (i: number) => `px-2 py-1 ${i ? 'border-l border-paper-line' : ''} ${columns[i].figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`;
@@ -33,7 +34,7 @@ function Table({ label, columns, rows, total, empty }: { label: string; columns:
       <tbody>
         {!rows.length && <tr><td colSpan={columns.length} className="px-2 py-1 text-paper-muted">{empty}</td></tr>}
         {rows.map((r, i) => (
-          <tr key={i} className="border-b border-paper-rule align-top">
+          <tr key={i} className={`border-b border-paper-rule align-top ${paperStripe(i)}`}>
             {r.map((v, j) => <td key={columns[j].header} className={cell(j)}>{v}</td>)}
           </tr>
         ))}

@@ -49,7 +49,8 @@ Consequences**.
 | [0036](0036-a-billing-statement-follows-the-company-form.md) | A billing statement follows the company's form, its client is typed, and it withholds 2% or 5% | Accepted |
 | [0037](0037-signatories-are-picked-payees-fold-and-any-record-can-go.md) | Signatories are picked from a list, the voucher register folds by payee, and a record in use can be removed | Accepted |
 | [0038](0038-one-letterhead-dated-invoice-numbers-penalty-and-signatures.md) | One letterhead on every paper, dated invoice numbers, a penalty line, and signatures that print themselves | Accepted |
-| [0039](0039-statements-of-account-for-leases.md) | Statements of account for leases are a module of their own, upright on one A4 page | Proposed |
+| [0039](0039-lines-on-a-paper-are-banded.md) | The lines on a paper are banded, white and gold | Accepted |
+| [0040](0040-statements-of-account-for-leases.md) | Statements of account for leases are a module of their own, upright on one A4 page | Proposed |
 
 Template:
 

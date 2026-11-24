@@ -1,4 +1,4 @@
-# 0039. Statements of account for leases are a module of their own, upright on one A4 page
+# 0040. Statements of account for leases are a module of their own, upright on one A4 page
 
 Status: Proposed · Date: 2026-11-24
 
@@ -27,7 +27,8 @@ Status: Proposed · Date: 2026-11-24
   year. The checks run one a month from the month after the advance (or the month set), for as many months as the
   advance does not pay (or the number set), each for its month's rent in its lease year, numbered on from the first.
 - **The paper is upright, one A4 page** (the kit's `Sheet`), under the letterhead every paper carries (docs/adr/0038),
-  each part a ruled table with a Computation column where the form asks for the working.
+  each part a ruled table with a Computation column where the form asks for the working, its lines banded white and
+  gold as every paper's are (docs/adr/0039).
 - **It ships in beta builds only** until its id is added to `RELEASED` (docs/adr/0017).
 
 ## Consequences
