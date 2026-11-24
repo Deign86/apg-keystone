@@ -4,7 +4,7 @@ import { layoutProblems } from '../support/mobile';
 import { touchScreen } from '../support/touch';
 import { chooseNewPassword, emptyCloud, expectHome, makeAccount, recordsInCloud, resetCode, signIn } from './emulators';
 
-// The cloud build on a phone (docs/adr/0046): signing in, a forgotten password and signing out work by touch on the
+// The cloud build on a phone (docs/adr/0047): signing in, a forgotten password and signing out work by touch on the
 // smallest phone screen, 320 × 640, as on the desktop (sign-in.e2e.ts).
 
 test.beforeEach(async () => {

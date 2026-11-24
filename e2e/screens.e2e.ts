@@ -7,7 +7,7 @@ import { expect } from 'e2e';
 
 // Every screen on the rail opens in a real browser, shows its title and does not hit the
 // error panel. The rail button's name also carries its shortcut badge, hence the pattern.
-const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'Statements of Account', 'ID Maker', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
+const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'Statements of Account', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
 
 test('opens on Home with the rail', async ({ app, screen }) => {
   await app.open('/');
@@ -51,7 +51,7 @@ test('the rail marks the screen that is open, and its brand goes home', async ({
   await expect(rail.getByRole('button', /Payroll$/)).toHaveAttribute('aria-current', 'page');
   await expect(rail.getByRole('button', /Home$/)).not.toHaveAttribute('aria-current');
 
-  await rail.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig').tap();
+  await rail.getByRole('button', 'ALPHA PREMIER KEYSTONE').tap();
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
   await expect(rail.getByRole('button', /Home$/)).toHaveAttribute('aria-current', 'page');
   await expect(rail.getByRole('button', /Payroll$/)).not.toHaveAttribute('aria-current');
@@ -142,8 +142,8 @@ test('Try again brings a screen back once what broke it is gone', async ({ app, 
   await expect(screen.getByRole('region', 'Entries').getByRole('listitem')).toHaveCount(7);
 });
 
-// Only the first nine screens after Home have a key; the ones after them (Payroll, Data, Bank Accounts) open from the
-// rail.
+// Only the first nine screens after Home have a key; the ones after them (Data, Bank Accounts) open from the rail. With
+// the ID Maker no longer installed (docs/adr/0046), Payroll is the ninth.
 test('Ctrl+1 to Ctrl+9 open the screens in rail order, and Ctrl+0 goes home', async ({ app, screen, browser }) => {
   await app.open('/');
 
@@ -179,7 +179,7 @@ test('on a phone, a menu takes the rail\'s place and opens the screens', async (
   await expect(screen.getByRole('form', 'New request')).toBeVisible();
 
   // The brand in the bar goes home.
-  await screen.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig').tap();
+  await screen.getByRole('button', 'ALPHA PREMIER KEYSTONE').tap();
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
 });
 

@@ -180,7 +180,7 @@ export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: Desk
   const { system } = e;
 
   // The web app (a phone, a tablet, a browser) cannot start another app: it opens where the app is downloaded, to
-  // install it on a computer (docs/adr/0046).
+  // install it on a computer (docs/adr/0047).
   if (system.platform === 'web') {
     await system.openUrl(downloadsPage(app));
 

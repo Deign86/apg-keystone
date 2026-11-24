@@ -1,6 +1,6 @@
 import { localDate, type ISODate } from './dates';
 import { shortDate, stamp, DASH } from './format';
-import type { Company, CompanyDetails, JsonValue, ModuleTag, TerminalState } from './schema';
+import type { Company, CompanyDetails, JsonValue, ModuleTag, SignatureOffset, TerminalState } from './schema';
 
 // What every domain builds on: the refusal type, the context a rule runs in, the shape
 // of a change, the activity log, numbering, and loading a saved state. Nothing here
@@ -157,7 +157,22 @@ function companyDetails(raw: JsonObject): CompanyDetails {
     billingTerms: text('billingTerms'), dueInDays: whole('dueInDays'), idValidYears: whole('idValidYears'),
     ...signaturesOf(raw.signatures),
     ...signatureSizesOf(raw.signatureSizes),
+    ...signatureOffsetsOf(raw.signatureOffsets),
   };
+}
+
+/** Signature offsets read back: only pairs of numbers within the signatory's area, under the names they were kept for. */
+function signatureOffsetsOf(raw: JsonValue | undefined): Pick<CompanyDetails, 'signatureOffsets'> {
+  if (raw === undefined || !isJsonObject(raw)) return {};
+
+  const kept = Object.entries(raw).flatMap(([name, value]) => {
+    if (!isJsonObject(value)) return [];
+    const offset = { x: jsonNumber(value.x), y: jsonNumber(value.y) };
+
+    return offset.x === clampOffset(offset).x && offset.y === clampOffset(offset).y ? [[signatureKey(name), offset] as const] : [];
+  });
+
+  return kept.length ? { signatureOffsets: Object.fromEntries(kept) } : {};
 }
 
 /** Signature sizes read back: only numbers in range, under the names they were saved for. */
@@ -195,6 +210,23 @@ export const signatureOf = (company: Pick<CompanyDetails, 'signatures'>, name: s
 
 /** How small and how large a signature may be drawn, as a share of the standard height. */
 export const SIGNATURE_SIZE = { least: 0.5, most: 2 } as const;
+
+/** How far a signature may be moved from its place on its line, in rem: across either way, up, and a little down. */
+export const SIGNATURE_OFFSET = { across: 8, up: 4, down: 1 } as const;
+
+/** An offset kept within the signatory's area, to the nearest twentieth of a rem. */
+export const clampOffset = ({ x, y }: SignatureOffset): SignatureOffset => {
+  const round = (n: number) => Math.round(n * 20) / 20 || 0;
+
+  return {
+    x: round(Math.min(SIGNATURE_OFFSET.across, Math.max(-SIGNATURE_OFFSET.across, x))),
+    y: round(Math.min(SIGNATURE_OFFSET.down, Math.max(-SIGNATURE_OFFSET.up, y))),
+  };
+};
+
+/** Where whoever is named has their signature moved to from its place on its line: none unless it was moved. */
+export const signatureOffsetOf = (company: Pick<CompanyDetails, 'signatureOffsets'>, name: string): SignatureOffset =>
+  (name.trim() ? company.signatureOffsets?.[signatureKey(name)] : undefined) ?? { x: 0, y: 0 };
 
 /** How large whoever is named has their signature drawn: a share of the standard height, 1 unless it was resized. */
 export const signatureSizeOf = (company: Pick<CompanyDetails, 'signatureSizes'>, name: string): number =>

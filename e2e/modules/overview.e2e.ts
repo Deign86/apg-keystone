@@ -2,7 +2,8 @@ import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
 // Overview (packages/modules/overview). It shows only what the other screens contribute (figures, findings, waiting
-// items, "New …" buttons), so these tests also guard the contributions of Vouchers, Billing, ID Maker and Directory.
+// items, "New …" buttons), so these tests also guard the contributions of Vouchers, Billing, Directory, Timekeeping and
+// Payroll. The ID Maker is no longer installed (docs/adr/0046): nothing of it shows here, though its IDs stay saved.
 
 test('sums up the figures from every screen', async ({ app, screen }) => {
   await app.open('/#overview');
@@ -11,19 +12,20 @@ test('sums up the figures from every screen', async ({ app, screen }) => {
   await expect(screen.getByText('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026.')).toBeVisible();
   await expect(screen.getByRole('definition').filter({ hasText: '₱35,000.00 pending signature' })).toBeVisible();
   await expect(screen.getByRole('definition').filter({ hasText: '2 statements open · 1 overdue' })).toBeVisible();
-  await expect(screen.getByRole('definition').filter({ hasText: '1 queued for printing' })).toBeVisible();
   await expect(screen.getByRole('definition').filter({ hasText: '4 vendors · 3 clients · 4 employees' })).toBeVisible();
+  await expect(screen.getByRole('definition').filter({ hasText: 'queued for printing' })).toBeHidden();
 });
 
 test('lists what waits on you, and opens each one in its own screen', async ({ app, screen }) => {
-  // Home's Overview tile counts the same items.
+  // Home's Overview tile counts the same items: the sample's voucher for approval and its two open statements. Its ID
+  // card for printing waited in the ID Maker, which is no longer installed (docs/adr/0046).
   await app.open('/#home');
-  await expect(screen.getByRole('button', /^Overview /)).toContainText('Waiting on you 4');
+  await expect(screen.getByRole('button', /^Overview /)).toContainText('Waiting on you 3');
 
   await app.open('/#overview');
   const waiting = screen.getByRole('region', 'Waiting on you');
 
-  await expect(waiting.getByRole('listitem')).toHaveCount(4);
+  await expect(waiting.getByRole('listitem')).toHaveCount(3);
   await waiting.getByRole('button', 'CV-2026-0141 Vergara & Associates Law Office · voucher ₱35,000.00 For Approval').tap();
 
   await expect(screen.getByRole('heading', { name: 'Check Vouchers', level: 1 })).toBeVisible();
@@ -47,7 +49,8 @@ test('follows new work: an approved voucher leaves the waiting list', async ({ a
   await app.open('/#overview');
   const waiting = screen.getByRole('region', 'Waiting on you');
 
-  await expect(waiting.getByRole('listitem')).toHaveCount(3);
+  // The three the sample starts with, less the voucher approved.
+  await expect(waiting.getByRole('listitem')).toHaveCount(2);
   await expect(waiting.getByRole('button', /^CV-2026-0141 /)).toBeHidden();
 });
 
@@ -61,7 +64,7 @@ test('shows recent activity and opens the full log', async ({ app, screen }) => 
   await expect(screen.getByRole('heading', { name: 'Activity Log', level: 1 })).toBeVisible();
 });
 
-test('starts a check voucher or an ID from its button, putting away what was open', async ({ app, screen }) => {
+test('starts a check voucher from its button, putting away what was open', async ({ app, screen }) => {
   await app.open('/#vouchers');
   await screen.getByRole('table', 'Voucher register').getByRole('cell', 'CV-2026-0141').tap();
   await expect(screen.getByRole('form', 'Editing CV-2026-0141')).toBeVisible();
@@ -73,14 +76,13 @@ test('starts a check voucher or an ID from its button, putting away what was ope
   await expect(screen.getByRole('heading', { name: 'Check Vouchers', level: 1 })).toBeVisible();
   await expect(screen.getByRole('form', 'New voucher').getByRole('textbox', 'CV No.')).toHaveValue('888-001');
 
+  // The ID Maker, which had a "New ID" button here, is no longer installed (docs/adr/0046).
   await app.open('/#overview');
-  await screen.getByRole('button', 'New ID').tap();
-
-  await expect(screen.getByRole('heading', { name: 'ID Maker', level: 1 })).toBeVisible();
-  await expect(screen.getByRole('form', 'New ID')).toBeVisible();
+  await expect(screen.getByRole('button', 'New check voucher')).toBeVisible();
+  await expect(screen.getByRole('button', 'New ID')).toBeHidden();
 });
 
-test('opens a statement and an ID card from what waits on you', async ({ app, screen }) => {
+test('opens a statement from what waits on you', async ({ app, screen }) => {
   await app.open('/#overview');
   const waiting = screen.getByRole('region', 'Waiting on you');
 
@@ -88,15 +90,9 @@ test('opens a statement and an ID card from what waits on you', async ({ app, sc
 
   await expect(screen.getByRole('heading', { name: 'Billing Statements', level: 1 })).toBeVisible();
   await expect(screen.getByRole('form', 'Editing 010098-2026')).toBeVisible();
-
-  await app.open('/#overview');
-  await waiting.getByRole('button', 'APG-2026-0030 Rafael D. Mendoza · ID card For printing').tap();
-
-  await expect(screen.getByRole('heading', { name: 'ID Maker', level: 1 })).toBeVisible();
-  await expect(screen.getByRole('form', 'Editing APG-2026-0030')).toBeVisible();
 });
 
-test('says nothing is waiting once every voucher, statement and card is dealt with', async ({ app, screen }) => {
+test('says nothing is waiting once every voucher and statement is dealt with', async ({ app, screen }) => {
   await app.open('/#vouchers');
   await screen.getByRole('button', 'Actions for CV-2026-0141').tap();
   await screen.getByRole('menuitem', 'Mark approved').tap();
@@ -110,11 +106,6 @@ test('says nothing is waiting once every voucher, statement and card is dealt wi
     await expect(screen.getByRole('table', 'Statements issued').getByRole('row', new RegExp(`^${no} `)).getByRole('cell', 'Paid')).toBeVisible();
   }
 
-  await app.open('/#id-maker');
-  await screen.getByRole('button', 'Actions for APG-2026-0030').tap();
-  await screen.getByRole('menuitem', 'Mark printed and handed over').tap();
-  await expect(screen.getByRole('table', 'Issued IDs').getByRole('row', /^APG-2026-0030 /).getByRole('cell', 'Active')).toBeVisible();
-
   await app.open('/#overview');
   const waiting = screen.getByRole('region', 'Waiting on you');
 
@@ -124,7 +115,6 @@ test('says nothing is waiting once every voucher, statement and card is dealt wi
   await expect(screen.getByText('Nothing is waiting on you.')).toHaveCount(2);
   await expect(screen.getByRole('definition').filter({ hasText: '₱0.00 pending signature' })).toBeVisible();
   await expect(screen.getByRole('definition').filter({ hasText: '0 statements open · 0 overdue' })).toBeVisible();
-  await expect(screen.getByRole('definition').filter({ hasText: '0 queued for printing' })).toBeVisible();
 
   await app.open('/');
   await expect(screen.getByText('Nothing is waiting on you.')).toBeVisible();

@@ -1,6 +1,6 @@
 import type { AppInstaller, AppUpdater, InstallWay } from '@keystone/kit';
 
-// The web app as an installable app (docs/adr/0046): its service worker (service-worker.ts, built as /sw.js), the
+// The web app as an installable app (docs/adr/0047): its service worker (service-worker.ts, built as /sw.js), the
 // newer build that worker has fetched, offered in the rail as the desktop app offers its updates, and adding Keystone
 // to a phone's or tablet's home screen. Only a built web app has any of this: not the desktop app, which Tauri serves
 // from its own files, and not the dev server, which has no worker.

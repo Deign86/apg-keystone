@@ -1,7 +1,7 @@
 # Keystone on the web: Vercel, phones and tablets
 
 The same Keystone as the desktop app, served as a web app that installs on a phone, a tablet or a computer
-(docs/adr/0046). It keeps its records in the Firebase project, behind the same sign-in (docs/FIREBASE.md). This page is
+(docs/adr/0047). It keeps its records in the Firebase project, behind the same sign-in (docs/FIREBASE.md). This page is
 for the owner of APG's Vercel and Firebase accounts: the steps that need those accounts, done once.
 
 ## What is already in the repository

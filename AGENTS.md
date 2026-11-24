@@ -18,11 +18,12 @@ Modularity comes from design, not from tools. The checks only stop it from slipp
 
 ## What Keystone is
 
-Alpha Premier Group's admin app: check vouchers, requests for funds, billing statements, employee IDs, a shared
-directory, an activity log, and employee timekeeping and payroll. It connects to the other APG systems: the attendance tracker (`Deign86/alpha-premier-attendance`),
-Alpha Branding Studio (`Deign86/Alpha_Branding`) and the website (`Deign86/apg-website`). It is one Tauri 2 + React 18
+Alpha Premier Group's admin app: check vouchers, requests for funds, billing statements, a shared directory, an
+activity log, and employee timekeeping and payroll. It connects to the other APG systems: the attendance tracker (`Deign86/alpha-premier-attendance`),
+the Alpha Premier ID Maker (`Deign86/apg-id-creator`), which makes the employee IDs (docs/adr/0046), Alpha Branding
+Studio (`Deign86/Alpha_Branding`) and the website (`Deign86/apg-website`). It is one Tauri 2 + React 18
 + TypeScript codebase for macOS and Windows, which is also a web app for phones, tablets and browsers, served from
-Vercel (docs/adr/0046, docs/WEB.md).
+Vercel (docs/adr/0047, docs/WEB.md).
 
 ## The map: a fixed kernel and removable packages
 
@@ -210,7 +211,7 @@ UI changes also go through the design checks in `docs/DESIGN.md`:
 - **Inspector:** run `inspect.mjs --app` on the screens you changed and look at the screenshots.
 - **Look:** follow the APG house style; it lives in `shared/design/tokens.json`.
 - **Fingers:** a screen works on a 320px phone and by touch. Use the shared controls, which are 44px under `data-touch`
-  (docs/adr/0046); a new screen joins `e2e/mobile/layout.e2e.ts` by being on the rail (add its address to
+  (docs/adr/0047); a new screen joins `e2e/mobile/layout.e2e.ts` by being on the rail (add its address to
   `e2e/support/mobile.ts › SCREENS`).
 
 ## Pull requests

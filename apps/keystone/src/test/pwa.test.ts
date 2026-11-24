@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { isAppleMobile, startServiceWorker, webInstaller, webUpdater, WORKER_URL, type InstallHost, type WorkerContainer, type WorkerHandle, type WorkerMessage, type WorkerRegistration } from '../platform/pwa';
 import { cacheName, PAGE, routeFor, staleCaches } from '../platform/sw-routes';
 
-// The web app (docs/adr/0046): what its service worker keeps and what it leaves to the network, its updates, its
+// The web app (docs/adr/0047): what its service worker keeps and what it leaves to the network, its updates, its
 // install, and how Vercel serves it.
 
 const ORIGIN = 'https://keystone.example.app';

@@ -1,12 +1,13 @@
 # Keystone
 
 Alpha Premier Group's admin app. It covers Check Vouchers, Requests for Funds (staff list the expenses, the CEO
-approves or declines from a PC or a phone, and an approval makes the fund transfer request or drafts the check voucher), Billing Statements, the ID Maker, a shared
+approves or declines from a PC or a phone, and an approval makes the fund transfer request or drafts the check voucher), Billing Statements, a shared
 Directory, an Activity Log, and employee Timekeeping and Payroll (each employee's own pay setup, the cut-off and payslips). Home also has a shortcut to each of the other APG apps, its logo, which opens it:
 
 - **The attendance tracker:** starts the app. When it is not installed, Keystone fetches its installer and opens it,
   or opens its download page when it cannot. When a newer version is out, "Update to …" shows under its shortcut.
-- **The Alpha Premier ID Maker:** the same.
+- **The Alpha Premier ID Maker:** the same. Employee IDs are made there; Keystone's own ID Maker screen is not
+  installed (docs/adr/0046).
 - **Alpha Branding Studio:** the same as the attendance tracker.
 - **The website:** opens its admin portal in the browser.
 

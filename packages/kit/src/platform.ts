@@ -45,10 +45,10 @@ export interface Platform extends SystemBridge {
 
   /**
    * Keystone's own updates: from its signed GitHub releases in the desktop app; in the web app, the newer build its
-   * service worker has fetched (docs/adr/0046). Absent where neither applies (the dev server).
+   * service worker has fetched (docs/adr/0047). Absent where neither applies (the dev server).
    */
   readonly updater?: AppUpdater;
-  /** Adding the web app to this device's home screen (docs/adr/0046). The web app only; absent on the desktop. */
+  /** Adding the web app to this device's home screen (docs/adr/0047). The web app only; absent on the desktop. */
   readonly installer?: AppInstaller;
 }
 

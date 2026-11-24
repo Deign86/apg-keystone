@@ -1,4 +1,4 @@
-import { companyOf, roleLabel } from '@keystone/core';
+import { roleLabel } from '@keystone/core';
 import { Button, KeyBadge, Sheet, cn } from '@keystone/ui';
 import { Menu } from 'lucide-react';
 import keystoneMark from '@keystone/ui/keystone-mark.png';
@@ -41,10 +41,9 @@ class ModuleBoundary extends Component<{ module: ModuleDef; children: ReactNode 
 
 const shortcutKey = () => (navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+');
 
-/** The mark and the company's address as Company Details keeps it, which go to the first screen. */
+/** The mark and the app's name, which go to the first screen. The company's address is on its papers, not here. */
 function Brand({ onGo }: { onGo?: () => void }) {
-  const { registry, go, state } = useKeystone();
-  const where = companyOf(state).shortAddress;
+  const { registry, go } = useKeystone();
 
   return (
     <button type="button" onClick={() => { if (registry.modules[0]) go(registry.modules[0].id); onGo?.(); }} className="flex min-w-0 items-center gap-2.5 rounded-control text-left">
@@ -53,7 +52,6 @@ function Brand({ onGo }: { onGo?: () => void }) {
         <span className="block font-display text-[11px] leading-tight font-bold text-ink">
           ALPHA PREMIER <span className="text-gold-bright">KEYSTONE</span>
         </span>
-        {where && <span className="mt-0.5 block truncate text-[11px] leading-snug text-ink-2">{where}</span>}
       </span>
     </button>
   );

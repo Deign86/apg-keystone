@@ -20,7 +20,7 @@ The listing-photo branding app (`Deign86/Alpha_Branding`), native on both platfo
   The studio also updates itself, but only while it is open, so Home is where it is seen first. On a Mac the
   download is a `.zip`: the person moves the new studio into Applications.
 - **In the web app and the browser preview:** it opens the app's download page and says it runs on a computer
-  (docs/adr/0046).
+  (docs/adr/0047).
 
 ## Contributes
 Its shortcut on Home: the studio's logo, named Alpha Branding Studio.

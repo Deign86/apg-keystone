@@ -1,4 +1,4 @@
-// What Keystone's service worker (service-worker.ts) does with each request the web app makes (docs/adr/0046). Kept
+// What Keystone's service worker (service-worker.ts) does with each request the web app makes (docs/adr/0047). Kept
 // apart from the worker and free of its globals, so the decision is tested on its own (src/test/pwa.test.ts).
 //
 // The worker keeps only the app shell: the page, its scripts, styles, fonts and icons, which a build names by their

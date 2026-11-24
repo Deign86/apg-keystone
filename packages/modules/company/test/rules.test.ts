@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { refusalOf } from '@keystone/kit/testing';
-import { COMPANY, companyOf, emptyState, parseState, SERVICES, signatureOf, signatureSizeOf, type Ctx, type Member } from '@keystone/core';
-import { canChange, COMPANY_LINE, companyDraftOf, resizeSignature, saveCompany, setSignature, signatureSizes, type CompanyDraft } from '../src/rules';
+import { COMPANY, companyOf, emptyState, parseState, SERVICES, signatureOf, signatureOffsetOf, signatureSizeOf, type Ctx, type Member } from '@keystone/core';
+import { canChange, COMPANY_LINE, companyDraftOf, moveSignature, resizeSignature, saveCompany, setSignature, signatureSizes, type CompanyDraft } from '../src/rules';
 import { companyModule } from '../src';
 import { sampleState } from '@keystone/core/sample';
 
@@ -117,6 +117,38 @@ describe('company details', () => {
     expect(companyOf(setSignature(saved, 'Mark Anthony Santos', null, at(owner)).state).signatureSizes).toBeUndefined();
   });
 
+  it('move a signature about its line for the CEO, within the signatory\'s area, and back with no offset', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
+    const moved = moveSignature(signed, 'mark anthony santos', { x: 1.23, y: -0.51 }, at(owner));
+
+    expect(signatureOffsetOf(companyOf(signed), 'Mark Anthony Santos')).toEqual({ x: 0, y: 0 });
+    expect(moved.message).toBe('Signature for mark anthony santos moved.');
+    expect(companyOf(moved.state).signatureOffsets).toEqual({ 'MARK ANTHONY SANTOS': { x: 1.25, y: -0.5 } });
+    expect(moved.state.log[0]).toMatchObject({ mod: 'CO', text: 'Signature for mark anthony santos moved.' });
+    // Kept within the signatory's area: 8rem either way across, 4rem up and 1rem down.
+    expect(signatureOffsetOf(companyOf(moveSignature(signed, 'Mark Anthony Santos', { x: -30, y: 9 }, at(owner)).state), 'Mark Anthony Santos')).toEqual({ x: -8, y: 1 });
+    expect(signatureOffsetOf(companyOf(moveSignature(signed, 'Mark Anthony Santos', { x: 30, y: -9 }, at(owner)).state), 'Mark Anthony Santos')).toEqual({ x: 8, y: -4 });
+    const back = moveSignature(moved.state, 'Mark Anthony Santos', { x: 0, y: 0 }, at(owner));
+
+    expect(companyOf(back.state).signatureOffsets).toBeUndefined();
+    expect(back.message).toBe('Signature for Mark Anthony Santos back on its line.');
+    expect(moveSignature(moved.state, 'Mark Anthony Santos', { x: 1.25, y: -0.5 }, at(owner)).state).toBe(moved.state);
+  });
+
+  it('keep a signature\'s place through a save and a saved file, and drop it with the signature', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
+    const placed = moveSignature(signed, 'Mark Anthony Santos', { x: 2, y: -1 }, at(owner)).state;
+    const saved = saveCompany(placed, companyDraftOf(placed), at(owner)).state;
+
+    expect(companyOf(saved).signatureOffsets).toEqual({ 'MARK ANTHONY SANTOS': { x: 2, y: -1 } });
+    const read = parseState(JSON.stringify({ ...saved, company: { ...saved.company, signatureOffsets: { 'mark anthony  santos': { x: 2, y: -1 }, 'BRIAN SY': { x: 40, y: 0 }, ANA: 'left' } } }));
+
+    expect(companyOf(read).signatureOffsets).toEqual({ 'MARK ANTHONY SANTOS': { x: 2, y: -1 } });
+    expect(companyOf(setSignature(saved, 'Mark Anthony Santos', null, at(owner)).state).signatureOffsets).toBeUndefined();
+  });
+
   it('let only the CEO resize, and only a signature that is kept, through the service papers use', () => {
     const png = 'data:image/png;base64,iVBORw0KGgo=';
     const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
@@ -126,6 +158,10 @@ describe('company details', () => {
     expect(() => resizeSignature(signed, 'Mark Anthony Santos', 1.2, at(staff))).toThrow('Only the CEO resizes signatures.');
     expect(() => resizeSignature(signed, 'Brian Sy', 1.2, at(owner))).toThrow('No signature is kept for Brian Sy.');
     expect(() => resizeSignature(signed, 'Mark Anthony Santos', Number.NaN, at(owner))).toThrow('That is not a size.');
+    expect(signatureSizes.move).toBe(moveSignature);
+    expect(() => moveSignature(signed, 'Mark Anthony Santos', { x: 1, y: 0 }, at(staff))).toThrow('Only the CEO moves signatures.');
+    expect(() => moveSignature(signed, 'Brian Sy', { x: 1, y: 0 }, at(owner))).toThrow('No signature is kept for Brian Sy.');
+    expect(() => moveSignature(signed, 'Mark Anthony Santos', { x: Number.NaN, y: 0 }, at(owner))).toThrow('That is not a place.');
   });
 
   it('refuse a signature from staff, with no name, that is not an image, or too large', () => {

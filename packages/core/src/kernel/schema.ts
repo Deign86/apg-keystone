@@ -217,7 +217,15 @@ export interface CompanyDetails extends Company, Defaults {
    * 2. A signature with none is drawn at the standard height.
    */
   signatureSizes?: Record<string, number>;
+  /**
+   * Where each signature is moved to from its place on its line, in rem across (x, right is positive) and down (y), by
+   * the same key as `signatures`: a manual correction where trimming left it off. None: on the middle of its line.
+   */
+  signatureOffsets?: Record<string, SignatureOffset>;
 }
+
+/** How far a signature is moved from its place on its line, in rem: right and down are positive. */
+export type SignatureOffset = { x: number; y: number };
 
 /**
  * A bank account the company pays checks from or asks clients to pay into. The Bank Accounts module keeps the list

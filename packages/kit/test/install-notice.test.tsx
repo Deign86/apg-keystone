@@ -8,7 +8,7 @@ import { buildRegistry } from '../src/registry';
 import { KeystoneStore } from '../src/store';
 import { memoryPlatform } from './fakes';
 
-// The web app's install hint in the rail (docs/adr/0046), against a stand-in for the browser's install support.
+// The web app's install hint in the rail (docs/adr/0047), against a stand-in for the browser's install support.
 
 afterEach(cleanup);
 

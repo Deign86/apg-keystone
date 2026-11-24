@@ -113,7 +113,7 @@ test('prints a statement and saves it as a PDF of A4 pages, from a phone or tabl
   expect(pdf.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE * pages.length);
 });
 
-test('draws a signature with a finger, and resizes it on the paper from its handle, which shows without a hover', async ({ app, screen, browser }) => {
+test('draws a signature with a finger, then moves and resizes it on the paper by dragging its frame, which shows without a hover', async ({ app, screen, browser }) => {
   await app.open('/#company');
   const panel = screen.getByRole('region', 'Signatures');
 
@@ -128,28 +128,37 @@ test('draws a signature with a finger, and resizes it on the paper from its hand
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   const statement = screen.getByRole('article', /^Billing statement /);
-  const handle = statement.getByRole('slider', 'Size of D. Lazaro\'s signature');
+  const frame = statement.getByRole('slider', "Size of D. Lazaro's signature");
 
   await expect(statement.getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
-  await expect(handle).toHaveAttribute('aria-valuenow', '100');
-  // A finger has no hover: the handle always shows on a touch screen, and takes a press from around it too.
+  await expect(frame).toHaveAttribute('aria-valuenow', '100');
+  // A finger has no hover: the frame always shows on a touch screen.
   expect(await browser.evaluate(() => getComputedStyle(document.querySelector('[role="slider"]')!).opacity)).toBe('1');
 
-  // Dragged up, the signature grows, on every paper it is on.
-  await handle.scrollIntoView();
-  const at = (await handle.boundingBox())!;
-  const [x, y] = [at.x + at.width / 2, at.y + at.height / 2];
+  /** Drags by a finger from (x, y) to (x + dx, y + dy), in steps, as the pointer events a touch makes. */
+  const drag = async (x: number, y: number, dx: number, dy: number) => {
+    await browser.mouse.move(x, y);
+    await browser.mouse.down();
+    await browser.mouse.move(x + dx / 2, y + dy / 2);
+    await browser.mouse.move(x + dx, y + dy);
+    await browser.mouse.up();
+  };
 
-  await browser.mouse.move(x, y);
-  await browser.mouse.down();
-  await browser.mouse.move(x, y - 20);
-  await browser.mouse.move(x, y - 40);
-  await browser.mouse.up();
-  await expect(handle).not.toHaveAttribute('aria-valuenow', '100');
-  const grown = Number(await handle.getAttribute('aria-valuenow'));
+  // Dragged by its middle, it moves off its place on the line.
+  await frame.scrollIntoView();
+  let at = (await frame.boundingBox())!;
+
+  await drag(at.x + at.width / 2, at.y + at.height / 2, 10, -6);
+  await expect(frame).toHaveAttribute('aria-valuetext', /moved/);
+
+  // Dragged out by its top right corner, it grows, on every paper it is on.
+  at = (await frame.boundingBox())!;
+  await drag(at.x + at.width, at.y, 24, -24);
+  await expect(frame).not.toHaveAttribute('aria-valuenow', '100');
+  const grown = Number(await frame.getAttribute('aria-valuenow'));
 
   expect(grown).toBeGreaterThan(100);
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
-  await expect(screen.getByRole('article', /^Check voucher /).getByRole('slider', 'Size of D. LAZARO\'s signature').first()).toHaveAttribute('aria-valuenow', String(grown));
+  await expect(screen.getByRole('article', /^Check voucher /).getByRole('slider', "Size of D. LAZARO's signature").first()).toHaveAttribute('aria-valuenow', String(grown));
 });

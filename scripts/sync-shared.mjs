@@ -12,7 +12,7 @@
 //          packages/ui/src/assets/             fonts, the APG logo (its versions for paper, the Group of Companies one
 //                                              among them) and Keystone's mark
 //          packages/core/sample/sample.json    the tests' sample records (@keystone/core/sample), never shipped
-//          apps/keystone/public/manifest.webmanifest  the web app's manifest, in the tokens' colours (docs/adr/0046)
+//          apps/keystone/public/manifest.webmanifest  the web app's manifest, in the tokens' colours (docs/adr/0047)
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -100,7 +100,7 @@ emit('packages/ui/src/assets/keystone-mark.png', readFileSync(join(root, 'shared
 
 emit('packages/core/sample/sample.json', readFileSync(join(root, 'shared/data/sample.json')));
 
-// The web app's manifest (docs/adr/0046): what a phone or tablet shows when Keystone is installed, its splash in
+// The web app's manifest (docs/adr/0047): what a phone or tablet shows when Keystone is installed, its splash in
 // APG's black. The icons are made by `npm run icons`, the maskable ones inside Android's safe zone.
 const about = "Alpha Premier Group's admin app: check vouchers, requests for funds, billing, statements of account, the directory, timekeeping and payroll.";
 

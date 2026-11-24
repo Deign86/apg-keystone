@@ -16,7 +16,7 @@ full APG logo, the phoenix with its wordmark, made for paper (`logo-paper.png`).
 | `icon-macos.png` | The same tile on Apple's grid: an 824 px squircle with a 100 px margin | macOS (`icon.icns`) |
 | `icon-ios.png` | The mark on a full-bleed black square, no transparency | iOS, which rounds its own corners |
 | `icon-android-fg.png` | The mark alone, inside the adaptive-icon safe zone | Android, on a `#0b0a08` background |
-| `icon-maskable.png` | The mark inside the web's maskable safe zone, on a full-bleed black square | The web app's icon on Android, which cuts it to its own shape (docs/adr/0046) |
+| `icon-maskable.png` | The mark inside the web's maskable safe zone, on a full-bleed black square | The web app's icon on Android, which cuts it to its own shape (docs/adr/0047) |
 | `icons.json` | The `tauri icon` manifest | `npm run icons` |
 
 ## Changing the logo

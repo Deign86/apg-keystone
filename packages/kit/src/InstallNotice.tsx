@@ -5,7 +5,7 @@ import type { InstallWay } from './platform';
 
 /**
  * In the web app, how to put Keystone on this device's home screen, so it opens full screen like an app and starts
- * from what it keeps even offline (docs/adr/0046): a button for the browser's own dialog, or, on an iPhone or iPad,
+ * from what it keeps even offline (docs/adr/0047): a button for the browser's own dialog, or, on an iPhone or iPad,
  * where the browser keeps it. Shows nothing once Keystone is installed, and nowhere it cannot be (the desktop app).
  */
 export function InstallNotice() {

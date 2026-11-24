@@ -3,7 +3,7 @@ import { startServiceWorker, webInstaller, webUpdater } from './pwa';
 import type { Platform } from '@keystone/kit';
 
 /**
- * The web app (docs/adr/0046): the browser platform, installable on a phone's or tablet's home screen, and in a built
+ * The web app (docs/adr/0047): the browser platform, installable on a phone's or tablet's home screen, and in a built
  * app (not the dev server) with its service worker keeping the app shell and offering newer builds as updates.
  */
 async function webPlatform(): Promise<Platform> {

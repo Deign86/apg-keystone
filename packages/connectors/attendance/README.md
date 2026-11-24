@@ -19,7 +19,7 @@ The RFID time-in kiosk at the front desk (`Deign86/alpha-premier-attendance`: Ta
 - **A newer version is out:** "Update to …" shows under the shortcut and does the same download (docs/adr/0035).
   The app also updates itself, but only while it is open, so Home is where it is seen first.
 - **In the web app and the browser preview:** it opens the app's download page and says it runs on a computer
-  (docs/adr/0046).
+  (docs/adr/0047).
 
 ## Contributes
 - Its shortcut on Home: the attendance app's logo, named Attendance Tracker. Directory records linked to it earlier

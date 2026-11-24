@@ -1,4 +1,4 @@
-// Keystone's service worker, for the web app (docs/adr/0046). Built by vite.config.ts as /sw.js, with the build's name
+// Keystone's service worker, for the web app (docs/adr/0047). Built by vite.config.ts as /sw.js, with the build's name
 // and its shell's files written in where the two markers below are. It keeps the app shell, so Keystone opens fast,
 // and opens offline; it never keeps the records, Firebase's sign-in or anything from another site (sw-routes.ts).
 //

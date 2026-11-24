@@ -1,7 +1,7 @@
 // The Group of Companies logo made for white paper, drawn in HD so it stays sharp on screen and in print.
 import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
+import { clampOffset, DASH, peso, toCentavos, type Company, type LineItem, type SignatureOffset } from '@keystone/core';
 import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, MARKS, TWO_UP, TWO_UP_EDGE, UPRIGHT, type PaperLayout } from './paper';
 import { useSignatureSize } from './context';
 import { usePaperPart } from './parts';
@@ -286,16 +286,33 @@ const SIGNATURE_MARGIN = 4;
 /** How strongly a pixel has to be inked to count as part of the signature, out of 255. */
 const INKED = 24;
 
+/** How long a signature's image may take to load before it is shown as kept, untrimmed. */
+const LOAD_LIMIT_MS = 5000;
+
+/**
+ * The image at `src`, once loaded. By its load and error events, not `decode()`, which a webview can leave unsettled
+ * and with it every signature untrimmed; given up on after a few seconds.
+ */
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((done, fail) => {
+    const image = new Image();
+    const late = setTimeout(() => fail(new Error('The signature took too long to load.')), LOAD_LIMIT_MS);
+
+    image.onload = () => { clearTimeout(late); done(image); };
+
+    image.onerror = () => { clearTimeout(late); fail(new Error('The signature could not be read.')); };
+
+    image.src = src;
+  });
+}
+
 /**
  * The signature with the empty paper around its ink cut away, so every signature, however much margin its scan or
- * drawing had, fills the same height over its line. Signatures are kept with their paper see-through (company
+ * drawing had, fills the same box over its line. Signatures are kept with their paper see-through (company
  * Details), so the ink is whatever is not see-through. Unchanged when this computer cannot read the image.
  */
 export async function trimSignature(src: string): Promise<string> {
-  const image = new Image();
-
-  image.src = src;
-  await image.decode();
+  const image = await loadImage(src);
   const { naturalWidth: width, naturalHeight: height } = image;
   const read = document.createElement('canvas');
 
@@ -352,63 +369,154 @@ function useTrimmed(src: string): string {
   return shown;
 }
 
-/** A signature's standard height, in rem (h-12): its size is a share of this. */
+/** A signature's box at its standard size, in rem: 3 high (h-12), three times as wide. Its size scales both. */
 const SIGNATURE_HEIGHT = 3;
+const SIGNATURE_WIDTH = 9;
 
-/** How far the resize handle is dragged, in CSS px, to add the standard height once more. */
-const DRAG_PER_SIZE = 48;
-
-/** A size step for the arrow keys on the resize handle. */
+/** A size step for the arrow keys on the frame, and a move step for Shift and the arrow keys, in rem. */
 const SIZE_STEP = 0.1;
+const MOVE_STEP = 0.25;
 
-const clampSize = (n: number) => Math.min(2, Math.max(0.5, n));
+/** One rem in CSS px, for a drag measured in px: the papers are laid out in rem at the browser's 16px. */
+const REM = 16;
+
+const clampSize = (n: number) => Math.min(2, Math.max(0.5, Math.round(n * 100) / 100));
+
+/** A length in rem, to three decimals, so 3 × 1.1 is "3.3rem", not "3.3000000000000003rem". */
+const rem = (n: number) => `${Math.round(n * 1000) / 1000}rem`;
+
+/** How far the pointer is from where a signature sits on its line (the middle of its box's foot). */
+const reach = (x: number, y: number, box: DOMRect) => Math.max(1, Math.hypot(x - (box.left + box.width / 2), y - box.bottom));
+
+/** A drag on the frame: moving the signature from where it was, or resizing it by its corner. */
+type Drag =
+  | { kind: 'move'; x: number; y: number; from: SignatureOffset; scale: number; offset: SignatureOffset }
+  | { kind: 'size'; at: number; from: number; size: number };
 
 /**
- * A signature over the line it is signed on, in the room above it, centered on its line. Trimmed to its ink and drawn
- * at one height (its signatory's size, kept with the signatures), so every signature reads alike whatever was
- * uploaded. Its box sits on the line, so it never moves the line. Where it may be resized (the CEO, on screen), a
- * handle shows on hover or focus: drag it up to enlarge, down to shrink, or use the arrow keys; Home is the standard
- * size. The handle never prints. On a touch screen it always shows, as there is no hover.
+ * A signature over the line it is signed on, in the room above it. Every signature is trimmed to its ink and drawn
+ * into the same box, three times as wide as it is high, sitting on the middle of its line: scaled to fit, so a tall
+ * signature and a wide one take the same room, and every signatory's reads alike whatever was uploaded. The box is
+ * its signatory's size (kept with the signatures) times the standard, and is not held to the line's width, so a larger
+ * size is always larger. It never moves the line.
+ *
+ * Where it may be changed (the CEO, on screen), a dashed frame shows around it on hover or focus. Drag the signature to
+ * move it anywhere about its line, a correction where trimming left it off; drag the square at the frame's top right
+ * corner to resize it from where it sits; or use the arrow keys to resize, Shift and the arrow keys to move, and Home
+ * for the standard size and place. Size and place are kept for that signatory, on every paper. The frame never prints.
+ * A finger has no hover: on a touch screen the frame always shows (never in an exported PDF), and the corner takes a
+ * press from well around it.
  */
 export function SignatureImage({ src, who }: { src: string; who: string }) {
   const shown = useTrimmed(src);
-  const { size, resize } = useSignatureSize(who);
-  // The size while the handle is being dragged, before it is let go and kept.
-  const [dragging, setDragging] = useState<{ from: number; at: number; size: number } | null>(null);
-  const live = dragging?.size ?? size;
+  const { size, offset, resize, move } = useSignatureSize(who);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  // The last size and place asked for from the keyboard, so presses quicker than the paper redraws still add up.
+  const asked = useRef<{ size: number; offset: SignatureOffset } | null>(null);
+  const live = drag?.kind === 'size' ? drag.size : size;
+  const at = drag?.kind === 'move' ? drag.offset : offset;
+
+  useEffect(() => { asked.current = null; }, [size, offset.x, offset.y]);
+
+  const now = () => asked.current ?? { size, offset };
+
+  const keepSize = (next: number) => {
+    asked.current = { ...now(), size: clampSize(next) };
+    resize?.(asked.current.size);
+  };
+
+  const keepPlace = (next: SignatureOffset) => {
+    asked.current = { ...now(), offset: clampOffset(next) };
+    move?.(asked.current.offset);
+  };
 
   return (
-    // The full width of the line, centring what it holds, so a wide signature may use all of it.
-    <span className="absolute inset-x-0 bottom-full mb-0.5 flex justify-center" style={{ height: `${SIGNATURE_HEIGHT * live}rem` }}>
-      <span className="group relative flex h-full max-w-full items-end">
-        <img src={shown} alt={`Signature of ${who}`} className="pointer-events-none h-full max-w-full object-contain object-bottom" />
-        {resize && (
+    <span
+      className="group absolute bottom-full left-1/2 mb-0.5"
+      style={{
+        height: rem(SIGNATURE_HEIGHT * live),
+        width: rem(SIGNATURE_WIDTH * live),
+        transform: `translate(calc(-50% + ${rem(at.x)}), ${rem(at.y)})`,
+      }}
+    >
+      <img src={shown} alt={`Signature of ${who}`} className="pointer-events-none size-full object-contain object-bottom" />
+      {resize && move && (
+        <span
+          role="slider"
+          tabIndex={0}
+          aria-label={`Size of ${who}'s signature`}
+          aria-valuemin={50}
+          aria-valuemax={200}
+          aria-valuenow={Math.round(live * 100)}
+          aria-valuetext={`${Math.round(live * 100)}%${at.x || at.y ? ', moved' : ''}`}
+          title="Drag to move this signature; drag the corner to resize it. On every paper."
+          className="absolute inset-0 cursor-move touch-none outline-1 outline-offset-2 outline-paper-mark outline-dashed opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden [[data-pdf-drawing]_&]:hidden [[data-touch]_&]:opacity-100"
+          onPointerDown={(e) => {
+            const box = e.currentTarget.getBoundingClientRect();
+
+            e.currentTarget.setPointerCapture(e.pointerId);
+            // How much the preview is scaled down on screen, so the signature follows the pointer exactly.
+            setDrag({ kind: 'move', x: e.clientX, y: e.clientY, from: offset, scale: box.width / (SIGNATURE_WIDTH * size * REM), offset });
+          }}
+          onPointerMove={(e) => {
+            if (drag?.kind !== 'move') return;
+            const toRem = (px: number) => px / drag.scale / REM;
+
+            setDrag({ ...drag, offset: clampOffset({ x: drag.from.x + toRem(e.clientX - drag.x), y: drag.from.y + toRem(e.clientY - drag.y) }) });
+          }}
+          onPointerUp={() => {
+            if (drag?.kind === 'move' && (drag.offset.x !== offset.x || drag.offset.y !== offset.y)) keepPlace(drag.offset);
+            setDrag(null);
+          }}
+          onPointerCancel={() => setDrag(null)}
+          onKeyDown={(e) => {
+            const step = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+
+            if (step && e.shiftKey) {
+              e.preventDefault();
+              const { offset: from } = now();
+
+              keepPlace({ x: from.x + step[0] * MOVE_STEP, y: from.y + step[1] * MOVE_STEP });
+            } else if (step) {
+              e.preventDefault();
+              // Up and right enlarge, down and left shrink.
+              keepSize(now().size + (step[0] + -step[1]) * SIZE_STEP);
+            }
+
+            if (e.key === 'Home') {
+              e.preventDefault();
+              keepSize(1);
+              keepPlace({ x: 0, y: 0 });
+            }
+          }}
+        >
           <span
-            role="slider"
-            tabIndex={0}
-            aria-label={`Size of ${who}'s signature`}
-            aria-valuemin={50}
-            aria-valuemax={200}
-            aria-valuenow={Math.round(live * 100)}
-            aria-valuetext={`${Math.round(live * 100)}%`}
-            title="Drag to resize this signature on every paper"
-            // A finger has no hover: on a phone or tablet the handle always shows, and takes a tap or a drag from well
-            // around it. Never drawn into an exported PDF.
-            className="absolute -top-1.5 -right-1.5 size-3 cursor-ns-resize touch-none rounded-full border border-paper-gold bg-paper opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden [[data-pdf-drawing]_&]:hidden [[data-touch]_&]:opacity-100 [[data-touch]_&]:after:absolute [[data-touch]_&]:after:-inset-5 [[data-touch]_&]:after:content-['']"
-            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging({ from: e.clientY, at: size, size }); }}
-            onPointerMove={(e) => { if (dragging) setDragging({ ...dragging, size: clampSize(dragging.at + (dragging.from - e.clientY) / DRAG_PER_SIZE) }); }}
-            onPointerUp={() => { if (dragging) resize(dragging.size); setDragging(null); }}
-            onPointerCancel={() => setDragging(null)}
-            onKeyDown={(e) => {
-              const step = { ArrowUp: SIZE_STEP, ArrowRight: SIZE_STEP, ArrowDown: -SIZE_STEP, ArrowLeft: -SIZE_STEP }[e.key];
+            aria-hidden="true"
+            className="absolute -top-1.5 -right-1.5 size-2.5 cursor-nesw-resize touch-none border border-paper-mark bg-paper [[data-touch]_&]:after:absolute [[data-touch]_&]:after:-inset-5 [[data-touch]_&]:after:content-['']"
+            onPointerDown={(e) => {
+              const box = e.currentTarget.parentElement?.getBoundingClientRect();
 
-              if (step !== undefined) { e.preventDefault(); resize(clampSize(size + step)); }
+              e.stopPropagation();
 
-              if (e.key === 'Home') { e.preventDefault(); resize(1); }
+              if (!box) return;
+              e.currentTarget.setPointerCapture(e.pointerId);
+              setDrag({ kind: 'size', at: size, from: reach(e.clientX, e.clientY, box), size });
             }}
+            onPointerMove={(e) => {
+              const box = e.currentTarget.parentElement?.getBoundingClientRect();
+
+              if (drag?.kind === 'size' && box) setDrag({ ...drag, size: clampSize((drag.at * reach(e.clientX, e.clientY, box)) / drag.from) });
+            }}
+            onPointerUp={(e) => {
+              e.stopPropagation();
+
+              if (drag?.kind === 'size' && drag.size !== size) keepSize(drag.size);
+              setDrag(null);
+            }}
+            onPointerCancel={() => setDrag(null)}
           />
-        )}
-      </span>
+        </span>
+      )}
     </span>
   );
 }

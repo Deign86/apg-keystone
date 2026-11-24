@@ -1,4 +1,4 @@
-# 0046. Keystone is also a web app, installable on phones and tablets, served from Vercel
+# 0047. Keystone is also a web app, installable on phones and tablets, served from Vercel
 
 Status: Accepted · Date: 2026-11-24
 

@@ -5,7 +5,7 @@ import { sampleRecords } from './e2e/support/sample-records';
 import { useUtf8Locale } from './e2e/support/locale';
 import { ANDROID_TABLET, IPHONE, touchScreen } from './e2e/support/touch';
 
-// The web app on phones and tablets (docs/adr/0046): every screen and its flows worked by a finger, as on the desktop.
+// The web app on phones and tablets (docs/adr/0047): every screen and its flows worked by a finger, as on the desktop.
 // Every test runs on both targets: an iPhone upright (390 × 844, under 768px, so the rail is behind the Menu button)
 // and an Android tablet upright (768 × 1024, with the rail). `e2e/mobile/layout.e2e.ts` also walks every screen at every
 // phone and tablet size, upright and on its side (e2e/support/touch.ts › SIZES). Run it with `npm run test:e2e:mobile`

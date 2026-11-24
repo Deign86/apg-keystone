@@ -7,7 +7,7 @@ import { partTest } from '../../vitest.shared';
 
 /**
  * This build's name: the commit it was built from (Vercel and GitHub Actions say which), else the time of the build. The
- * web app's service worker keeps its files under it and the rail shows it as the version (docs/adr/0046).
+ * web app's service worker keeps its files under it and the rail shows it as the version (docs/adr/0047).
  */
 const build = (process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? '').slice(0, 7) || Date.now().toString(36);
 

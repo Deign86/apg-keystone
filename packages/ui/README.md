@@ -6,7 +6,7 @@ The APG design system: the look shared with the attendance tracker and the websi
   and Poppins). Never edit it by hand.
 - `src/styles.css`: base styles, the brand's eyebrow and input chrome, the print stylesheet, the fixed z-index
   scale, and the touch sizes: under `data-touch` every control is 44px each way, a text field's text 16px, and a box to
-  tick takes a tap across 44px (docs/adr/0046).
+  tick takes a tap across 44px (docs/adr/0047).
 - `src/touch.ts`: `watchTouch` marks the page `data-touch` while its main pointer is coarse (a phone, a tablet). Tested
   in `test/touch.test.ts`.
 - `src/primitives.tsx`: `Button`, `Panel`, `ScreenHeader`, `Eyebrow`, `SectionLabel`, `KeyBadge`, `StatusPill`, `Tag`,

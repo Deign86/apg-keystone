@@ -22,7 +22,7 @@ is the shortcut to that program. It is not the ID Maker screen inside Keystone (
   the only way the ID Maker is updated, since it has no updater of its own. A portable copy is not found and so is
   never offered an update.
 - **In the web app and the browser preview:** it opens the app's download page and says it runs on a computer
-  (docs/adr/0046).
+  (docs/adr/0047).
 
 ## Contributes
 Its shortcut on Home: the ID Maker's logo, named Alpha Premier ID Maker.
