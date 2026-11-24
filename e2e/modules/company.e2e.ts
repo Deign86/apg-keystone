@@ -49,9 +49,9 @@ test('a computer with nothing saved still has the company, on Home, in the sideb
   await app.open('/');
   await startEmpty(app, browser);
 
-  // No records, but the company is built in: Home asks for nothing, and the sidebar names where it is.
+  // No records, but the company is built in: Home asks for nothing. The sidebar shows the mark alone, no address.
   await expect(screen.getByText(/^Fill in Company Details/)).toBeHidden();
-  await expect(screen.getByRole('button', 'ALPHA PREMIER KEYSTONE Tektite East Tower, Ortigas Center, Pasig')).toBeVisible();
+  await expect(screen.getByRole('button', 'ALPHA PREMIER KEYSTONE')).toBeVisible();
 
   await app.open('/#company');
   const form = screen.getByRole('form', 'Company details');
