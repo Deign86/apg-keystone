@@ -1,7 +1,7 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
+import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
 import { BankAccountPicker, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
@@ -143,7 +143,7 @@ function Billing() {
                       <Field label="Invoice No." hint={editing ? undefined : 'The next number; change it if you need to.'}>
                         <TextInput figures readOnly={!!editing} value={draft.editing ?? draft.no} onChange={(no) => setDraft({ ...draft, no })} />
                       </Field>
-                      <Field label="Date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft({ ...draft, date })} /></Field>
+                      <Field label="Date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft(withStatementDate(state, draft, date))} /></Field>
                     </FieldRow>
                     <FieldRow>
                       <Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field>
@@ -175,6 +175,7 @@ function Billing() {
                     </div>
                     <PayInto draft={draft} setDraft={setDraft} />
                     <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
+                    <Field label="Penalty" hint="The late-payment penalty, printed under the payment instructions."><TextArea rows={2} value={draft.penalty} onChange={(penalty) => setDraft({ ...draft, penalty })} /></Field>
                     <Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
                     {/* Each signatory's name over their position, as the statement prints them. */}
                     <FieldRow min={120}>

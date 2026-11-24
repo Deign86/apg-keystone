@@ -10,14 +10,14 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0" data-print-root="">
 <div data-sheet-copy="" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
 <img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
-<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
 </div>
 </div>
 </header>
@@ -93,33 +93,33 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">D. LAZARO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">CEO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
@@ -131,14 +131,14 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </div>
 <div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col border-t border-dashed border-paper-muted">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
 <img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
-<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
 </div>
 </div>
 </header>
@@ -214,33 +214,33 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">D. LAZARO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">CEO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
@@ -262,14 +262,14 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
 <div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
 <img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
-<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
 </div>
 </div>
 </header>
@@ -345,33 +345,33 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">D. LAZARO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">CEO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
@@ -383,14 +383,14 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </div>
 <div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
 <img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
-<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
 </div>
 </div>
 </header>
@@ -466,33 +466,33 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">D. LAZARO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">CEO</p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
@@ -513,13 +513,13 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 <article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
 <div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
 <img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
 </div>
 </div>
 </header>
@@ -591,36 +591,36 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
@@ -632,13 +632,13 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 </div>
 <div data-sheet-copy="" aria-hidden="true" style="min-height: 561px; padding: 6mm;" class="flex flex-col border-t border-dashed border-paper-muted">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
 <img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Check Voucher</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">No. CV-2026-0139</p>
 </div>
 </div>
 </header>
@@ -710,36 +710,36 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">
 </p>
 </div>
 </div>
-<div class="flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
+<div class="flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
-<div class="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+<div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 min-h-4 font-semibold">

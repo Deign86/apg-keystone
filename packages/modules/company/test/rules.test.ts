@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { COMPANY, companyOf, emptyState, parseState, type Ctx, type Member } from '@keystone/core';
-import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, type CompanyDraft } from '../src/rules';
+import { COMPANY, companyOf, emptyState, parseState, signatureOf, type Ctx, type Member } from '@keystone/core';
+import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, setSignature, type CompanyDraft } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
 /** 12 Nov 2026, 09:05 in Manila. */
@@ -15,7 +15,7 @@ describe('company details', () => {
 
     // docs/adr/0023: the company itself is built in, the same on every computer and in every set of records.
     expect(d).toMatchObject({
-      name: 'ALPHA PREMIER GROUP OF COMPANIES OPC', address: 'Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila',
+      name: 'ALPHA PREMIER GROUP OF COMPANIES OPC', address: 'Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605',
       shortAddress: 'Tektite East Tower, Ortigas Center, Pasig', phone: '02 8650 2540', billingEmail: 'billing@alphapremiergroup.com',
     });
     expect(blank()).toEqual({
@@ -62,6 +62,38 @@ describe('company details', () => {
     expect(canChange(at(staff))).toBe(false);
     expect(() => saveCompany(sampleState(), d, at(staff))).toThrow('Only the CEO changes the company\'s details.');
     expect(saveCompany(sampleState(), d, at()).record.billingTerms).toBe('Pay within the month.');
+  });
+
+  it('keep a signature for each signatory, found by name whatever its capitals, kept by a save, and read back', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const added = setSignature(sampleState(), ' Mark  Anthony Santos', png, at(owner));
+
+    expect(added.message).toBe('Signature for Mark Anthony Santos added.');
+    expect(signatureOf(companyOf(added.state), 'MARK ANTHONY SANTOS')).toBe(png);
+    expect(signatureOf(companyOf(added.state), 'Brian Sy')).toBeUndefined();
+    expect(setSignature(added.state, 'mark anthony santos', png, at(owner)).message).toBe('Signature for mark anthony santos replaced.');
+    // Saving the form keeps them; a saved file brings them back, and only images.
+    const saved = saveCompany(added.state, companyDraftOf(added.state), at(owner)).state;
+
+    expect(signatureOf(companyOf(saved), 'Mark Anthony Santos')).toBe(png);
+    const read = parseState(JSON.stringify({ ...saved, company: { ...saved.company, signatures: { 'mark  anthony santos': png, 'BRIAN SY': 'javascript:alert(1)' } } }));
+
+    expect(companyOf(read).signatures).toEqual({ 'MARK ANTHONY SANTOS': png });
+
+    const removed = setSignature(saved, 'Mark Anthony Santos', null, at(owner));
+
+    expect(companyOf(removed.state).signatures).toBeUndefined();
+    expect(removed.state.log.map((l) => l.text)).toContain('Signature for Mark Anthony Santos removed.');
+  });
+
+  it('refuse a signature from staff, with no name, that is not an image, or too large', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+
+    expect(() => setSignature(sampleState(), 'Brian Sy', png, at(staff))).toThrow('Only the CEO changes signatures.');
+    expect(() => setSignature(sampleState(), '  ', png, at(owner))).toThrow('Choose whose signature this is.');
+    expect(() => setSignature(sampleState(), 'Brian Sy', 'data:text/html;base64,PGI+', at(owner))).toThrow('That file is not an image.');
+    expect(() => setSignature(sampleState(), 'Brian Sy', `${png}${'A'.repeat(200_000)}`, at(owner))).toThrow('That signature is too large. Use a smaller image.');
+    expect(() => setSignature(sampleState(), 'Brian Sy', null, at(owner))).toThrow('No signature is kept for Brian Sy.');
   });
 
   it('come back into the form as saved, days and years as text', () => {

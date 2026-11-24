@@ -1,6 +1,7 @@
 import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput } from '@keystone/ui';
 import { useCallback, useState } from 'react';
 import { FormCard, SignatoryPicker, useKeystone, type ModuleDef } from '@keystone/kit';
+import { SignaturesPanel } from './Signatures';
 import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft, ID } from './rules';
 
 /** The company's details, in one form. Staff see them; only an owner changes them. */
@@ -58,7 +59,7 @@ function CompanyDetailsScreen() {
           {paragraph('paymentInstructions', 'Payment instructions', 'Where clients pay and send proof of payment.')}
           {paragraph('billingNote', 'Closing note')}
           <FieldRow>
-            {text('billingTerms', 'Terms', 'Under the dates: the late-payment penalty.')}
+            {text('billingTerms', 'Penalty', 'The late-payment penalty each new statement prints under its payment instructions.')}
             {text('dueInDays', 'Days to pay', 'Blank: each new statement needs its due date typed.')}
           </FieldRow>
         </fieldset>
@@ -70,6 +71,7 @@ function CompanyDetailsScreen() {
           </FieldRow>
         </fieldset>
       </FormCard>
+      <SignaturesPanel editable={editable} />
     </>
   );
 }

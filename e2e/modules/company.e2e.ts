@@ -1,13 +1,13 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { startEmpty } from '../support/sample-records';
-import { typeSignatory } from '../support/signatory';
+import { pickSignatory, typeSignatory } from '../support/signatory';
 
 // Company Details (packages/modules/company): what each new voucher, statement and ID starts from, kept with the
 // records (docs/adr/0018). The company itself, its name, address and contacts, is built in (docs/adr/0023), so it is
 // on every document, in the sidebar, and the same on a computer that saved nothing.
 
-const ADDRESS = 'Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila';
+const ADDRESS = 'Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605';
 
 test('is last under Settings, and shows what documents start from', async ({ app, screen }) => {
   await app.open('/');
@@ -65,4 +65,38 @@ test('a computer with nothing saved still has the company, on Home, in the sideb
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
   await expect(screen.getByRole('article', 'Check voucher 888-001').getByText(ADDRESS).first()).toBeVisible();
+});
+
+test('keeps a signature drawn for a signatory, which every paper they sign prints above their name', async ({ app, screen }) => {
+  await app.open('/#company');
+  const panel = screen.getByRole('region', 'Signatures');
+
+  await expect(panel.getByText('No signatures yet. Documents leave the line to sign by hand.')).toBeVisible();
+  await pickSignatory(screen, panel, 'Whose signature', 'D. Lazaro');
+  await panel.getByRole('button', 'Draw signature…').tap();
+  const pad = screen.getByRole('dialog', 'Signature of D. Lazaro');
+
+  await expect(pad.getByRole('button', 'Save signature')).toBeDisabled();
+  await pad.getByRole('img', 'Sign here').dragTo(pad.getByRole('button', 'Clear'));
+  await pad.getByRole('button', 'Save signature').tap();
+  await expect(screen.getByRole('dialog', 'Signature for D. Lazaro added.')).toBeVisible();
+  await expect(panel.getByRole('list', 'Signatures kept').getByRole('img', 'Signature of D. LAZARO')).toBeVisible();
+
+  // D. Lazaro prepares the next statement and voucher: their signature is over the line.
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
+
+  await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher entry/).tap();
+  await expect(screen.getByRole('article', /^Check voucher /).getByRole('img', 'Signature of D. LAZARO')).toBeVisible();
+
+  // Removed, it prints no more.
+  await app.open('/#company');
+  await screen.getByRole('region', 'Signatures').getByRole('button', 'Remove…').tap();
+  const confirm = screen.getByRole('alertdialog', 'Remove the signature of D. LAZARO?');
+
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await confirm.getByRole('button', 'Remove signature').tap();
+  await expect(screen.getByRole('region', 'Signatures').getByText('No signatures yet. Documents leave the line to sign by hand.')).toBeVisible();
 });

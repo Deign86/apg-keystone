@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
-  billingFigure, billingFinding, billingWaiting, EWT_RATE, EWT_RATES, ewtRateOf, markOverdue, newStatement, nextStatementNo, paidInto, payInto,
+  billingFigure, billingFinding, billingWaiting, EWT_RATE, EWT_RATES, ewtRateOf, markOverdue, newStatement, nextStatementNo, paidInto, withStatementDate, payInto,
   recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftOf, statementPayments, statementTone, statementTotals, withClient,
 } from '../src/rules';
 import { billingModule } from '../src';
@@ -27,20 +27,26 @@ describe('billing statements', () => {
     expect(due['010099-2026']).toBe(toCentavos(586627.5));
   });
 
-  it('numbers invoices with a six-digit running number and the year', () => {
-    expect(nextStatementNo(state(), ctx)).toBe('010100-2026');
-    const older = { ...state(), bs: [...state().bs, { ...state().bs[0], no: 'BS-2026-0123' }] };
-    expect(nextStatementNo(older, ctx)).toBe('010100-2026'); // older numbers don't count
-    expect(nextStatementNo({ ...state(), bs: [] }, ctx)).toBe('000001-2026');
+  it('numbers invoices 888- and the date as month, day and year, then -2, -3 on the same day', () => {
+    const s = state();
+    expect(nextStatementNo(s, '2026-10-30')).toBe('888-103026');
+    expect(nextStatementNo(s, '2027-01-05')).toBe('888-010527');
+    const one = { ...s, bs: [...s.bs, { ...s.bs[0], no: '888-103026' }] };
+    expect(nextStatementNo(one, '2026-10-30')).toBe('888-103026-2');
+    expect(nextStatementNo({ ...one, bs: [...one.bs, { ...s.bs[0], no: '888-103026-2' }] }, '2026-10-30')).toBe('888-103026-3');
+    // A new statement takes its date's number as its date changes; a number typed by hand stays.
+    const d = newStatement(s, ctx);
+    expect(withStatementDate(s, d, '2026-11-02').no).toBe('888-110226');
+    expect(withStatementDate(s, { ...d, no: 'SPECIAL-1' }, '2026-11-02').no).toBe('SPECIAL-1');
   });
 
   it('keeps the invoice number typed on a new statement, and refuses one in use', () => {
     const s = state();
     const d = { ...billed(s), lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', amount: '2,299' })] };
-    expect(saveStatement(s, d, ctx).record.no).toBe('010100-2026');
+    expect(saveStatement(s, d, ctx).record.no).toBe('888-103026');
     expect(saveStatement(s, { ...d, no: '010150-2026' }, ctx).record.no).toBe('010150-2026');
-    expect(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx)).toThrow('Invoice No. 010099-2026 is already used. The next free one is 010100-2026.');
-    expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('010100-2026'); // a copy takes the next
+    expect(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx)).toThrow('Invoice No. 010099-2026 is already used. The next free one is 888-103026.');
+    expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('888-102526'); // a copy takes the next number for its date
   });
 
   it('prices each charge by quantity, and adds VAT on the subtotal', () => {
@@ -124,7 +130,7 @@ describe('billing statements', () => {
 
     const saved = saveStatement(s, { ...racil, lines: [lineDraft({ desc: 'Commission', amount: '210,000' })] }, ctx);
     expect(saved.record.client).toBe('RACIL REALTY INC');
-    expect(saved.state.log[0].text).toBe('010100-2026 sent to RACIL REALTY INC (₱235,200.00 due Nov 14, 2026).');
+    expect(saved.state.log[0].text).toBe('888-103026 sent to RACIL REALTY INC (₱235,200.00 due Nov 14, 2026).');
     expect(() => saveStatement(s, { ...racil, client: '  ', lines: [lineDraft({ desc: 'Commission', amount: '1' })] }, ctx)).toThrow('Enter who the statement is billed to.');
     // A statement saved before Bill to was typed names its client by code, and comes back with the name.
     expect(statementDraftOf(s.bs[2], s).client).toBe('Harbor Point Logistics Corp.');
