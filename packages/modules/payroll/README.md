@@ -10,7 +10,9 @@ it (the `PAYROLL` and `PAYSLIP` tabs), from the days Timekeeping counted.
   whole centavos. The screen, the payroll sheet, the payslip and Overview only show fields of the `Pay` it returns;
   none of them adds anything up. Tested in `test/pay.test.ts`.
 - `src/rules.ts`: the pay setup and its checks, the saved data, assembling a cut-off (`cutoffOf`), closing and
-  reopening it, and what it contributes. It calls the engine for every amount. Tested in `test/rules.test.ts`.
+  reopening it, and what it contributes. It calls the engine for every amount. A refused pay setup names the field it
+  is about (the daily rate, an amount it cannot read, an employee number in use), which the form marks. Tested in
+  `test/rules.test.ts`.
 - `src/index.tsx`: the screen. **Pay setup** lists every employee in the Directory; opening one sets their pay.
   **Cut-off** shows the pay for a semi-monthly cut-off and closes or reopens it; in a narrow window it keeps gross,
   deductions and net pay and leaves what adds up to gross to the payroll sheet. Under it, once someone has pay set up,

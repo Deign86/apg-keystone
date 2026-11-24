@@ -198,9 +198,9 @@ export function voucherOf(d: VoucherDraft, status: VoucherStatus = 'For Approval
 function checkedVoucher(d: VoucherDraft): Voucher {
   const v = voucherOf(d);
 
-  if (!v.lines.length || voucherTotal(v) <= 0) throw new KeystoneError('Add at least one particular with an amount.');
+  if (!v.lines.length || voucherTotal(v) <= 0) throw new KeystoneError('Add at least one particular with an amount.', 'lines.0.amount');
 
-  if (!v.payee) throw new KeystoneError('Enter the payee.');
+  if (!v.payee) throw new KeystoneError('Enter the payee.', 'payee');
 
   return v;
 }

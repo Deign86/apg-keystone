@@ -151,7 +151,15 @@ test('needs a name for a new record', async ({ app, screen }) => {
 
   await dialog.getByRole('button', 'Add record').tap();
 
-  await expect(dialog.getByText('Enter a name for the record.')).toBeVisible();
+  await expect(dialog.getByRole('alert')).toHaveText('Enter a name for the record.');
+  // The field it is about is marked and has the focus, and typing in it clears the mark.
+  const name = dialog.getByRole('textbox', 'Name');
+
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await expect(name).toBeFocused();
+  await expect(dialog.getByRole('textbox', 'TIN')).not.toHaveAttribute('aria-invalid', 'true');
+  await name.fill('Ortigas Dental Clinic');
+  await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('refuses a second vendor with a name already in use', async ({ app, screen }) => {
@@ -163,7 +171,9 @@ test('refuses a second vendor with a name already in use', async ({ app, screen 
   await dialog.getByRole('textbox', 'Name').fill('manila electric company (meralco)');
   await dialog.getByRole('button', 'Add record').tap();
 
-  await expect(dialog.getByText('V-001 already has that name.')).toBeVisible();
+  await expect(dialog.getByRole('alert')).toHaveText('V-001 already has that name.');
+  await expect(dialog.getByRole('textbox', 'Name')).toHaveAttribute('aria-invalid', 'true');
+  await expect(dialog.getByRole('textbox', 'Name')).toBeFocused();
   await dialog.getByRole('button', 'Cancel').tap();
   await expect(screen.getByRole('button', 'Vendors 4')).toBeVisible();
 });
@@ -204,7 +214,9 @@ test('opens a record from its row, saves it under the same code and type, and lo
   await again.getByRole('combobox', 'Type').tap();
   await screen.getByRole('option', 'Client').tap();
   await again.getByRole('button', 'Save changes').tap();
-  await expect(again.getByText('V-002 is a vendor; add a new record to change its type.')).toBeVisible();
+  // Not about one field: the sentence is said, and no field is marked.
+  await expect(again.getByRole('alert')).toHaveText('V-002 is a vendor; add a new record to change its type.');
+  await expect(again.getByRole('textbox', 'Name')).not.toHaveAttribute('aria-invalid', 'true');
   await again.getByRole('button', 'Cancel').tap();
   await expect(row).toContainText('Vendor');
 

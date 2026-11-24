@@ -1,6 +1,6 @@
-import { Button, CellInput, EmptyState, Field, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm } from '@keystone/ui';
+import { Button, CellInput, EmptyState, Field, FieldMarks, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm, type Refusal } from '@keystone/ui';
 import { Pin, X } from 'lucide-react';
-import { useEffect, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
 import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
 import { useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector } from './context';
 import { MARKS } from './paper';
@@ -10,11 +10,12 @@ import { ActivePart, FILLS } from './parts';
 // kernel, so a module that uses it can be removed without touching another module.
 
 /**
- * Description · amount · remove; or, priced by unit, description · quantity · unit price · remove. Enter in a line that
- * is filled in moves to the next line, adding one after the last; in a line that is not, it moves to its empty box.
- * Either way it never submits the form around it.
+ * Description · amount · remove; or, priced by unit, description · quantity · unit price · remove. A refusal names a
+ * cell as `<name>.<line index>.<desc|qty|amount>` (`lines.0.amount`). Enter in a line that is filled in moves to the
+ * next line, adding one after the last; in a line that is not, it moves to its empty box. Either way it never submits
+ * the form around it.
  */
-export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; pricing?: LinePricing }) {
+export function LineEditor({ title, lines, onChange, pricing = 'amount', name = 'lines' }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; pricing?: LinePricing; name?: string }) {
   const set = (id: string, patch: Partial<LineDraft>) => onChange(lines.map((l) => (l.id === id ? { ...l, ...patch } : l)));
   const unit = pricing === 'unit';
   const box = useRef<HTMLFieldSetElement>(null);
@@ -57,9 +58,9 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { tit
           onKeyDown={(e) => enter(e, i)}
           className={cn('grid items-center gap-1.5', unit ? 'grid-cols-[minmax(0,1fr)_64px_112px_32px]' : 'grid-cols-[minmax(0,1fr)_112px_32px]')}
         >
-          <CellInput label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} onChange={(v) => set(l.id, { desc: v })} />
-          {unit && <CellInput label={`Line ${i + 1} quantity`} placeholder="Qty" align="right" value={l.qty} onChange={(v) => set(l.id, { qty: v })} />}
-          <CellInput label={unit ? `Line ${i + 1} unit price` : `Line ${i + 1} amount`} placeholder={unit ? 'Unit price' : '0.00'} align="right" value={l.amount} onChange={(v) => set(l.id, { amount: v })} />
+          <CellInput name={`${name}.${i}.desc`} label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} onChange={(v) => set(l.id, { desc: v })} />
+          {unit && <CellInput name={`${name}.${i}.qty`} label={`Line ${i + 1} quantity`} placeholder="Qty" align="right" value={l.qty} onChange={(v) => set(l.id, { qty: v })} />}
+          <CellInput name={`${name}.${i}.amount`} label={unit ? `Line ${i + 1} unit price` : `Line ${i + 1} amount`} placeholder={unit ? 'Unit price' : '0.00'} align="right" value={l.amount} onChange={(v) => set(l.id, { amount: v })} />
           <button
             type="button"
             aria-label={`Remove line ${i + 1}`}
@@ -154,12 +155,16 @@ export function Workspace({ form, preview, previewTitle, previewNote = 'Updates 
 }
 
 /**
- * A form card: its heading, the fields, and the save row. ⌘/Ctrl+S saves. The refusal,
- * when there is one, is written next to the save button as well as in a toast.
+ * A form card: its heading, the fields, and the save row. ⌘/Ctrl+S saves. The refusal, when there is one, is written
+ * next to the save button as well as in a toast. A refusal that names fields (a refused run's outcome) also marks them
+ * until each is edited, and the first takes the focus (FieldMarks).
  */
 export function FormCard({
   id, eyebrow, title, children, actions, onSubmit, error,
-}: { id?: string; eyebrow: string; title: string; children: ReactNode; actions: ReactNode; onSubmit: () => void; error?: string | null }) {
+}: { id?: string; eyebrow: string; title: string; children: ReactNode; actions: ReactNode; onSubmit: () => void; error?: Refusal | null }) {
+  const said = useId();
+  const sentence = error?.error;
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); onSubmit(); }
@@ -176,9 +181,9 @@ export function FormCard({
         <p className="eyebrow m-0">{eyebrow}</p>{/* taste-skill-ignore: the APG brand eyebrow (docs/DESIGN.md) */}
         <h2 className="mt-1 mb-0 font-display text-[15px] font-semibold">{title}</h2>
       </div>
-      {children}
+      <FieldMarks refusal={error} describedBy={said}>{children}</FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-        {error && <p role="alert" className="m-0 mr-auto max-w-[44ch] text-[13px] text-bad">{error}</p>}
+        {sentence && <p id={said} role="alert" className="m-0 mr-auto max-w-[44ch] text-[13px] text-bad">{sentence}</p>}
         {actions}
       </div>
     </Panel>
@@ -259,8 +264,10 @@ const OTHER_NAME = 'Other…';
  * `names` (those the module's own documents were signed by), each once. `value` is shown as saved: a name not listed stays a choice.
  * Other… clears the name and shows a field to type it in.
  */
-export function SignatoryPicker({ label, value, onChange, names = [], hint, anyone }: {
+export function SignatoryPicker({ label, value, onChange, names = [], hint, anyone, name }: {
   label: string; value: string; onChange: (name: string) => void;
+  /** How a refusal names this field (KeystoneError's fields). */
+  name?: string;
   /** Names the module's own saved documents were signed by. */
   names?: Iterable<string>;
   hint?: string;
@@ -286,14 +293,14 @@ export function SignatoryPicker({ label, value, onChange, names = [], hint, anyo
     onChange(choice === OTHER_NAME ? '' : choice);
   };
 
-  const type = (name: string) => {
-    setTyped(name);
-    onChange(name);
+  const type = (typedName: string) => {
+    setTyped(typedName);
+    onChange(typedName);
   };
 
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <Field label={label} hint={hint}>
+      <Field label={label} hint={hint} name={name}>
         <SelectInput
           value={typing ? OTHER_NAME : match ?? value}
           onChange={pick}
@@ -302,7 +309,7 @@ export function SignatoryPicker({ label, value, onChange, names = [], hint, anyo
       </Field>
       {typing && (
         <div onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
-          <CellInput capitalize label={`${label}, name`} placeholder="Type the name" autoFocus value={value} onChange={type} />
+          <CellInput capitalize name={name} label={`${label}, name`} placeholder="Type the name" autoFocus value={value} onChange={type} />
         </div>
       )}
     </div>
@@ -322,8 +329,10 @@ type TypedAccount = { bank: string; branch: string; name: string; number: string
  * account is saved to Bank Accounts and picked, so every form after lists it too; Remove… takes the picked one off.
  * `onChange` gets the account's label and the account, or "" when none is left. Nothing without the service.
  */
-export function BankAccountPicker({ label, value, onChange, hint, noneHint, after, kept }: {
+export function BankAccountPicker({ label, value, onChange, hint, noneHint, after, kept, name }: {
   label: string; value: string; onChange: (label: string, account?: BankAccount) => void;
+  /** How a refusal names this field (KeystoneError's fields). */
+  name?: string;
   /** Under the list when it has accounts, and when it has none. */
   hint: string; noneHint: string;
   /** Who else lists an account saved here: "every voucher after this one". */
@@ -338,7 +347,8 @@ export function BankAccountPicker({ label, value, onChange, hint, noneHint, afte
   // The account's name starts as the company's: these are its own accounts.
   const blank = (): TypedAccount => ({ bank: '', branch: '', name: companyOf(state).name, number: '' });
   const [adding, setAdding] = useState<TypedAccount | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
 
   if (!banks) return null;
   const accounts = banks.accounts(state);
@@ -357,7 +367,7 @@ export function BankAccountPicker({ label, value, onChange, hint, noneHint, afte
     if (!adding) return;
     const r = run((s, c) => banks.add(s, adding, c));
 
-    if (!r.ok) return setError(r.error);
+    if (!r.ok) return setError(r);
     onChange(banks.label(r.record), r.record);
     setAdding(null);
     setError(null);
@@ -377,7 +387,7 @@ export function BankAccountPicker({ label, value, onChange, hint, noneHint, afte
 
   return (
     <div className="flex flex-col gap-2.5">
-      <Field label={label} hint={accounts.length ? hint : noneHint}>
+      <Field label={label} hint={accounts.length ? hint : noneHint} name={name}>
         <div className="flex gap-2">
           <div className="min-w-0 flex-1">
             <SelectInput
@@ -409,17 +419,19 @@ export function BankAccountPicker({ label, value, onChange, hint, noneHint, afte
           className="flex flex-col gap-2.5 rounded-control border border-line p-3"
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } }}
         >
-          <FieldRow>
-            <Field label="Bank name"><TextInput autoFocus placeholder="BDO" {...field('bank')} /></Field>
-            <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" {...field('number')} /></Field>
-          </FieldRow>
-          <FieldRow>
-            <Field label="Account name" hint="As the bank holds it."><TextInput capitalize {...field('name')} /></Field>
-            <Field label="Branch"><TextInput placeholder="Optional" {...field('branch')} /></Field>
-          </FieldRow>
+          <FieldMarks refusal={error} describedBy={said}>
+            <FieldRow>
+              <Field label="Bank name" name="bank"><TextInput autoFocus placeholder="BDO" {...field('bank')} /></Field>
+              <Field label="Account number" name="number"><TextInput figures placeholder="0012 3456 7890" {...field('number')} /></Field>
+            </FieldRow>
+            <FieldRow>
+              <Field label="Account name" hint="As the bank holds it." name="name"><TextInput capitalize {...field('name')} /></Field>
+              <Field label="Branch" name="branch"><TextInput placeholder="Optional" {...field('branch')} /></Field>
+            </FieldRow>
+          </FieldMarks>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {error
-              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-pretty text-bad">{error}</p>
+              ? <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-pretty text-bad">{error.error}</p>
               : <span className="mr-auto text-[13px] text-pretty text-ink-2">Saved to Bank Accounts, for {after}.</span>}
             {accounts.length > 0 && <Button size="sm" onClick={() => { setAdding(null); setError(null); }}>Cancel</Button>}
             <Button size="sm" onClick={save}>Save account</Button>

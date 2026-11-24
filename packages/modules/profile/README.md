@@ -11,7 +11,7 @@ or asked for funds, and in the activity log. First under Settings on the rail, b
   - **Records kept on this computer:** nobody signs in, so the screen says there is no profile to change.
 - `src/rules.ts`: its rules, tested in `test/rules.test.ts`:
   - a new name is kept on one line with single spaces, needs at least one character and at most 80, and differs from
-    the name now shown (`checkName`);
+    the name now shown (`checkName`), and a refusal names the name field, which the form marks;
   - the log line names the old name and the new (`nameChanged`).
 - The screen against a stand-in sign-in is tested in `test/screen.test.tsx`.
 

@@ -9,7 +9,9 @@ The APG design system: the look shared with the attendance tracker and the websi
 - `src/primitives.tsx`: `Button`, `Panel`, `ScreenHeader`, `Eyebrow`, `SectionLabel`, `KeyBadge`, `StatusPill`, `Tag`,
   `EmptyState`, `FigureStrip`, `cn`.
 - `src/fields.tsx`: `Field`, `TextInput`, `CellInput`, `TextArea`, `SelectInput`, `Checkbox`, `FieldRow`, all built
-  on Base UI's `Field` so every control is labelled.
+  on Base UI's `Field` so every control is labelled. `FieldMarks` marks the fields a refusal names (`Refusal`: the
+  sentence and the `name`s of its fields): each turns red, is announced invalid and tied to the sentence until it is
+  edited, and the first takes the focus and scrolls into view (docs/adr/0044).
 - `src/register.tsx`: `Register` (a real table with keyboard-openable rows; a column marked `detail`, a breakdown it
   can do without, is left out while the table is too narrow to show every column whole; `current` marks the row open
   in the form beside it, `aria-current` and a gold line at its edge; `pageSize`, `PAGE_SIZE` for most, shows a long

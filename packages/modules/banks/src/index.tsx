@@ -1,5 +1,5 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
-import { useState } from 'react';
+import { Button, EmptyState, Field, FieldMarks, FieldRow, Panel, Register, ScreenHeader, Sheet, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
+import { useId, useState } from 'react';
 import { changeEach, count, DASH, SERVICES, type BankAccount } from '@keystone/core';
 import { useKeystone, type ModuleDef } from '@keystone/kit';
 import {
@@ -10,25 +10,28 @@ import {
 function AccountForm({ draft, onDone }: { draft: AccountDraft; onDone: () => void }) {
   const { state, run } = useKeystone();
   const [d, setD] = useState(draft);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
 
   const save = () => {
     const r = run((s, c) => saveAccount(s, d, c));
 
-    if (r.ok) onDone(); else setError(r.error);
+    if (r.ok) onDone(); else setError(r);
   };
 
   return (
     <form className="flex flex-col gap-3.5" onSubmit={(e) => { e.preventDefault(); save(); }}>
-      <FieldRow>
-        <Field label="Bank"><TextInput autoFocus value={d.bank} onChange={(bank) => setD({ ...d, bank })} /></Field>
-        <Field label="Branch"><TextInput placeholder="Optional" value={d.branch} onChange={(branch) => setD({ ...d, branch })} /></Field>
-      </FieldRow>
-      <Field label="Account name" hint="As the bank holds it. Statements print it for the client."><TextInput capitalize value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
-      <Field label="Account number"><TextInput figures value={d.number} onChange={(number) => setD({ ...d, number })} /></Field>
+      <FieldMarks refusal={error} describedBy={said}>
+        <FieldRow>
+          <Field name="bank" label="Bank"><TextInput autoFocus value={d.bank} onChange={(bank) => setD({ ...d, bank })} /></Field>
+          <Field name="branch" label="Branch"><TextInput placeholder="Optional" value={d.branch} onChange={(branch) => setD({ ...d, branch })} /></Field>
+        </FieldRow>
+        <Field name="name" label="Account name" hint="As the bank holds it. Statements print it for the client."><TextInput capitalize value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
+        <Field name="number" label="Account number"><TextInput figures value={d.number} onChange={(number) => setD({ ...d, number })} /></Field>
+      </FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {error
-          ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>
+          ? <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error.error}</p>
           : <span className="mr-auto text-xs text-ink-2">{d.editing ? `Keeps ${d.editing}.` : `Gets ${nextAccountId(state)}.`}</span>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">{d.editing ? 'Save changes' : 'Add account'}</Button>

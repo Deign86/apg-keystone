@@ -116,6 +116,10 @@ describe('User Accounts', () => {
     await fill(dialog, 'Liza Bautista', 'liza.bautista@alphapremiergroup.com', 'short');
     expect(within(dialog).getByRole('alert')).toHaveTextContent('The password needs at least 8 characters.');
     expect(accounts.create).not.toHaveBeenCalled();
+    // The field it is about is marked and has the focus; the others are not.
+    expect(within(dialog).getByLabelText('Password')).toHaveAttribute('aria-invalid', 'true');
+    expect(within(dialog).getByLabelText('Password')).toHaveFocus();
+    expect(within(dialog).getByRole('textbox', { name: 'Email' })).not.toHaveAttribute('aria-invalid', 'true');
 
     await fill(dialog, ' Liza  Bautista ', 'Liza.Bautista@alphapremiergroup.com', 'correct horse');
     expect(accounts.create).toHaveBeenCalledWith({ name: 'Liza Bautista', email: 'liza.bautista@alphapremiergroup.com', password: 'correct horse' });
@@ -136,6 +140,8 @@ describe('User Accounts', () => {
     await fill(dialog, 'Liza Bautista', 'liza.bautista@alphapremiergroup.com', 'correct horse');
     expect(within(dialog).getByRole('alert')).toHaveTextContent('That email already has a sign-in.');
     expect(within(dialog).getByRole('button', { name: 'Make account' })).toBeEnabled();
+    // The sign-in's reason names no field, so none is marked.
+    expect(within(dialog).getByRole('textbox', { name: 'Email' })).not.toHaveAttribute('aria-invalid', 'true');
     expect(store.state.log).toHaveLength(log);
   });
 
@@ -204,6 +210,12 @@ describe('User Accounts', () => {
     await type('old-password', 'new-password-1', 'new-password-2');
     expect(within(dialog).getByRole('alert')).toHaveTextContent('The new password and its repeat do not match.');
     expect(accounts.changePassword).not.toHaveBeenCalled();
+    // The repeat is marked and has the focus, and typing in it clears the mark.
+    expect(within(dialog).getByLabelText('New password again')).toHaveAttribute('aria-invalid', 'true');
+    expect(within(dialog).getByLabelText('New password again')).toHaveFocus();
+    expect(within(dialog).getByLabelText('New password')).not.toHaveAttribute('aria-invalid', 'true');
+    fireEvent.change(within(dialog).getByLabelText('New password again'), { target: { value: 'new-password-1' } });
+    expect(within(dialog).getByLabelText('New password again')).not.toHaveAttribute('aria-invalid', 'true');
 
     await type('old-password', 'new-password-1', 'new-password-1');
     expect(accounts.changePassword).toHaveBeenCalledWith('old-password', 'new-password-1');

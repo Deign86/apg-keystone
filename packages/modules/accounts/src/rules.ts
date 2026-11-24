@@ -56,14 +56,14 @@ export function checkAccount(d: AccountDraft, members: MemberAccount[], ctx: Ctx
   const name = clean(d.name);
   const email = d.email.trim().toLowerCase();
 
-  if (!name) throw new KeystoneError('Enter the person\'s name, as Keystone should show it.');
+  if (!name) throw new KeystoneError('Enter the person\'s name, as Keystone should show it.', 'name');
 
-  if (!EMAIL.test(email)) throw new KeystoneError('Enter the email they will sign in with, like ana.cruz@alphapremiergroup.com.');
+  if (!EMAIL.test(email)) throw new KeystoneError('Enter the email they will sign in with, like ana.cruz@alphapremiergroup.com.', 'email');
   const taken = members.find((m) => m.email.toLowerCase() === email);
 
-  if (taken) throw new KeystoneError(`${email} already has an account: ${taken.name}.`);
+  if (taken) throw new KeystoneError(`${email} already has an account: ${taken.name}.`, 'email');
 
-  if (d.password.length < MIN_PASSWORD) throw new KeystoneError(`The password needs at least ${MIN_PASSWORD} characters.`);
+  if (d.password.length < MIN_PASSWORD) throw new KeystoneError(`The password needs at least ${MIN_PASSWORD} characters.`, 'password');
 
   return { name, email, password: d.password };
 }
@@ -179,13 +179,13 @@ export interface PasswordChange {
 export function checkPasswordChange(d: PasswordDraft, ctx: Ctx): PasswordChange {
   if (!ctx.who) throw new KeystoneError(NO_SIGN_IN);
 
-  if (!d.current) throw new KeystoneError('Enter your current password.');
+  if (!d.current) throw new KeystoneError('Enter your current password.', 'current');
 
-  if (d.next.length < MIN_PASSWORD) throw new KeystoneError(`The new password needs at least ${MIN_PASSWORD} characters.`);
+  if (d.next.length < MIN_PASSWORD) throw new KeystoneError(`The new password needs at least ${MIN_PASSWORD} characters.`, 'next');
 
-  if (d.again !== d.next) throw new KeystoneError('The new password and its repeat do not match.');
+  if (d.again !== d.next) throw new KeystoneError('The new password and its repeat do not match.', 'again');
 
-  if (d.next === d.current) throw new KeystoneError('Choose a new password, not the one you have now.');
+  if (d.next === d.current) throw new KeystoneError('Choose a new password, not the one you have now.', 'next');
 
   return { current: d.current, next: d.next };
 }

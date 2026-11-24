@@ -94,6 +94,25 @@ test('refuses a voucher with no particulars', async ({ app, screen }) => {
   await form.getByRole('button', 'Save and route for approval').tap();
 
   await expect(form.getByRole('alert')).toHaveText('Add at least one particular with an amount.');
+  // The line's amount is marked and has the focus, and typing in it clears the mark.
+  const amount = form.getByRole('textbox', 'Line 1 amount');
+
+  await expect(amount).toHaveAttribute('aria-invalid', 'true');
+  await expect(amount).toBeFocused();
+  await amount.fill('1500');
+  await expect(amount).not.toHaveAttribute('aria-invalid', 'true');
+
+  // With an amount, the payee is what is missing, and it is the field marked.
+  await form.getByRole('button', 'Save and route for approval').tap();
+  await expect(form.getByRole('alert')).toHaveText('Enter the payee.');
+  const payee = form.getByRole('textbox', 'Payee');
+
+  await expect(payee).toHaveAttribute('aria-invalid', 'true');
+  await expect(payee).toBeFocused();
+  await expect(amount).not.toHaveAttribute('aria-invalid', 'true');
+  await payee.fill('Meralco');
+  await expect(payee).not.toHaveAttribute('aria-invalid', 'true');
+
   await screen.getByRole('tab', REGISTER).tap();
   await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001/)).toBeHidden();
 });
@@ -905,8 +924,9 @@ test('marks on both copies where the field being typed in prints, on screen only
   await form.getByRole('textbox', "Preparer's position").fill('Accounting Staff');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
 
-  // The ring is drawn on screen only: it never prints, and Export PDF draws the paper without it.
-  expect(await paperMarkMedia(browser)).toEqual(['screen']);
+  // The ring is drawn on screen only (the mark itself, and its stillness for whoever asks for less motion): it never
+  // prints, and Export PDF draws the paper without it.
+  expect(await paperMarkMedia(browser)).toEqual(['screen', 'screen and (prefers-reduced-motion: reduce)']);
   expect(await markedPaperPartsDrawn(browser)).toEqual(['none', 'none']);
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
 

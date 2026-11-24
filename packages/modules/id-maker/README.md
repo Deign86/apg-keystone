@@ -5,7 +5,8 @@
   square at 640px), Print, and Export print file.
 - `src/IDCard.tsx`: the CR80 card, front and back, with the 21×21 verification pattern.
 - `src/rules.ts`: its rules (numbering, issuing from an employee, expiry on open) and what it contributes;
-  `src/verification.ts`: the verification pattern, identical to the prototype's `drawCode`. Tested in
+  `src/verification.ts`: the verification pattern, identical to the prototype's `drawCode`. A refusal names the field it
+  is about (the name, the valid-until date), which the form marks. Tested in
   `test/rules.test.ts`.
 
 ## Contributes

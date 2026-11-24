@@ -103,6 +103,13 @@ test('refuses a statement with no charges', async ({ app, screen }) => {
   await form.getByRole('button', 'Save and mark as sent').tap();
 
   await expect(form.getByRole('alert')).toHaveText('Add at least one charge with an amount.');
+  // The first charge's unit price is marked and has the focus, and typing in it clears the mark.
+  const price = form.getByRole('textbox', 'Line 1 unit price');
+
+  await expect(price).toHaveAttribute('aria-invalid', 'true');
+  await expect(price).toBeFocused();
+  await price.fill('10000');
+  await expect(price).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('marks a statement paid, and the outstanding total drops', async ({ app, screen }) => {
@@ -314,12 +321,19 @@ test('refuses a charge with no quantity, and a due date before the invoice date'
   await form.getByRole('button', 'Save and mark as sent').tap();
 
   await expect(form.getByRole('alert')).toHaveText('Enter a quantity above zero on every charge.');
+  await expect(form.getByRole('textbox', 'Line 1 quantity')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Line 1 quantity')).toBeFocused();
 
   await form.getByRole('textbox', 'Line 1 quantity').fill('1');
+  await expect(form.getByRole('textbox', 'Line 1 quantity')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('textbox', 'Due date').fill('2026-11-01');
   await form.getByRole('button', 'Save and mark as sent').tap();
 
   await expect(form.getByRole('alert')).toHaveText('The due date is before the invoice date.');
+  await expect(form.getByRole('textbox', 'Due date')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Due date')).toBeFocused();
+  await form.getByRole('textbox', 'Due date').fill('2026-12-01');
+  await expect(form.getByRole('textbox', 'Due date')).not.toHaveAttribute('aria-invalid', 'true');
   await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^888-110226 /)).toBeHidden();
 });
@@ -545,6 +559,10 @@ test('bills someone not in the directory, typed as the statement prints it', asy
   await form.getByRole('textbox', 'Line 1 unit price').fill('210000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter who the statement is billed to.');
+  await expect(form.getByRole('textbox', 'Bill to')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Bill to')).toBeFocused();
+  await form.getByRole('textbox', 'Bill to').fill('RACIL REALTY INC');
+  await expect(form.getByRole('textbox', 'Bill to')).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('prints who prepared, checked and approved the statement', async ({ app, screen }) => {

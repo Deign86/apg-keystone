@@ -10,7 +10,7 @@ after Data.
     highest in use.
   - **Adding or editing** needs the bank, the account name and the account number. A number already in use is
     refused, naming the account that has it; numbers are compared by their letters and digits, so `4011-0258-68` is
-    `4011 0258 68`.
+    `4011 0258 68`. Each refusal names the field it is about (`bank`, `name`, `number`), which the dialog marks.
   - **Removing** asks first. Statements already issued keep the payment instructions written on them.
 - `src/index.tsx`: the screen. A register of the accounts; **Add account** opens a dialog (Bank, Branch, Account name,
   Account number), a row opens it for editing, and the row menu has Edit… and Remove….

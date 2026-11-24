@@ -1,4 +1,4 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
+import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
 import { Fills, FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
@@ -108,7 +108,7 @@ function Funds() {
     module: ID, private: true, title: (d) => requestDraftTitle(state, d, ctx), blank: requestDraftBlank, restore: (d) => requestDraftFrom(state, ctx, d),
   });
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLElement>(null);
   const editing = draft.editing ? requestOf(state, draft.editing) : undefined;
   const locked = editing ? requestLock(editing, ctx) : null;
@@ -134,7 +134,7 @@ function Funds() {
 
   const save = useCallback(() => {
     const r = run((s, c) => fileRequest(s, draft, c));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     if (!r.ok) return;
     drafts.finish(draft);
@@ -188,7 +188,7 @@ function Funds() {
       {/* A disabled fieldset turns every control inside it off at once. */}
       <fieldset disabled={!!locked} className="m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0">
         <Fills part="purpose">
-          <Field label="What it is for" hint="In a line: the fund, event or purchase the expenses below are for.">
+          <Field name="purpose" label="What it is for" hint="In a line: the fund, event or purchase the expenses below are for.">
             <TextArea value={shown.purpose} onChange={(purpose) => setDraft({ ...draft, purpose })} />
           </Field>
         </Fills>
@@ -204,25 +204,25 @@ function Funds() {
         {shown.pay === 'transfer'
           ? <>
             <FieldRow>
-              <Fills part="bank"><Field label="Bank"><TextInput placeholder="BDO" value={shown.account.bank} onChange={(bank) => setAccount({ bank })} /></Field></Fills>
+              <Fills part="bank"><Field name="account.bank" label="Bank"><TextInput placeholder="BDO" value={shown.account.bank} onChange={(bank) => setAccount({ bank })} /></Field></Fills>
               <Fills part="branch"><Field label="Branch"><TextInput placeholder="Optional" value={shown.account.branch} onChange={(branch) => setAccount({ branch })} /></Field></Fills>
             </FieldRow>
             <FieldRow>
-              <Fills part="accountName"><Field label="Account name" hint="As the bank holds it."><TextInput capitalize value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field></Fills>
-              <Fills part="accountNo"><Field label="Account number"><TextInput figures placeholder="0012 3456 7890" value={shown.account.number} onChange={(number) => setAccount({ number })} /></Field></Fills>
+              <Fills part="accountName"><Field name="account.name" label="Account name" hint="As the bank holds it."><TextInput capitalize value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field></Fills>
+              <Fills part="accountNo"><Field name="account.number" label="Account number"><TextInput figures placeholder="0012 3456 7890" value={shown.account.number} onChange={(number) => setAccount({ number })} /></Field></Fills>
             </FieldRow>
           </>
-          : <Field label="Payee">
+          : <Field name="payee" label="Payee">
             <SelectInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
           </Field>}
         <FieldRow>
           <Fills part="settle">
             <Field label="Settle"><SelectInput value={shown.when} onChange={(when) => setDraft({ ...draft, when: when === 'date' ? 'date' : ASAP })} options={WHEN} /></Field>
-            {shown.when === 'date' && <Field label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
+            {shown.when === 'date' && <Field name="by" label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
           </Fills>
         </FieldRow>
         <Fills part="requester">
-          <Field label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
+          <Field name="requester" label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
             <TextInput capitalize readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
           </Field>
         </Fills>

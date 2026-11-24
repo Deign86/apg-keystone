@@ -1,8 +1,8 @@
 import {
-  Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, Sheet, StatusPill,
-  TextInput, cn, useConfirm, type Column, type RowAction,
+  Button, EmptyState, Field, FieldMarks, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, Sheet, StatusPill,
+  TextInput, cn, useConfirm, type Column, type Refusal, type RowAction,
 } from '@keystone/ui';
-import { useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import {
   changeEach, DASH, companyOf, count, halfMonthsTo, peso, periodLabel, recordOf, recordsOf, SERVICES, toCentavos, today,
   type DirectoryRecord, type Period,
@@ -18,7 +18,7 @@ import {
 
 function Amount({ field, d, set, placeholder = '0.00' }: { field: AmountField; d: SetupDraft; set: (d: SetupDraft) => void; placeholder?: string }) {
   return (
-    <Field label={AMOUNT_LABEL[field]}>
+    <Field name={field} label={AMOUNT_LABEL[field]}>
       <TextInput figures align="right" placeholder={placeholder} value={d[field]} onChange={(v) => set({ ...d, [field]: v })} />
     </Field>
   );
@@ -36,45 +36,48 @@ function Group({ legend, children }: { legend: string; children: ReactNode }) {
 function SetupForm({ draft, period, onDone }: { draft: SetupDraft; period: Period; onDone: () => void }) {
   const { state, run } = useKeystone();
   const [d, setD] = useState(draft);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
   const name = recordOf(state, d.emp)?.name ?? d.emp;
   const grey = workedOut(d, period);
 
   const save = () => {
     const r = run((s, c) => saveSetup(s, d, c));
 
-    if (r.ok) onDone(); else setError(r.error);
+    if (r.ok) onDone(); else setError(r);
   };
 
   return (
     <form aria-label={`Pay setup for ${name}`} className="flex flex-col gap-3.5" onSubmit={(ev) => { ev.preventDefault(); save(); }}>
-      <FieldRow>
-        <Field label="Employee no."><TextInput autoFocus placeholder="APGCO-0013" value={d.empNo} onChange={(empNo) => setD({ ...d, empNo })} /></Field>
-        <Amount field="daily" d={d} set={setD} />
-        <Amount field="monthly" d={d} set={setD} placeholder={grey.monthly.toFixed(2)} />
-      </FieldRow>
-      <Group legend="Allowances (special allowance is per day worked)">
-        <FieldRow min={130}>
-          <Amount field="incentive" d={d} set={setD} />
-          <Amount field="housing" d={d} set={setD} />
-          <Amount field="special" d={d} set={setD} />
-        </FieldRow>
-      </Group>
-      <Group legend="Deductions, each cut-off">
-        <FieldRow min={100}>
-          {SHARES.map((f) => <Amount key={f} field={f} d={d} set={setD} placeholder={grey.shares[f].toFixed(2)} />)}
-          <Amount field="advance" d={d} set={setD} />
-        </FieldRow>
-        <p className="m-0 text-[13px] text-ink-2">Empty fields are worked out (shown in grey): monthly pay as the daily rate × 261 ÷ 12, shares from the 2026 tables on it. Type an amount, 0 included, to use this employee's own.</p>
-      </Group>
-      <Group legend="Paid by">
+      <FieldMarks refusal={error} describedBy={said}>
         <FieldRow>
-          <Field label="Bank"><TextInput placeholder="Cash" value={d.bank} onChange={(bank) => setD({ ...d, bank })} /></Field>
-          <Field label="Account no."><TextInput figures value={d.account} onChange={(account) => setD({ ...d, account })} /></Field>
+          <Field name="empNo" label="Employee no."><TextInput autoFocus placeholder="APGCO-0013" value={d.empNo} onChange={(empNo) => setD({ ...d, empNo })} /></Field>
+          <Amount field="daily" d={d} set={setD} />
+          <Amount field="monthly" d={d} set={setD} placeholder={grey.monthly.toFixed(2)} />
         </FieldRow>
-      </Group>
+        <Group legend="Allowances (special allowance is per day worked)">
+          <FieldRow min={130}>
+            <Amount field="incentive" d={d} set={setD} />
+            <Amount field="housing" d={d} set={setD} />
+            <Amount field="special" d={d} set={setD} />
+          </FieldRow>
+        </Group>
+        <Group legend="Deductions, each cut-off">
+          <FieldRow min={100}>
+            {SHARES.map((f) => <Amount key={f} field={f} d={d} set={setD} placeholder={grey.shares[f].toFixed(2)} />)}
+            <Amount field="advance" d={d} set={setD} />
+          </FieldRow>
+          <p className="m-0 text-[13px] text-ink-2">Empty fields are worked out (shown in grey): monthly pay as the daily rate × 261 ÷ 12, shares from the 2026 tables on it. Type an amount, 0 included, to use this employee's own.</p>
+        </Group>
+        <Group legend="Paid by">
+          <FieldRow>
+            <Field label="Bank"><TextInput placeholder="Cash" value={d.bank} onChange={(bank) => setD({ ...d, bank })} /></Field>
+            <Field label="Account no."><TextInput figures value={d.account} onChange={(account) => setD({ ...d, account })} /></Field>
+          </FieldRow>
+        </Group>
+      </FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-        {error && <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-bad">{error}</p>}
+        {error && <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-bad">{error.error}</p>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">Save pay setup</Button>
       </div>

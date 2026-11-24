@@ -4,7 +4,7 @@
 The screen for the master list of vendors, clients and employees. The records and their rules are shared kernel
 (`@keystone/core` › `kernel/directory.ts`), because every document reads them. You can add and edit records (in a dialog), remove them (one a document
 uses after saying which records name it: they keep what was saved on them, and show the code where they name it only by
-code), filter by type, and search.
+code), filter by type, and search. A refusal about the name (none, or one already used) marks the Name field.
 
 ## Contributes
 - **Overview:** the "Directory records" figure.

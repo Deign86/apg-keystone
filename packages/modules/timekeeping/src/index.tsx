@@ -1,8 +1,8 @@
 import {
-  Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, Sheet, StatusPill,
-  TextInput, useConfirm, type Column, type RowAction, type Tone,
+  Button, EmptyState, Field, FieldMarks, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, Sheet, StatusPill,
+  TextInput, useConfirm, type Column, type Refusal, type RowAction, type Tone,
 } from '@keystone/ui';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
   changeEach, DASH, count, halfMonthOf, halfMonthsTo, periodLabel, recordsOf, SERVICES, shortDate, today, weekdayLong, weekdayOf,
 } from '@keystone/core';
@@ -39,27 +39,30 @@ function remarks(d: DayResult): string {
 function DayForm({ draft, name, onDone }: { draft: DayDraft; name: string; onDone: () => void }) {
   const { run } = useKeystone();
   const [d, setD] = useState(draft);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
 
   const save = () => {
     const r = run((s, c) => saveDay(s, d, c));
 
-    if (r.ok) onDone(); else setError(r.error);
+    if (r.ok) onDone(); else setError(r);
   };
 
   return (
     <form aria-label={`Correct ${shortDate(d.date)}`} className="flex flex-col gap-3.5" onSubmit={(e) => { e.preventDefault(); save(); }}>
       <p className="m-0 text-[13px] text-ink-2">{name} · {shortDate(d.date)}</p>
-      <FieldRow min={120}>
-        <Field label="Time in" hint="24-hour, like 08:00"><TextInput autoFocus figures placeholder="08:00" value={d.in} onChange={(v) => setD({ ...d, in: v })} /></Field>
-        <Field label="Time out" hint="24-hour, like 17:00"><TextInput figures placeholder="17:00" value={d.out} onChange={(v) => setD({ ...d, out: v })} /></Field>
-      </FieldRow>
-      <Field label="Approved overtime (hours)" hint="Only what was approved; staying late alone is not overtime.">
-        <TextInput figures placeholder="0" value={d.ot} onChange={(v) => setD({ ...d, ot: v })} />
-      </Field>
-      <Field label="Note"><TextInput placeholder="Why it was corrected" value={d.note} onChange={(v) => setD({ ...d, note: v })} /></Field>
+      <FieldMarks refusal={error} describedBy={said}>
+        <FieldRow min={120}>
+          <Field name="in" label="Time in" hint="24-hour, like 08:00"><TextInput autoFocus figures placeholder="08:00" value={d.in} onChange={(v) => setD({ ...d, in: v })} /></Field>
+          <Field name="out" label="Time out" hint="24-hour, like 17:00"><TextInput figures placeholder="17:00" value={d.out} onChange={(v) => setD({ ...d, out: v })} /></Field>
+        </FieldRow>
+        <Field name="ot" label="Approved overtime (hours)" hint="Only what was approved; staying late alone is not overtime.">
+          <TextInput figures placeholder="0" value={d.ot} onChange={(v) => setD({ ...d, ot: v })} />
+        </Field>
+        <Field label="Note"><TextInput placeholder="Why it was corrected" value={d.note} onChange={(v) => setD({ ...d, note: v })} /></Field>
+      </FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-        {error && <p role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-bad">{error}</p>}
+        {error && <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-[13px] text-bad">{error.error}</p>}
         <Button onClick={onDone}>Cancel</Button>
         <Button kind="primary" type="submit">Save day</Button>
       </div>
@@ -70,26 +73,29 @@ function DayForm({ draft, name, onDone }: { draft: DayDraft; name: string; onDon
 function HolidayForm() {
   const { ctx, run } = useKeystone();
   const [h, setH] = useState<HolidayDraft>(() => newHoliday(ctx));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
 
   const add = () => {
     const r = run((s, c) => saveHoliday(s, h, c));
-    setError(r.ok ? null : r.error);
+    setError(r.ok ? null : r);
 
     if (r.ok) setH(newHoliday(ctx));
   };
 
   return (
     <form aria-label="Add a holiday" className="mt-3 flex flex-col gap-2.5 border-t border-line pt-3" onSubmit={(e) => { e.preventDefault(); add(); }}>
-      <FieldRow min={140}>
-        <Field label="Date"><TextInput type="date" value={h.date} onChange={(date) => setH({ ...h, date })} /></Field>
-        <Field label="Holiday"><TextInput placeholder="Bonifacio Day" value={h.name} onChange={(name) => setH({ ...h, name })} /></Field>
-        <Field label="Kind">
-          <SelectInput value={h.kind} onChange={(k) => setH({ ...h, kind: k === 'Special' ? 'Special' : 'Regular' })} options={HOLIDAY_KINDS.map((k) => ({ value: k, label: k === 'Regular' ? 'Regular holiday' : 'Special non-working day' }))} />
-        </Field>
-      </FieldRow>
+      <FieldMarks refusal={error} describedBy={said}>
+        <FieldRow min={140}>
+          <Field name="date" label="Date"><TextInput type="date" value={h.date} onChange={(date) => setH({ ...h, date })} /></Field>
+          <Field name="name" label="Holiday"><TextInput placeholder="Bonifacio Day" value={h.name} onChange={(name) => setH({ ...h, name })} /></Field>
+          <Field label="Kind">
+            <SelectInput value={h.kind} onChange={(k) => setH({ ...h, kind: k === 'Special' ? 'Special' : 'Regular' })} options={HOLIDAY_KINDS.map((k) => ({ value: k, label: k === 'Regular' ? 'Regular holiday' : 'Special non-working day' }))} />
+          </Field>
+        </FieldRow>
+      </FieldMarks>
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {error && <p role="alert" className="m-0 mr-auto text-[13px] text-bad">{error}</p>}
+        {error && <p id={said} role="alert" className="m-0 mr-auto text-[13px] text-bad">{error.error}</p>}
         <span className="mr-auto text-[13px] text-ink-2">{error ? '' : 'A regular holiday is paid when not worked; working a special day adds 30%, a regular one 100%.'}</span>
         <Button kind="primary" type="submit">Add holiday</Button>
       </div>

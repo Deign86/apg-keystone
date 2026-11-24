@@ -1,6 +1,6 @@
-import { Button, Field, Panel, ScreenHeader, TextInput } from '@keystone/ui';
-import { useState, type FormEvent } from 'react';
-import { roleLabel, sentenceOf, SERVICES, type Accounts, type Member } from '@keystone/core';
+import { Button, Field, FieldMarks, Panel, ScreenHeader, TextInput, type Refusal } from '@keystone/ui';
+import { useId, useState, type FormEvent } from 'react';
+import { fieldsOf, roleLabel, sentenceOf, SERVICES, type Accounts, type Member } from '@keystone/core';
 import { useKeystone, useModuleApp, type ModuleDef } from '@keystone/kit';
 import { checkName, MAX_NAME, nameChanged, NO_SIGN_IN, TAG, ID } from './rules';
 
@@ -11,7 +11,8 @@ function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
   const { run, ctx } = useKeystone();
   const app = useModuleApp();
   const [name, setName] = useState(who.name);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Refusal | null>(null);
+  const said = useId();
   const [busy, setBusy] = useState(false);
 
   const save = async (e: FormEvent) => {
@@ -27,7 +28,7 @@ function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
       run((s, c) => nameChanged(s, who.name, next, c));
       setName(next);
     } catch (err) {
-      setError(sentenceOf(err));
+      setError({ error: sentenceOf(err), fields: fieldsOf(err) });
     } finally {
       setBusy(false);
     }
@@ -38,13 +39,15 @@ function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
       <ScreenHeader eyebrow="Settings" title="Profile" line={LINE} />
       <Panel className="max-w-xl">
         <form className="flex flex-col gap-3.5" aria-label="Your profile" onSubmit={(e) => void save(e)}>
-          <Field label="Your name" hint={`Your full name, up to ${MAX_NAME} characters. Everyone signed in sees it.`}>
-            <TextInput capitalize autoComplete="name" value={name} onChange={setName} />
-          </Field>
+          <FieldMarks refusal={error} describedBy={said}>
+            <Field name="name" label="Your name" hint={`Your full name, up to ${MAX_NAME} characters. Everyone signed in sees it.`}>
+              <TextInput capitalize autoComplete="name" value={name} onChange={setName} />
+            </Field>
+          </FieldMarks>
           <p className="m-0 text-[13px] text-ink-2">Role: <span className="font-semibold text-ink">{roleLabel(who)}</span>. Only the CEO changes roles.</p>
           <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
             {error
-              ? <p role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error}</p>
+              ? <p id={said} role="alert" className="m-0 mr-auto max-w-[36ch] text-xs text-pretty text-bad">{error.error}</p>
               : <span className="mr-auto text-xs text-ink-2">Saved with your sign-in, on every computer and phone.</span>}
             <Button kind="primary" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save name'}</Button>
           </div>

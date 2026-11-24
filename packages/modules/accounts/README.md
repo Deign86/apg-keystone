@@ -10,7 +10,8 @@ rail, after Profile (where anyone signed in changes their own name) and before D
     and "(you)" beside the person signed in).
   - **The CEO** also gets **Make account**, a dialog with Name, Email and Password. The password is the one the
     person first signs in with: the CEO hands it over, and Keystone sends nothing. A refusal stays on the form with
-    its reason.
+    its reason, and marks the field it is about when it names one (`name`, `email`, `password`; Change password's
+    `current`, `next`, `again`).
   - **The CEO** gives a staff member what an installed connected system lets a member be given, from the same menu,
     and takes it back (`Connector.memberGrant`; today the attendance connector's, docs/adr/0030). It shows beside
     their role. A CEO needs none. The wording is the connector's; this module names no connected system.

@@ -194,8 +194,13 @@ describe('the mark on paper', () => {
 
     expect(MARKS).toMatchObject({ active: 'data-paper-active', drawing: 'data-pdf-drawing' });
     expect(screenOnly).not.toBeNull();
-    // An outline: nothing that changes the size or place of anything on the paper.
-    expect(screenOnly?.[1].match(/^\s*([\w-]+):/gm)?.map((p) => p.trim().slice(0, -1))).toEqual(['outline', 'outline-offset']);
+    // An outline, pulsing: nothing that changes the size or place of anything on the paper.
+    expect(screenOnly?.[1].match(/^\s*([\w-]+):/gm)?.map((p) => p.trim().slice(0, -1))).toEqual(['outline', 'outline-offset', 'animation']);
+    // The pulse moves only the outline, and stops for whoever asks for less motion.
+    const pulse = /@keyframes paper-mark-pulse\s*\{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
+
+    expect([...new Set(pulse.match(/^\s*([\w-]+):/gm)?.map((p) => p.trim().slice(0, -1)))]).toEqual(['outline-offset']);
+    expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{\s*\[data-paper-active\]\s*\{\s*animation: none;/);
     // The print stylesheet never names it.
     expect(css.slice(css.indexOf('@media print'))).not.toContain(MARKS.active);
   });

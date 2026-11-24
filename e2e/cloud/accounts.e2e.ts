@@ -49,6 +49,11 @@ test('the CEO makes a staff account, and that person signs in with it on another
   const dialog = await makeAccountFor(screen, { ...liza, password: 'short' });
 
   await expect(dialog.getByRole('alert')).toHaveText('The password needs at least 8 characters.');
+  // The field it is about has the focus and says it under itself too; the others are not marked. (A password field's
+  // attributes are not read here, so its mark shows as the sentence under it.)
+  await expect(dialog.getByLabel('Password')).toBeFocused();
+  await expect(dialog.getByText('The password needs at least 8 characters.')).toHaveCount(2);
+  await expect(dialog.getByRole('textbox', 'Email')).not.toHaveAttribute('aria-invalid', 'true');
   await dialog.getByRole('button', 'Cancel').tap();
   expect(await documentIds('members')).toHaveLength(2);
 
@@ -235,6 +240,20 @@ test('staff change their own password, checked against the current one, and sign
     await dialog.getByRole('button', 'Change password').tap();
   };
 
+  // A slip is caught on the form, and marks the field it is about until it is typed in again. (A password field's
+  // attributes are not read here, so its mark shows as the sentence under it as well as at the foot.)
+  const again = dialog.getByLabel('New password again');
+
+  await dialog.getByLabel('New password', { exact: true }).fill('anas-new-password');
+  await again.fill('anas-new-passwort');
+  await dialog.getByLabel('Current password').fill(hr.password);
+  await dialog.getByRole('button', 'Change password').tap();
+  await expect(dialog.getByRole('alert')).toHaveText('The new password and its repeat do not match.');
+  await expect(again).toBeFocused();
+  await expect(dialog.getByText('The new password and its repeat do not match.')).toHaveCount(2);
+  await again.fill('anas-new-password');
+  await expect(dialog.getByText('The new password and its repeat do not match.')).toHaveCount(1);
+
   // The current password is checked by the sign-in itself.
   await change(`${hr.password}-not-it`);
   await expect(dialog.getByRole('alert')).toHaveText('That is not your current password.');
@@ -271,7 +290,13 @@ test('staff change their own name on Profile, and every computer shows it', asyn
   const form = screen.getByRole('form', 'Your profile');
 
   await expect(form.getByRole('textbox', 'Your name')).toHaveValue('Ana Cruz');
+  // Saving the name she has is refused: the field is marked and has the focus, and typing in it clears the mark.
+  await form.getByRole('button', 'Save name').tap();
+  await expect(form.getByRole('alert')).toHaveText('That is already your name.');
+  await expect(form.getByRole('textbox', 'Your name')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Your name')).toBeFocused();
   await form.getByRole('textbox', 'Your name').fill('Ana Cruz-Reyes');
+  await expect(form.getByRole('textbox', 'Your name')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Save name').tap();
 
   await expect(screen.getByRole('dialog', 'Keystone shows you as Ana Cruz-Reyes from now on.')).toBeVisible();
