@@ -3,7 +3,7 @@ import { expect } from 'e2e';
 import { askedGitHub, ATTENDANCE, fakeDesktop, ID_MAKER, installedAt, LATEST } from '../support/fake-desktop';
 
 // Attendance Tracker (packages/connectors/attendance): a shortcut on Home, the attendance app's logo, that opens the
-// app. The browser preview cannot start another app, so it says so. Finding and starting the app on the desktop are
+// app. The browser preview cannot start another app, so it opens its download page. Finding and starting the app on the desktop are
 // tested in the package's own tests.
 // On Keystone's desktop app (a fake Windows computer, e2e/support/fake-desktop.ts), Home also says when a newer version
 // of the app is out, under its shortcut (docs/adr/0035).
@@ -22,11 +22,21 @@ test('is the attendance app’s logo on Home', async ({ app, screen, browser }) 
   expect(width).toBeGreaterThan(0);
 });
 
-test('opening it in the browser preview asks for the desktop app', async ({ app, screen }) => {
+test('opening it in the browser preview opens its download page, to install it on a computer', async ({ app, screen, browser }) => {
   await app.open('/');
+  // Write what would open in a new tab onto the page, where the locator below waits for it.
+  await browser.evaluate(() => {
+    window.open = (url) => {
+      document.body.append(Object.assign(document.createElement('output'), { textContent: `Opened ${String(url)}` }));
+
+      return null;
+    };
+  });
   await screen.getByRole('button', 'Open Attendance Tracker').tap();
 
-  await expect(screen.getByRole('region', 'Notifications').getByText('Open Keystone’s desktop app to open Alpha Premier Attendance.')).toBeVisible();
+  await expect(screen.getByText('Opened https://github.com/Deign86/alpha-premier-attendance/releases/latest')).toBeVisible();
+
+  await expect(screen.getByRole('region', 'Notifications').getByText('Alpha Premier Attendance runs on a computer, so its download page is open. Install it there, or open it from Keystone’s desktop app.')).toBeVisible();
 });
 
 test('on the desktop, an older attendance app is offered its newer version under its shortcut, and the installer opens', async ({ app, screen, browser }) => {

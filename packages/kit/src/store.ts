@@ -42,7 +42,7 @@ export class KeystoneStore {
   lastChange: 'here' | 'elsewhere' = 'here';
   /**
    * Whether others' saves arrive as they are made. False while the platform's live updates have stopped and it reads the
-   * records again from time to time instead (docs/adr/0047); the rail says so.
+   * records again from time to time instead (docs/adr/0049); the rail says so.
    */
   live = true;
   /** Who hears the Activity Log lines of the changes that arrived from elsewhere (onArrival). */

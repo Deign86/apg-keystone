@@ -4,7 +4,7 @@ import type { Page } from 'playwright-core';
 import { anotherComputer } from './another-computer';
 import { emptyCloud, expectHome, makeAccount, record, recordsInCloud, saveElsewhere, setMember, signIn } from './emulators';
 
-// Live updates (apps/keystone/src/platform/firestore.ts, cloud.ts; docs/adr/0047): two people, each with Keystone open on
+// Live updates (apps/keystone/src/platform/firestore.ts, cloud.ts; docs/adr/0049): two people, each with Keystone open on
 // their own computer, signed in to the same records. What one saves appears on the other's screen without reopening
 // Keystone, with a quiet word naming who saved it and a mark on the screen it changed; a record the other has open in a
 // form is not changed under them, the form says so; and a computer that was offline catches up when it is back. The

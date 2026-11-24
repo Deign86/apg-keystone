@@ -19,7 +19,7 @@ export interface RemoteDocs {
    */
   write(change: DocumentChanges): Promise<void>;
   /**
-   * Listens to every collection the records are read from (docs/adr/0047). Absent where the documents cannot be
+   * Listens to every collection the records are read from (docs/adr/0049). Absent where the documents cannot be
    * watched.
    */
   watch?(listener: RemoteListener): RemoteWatch;
@@ -72,7 +72,7 @@ export const NOT_READ = 'Keystone has not read the records from the cloud, so it
  * read, copied in or written beside it. Photos, files and the system stay with the local platform. `layout` names the
  * lists modules keep as documents of their own (docs/adr/0011); `who` is the member signed in, which the rules see as
  * `ctx.who`. `kept` is where this computer notes the member's saves the cloud has not confirmed yet (docs/adr/0013).
- * `wake` says when the person may be back, for live updates that have stopped (docs/adr/0047).
+ * `wake` says when the person may be back, for live updates that have stopped (docs/adr/0049).
  */
 export function cloudPlatform(
   local: Platform, remote: RemoteDocs, layout: DocumentLayout = {}, who?: Member,
@@ -137,7 +137,7 @@ export function cloudPlatform(
   }
 
   /**
-   * Live updates (docs/adr/0047): each time some of the cloud's collections change, they replace what this computer
+   * Live updates (docs/adr/0049): each time some of the cloud's collections change, they replace what this computer
    * knew of them, are what the next save is measured from, and the store gets the whole state. Only once the records
    * have been read, so nothing is saved over them before. Nothing here writes: what arrives is already saved.
    *

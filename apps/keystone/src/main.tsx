@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { sentenceOf, SERVICES } from '@keystone/core';
 import { App, buildRegistry, documentLayout, KeystoneStore, memberGrants, type Platform } from '@keystone/kit';
+import { watchTouch } from '@keystone/ui';
 import { connectors } from './connectors';
 import { SignIn, StartFailed } from './Gate';
 import { shippedModules } from './modules';
@@ -12,6 +13,8 @@ import './styles.css';
 
 // The composition root: with modules.ts and connectors.ts, the only place that names every part.
 async function start() {
+  // A phone or tablet gets controls a finger can hit, the sign-in screen too.
+  watchTouch();
   const root = createRoot(document.getElementById('root')!);
   // A screen not released yet says "Coming soon" outside a beta build (docs/adr/0017).
   const registry = buildRegistry(shippedModules(isBeta(import.meta.env)), connectors);

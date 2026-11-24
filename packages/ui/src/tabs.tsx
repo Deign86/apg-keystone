@@ -34,18 +34,21 @@ export function Tabs<T extends string>({ label, value, onChange, tabs, className
     const tabs = list.current;
 
     if (tabs && tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block: 'start' });
+    // On a phone the row of tabs scrolls sideways: the one shown is brought into it.
+    tabs?.querySelector<HTMLElement>('[data-active]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }, [value]);
 
   return (
     // SAFETY: every tab's value is one of `tabs`' values, all of type T, so the value a tab hands back is a T.
     <BaseTabs.Root value={value} onValueChange={(v) => onChange(v as T)} className={className}>
-      <BaseTabs.List ref={list} aria-label={label} className="mb-4 flex scroll-mt-4 gap-1 border-b border-line">
+      {/* Narrower than its tabs (a phone), the row scrolls sideways; the 1px line is drawn inside it, so it scrolls along. */}
+      <BaseTabs.List ref={list} aria-label={label} className="mb-4 flex scroll-mt-4 gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-line)] [scrollbar-width:none]">
         {tabs.map((t) => (
           <BaseTabs.Tab
             key={t.value}
             value={t.value}
             className={cn(
-              'relative -mb-px flex h-10 items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-semibold whitespace-nowrap text-ink-2',
+              'relative flex h-10 shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-[13px] font-semibold whitespace-nowrap text-ink-2',
               'transition-colors duration-150 ease-out hover:text-ink',
               'data-[active]:border-gold data-[active]:text-ink',
             )}

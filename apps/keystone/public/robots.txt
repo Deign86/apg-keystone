@@ -1,0 +1,3 @@
+# Keystone is APG's internal admin app: nothing here is for search engines.
+User-agent: *
+Disallow: /

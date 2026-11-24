@@ -2,7 +2,7 @@ import { count } from './format';
 import type { LogEntry } from './schema';
 import type { Member } from './state';
 
-// Live updates (docs/adr/0047): what others save reaches every Keystone that is open, as it is saved, and the person is
+// Live updates (docs/adr/0049): what others save reaches every Keystone that is open, as it is saved, and the person is
 // told what arrived. What they are told is the Activity Log line of each change, the sentence the rule that made it
 // wrote, with who made it.
 

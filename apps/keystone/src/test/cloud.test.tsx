@@ -388,7 +388,7 @@ describe('a save the cloud has not confirmed (docs/adr/0013)', () => {
   });
 });
 
-describe('live updates (docs/adr/0047)', () => {
+describe('live updates (docs/adr/0049)', () => {
   /**
    * The memory cloud with listeners: `send` stands in for Firestore sending some collections as they are now, `live` for
    * a listener stopping or coming back. `retries` counts asks to listen again; `wake` stands in for the person coming back.

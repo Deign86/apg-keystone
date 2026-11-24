@@ -11,6 +11,8 @@ every platform's icons:
     shared/brand/icon-macos.png        the same tile on Apple's 1024 grid (824 px squircle, 100 px margin): macOS
     shared/brand/icon-ios.png          the mark on a full-bleed black square, no hairline: iOS rounds its own corners
     shared/brand/icon-android-fg.png   the mark alone in the adaptive-icon safe zone: Android, on the tile colour
+    shared/brand/icon-maskable.png     the mark inside the web's maskable safe zone, on a full-bleed black square: the
+                                       web app's icon on Android, which cuts it to any shape
 """
 
 import sys
@@ -107,6 +109,16 @@ def safe_zone(mark: Image.Image) -> Image.Image:
     return canvas
 
 
+def maskable(mark: Image.Image) -> Image.Image:
+    """The mark on a full-bleed square of the tile colour, small enough to stay inside the maskable safe zone (a circle
+    of 40% radius at the centre), since the launcher may cut the icon to a circle, a squircle or a teardrop."""
+    canvas = Image.new('RGBA', (SIZE, SIZE), TILE + (255,))
+    placed = fit(mark, 520)
+    canvas.alpha_composite(placed, ((SIZE - placed.width) // 2, (SIZE - placed.height) // 2))
+
+    return canvas
+
+
 def main() -> None:
     artwork = Image.open(SOURCE)
     mark = mark_from(artwork)
@@ -118,9 +130,10 @@ def main() -> None:
     tile(inset=100, radius=185, mark=mark, mark_height=560).save(BRAND / 'icon-macos.png', optimize=True)
     full_bleed(mark).convert('RGB').save(BRAND / 'icon-ios.png', optimize=True)
     safe_zone(mark).save(BRAND / 'icon-android-fg.png', optimize=True)
+    maskable(mark).convert('RGB').save(BRAND / 'icon-maskable.png', optimize=True)
 
     print(f'From {SOURCE.relative_to(ROOT) if SOURCE.is_relative_to(ROOT) else SOURCE} ({artwork.width}×{artwork.height}):')
-    for name in ('keystone-mark.png', 'keystone-mark-ui.png', 'icon-app.png', 'icon-macos.png', 'icon-ios.png', 'icon-android-fg.png'):
+    for name in ('keystone-mark.png', 'keystone-mark-ui.png', 'icon-app.png', 'icon-macos.png', 'icon-ios.png', 'icon-android-fg.png', 'icon-maskable.png'):
         print(f'  shared/brand/{name}')
 
 

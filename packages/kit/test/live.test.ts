@@ -4,7 +4,7 @@ import { sampleState } from '@keystone/core/sample';
 import { KeystoneStore } from '../src/store';
 import { memoryPlatform } from '../testing';
 
-// Live updates (Platform.watchState, docs/adr/0047): what others save shows here as it is saved, a change made here and
+// Live updates (Platform.watchState, docs/adr/0049): what others save shows here as it is saved, a change made here and
 // not saved yet is kept on top of it, nothing that arrives is ever written back, and the lines others' saves add to the
 // Activity Log are told.
 

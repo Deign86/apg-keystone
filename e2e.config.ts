@@ -18,7 +18,8 @@ import { useUtf8Locale } from './e2e/support/locale';
 // cloud build (apps/keystone/.env.local naming a Firebase project), which opens on the sign-in
 // screen. The VITE_FIREBASE_* variables are blanked for the same reason, so .env.local is ignored.
 // The cloud build has its own suite: e2e.cloud.config.ts. So does a release that is not a beta, where only the
-// released screens open: e2e.stable.config.ts. The dev server here is a beta and opens every screen.
+// released screens open: e2e.stable.config.ts. So do phones and tablets: e2e.mobile.config.ts. The dev server here is a
+// beta and opens every screen.
 //
 // E2E_CDP_ENDPOINT (for example http://127.0.0.1:9222) attaches to a Chromium that is
 // already running instead of launching one: useful where the browser download is blocked.
@@ -29,7 +30,7 @@ const connect = cdpEndpoint ? { cdpEndpoint: () => cdpEndpoint } : undefined;
 useUtf8Locale();
 
 export default {
-  tests: ['e2e/**/*.e2e.ts', '!e2e/cloud/**', '!e2e/stable/**'],
+  tests: ['e2e/**/*.e2e.ts', '!e2e/cloud/**', '!e2e/stable/**', '!e2e/mobile/**'],
   targets: [
     {
       engine: web({

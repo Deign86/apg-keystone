@@ -10,7 +10,7 @@ import { Shell } from '../src/Shell';
 import { KeystoneStore } from '../src/store';
 import { memoryPlatform } from './fakes';
 
-// What the person is shown of others' saves (docs/adr/0047): a quiet word of each change as it arrives, a mark on the
+// What the person is shown of others' saves (docs/adr/0049): a quiet word of each change as it arrives, a mark on the
 // screens it changed until they are opened, the rail saying when live updates have stopped, and a form saying when the
 // record it holds was changed by someone else.
 

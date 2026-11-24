@@ -83,7 +83,7 @@ Keystone reads nothing from these systems and keeps no password for any of them.
   one document per record (`toDocuments` in core), behind an email and password sign-in. `platform/cloud.ts` wraps the
   local platform: it moves a computer's records in once, writes only the documents a save changed, and keeps a copy
   in `state.json`. Firebase itself is only in `platform/firestore.ts`; setup is in `docs/FIREBASE.md`.
-- **Live updates (docs/adr/0047):** every collection the records are read from is listened to, with the read's own
+- **Live updates (docs/adr/0049):** every collection the records are read from is listened to, with the read's own
   filter, and what changes is put over what this computer knew (platform/cloud.ts, irestore.ts); the store shows it
   without saving it back, and keeps a change of its own not saved yet on top. A listener that stops listens again by
   itself; meanwhile the records are read again every 2 minutes and when Keystone comes back into focus or online, and the

@@ -157,7 +157,7 @@ export interface LogEntry {
   when: string;
   mod: ModuleTag;
   text: string;
-  /** Who saved it, when someone was signed in: their name (docs/adr/0047). Older entries, and a computer's own records, name nobody. */
+  /** Who saved it, when someone was signed in: their name (docs/adr/0049). Older entries, and a computer's own records, name nobody. */
   by?: string;
 }
 

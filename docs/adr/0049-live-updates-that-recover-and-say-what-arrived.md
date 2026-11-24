@@ -1,4 +1,4 @@
-# 0047. Live updates that recover by themselves, and say what arrived
+# 0049. Live updates that recover by themselves, and say what arrived
 
 Status: Accepted · Date: 2026-11-25
 

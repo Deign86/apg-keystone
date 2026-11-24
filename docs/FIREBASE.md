@@ -1,7 +1,8 @@
 # Keystone on Firebase
 
 How to set up the Firebase project that holds Keystone's records (docs/adr/0009). A build without the
-`VITE_FIREBASE_*` variables ignores all of this and keeps its records on the computer.
+`VITE_FIREBASE_*` variables ignores all of this and keeps its records on the computer. The web app on Vercel uses the
+same project: docs/WEB.md says what to set there.
 
 ## With Claude Code and the Firebase MCP server
 

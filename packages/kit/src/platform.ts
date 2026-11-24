@@ -26,7 +26,7 @@ export interface Platform extends SystemBridge {
    * Live updates, where the saved state is shared (the records in the cloud): calls `onChange` with the whole saved
    * state as JSON text each time it changes, by anyone, and returns the way to stop. `onLive` hears whether others'
    * saves arrive as they are made (true) or live updates have stopped and the state is only read again from time to
-   * time (false), each time that changes (docs/adr/0047). Absent where nobody else saves.
+   * time (false), each time that changes (docs/adr/0049). Absent where nobody else saves.
    */
   watchState?(onChange: (json: string) => void, onLive?: (live: boolean) => void): () => void;
 
@@ -45,8 +45,28 @@ export interface Platform extends SystemBridge {
    */
   printPdf?(): Promise<Uint8Array>;
 
-  /** Keystone's own updates, from its signed GitHub releases. The desktop app only; absent in the browser. */
+  /**
+   * Keystone's own updates: from its signed GitHub releases in the desktop app; in the web app, the newer build its
+   * service worker has fetched (docs/adr/0047). Absent where neither applies (the dev server).
+   */
   readonly updater?: AppUpdater;
+  /** Adding the web app to this device's home screen (docs/adr/0047). The web app only; absent on the desktop. */
+  readonly installer?: AppInstaller;
+}
+
+/**
+ * How Keystone can be installed now: by the browser's own dialog (`prompt`, Chrome and Edge), or by hand from Safari's
+ * Share menu (`share-menu`, an iPhone or iPad).
+ */
+export type InstallWay = 'prompt' | 'share-menu';
+
+export interface AppInstaller {
+  /** How Keystone can be installed now, or null when it is installed already or this browser offers no way. */
+  way(): InstallWay | null;
+  /** Calls `onChange` whenever `way` changes (the browser offers its dialog, Keystone was installed). Returns the way to stop. */
+  watch(onChange: () => void): () => void;
+  /** Opens the browser's install dialog (`way` is `prompt`). True when the person installed Keystone. */
+  prompt(): Promise<boolean>;
 }
 
 export interface AppSession {

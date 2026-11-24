@@ -201,7 +201,7 @@ export function openFirebase(
     },
 
     /**
-     * Every collection the records are read from, watched on its own (docs/adr/0047), with the same filter its read has,
+     * Every collection the records are read from, watched on its own (docs/adr/0049), with the same filter its read has,
      * so a member is sent only what firestore.rules let them read. Each change (this computer's saves straight away,
      * from its own copy; others' as the cloud sends them) hands over the collections that changed, a moment after the
      * last of a burst, so one save across several lists arrives as one. A collection whose listener stops (refused,

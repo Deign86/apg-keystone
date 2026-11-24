@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { arrivalNotices, changedElsewhere, emptyState, logged, newEntries, type Ctx, type LogEntry, type Member } from '../src';
 
-// Live updates (docs/adr/0047): which Activity Log lines arrived from someone else's save, and what the person is told.
+// Live updates (docs/adr/0049): which Activity Log lines arrived from someone else's save, and what the person is told.
 
 const ana: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
 const mark: Member = { uid: 'ceo-1', name: 'Mark Reyes', role: 'owner' };

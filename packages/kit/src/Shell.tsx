@@ -5,6 +5,7 @@ import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type ErrorInfo, type ReactNode } from 'react';
 import { useKeystone, useRuntime } from './context';
 import type { ModuleDef } from './registry';
+import { InstallNotice } from './InstallNotice';
 import { IdleSignOut, SignOutButton } from './Session';
 import { UpdateNotice } from './UpdateNotice';
 
@@ -63,7 +64,7 @@ function RailFoot() {
   // Read as the store changes them: a save fails, or the first save replaces damaged records, a moment after any render.
   const saveError = useSyncExternalStore(store.subscribe, () => store.saveError);
   const loadError = useSyncExternalStore(store.subscribe, () => store.loadError);
-  // Whether others' saves arrive as they are made, where the records are shared (docs/adr/0047).
+  // Whether others' saves arrive as they are made, where the records are shared (docs/adr/0049).
   const live = useSyncExternalStore(store.subscribe, () => store.live);
   const mod = shortcutKey();
   // As the rules see them: under a name changed since signing in, too.
@@ -72,6 +73,7 @@ function RailFoot() {
   return (
     <div className="mt-auto text-[11.5px] leading-relaxed text-ink-2">
       <UpdateNotice />
+      <InstallNotice />
       <p className="m-0 flex items-center gap-1.5 font-semibold text-ink">
         <span aria-hidden="true" className={cn('size-[7px] rounded-full', live ? 'bg-good' : 'bg-warn')} />
         {who ? `${who.name} · ${roleLabel(who)}` : 'Administrator access'}
@@ -88,7 +90,7 @@ function RailFoot() {
 }
 
 /**
- * What arrives from others' saves (docs/adr/0047): each change told quietly as it arrives, in its Activity Log line, and
+ * What arrives from others' saves (docs/adr/0049): each change told quietly as it arrives, in its Activity Log line, and
  * the screens it changed (by their log tags) marked in the rail until they are opened. Returns those screens' ids.
  */
 function useArrivals(): ReadonlySet<string> {
@@ -224,12 +226,13 @@ export function Shell() {
   }, [route]);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
+    // Installed on a phone or tablet, Keystone runs under the status bar and round the notch: it keeps clear of them.
+    <div className="flex h-dvh flex-col overflow-hidden pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] md:flex-row">
       <TopBar fresh={fresh} />
       <Rail fresh={fresh} />
       <main id="main" className="min-w-0 flex-1 overflow-y-auto">
         {active ? (
-          <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-4 pt-5 pb-14 md:px-8 md:pt-7 motion-safe:animate-[fade-in_180ms_ease-out]">
+          <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-4 pt-5 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-7 motion-safe:animate-[fade-in_180ms_ease-out]">
             <ModuleBoundary module={active}>
               <active.Screen />
             </ModuleBoundary>

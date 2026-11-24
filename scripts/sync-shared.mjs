@@ -12,6 +12,7 @@
 //          packages/ui/src/assets/             fonts, the APG logo (its versions for paper, the Group of Companies one
 //                                              among them) and Keystone's mark
 //          packages/core/sample/sample.json    the tests' sample records (@keystone/core/sample), never shipped
+//          apps/keystone/public/manifest.webmanifest  the web app's manifest, in the tokens' colours (docs/adr/0047)
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -98,6 +99,33 @@ emit('packages/ui/src/assets/logo-paper-companies.png', readFileSync(join(root, 
 emit('packages/ui/src/assets/keystone-mark.png', readFileSync(join(root, 'shared/brand/keystone-mark-ui.png')));
 
 emit('packages/core/sample/sample.json', readFileSync(join(root, 'shared/data/sample.json')));
+
+// The web app's manifest (docs/adr/0047): what a phone or tablet shows when Keystone is installed, its splash in
+// APG's black. The icons are made by `npm run icons`, the maskable ones inside Android's safe zone.
+const about = "Alpha Premier Group's admin app: check vouchers, requests for funds, billing, statements of account, the directory, timekeeping and payroll.";
+
+const manifest = {
+  id: '/',
+  name: 'Alpha Premier Keystone',
+  short_name: 'Keystone',
+  description: about,
+  lang: 'en',
+  dir: 'ltr',
+  start_url: '/',
+  scope: '/',
+  display: 'standalone',
+  orientation: 'any',
+  theme_color: tokens.color.bg,
+  background_color: tokens.color.bg,
+  categories: ['business', 'finance', 'productivity'],
+  icons: [
+    ...[192, 512].map((n) => ({ src: `/icon-${n}.png`, sizes: `${n}x${n}`, type: 'image/png', purpose: 'any' })),
+    ...[192, 512].map((n) => ({ src: `/icon-maskable-${n}.png`, sizes: `${n}x${n}`, type: 'image/png', purpose: 'maskable' })),
+  ],
+};
+
+emit('apps/keystone/public/manifest.webmanifest', `${JSON.stringify(manifest, null, 2)}
+`);
 
 if (check && stale.length) {
   console.error('Generated files are out of date. Run `npm run sync` and commit:\n  ' + stale.join('\n  '));

@@ -232,7 +232,7 @@ export interface HeldRecord {
 }
 
 /**
- * Whether someone else changed the saved record a form holds since the form opened it (docs/adr/0047): core's sentence
+ * Whether someone else changed the saved record a form holds since the form opened it (docs/adr/0049): core's sentence
  * saying so, or null. The form keeps what it holds, so nothing changes under the person typing; they are told instead.
  * A change saved here (the form's own save) clears it. Outside the app, as a form in a test, never anything.
  */
