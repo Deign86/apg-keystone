@@ -45,7 +45,7 @@ drafted.
   `app.setDraft('<id>.draft', …)`.
 - **Refusals name their fields:** a rule throws `KeystoneError('Enter the client.', 'client')` with the draft keys it
   is about; the screen keeps the whole refusal (`setError(r.ok ? null : r)`) and gives each `Field` its `name`, so the
-  form marks and focuses it (docs/adr/0042). Test the names with `refusalOf` from `@keystone/kit/testing`.
+  form marks and focuses it (docs/adr/0044). Test the names with `refusalOf` from `@keystone/kit/testing`.
 - **Removing a module:** delete its line in `apps/keystone/src/modules.ts` and its entry in
   `apps/keystone/package.json`. `apps/keystone/src/test/removal.test.tsx` covers every module listed there.
 

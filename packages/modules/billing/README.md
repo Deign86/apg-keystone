@@ -23,7 +23,7 @@
 - `src/rules.ts`: its rules (totals with VAT and EWT, numbering, the client typed or from the directory,
   `recordPayment`, overdue on open, the account the payment instructions name) and what it contributes. A refused save
   names the fields it is about (`client`, `due`, each charge's `lines.<i>.qty`…), which the form marks and focuses
-  (docs/adr/0042). Tested in `test/rules.test.ts`.
+  (docs/adr/0044). Tested in `test/rules.test.ts`.
 - **EWT** is 2% (services) or 5% (rentals and professional fees), picked under **EWT rate** once withholding is ticked
   and kept on the statement as `ewtRate`; a new statement starts at 2%. A statement saved before it kept its rate
   withheld 5% and still does, so its amount due never changes.

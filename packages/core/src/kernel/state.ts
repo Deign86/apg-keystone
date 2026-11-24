@@ -7,7 +7,7 @@ import type { Company, CompanyDetails, JsonValue, ModuleTag, TerminalState } fro
 // knows about vouchers, statements or IDs.
 
 /**
- * A rule's refusal: the sentence to show, and the fields it is about, if any (docs/adr/0042). A field is named as the
+ * A rule's refusal: the sentence to show, and the fields it is about, if any (docs/adr/0044). A field is named as the
  * draft names it (`client`, `sqm`), a line's cell as `lines.<index>.<key>` (`lines.0.amount`), so the screen can mark
  * the field that is wrong or missing. A refusal about no one field (a number already used, a record gone) names none.
  */

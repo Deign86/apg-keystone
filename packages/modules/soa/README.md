@@ -18,7 +18,7 @@
      the month's last day), for that month's rent in its lease year. Check numbers count on from the first.
 - `src/rules.ts`: the computation, numbering (`SOA-2026-001`, running within the year), saving, and the saved data
   under `state.ext.soa`. A refused save names the fields it is about (`client`, `sqm`, `depositMonths`…), which the
-  form marks and focuses (docs/adr/0042). Tested in `test/rules.test.ts`.
+  form marks and focuses (docs/adr/0044). Tested in `test/rules.test.ts`.
 
 ## Contributes
 - **Home:** a tile, with the number saved.

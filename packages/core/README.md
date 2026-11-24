@@ -26,7 +26,7 @@ screen.
 
 - **Shape of a rule:** `(state, …, ctx) => { state, record, message }`. To refuse, throw `KeystoneError('The sentence to
   show.')`, naming the draft fields it is about after the sentence (`KeystoneError('Enter the client.', 'client')`,
-  a line's cell as `lines.0.amount`), so the form can mark them (docs/adr/0042). Never mutate the state you were given.
+  a line's cell as `lines.0.amount`), so the form can mark them (docs/adr/0044). Never mutate the state you were given.
 - **Time:** comes from `ctx.now()`, never `new Date()`, so tests can pin it (they use 30 Oct 2026, 09:05, Manila).
 - **What belongs here:** only what two or more parts need. Something one module needs belongs in that module.
 - **A new service:** add its name to `SERVICES`, its types to `services.ts` and a line to `ServiceContracts` (name →

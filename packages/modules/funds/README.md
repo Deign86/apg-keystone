@@ -26,7 +26,7 @@
     transfer makes its fund transfer request; approving a check drafts its voucher;
   - the log lines, which name a request's number and who filed or decided it, never its purpose, amount or account;
   - a refused request names the fields it is about (`purpose`, `lines.1.desc`, `account.number`, `by`…), which the
-    form marks and focuses (docs/adr/0042).
+    form marks and focuses (docs/adr/0044).
 - The order: For Approval, then Approved, Declined or Withdrawn.
 
 ## Contributes
