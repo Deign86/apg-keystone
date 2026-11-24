@@ -25,12 +25,17 @@ percent-encoding = "2"
 # Fetching the other APG apps' installers (docs/adr/0029). Both are already in the tree through the updater plugin.
 reqwest = { version = "0.13", default-features = false, features = ["rustls", "json"] }
 sha2 = "0.10"
+# Reading the PDF WebView2 prints (docs/adr/0041), which DevTools hands back as base64.
+base64 = "0.21"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 plist = "1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.55"
+# Asking WebView2 to print the page to a PDF (docs/adr/0041): the versions Tauri's own WebView2 binding uses.
+webview2-com = "0.39"
+windows = "0.62"
 
 [profile.release]
 codegen-units = 1

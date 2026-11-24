@@ -13,6 +13,8 @@ export interface Files {
   save: Platform['saveFile'];
   /** Asks for one file and reads it. Null if cancelled. */
   open: Platform['openFile'];
+  /** Prints the page to a PDF, as Print would (`Platform.printPdf`). Absent where the platform cannot. */
+  printPdf?: () => Promise<Uint8Array>;
 }
 
 /** The card photos kept beside the records. Read one with `usePhoto`. */
@@ -47,9 +49,10 @@ interface KeystoneContextValue {
 
 function capabilitiesOf(store: KeystoneStore): Capabilities {
   const p = store.platform;
+  const printPdf = p.printPdf?.bind(p);
 
   return {
-    files: { save: (name, bytes, filters) => p.saveFile(name, bytes, filters), open: (filters) => p.openFile(filters) },
+    files: { save: (name, bytes, filters) => p.saveFile(name, bytes, filters), open: (filters) => p.openFile(filters), ...(printPdf && { printPdf }) },
     photos: { put: (name, bytes) => p.putPhoto(name, bytes) },
     backup: { restore: (next) => store.replaceAll(next) },
     kind: p.kind,

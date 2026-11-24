@@ -98,7 +98,12 @@ export function voucherColumnLines(browser: Browser) {
 }
 
 /**
- * The most a saved PDF may weigh. A paper drawn at print resolution and kept compressed is a few hundred kilobytes;
- * stored as raw pixels it ran to tens of megabytes (packages/kit/src/output.ts › savePdf).
+ * The most a page of a saved PDF may weigh. In the browser a paper is drawn at print resolution and kept compressed, a
+ * few hundred kilobytes a page; stored as raw pixels it ran to tens of megabytes (packages/kit/src/output.ts).
  */
-export const PDF_MOST_BYTES = 1_000_000;
+export const PDF_MOST_BYTES_A_PAGE = 700_000;
+
+/** The pages of a saved PDF, each as its width and height in points. */
+export function pdfPages(pdf: Buffer) {
+  return [...pdf.toString('latin1').matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map(([, w, h]) => ({ w: Number(w), h: Number(h) }));
+}

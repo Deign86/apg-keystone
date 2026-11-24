@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
 import { asMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
-import { PDF_MOST_BYTES } from '../support/paper';
+import { PDF_MOST_BYTES_A_PAGE } from '../support/paper';
 
 // Requests for funds in the cloud (docs/adr/0011, 0021): staff ask, each on their own computer and seeing only their
 // own requests; the CEO decides them from a phone. Approving a check drafts the check voucher through Check Vouchers;
@@ -192,8 +192,8 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   const bytes = await readFile(pdf.absolutePath);
 
   expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
-  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
-  expect(bytes.length).toBeLessThan(PDF_MOST_BYTES);
+  // Drawn at print resolution and compressed: a few hundred kilobytes a page, not the tens of megabytes of raw pixels.
+  expect(bytes.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE);
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
   expect(await record('cv', '888-001')).toBeNull();
   await app.open('/');

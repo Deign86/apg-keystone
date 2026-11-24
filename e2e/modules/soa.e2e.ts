@@ -1,5 +1,7 @@
+import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
+import { PDF_MOST_BYTES_A_PAGE, pdfPages } from '../support/paper';
 
 // Statements of Account (packages/modules/soa). The tests' sample records keep none, so a new one is SOA-2026-001. The
 // lease filled in below is the company's form: 354.4 sqm at ₱600 a month, two months' deposit and two months' advance,
@@ -89,6 +91,35 @@ test('saves the statement to the register and the Activity Log, and opens it aga
   await app.open('/#activity');
   await screen.getByRole('group', 'Module').getByRole('button', 'Statements of Account').tap();
   await expect(screen.getByRole('region', 'Entries').getByText(/SOA-2026-001 for Northwind Retail Corp\., Unit 5, Ortigas Avenue, Pasig \(₱227,524\.80 a month, ₱667,689\.60 on signing\)/)).toBeVisible();
+});
+
+test('exports a long statement of account onto A4 pages, the paper at full width, not squeezed onto one', async ({ app, screen, browser }) => {
+  await app.open('/#soa');
+  const form = await fillLease(screen);
+
+  // Two years of checks: the paper runs to about twice an A4 page's height.
+  await form.getByRole('textbox', 'Number of checks').fill('24');
+  await expect(screen.getByRole('table', 'Postdated checks').getByRole('row')).toHaveCount(25);
+
+  // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited.
+  const file = await browser.waitForDownload(async () => {
+    await form.getByRole('button', 'Export PDF').tap();
+    await expect(screen.getByRole('dialog', 'Saved SOA-2026-001.pdf.')).toBeVisible({ timeout: 30_000 });
+  });
+
+  const pdf = await readFile(file.absolutePath);
+  const pages = pdfPages(pdf);
+
+  expect(file.suggestedFilename).toBe('SOA-2026-001.pdf');
+  // Two upright A4 pages, 595 × 842 pt, each a page of the statement.
+  expect(pages).toHaveLength(2);
+
+  for (const page of pages) {
+    expect(page.w).toBeCloseTo(595.28, 1);
+    expect(page.h).toBeCloseTo(841.89, 1);
+  }
+
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE * pages.length);
 });
 
 test('refuses a statement with no floor area, saying what is missing', async ({ app, screen }) => {

@@ -32,6 +32,8 @@ function computer(files: Map<string, string>, unreadable: string[] = [], blind =
         return isJsonObject(args) && Array.isArray(args.paths) ? args.paths.map(jsonText).join('/') : '';
       case 'cpu_arch':
         return 'aarch64';
+      case 'print_pdf':
+        return bytesOf('%PDF-1.7');
       case 'file_exists':
         if (blind) throw `Cannot look for ${path}: Permission denied (os error 13)`;
 
@@ -93,6 +95,22 @@ describe('the desktop platform reading the saved state', () => {
 
     expect(await desktopPlatform('macos').photoUrl('card.jpg')).toBeNull();
     expect(await desktopPlatform('macos').photoUrl('none.jpg')).toBeNull();
+  });
+});
+
+describe('the desktop platform printing a page to a PDF', () => {
+  it('asks the native side on Windows, where WebView2 prints the page with its text kept', async () => {
+    computer(new Map());
+    const pdf = await desktopPlatform('windows').printPdf?.();
+
+    expect(new TextDecoder().decode(pdf)).toBe('%PDF-1.7');
+    expect(asked).toContain('print_pdf');
+  });
+
+  it('cannot on a Mac, so Export PDF draws the paper there instead', () => {
+    computer(new Map());
+
+    expect(desktopPlatform('macos').printPdf).toBeUndefined();
   });
 });
 

@@ -51,6 +51,7 @@ Consequences**.
 | [0038](0038-one-letterhead-dated-invoice-numbers-penalty-and-signatures.md) | One letterhead on every paper, dated invoice numbers, a penalty line, and signatures that print themselves | Accepted |
 | [0039](0039-lines-on-a-paper-are-banded.md) | The lines on a paper are banded, white and gold | Accepted |
 | [0040](0040-statements-of-account-for-leases.md) | Statements of account for leases are a module of their own, upright on one A4 page | Accepted |
+| [0041](0041-export-pdf-is-the-print-with-its-text.md) | Export PDF is the print, with its text, on as many A4 pages as it takes | Accepted |
 
 Template:
 
