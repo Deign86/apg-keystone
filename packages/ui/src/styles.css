@@ -129,13 +129,32 @@
 }
 
 /* The part of a paper the field being typed in fills (kit's Workspace): a ring around it, as a focused control has, in
-   the papers' own gold (3:1 or more on white paper and on the dark ID card). An outline takes no room, so the paper's
-   layout never moves. On screen only: never printed, and not while Export PDF draws the paper. No transition: it
-   moves nothing. */
+   a blue the papers use nowhere else, so it stands out from their gold (4:1 on white paper, 4.7:1 on the dark ID card,
+   3.6:1 on a gold band). It pulses, the ring breathing out and back at the same width, so the eye finds it. An outline takes no room, and the pulse
+   moves only the outline, so the paper's layout never moves. On screen only: never printed, and not while Export PDF
+   draws the paper. With reduced motion, it stays still. */
+@keyframes paper-mark-pulse {
+  0%,
+  100% {
+    outline-offset: 2px;
+  }
+
+  50% {
+    outline-offset: 5px;
+  }
+}
+
 @media screen {
   [data-paper-active]:not([data-pdf-drawing] *) {
-    outline: 2px solid var(--color-paper-gold);
+    outline: 2px solid var(--color-paper-mark);
     outline-offset: 2px;
+    animation: paper-mark-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  [data-paper-active] {
+    animation: none;
   }
 }
 

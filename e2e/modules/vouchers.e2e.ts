@@ -905,8 +905,9 @@ test('marks on both copies where the field being typed in prints, on screen only
   await form.getByRole('textbox', "Preparer's position").fill('Accounting Staff');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
 
-  // The ring is drawn on screen only: it never prints, and Export PDF draws the paper without it.
-  expect(await paperMarkMedia(browser)).toEqual(['screen']);
+  // The ring is drawn on screen only (the mark itself, and its stillness for whoever asks for less motion): it never
+  // prints, and Export PDF draws the paper without it.
+  expect(await paperMarkMedia(browser)).toEqual(['screen', 'screen and (prefers-reduced-motion: reduce)']);
   expect(await markedPaperPartsDrawn(browser)).toEqual(['none', 'none']);
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
 

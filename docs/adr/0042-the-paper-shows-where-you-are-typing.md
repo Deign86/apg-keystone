@@ -20,8 +20,10 @@ the field, on every document screen, and the paper must print, export and lay ou
   `data-paper-active`; leaving the field, or focusing one that fills no part, clears it. Focus in a picker's list,
   which opens outside the form, keeps its field's part. The pinned preview scrolls at once (no motion) to bring the part
   to its middle; stacked or unpinned, nothing scrolls, so the field stays in view.
-- The stylesheet draws the mark (`packages/ui/src/styles.css`): a 2px ring in the papers' gold, 2px out, as a focused
-  control has. A shape, not only a colour; 3:1 or more on white paper and on the dark ID card. No glow: the house
+- The stylesheet draws the mark (`packages/ui/src/styles.css`): a 2px ring, 2px out, as a focused control has.
+  (Changed 2026-11-24, from the team: the ring is blue, `paperMark` #1d7cf2, a colour the papers use nowhere else, and
+  pulses, its outline breathing out to 5px and back, so it is noticed; with reduced motion it stays still. Only the
+  outline moves.) A shape, not only a colour; 3:1 or more on white paper and on the dark ID card. No glow: the house
   style keeps shadows for overlays. On screen only (`@media screen`), and left out while Export PDF draws the paper
   (`data-pdf-drawing`). An outline takes no room, so nothing on the paper moves.
 
