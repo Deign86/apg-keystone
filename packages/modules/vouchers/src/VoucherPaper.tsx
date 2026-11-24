@@ -1,9 +1,8 @@
 // The Alpha Premier Group of Companies logo made for white paper: GROUP OF COMPANIES under ALPHA PREMIER.
-import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, type ReactNode } from 'react';
-import { amountInWords, longDate, peso, toCentavos, type Company, type Voucher } from '@keystone/core';
+import { amountInWords, longDate, peso, signatureOf, toCentavos, type Company, type CompanyDetails, type Voucher } from '@keystone/core';
 import { caps, voucherTotal, type Payee } from './rules';
-import { Masthead, paperHeading as heading, paperLabel, paperLogo, TwoUp } from '@keystone/kit';
+import { Letterhead, paperHeading as heading, paperLabel, SignatureImage, TwoUp } from '@keystone/kit';
 
 // The company's Check Voucher, twice on one A4 sheet: once on each half, cut apart along the dashed line across the
 // middle. Ruled into boxes as the printed cash voucher is, out to near the paper's edges: who and where on the left, the
@@ -11,7 +10,7 @@ import { Masthead, paperHeading as heading, paperLabel, paperLogo, TwoUp } from 
 // each signature. Everything filled in is bold, so it reads at a glance.
 
 /** `payee` is who the voucher pays, as printed (payeeOf). */
-type Props = { voucher: Voucher; payee: Payee; company: Company };
+type Props = { voucher: Voucher; payee: Payee; company: Company & Pick<CompanyDetails, 'signatures'> };
 
 /** One labelled box in the ruled grid. */
 function Box({ label, children, className = '' }: { label: string; children?: ReactNode; className?: string }) {
@@ -33,16 +32,7 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
   return (
     <TwoUp ref={ref} label={`Check voucher ${v.no}`}>
-      {/* The Group of Companies logo, with the company's address right beside it; the logo names the company, so its
-          name and contact are left out. */}
-      <Masthead
-        title="Check Voucher"
-        no={`No. ${v.no}`}
-        mark={<>
-          <img src={companiesLogo} alt="Alpha Premier Group of Companies" className={paperLogo} />
-          {company.address && <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
-        </>}
-      />
+      <Letterhead company={company} title="Check Voucher" no={`No. ${v.no}`} />
 
       {/* One ruled form: a firm line between its parts, a light one between the boxes inside each part. No frame around
           it, so nothing is drawn along the paper's edges. */}
@@ -100,10 +90,12 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
         <div className="grid grid-cols-4 border-t border-paper-ink text-[11px]">
           {signatures.map(([position, who, role], i) => (
-            <div key={role} className={`flex min-h-20 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
+            <div key={role} className={`flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
               <p className={`m-0 ${paperLabel}`}>{role}</p>
               {/* Room to sign above the line; under it the signatory's name, then their position. */}
-              <div className="mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+              <div className="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
+                {/* Their signature over the line, when Company Details keeps one. */}
+                {who && signatureOf(company, who) && <SignatureImage center src={signatureOf(company, who) ?? ''} who={who} />}
                 <p className="m-0 min-h-4 font-bold">{who}</p>
                 <p className="m-0 min-h-4 font-semibold">{position}</p>
               </div>

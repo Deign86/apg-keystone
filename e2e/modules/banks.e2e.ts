@@ -71,7 +71,7 @@ test('adds an account, and a statement picks it under Pay into and prints it', a
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
-  const paper = screen.getByRole('article', 'Billing statement 010100-2026');
+  const paper = screen.getByRole('article', 'Billing statement 888-110226');
 
   // A new statement names the company account, so that is the one Pay into shows.
   await expect(form.getByRole('combobox', 'Pay into')).toHaveText('BPI · 4011 0258 68');

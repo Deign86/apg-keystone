@@ -10,11 +10,13 @@
   **Checked by** and **Approved by** as the last statement's (Company Details' before the first). Each signatory has a
   position under their name (**Preparer's position**, **Checker's position**, **Approver's position**), kept only when
   typed, printed under the name, and started from the last statement's.
-- `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under the check
-  voucher's masthead (the Group of Companies logo, the address beside it, the title, number and date): Bill to and
-  Attention, the invoice box (number, invoice and due dates, the late-payment penalty), Qty · Description · Unit price ·
-  Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%) and the total amount due, every line shown, a
-  dash where a tax does not apply. Then payment instructions, notes and who signs. It prints once, on a whole upright
+- `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under every paper's
+  letterhead (kit's `Letterhead`: the title across the top, the Group of Companies logo with the address beside it, the
+  number and date): Bill to and Attention, the invoice box (number, invoice and due dates), Qty · Description · Unit
+  price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%) and the total amount due, every line
+  shown, a dash where a tax does not apply. Then payment instructions, the **Penalty** line (the statement's own,
+  `penalty`, started from Company Details' penalty; one saved before it kept one prints Company Details'), notes and
+  who signs, each with the signature Company Details keeps for them (docs/adr/0038). It prints once, on a whole upright
   A4 page (the kit's `Sheet`), not twice on a sheet cut in two as the check voucher does.
 - `src/rules.ts`: its rules (totals with VAT and EWT, numbering, the client typed or from the directory,
   `recordPayment`, overdue on open, the account the payment instructions name) and what it contributes. Tested in
@@ -29,9 +31,10 @@
   Company Details' instructions name, else the first kept. Tested with and without the service in
   `test/pay-into.test.tsx`.
 
-**Invoice numbers** are a six-digit running number and the year, `010100-2026`. A new statement offers the next one
-(one past the highest in that format, across years) and keeps a number typed over it unless it is taken. Older
-`BS-2026-0087` numbers stay as they are and don't count. Older statements keep their billing period and reference;
+**Invoice numbers** are 888- and the statement's date as month, day and year: `888-112426`. A second statement that
+day is `888-112426-2`, then `-3` (`nextStatementNo`). A new statement's number follows its date as the date changes
+(`withStatementDate`); one typed over it is kept unless it is taken. Older `010100-2026` and `BS-2026-0087` numbers
+stay as they are (docs/adr/0038). Older statements keep their billing period and reference;
 neither is entered or printed any more.
 
 ## Contributes

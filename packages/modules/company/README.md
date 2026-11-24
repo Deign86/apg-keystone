@@ -12,7 +12,11 @@ What each new voucher, statement and ID starts from. The company itself, its nam
     details are one document, `keystone/apg/company/details`, that only a CEO writes. Where nobody signs in (the
     records on one computer), whoever uses it may.
 - `src/index.tsx`: the screen. One form in three parts: check vouchers (prepared, audited and approved by), billing
-  statements (payment instructions, closing note, terms, days to pay) and employee IDs (signatory, years valid).
+  statements (payment instructions, closing note, penalty, days to pay) and employee IDs (signatory, years valid).
+- `src/Signatures.tsx`: **Signatures** under the form (docs/adr/0038). The CEO picks whose signature it is and uploads
+  a scan or photo (scaled to fit 480 × 160, its paper made see-through) or draws it in a box; `setSignature` keeps it
+  in `state.company.signatures` by the name in capitals, and replaces or removes it, each a log line. Every voucher,
+  statement and request then prints it above the name of whoever signs. Saving the form keeps them.
 - The data itself is the kernel's: `state.company` (`CompanyDetails` in core), read everywhere with `companyOf`, which
   gives the built-in company and "" (or 0) for anything not filled in.
 

@@ -142,8 +142,29 @@ function companyDetails(raw: JsonObject): CompanyDetails {
     billingEmail: text('billingEmail'), preparedBy: text('preparedBy'), checkedBy: text('checkedBy'), approvedBy: text('approvedBy'),
     paymentInstructions: text('paymentInstructions'), billingNote: text('billingNote'), signatory: text('signatory'),
     billingTerms: text('billingTerms'), dueInDays: whole('dueInDays'), idValidYears: whole('idValidYears'),
+    ...signaturesOf(raw.signatures),
   };
 }
+
+/** Signatures read back: only images, under the names they were saved for. */
+function signaturesOf(raw: JsonValue | undefined): Pick<CompanyDetails, 'signatures'> {
+  if (raw === undefined || !isJsonObject(raw)) return {};
+
+  const kept = Object.entries(raw).flatMap(([name, value]) => {
+    const image = jsonText(value);
+
+    return image.startsWith('data:image/') ? [[signatureKey(name), image] as const] : [];
+  });
+
+  return kept.length ? { signatures: Object.fromEntries(kept) } : {};
+}
+
+/** How a signature is kept and found: the name in capitals with single spaces, so "A. Bautista" and "A.  BAUTISTA" are one. */
+export const signatureKey = (name: string) => name.trim().replace(/\s+/g, ' ').toUpperCase();
+
+/** The signature Company Details keeps for whoever is named, if any. */
+export const signatureOf = (company: Pick<CompanyDetails, 'signatures'>, name: string): string | undefined =>
+  (name.trim() ? company.signatures?.[signatureKey(name)] : undefined);
 
 /**
  * The company itself, built in (docs/adr/0023): every document, the rail and every new record print these, whatever
@@ -151,7 +172,7 @@ function companyDetails(raw: JsonObject): CompanyDetails {
  */
 export const COMPANY: Company = {
   name: 'ALPHA PREMIER GROUP OF COMPANIES OPC',
-  address: 'Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila',
+  address: 'Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605',
   contact: '0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com',
   shortAddress: 'Tektite East Tower, Ortigas Center, Pasig',
   phone: '02 8650 2540',

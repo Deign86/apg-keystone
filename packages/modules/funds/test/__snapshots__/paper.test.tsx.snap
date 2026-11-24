@@ -7,20 +7,16 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
 <article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Fund Transfer Request</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
-<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Fund Transfer Request</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">RF-2026-0007</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">RF-2026-0007</p>
 <p class="m-0 text-xs font-medium tabular-nums">November 3, 2026</p>
 </div>
-</div>
-<div class="mt-2">
-<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
-<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
-<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
 </div>
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
@@ -75,12 +71,12 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </tr>
 </tfoot>
 </table>
-<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
-<div class="border-t border-paper-ink pt-1 text-[11px]">
+<div class="mt-14 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
 </div>
-<div class="border-t border-paper-ink pt-1 text-[11px]">
+<div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Mark Reyes</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -97,20 +93,16 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
 <article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Fund Transfer Request</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
-<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Fund Transfer Request</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">RF-2026-0007</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">RF-2026-0007</p>
 <p class="m-0 text-xs font-medium tabular-nums">November 3, 2026</p>
 </div>
-</div>
-<div class="mt-2">
-<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
-<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
-<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
 </div>
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
@@ -165,12 +157,12 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </tr>
 </tfoot>
 </table>
-<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
-<div class="border-t border-paper-ink pt-1 text-[11px]">
+<div class="mt-14 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
 </div>
-<div class="border-t border-paper-ink pt-1 text-[11px]">
+<div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Mark Reyes</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -186,20 +178,16 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
 <article data-ui="document" aria-label="Fund transfer request RF-2026-0008" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+<p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Fund Transfer Request</p>
 <div class="flex items-center justify-between gap-4">
 <div class="flex min-w-0 items-center gap-4">
-<img src="logo-paper.png" alt="Alpha Premier Group" class="h-15 w-auto shrink-0">
+<img src="logo-paper-companies.png" alt="Alpha Premier Group of Companies" class="h-15 w-auto shrink-0">
+<p class="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605</p>
 </div>
 <div class="shrink-0 text-right">
-<p class="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">Fund Transfer Request</p>
-<p class="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">RF-2026-0008</p>
+<p class="m-0 text-[12.5px] font-semibold tabular-nums">RF-2026-0008</p>
 <p class="m-0 text-xs font-medium tabular-nums">November 2, 2026</p>
 </div>
-</div>
-<div class="mt-2">
-<p class="m-0 text-[12.5px] font-semibold">ALPHA PREMIER GROUP OF COMPANIES OPC</p>
-<p class="m-0 text-[11px] text-pretty text-paper-muted">Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila</p>
-<p class="m-0 text-[11px] text-paper-muted">0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com</p>
 </div>
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
@@ -250,12 +238,12 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 </tr>
 </tfoot>
 </table>
-<div class="mt-10 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
-<div class="border-t border-paper-ink pt-1 text-[11px]">
+<div class="mt-14 grid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
 </div>
-<div class="border-t border-paper-ink pt-1 text-[11px]">
+<div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>

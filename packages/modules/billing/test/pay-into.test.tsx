@@ -41,7 +41,7 @@ async function openBilling(modules: ModuleDef[]) {
 
   return {
     form: screen.getByRole('form', { name: 'New statement' }),
-    paper: screen.getByRole('article', { name: 'Billing statement 010100-2026' }),
+    paper: screen.getByRole('article', { name: /^Billing statement 888-\d{6}$/ }),
   };
 }
 

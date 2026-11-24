@@ -1,8 +1,8 @@
 import {
   addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
-  percent, peso, recordsOf, shortDate, sumCentavos, thisYear, toCentavos, today,
+  percent, peso, recordsOf, shortDate, sumCentavos, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
-  type Payment, type Statement, type StatementPayments,
+  type ISODate, type Payment, type Statement, type StatementPayments,
   type Reference, type TerminalState, type Tone, type WaitingItem
 } from '@keystone/core';
 
@@ -60,18 +60,36 @@ export function statementTotals(b: Pick<Statement, 'lines' | 'vat' | 'ewt' | 'ew
   return { subtotal, vat, ewt, due: subtotal + vat - ewt };
 }
 
-/** Invoice numbers: a six-digit running number and the year, "010100-2026". */
-const INVOICE_NO = /^(\d{6})-\d{4}$/;
+/** Invoice numbers start with 888-, then the statement's date as month, day and year: 888-112426. */
+const SERIES = '888-';
 
-/** The next invoice number: one past the highest running number in use, with this year. */
-export function nextStatementNo(s: TerminalState, ctx: Ctx): string {
-  const highest = Math.max(0, ...s.bs.flatMap((b) => {
-    const m = INVOICE_NO.exec(b.no);
+/** A statement date as the invoice number writes it: "2026-11-24" → "112426". */
+const mmddyy = (date: ISODate) => `${date.slice(5, 7)}${date.slice(8, 10)}${date.slice(2, 4)}`;
 
-    return m ? [Number(m[1])] : [];
-  }));
+/**
+ * The invoice number for a statement dated `date`: 888- and the date as month, day and year (888-112426). A second
+ * statement that day is 888-112426-2, a third -3, and on. Older numbers (010100-2026) keep theirs.
+ */
+export function nextStatementNo(s: TerminalState, date: ISODate): string {
+  const first = `${SERIES}${mmddyy(date)}`;
+  const used = new Set(s.bs.map((b) => b.no));
 
-  return `${String(highest + 1).padStart(6, '0')}-${thisYear(ctx)}`;
+  if (!used.has(first)) return first;
+  let n = 2;
+
+  while (used.has(`${first}-${n}`)) n++;
+
+  return `${first}-${n}`;
+}
+
+/**
+ * The statement with its date changed. A new statement still showing the number its old date gave takes the new
+ * date's; a number typed by hand is kept.
+ */
+export function withStatementDate(s: TerminalState, d: StatementDraft, date: string): StatementDraft {
+  const auto = !d.editing && (!d.no.trim() || d.no === nextStatementNo(s, d.date));
+
+  return { ...d, date, no: auto && date ? nextStatementNo(s, date) : d.no };
 }
 
 export const statementsNewestFirst = (s: TerminalState) => newestFirst(s.bs);
@@ -81,7 +99,7 @@ export const outstandingTotal = (s: TerminalState) => sumCentavos(outstanding(s)
 
 export interface StatementDraft extends Editing {
   no: string; date: string; invoiceDate: string; due: string; client: string; attention: string;
-  lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string;
+  lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string; penalty: string;
   prepared: string; checked: string; approved: string;
   preparedPos: string; checkedPos: string; approvedPos: string;
 }
@@ -100,9 +118,9 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
   const account = paidInto(last?.notes ?? '', accounts) ?? paidInto(d.paymentInstructions, accounts) ?? accounts[0];
 
   return {
-    no: nextStatementNo(s, ctx), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: '',
+    no: nextStatementNo(s, t), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: '',
     attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
-    notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote,
+    notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote, penalty: d.billingTerms,
     prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
     preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
   };
@@ -115,7 +133,7 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
   editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: nameOf(s, b.client),
   attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
-  notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote,
+  notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote, penalty: b.penalty ?? companyOf(s).billingTerms,
   prepared: b.prepared ?? '', checked: b.checked ?? '', approved: b.approved ?? '',
   preparedPos: b.preparedPos ?? '', checkedPos: b.checkedPos ?? '', approvedPos: b.approvedPos ?? '',
 });
@@ -126,7 +144,7 @@ const POSITIONS = ['preparedPos', 'checkedPos', 'approvedPos'] as const;
 export function statementOf(d: StatementDraft, status: StatementStatus = 'Sent'): Statement {
   const b: Statement = {
     no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client.trim(), attention: d.attention.trim(),
-    lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, note: d.note,
+    lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, note: d.note, penalty: d.penalty.trim(),
     prepared: d.prepared.trim(), checked: d.checked.trim(), approved: d.approved.trim(), status,
   };
 
@@ -230,9 +248,9 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
 
   // A new statement keeps the number typed on it, unless that number is taken. A copy of a
   // saved one takes the next number.
-  const no = original || !b.no ? nextStatementNo(s, ctx) : b.no;
+  const no = original || !b.no ? nextStatementNo(s, b.date) : b.no;
 
-  if (s.bs.some((x) => x.no === no)) throw new KeystoneError(`Invoice No. ${no} is already used. The next free one is ${nextStatementNo(s, ctx)}.`);
+  if (s.bs.some((x) => x.no === no)) throw new KeystoneError(`Invoice No. ${no} is already used. The next free one is ${nextStatementNo(s, b.date)}.`);
   const saved = { ...b, no };
 
   return {

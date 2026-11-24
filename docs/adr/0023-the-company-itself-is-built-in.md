@@ -14,7 +14,7 @@ Status: Accepted · Date: 2026-11-16 · Supersedes 0018 for the company's own de
 
 - **Core holds the company (`COMPANY` in `packages/core/src/kernel/state.ts`):**
   - Name: ALPHA PREMIER GROUP OF COMPANIES OPC
-  - Address: Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila
+  - Address: Suites 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605 (docs/adr/0038; it was Unit 3104C, Tektite East Tower Ortigas Center, Pasig, 1116 Metro Manila)
   - Contact line: 0915 888 9482 / 02 8650 2540 / www.alphapremiergroup.com
   - Short address (the sidebar): Tektite East Tower, Ortigas Center, Pasig
   - Phone: 02 8650 2540 · Billing email: billing@alphapremiergroup.com

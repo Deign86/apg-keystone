@@ -68,6 +68,19 @@ describe('the billing statement on paper', () => {
     expect(paper.textContent).toMatch(/D\. LazaroPrepared by/);
   });
 
+  it('prints each signatory\'s signature above their name when Company Details keeps one, and the penalty under how to pay', () => {
+    const b = { ...s.bs[0], prepared: 'D. Lazaro', checked: 'Mark Anthony Santos', approved: 'Brian Sy', penalty: '3% a month on late payments.' };
+    const company = { ...companyOf(s), signatures: { 'MARK ANTHONY SANTOS': 'data:image/png;base64,AAAA' } };
+
+    render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={company} terms="Company terms" />);
+    const paper = screen.getByRole('article', { name: `Billing statement ${b.no}` });
+
+    expect(screen.getByRole('img', { name: 'Signature of Mark Anthony Santos' })).toHaveAttribute('src', 'data:image/png;base64,AAAA');
+    expect(screen.queryByRole('img', { name: /^Signature of (D\. Lazaro|Brian Sy)$/ })).toBeNull();
+    expect(paper.textContent).toMatch(/Penalty3% a month on late payments\./);
+    expect(paper.textContent).not.toMatch(/Company terms/);
+  });
+
   it('lays out every statement in the sample the same way, with and without tax, and one with no charges', () => {
     for (const b of [...s.bs.slice(1), { ...s.bs[0], no: 'blank', lines: [], notes: '', note: '' }]) {
       const { unmount } = render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);

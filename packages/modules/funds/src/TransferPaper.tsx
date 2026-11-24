@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { amountInWords, longDate, peso, type Company } from '@keystone/core';
+import { amountInWords, longDate, peso, signatureOf, type Company, type CompanyDetails } from '@keystone/core';
 import { amountColumn, Letterhead, Lines, Meta, orDash, paperLabel, Sheet, Signatures } from '@keystone/kit';
 import { expensesOf, requestTotal, settleText, type FundsRequest } from './rules';
 
@@ -7,7 +7,7 @@ import { expensesOf, requestTotal, settleText, type FundsRequest } from './rules
 // for its total to be sent to the account it names, for the expenses it lists. One A4 page: who asked and when, the
 // account in its own ruled box, the amount in figures and in words, the expenses, and who asked and who approved.
 
-type Props = { request: FundsRequest; company: Company };
+type Props = { request: FundsRequest; company: Company & Pick<CompanyDetails, 'signatures'> };
 
 /** "Nov 15, 2026 at 14:02", from a decision's "2026-11-15 14:02". */
 const when = (at: string) => `${longDate(at.slice(0, 10))} at ${at.slice(11, 16)}`;
@@ -50,7 +50,7 @@ export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPap
         footer={[['Total', peso(total), true]]}
       />
 
-      <Signatures names={[[r.requester, 'Requested by'], [r.status === 'Approved' ? r.decision?.by ?? '' : '', 'Approved by']]} />
+      <Signatures signed={(who) => signatureOf(company, who)} names={[[r.requester, 'Requested by'], [r.status === 'Approved' ? r.decision?.by ?? '' : '', 'Approved by']]} />
       <p className="m-0 mt-3 text-[11px] font-medium text-pretty">{standing(r)}</p>
     </Sheet>
   );

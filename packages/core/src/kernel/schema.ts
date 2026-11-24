@@ -87,7 +87,7 @@ export interface Voucher {
 }
 
 export interface Statement {
-  /** The invoice number: a six-digit running number and the year, "010100-2026". */
+  /** The invoice number: 888- and the statement's date as month, day and year, "888-112426" (older ones: "010100-2026"). */
   no: string;
   /** The statement's date ("Date:" at the top). */
   date: ISODate;
@@ -114,6 +114,8 @@ export interface Statement {
   notes?: string;
   /** The closing note under the payment instructions. */
   note?: string;
+  /** The late-payment penalty, printed under the payment instructions. Older statements have none and print Company Details' terms. */
+  penalty?: string;
   /** Who signs the statement, printed at its foot. Older statements have none. */
   prepared?: string;
   checked?: string;
@@ -190,7 +192,7 @@ export interface Defaults {
   /** A statement's closing note. */
   billingNote: string;
   signatory: string;
-  /** Printed under a statement's dates: the late-payment penalty. */
+  /** A new statement's penalty line, printed under its payment instructions: the late-payment penalty. */
   billingTerms: string;
   /** Days from a statement's date to its due date. 0 when not set: a new statement then starts with no due date. */
   dueInDays: number;
@@ -202,7 +204,13 @@ export interface Defaults {
  * The company's details and what its documents start from, kept with the records and nowhere else (docs/adr/0018): in
  * the cloud an owner-only document, edited on Company Details. Nothing of it is built into Keystone.
  */
-export interface CompanyDetails extends Company, Defaults {}
+export interface CompanyDetails extends Company, Defaults {
+  /**
+   * Each signatory's signature, an image (a data: URL), by their name in capitals with single spaces (`signatureKey`).
+   * A document prints it above the name of whoever signs it (docs/adr/0038).
+   */
+  signatures?: Record<string, string>;
+}
 
 /**
  * A bank account the company pays checks from or asks clients to pay into. The Bank Accounts module keeps the list

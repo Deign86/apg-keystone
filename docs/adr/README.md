@@ -48,6 +48,7 @@ Consequences**.
 | [0035](0035-home-shows-every-connected-apps-update.md) | Home shows every connected app's newer version | Accepted |
 | [0036](0036-a-billing-statement-follows-the-company-form.md) | A billing statement follows the company's form, its client is typed, and it withholds 2% or 5% | Accepted |
 | [0037](0037-signatories-are-picked-payees-fold-and-any-record-can-go.md) | Signatories are picked from a list, the voucher register folds by payee, and a record in use can be removed | Accepted |
+| [0038](0038-one-letterhead-dated-invoice-numbers-penalty-and-signatures.md) | One letterhead on every paper, dated invoice numbers, a penalty line, and signatures that print themselves | Accepted |
 
 Template:
 

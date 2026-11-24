@@ -1,6 +1,5 @@
-// The APG logo made for white paper: the phoenix in solid gold and "ALPHA PREMIER GROUP" in black, drawn in HD so it
-// stays sharp on screen and in print.
-import logo from '@keystone/ui/logo-paper.png';
+// The Group of Companies logo made for white paper, drawn in HD so it stays sharp on screen and in print.
+import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, MARKS, TWO_UP, TWO_UP_EDGE, UPRIGHT, type PaperLayout } from './paper';
@@ -136,44 +135,25 @@ export function FitWidth({ children }: { children: ReactNode }) {
 }
 
 /**
- * The row every letterhead opens with, over the gold rule: `mark` on the left (a logo, and anything set beside it),
- * the document's title, number and date on the right. `children` run under the row, across the page. A paper with a
- * letterhead of its own composes this.
- */
-export function Masthead({ mark, title, no, date, children }: { mark: ReactNode; title: string; no: string; date?: string; children?: ReactNode }) {
-  return (
-    <header className="mb-3.5 border-b-2 border-paper-gold pb-2.5">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">{mark}</div>
-        <div className="shrink-0 text-right">
-          <p className="m-0 font-display text-[15px] font-semibold tracking-[0.12em] text-paper-gold uppercase">{title}</p>
-          <p className="m-0 mt-0.5 text-[12.5px] font-semibold tabular-nums">{no}</p>
-          {date && <p className="m-0 text-xs font-medium tabular-nums">{date}</p>}
-        </div>
-      </div>
-      {children}
-    </header>
-  );
-}
-
-/** How a logo sits in a masthead. */
-export const paperLogo = 'h-15 w-auto shrink-0';
-
-/**
- * The APG logo, the document's title and number, and under them the company as Company Details keeps it: its name,
- * address and contact, across the page. Nothing of the company shows until it is filled in.
+ * Every paper's header, the same on each (docs/adr/0038): the document's title across the top, then the Group of
+ * Companies logo with the company's address beside it, and the document's number and date on the right. The logo
+ * names the company, so its name and contact are left out.
  */
 export function Letterhead({ company, title, no, date }: { company: Company; title: string; no: string; date?: string }) {
   return (
-    <Masthead mark={<img src={logo} alt="Alpha Premier Group" className={paperLogo} />} title={title} no={no} date={date}>
-      {(company.name || company.address || company.contact) && (
-        <div className="mt-2">
-          {company.name && <p className="m-0 text-[12.5px] font-semibold">{company.name}</p>}
-          {company.address && <p className="m-0 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
-          {company.contact && <p className="m-0 text-[11px] text-paper-muted">{company.contact}</p>}
+    <header className="mb-3.5 border-b-2 border-paper-gold pb-2.5">
+      <p className="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">{title}</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <img src={companiesLogo} alt="Alpha Premier Group of Companies" className="h-15 w-auto shrink-0" />
+          {company.address && <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
         </div>
-      )}
-    </Masthead>
+        <div className="shrink-0 text-right">
+          <p className="m-0 text-[12.5px] font-semibold tabular-nums">{no}</p>
+          {date && <p className="m-0 text-xs font-medium tabular-nums">{date}</p>}
+        </div>
+      </div>
+    </header>
   );
 }
 
@@ -254,19 +234,42 @@ export function Lines({ columns, lines, empty, footer }: { columns: LineColumn[]
   );
 }
 
-/** Lines to sign on: room above a firm line, then who signs, in bold, and their role. */
-export function Signatures({ names }: { names: ([who: string, role: string] | [who: string, role: string, position: string])[] }) {
+/**
+ * Who signs, side by side: a line, the name under it, the position when the document keeps one, and what they sign as.
+ * With `signed` (a lookup of the signatures Company Details keeps, `signatureOf`), a signatory's signature prints above
+ * their line.
+ */
+export function Signatures({ names, signed }: {
+  names: ([who: string, role: string] | [who: string, role: string, position: string])[];
+  signed?: (who: string) => string | undefined;
+}) {
   return (
-    <div className="mt-10 grid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
-      {names.map(([who, role, position]) => (
-        <div key={role} className="border-t border-paper-ink pt-1 text-[11px]">
-          <p className="m-0 min-h-4 font-bold">{who}</p>
-          {/* Under the name, the signatory's position, when the document keeps one. */}
-          {position && <p className="m-0 font-semibold">{position}</p>}
-          <p className={`m-0 mt-0.5 ${paperLabel}`}>{role}</p>
-        </div>
-      ))}
+    <div className="mt-14 grid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
+      {names.map(([who, role, position]) => {
+        const signature = who ? signed?.(who) : undefined;
+
+        return (
+          <div key={role} className="relative border-t border-paper-ink pt-1 text-[11px]">
+            {signature && <SignatureImage src={signature} who={who} />}
+            <p className="m-0 min-h-4 font-bold">{who}</p>
+            {/* Under the name, the signatory's position, when the document keeps one. */}
+            {position && <p className="m-0 font-semibold">{position}</p>}
+            <p className={`m-0 mt-0.5 ${paperLabel}`}>{role}</p>
+          </div>
+        );
+      })}
     </div>
+  );
+}
+
+/** A signature over the line it is signed on, in the room above it. Its box sits on the line, so it never moves the line. */
+export function SignatureImage({ src, who, center }: { src: string; who: string; center?: boolean }) {
+  return (
+    <img
+      src={src}
+      alt={`Signature of ${who}`}
+      className={`pointer-events-none absolute bottom-full mb-0.5 h-12 max-w-full object-contain ${center ? 'left-1/2 -translate-x-1/2 object-bottom' : 'left-0 object-left-bottom'}`}
+    />
   );
 }
 

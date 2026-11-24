@@ -1,14 +1,13 @@
 // The Alpha Premier Group of Companies logo made for white paper, as the check voucher carries it.
-import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, type ReactNode } from 'react';
-import { DASH, longDate, peso, toCentavos, type Company, type Statement } from '@keystone/core';
+import { DASH, longDate, peso, signatureOf, toCentavos, type Company, type CompanyDetails, type Statement } from '@keystone/core';
 import { ewtRateOf, statementTotals, VAT_RATE } from './rules';
-import { amountColumn, Lines, Masthead, orDash, paperHeading, paperLabel, paperLogo, Sheet, Signatures } from '@keystone/kit';
+import { amountColumn, Letterhead, Lines, orDash, paperHeading, paperLabel, Sheet, Signatures } from '@keystone/kit';
 
-// The company's Billing Statement, laid out as its printed form under the check voucher's masthead: the logo with the
-// address beside it, the title, number and date, who it is billed to, the invoice box with the penalty terms, the
-// charges, then the totals box (subtotal, VAT, the expanded withholding tax taken off, the amount due), how to pay, and
-// who signs. Once, on a whole upright A4 page: unlike the check voucher, it is not printed twice on a sheet cut in two.
+// The company's Billing Statement, laid out as its printed form under every paper's letterhead (the title on top, the
+// logo with the address beside it, the number and date): who it is billed to, the invoice box, the charges, then the
+// totals box (subtotal, VAT, the expanded withholding tax taken off, the amount due), how to pay, the late-payment
+// penalty, and who signs, each with their signature when Company Details keeps one. Once, on a whole upright A4 page: unlike the check voucher, it is not printed twice on a sheet cut in two.
 
 function Note({ title, text }: { title: string; text?: string }) {
   if (!text?.trim()) return null;
@@ -31,21 +30,12 @@ function Row({ label, children, strong, first }: { label: string; children: Reac
   );
 }
 
-export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement; billTo: string; company: Company; terms: string }>(function StatementPaper({ statement: b, billTo, company, terms }, ref) {
+export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement; billTo: string; company: Company & Pick<CompanyDetails, 'signatures'>; terms: string }>(function StatementPaper({ statement: b, billTo, company, terms }, ref) {
   const t = statementTotals(b);
 
   return (
     <Sheet ref={ref} label={`Billing statement ${b.no}`}>
-      {/* Headed as the check voucher is: the Group of Companies logo, with the company's address right beside it. */}
-      <Masthead
-        title="Billing Statement"
-        no={`Invoice No. ${b.no}`}
-        date={`Date: ${longDate(b.date)}`}
-        mark={<>
-          <img src={companiesLogo} alt="Alpha Premier Group of Companies" className={paperLogo} />
-          {company.address && <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
-        </>}
-      />
+      <Letterhead company={company} title="Billing Statement" no={`Invoice No. ${b.no}`} date={`Date: ${longDate(b.date)}`} />
 
       <dl className="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
         <dt className={paperLabel}>Bill to</dt>
@@ -59,11 +49,6 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
           <Row label="Invoice No." strong first>{b.no}</Row>
           <Row label="Invoice date">{longDate(b.invoiceDate ?? b.date)}</Row>
           <Row label="Due date">{b.due ? longDate(b.due) : DASH}</Row>
-          {terms.trim() && (
-            <tr className="border-t border-paper-line">
-              <td colSpan={2} className="px-2.5 py-1.5 text-[11px]">{terms}</td>
-            </tr>
-          )}
         </tbody>
       </table>
 
@@ -90,8 +75,10 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
       </table>
 
       <Note title="Payment instructions" text={b.notes} />
+      {/* The late-payment penalty: the statement's own, or Company Details' terms on one saved before it kept one. */}
+      <Note title="Penalty" text={b.penalty ?? terms} />
       <Note title="Notes" text={b.note} />
-      <Signatures names={[[b.prepared ?? '', 'Prepared by', b.preparedPos ?? ''], [b.checked ?? '', 'Checked by', b.checkedPos ?? ''], [b.approved ?? '', 'Approved by', b.approvedPos ?? '']]} />
+      <Signatures signed={(who) => signatureOf(company, who)} names={[[b.prepared ?? '', 'Prepared by', b.preparedPos ?? ''], [b.checked ?? '', 'Checked by', b.checkedPos ?? ''], [b.approved ?? '', 'Approved by', b.approvedPos ?? '']]} />
     </Sheet>
   );
 });
