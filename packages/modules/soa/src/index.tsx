@@ -1,10 +1,10 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
+import { Button, CellInput, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, shortDate } from '@keystone/core';
 import { Fills, FormCard, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
   dueOnSigning, EWT_RATE, ID, monthlyRent, monthName, newSoa, pdcStart, pdcTotal, removeSoa, saveSoa, soaDraftBlank, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf,
-  statementsNewestFirst, statementsOf, TAG, VAT_RATE, type Soa, type SoaDraft,
+  statementsNewestFirst, statementsOf, TAG, VAT_RATE, withCheckNumber, type Soa, type SoaDetail, type SoaDraft,
 } from './rules';
 import { SoaPaper } from './SoaPaper';
 
@@ -21,6 +21,7 @@ function Statements() {
   const rent = monthlyRent(live);
   const set = (patch: Partial<SoaDraft>) => setDraft({ ...draft, ...patch });
   const start = pdcStart({ ...live, pdcFirst: '' });
+  const detail = (i: number, patch: Partial<SoaDetail>) => set({ details: draft.details.map((d, j) => (j === i ? { ...d, ...patch } : d)) });
 
   const save = useCallback((asNew = false) => {
     const r = run((s, c) => saveSoa(s, draft, c, asNew));
@@ -98,7 +99,25 @@ function Statements() {
             </FieldRow>
             <Fills part="client"><Field label="Client"><TextInput capitalize placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field></Fills>
             <Fills part="property"><Field label="Property address"><TextInput value={draft.property} onChange={(property) => set({ property })} /></Field></Fills>
-            <Fills part="payee"><Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize value={draft.payee} onChange={(payee) => set({ payee })} /></Field></Fills>
+            <Fills part="payee">
+              <FieldRow>
+                <Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize value={draft.payee} onChange={(payee) => set({ payee })} /></Field>
+                <Field label="Payee’s title" hint="As it prints, e.g. Lessor."><TextInput placeholder="Payee" value={draft.payeeLabel} onChange={(payeeLabel) => set({ payeeLabel })} /></Field>
+              </FieldRow>
+            </Fills>
+            <div className="flex flex-col gap-2">
+              <Fills part="breakdown"><Checkbox checked={draft.showSqm} onChange={(showSqm) => set({ showSqm })}>Show the floor area at the top</Checkbox></Fills>
+              <Fills part="details">
+                {draft.details.map((d, i) => (
+                  <div key={i} className="flex items-end gap-2">
+                    <div className="w-40 shrink-0"><CellInput label={`Detail ${i + 1} label`} placeholder="Label" value={d.label} onChange={(label) => detail(i, { label })} /></div>
+                    <div className="min-w-0 flex-1"><CellInput label={`Detail ${i + 1} value`} placeholder="Value" value={d.value} onChange={(value) => detail(i, { value })} /></div>
+                    <Button size="sm" onClick={() => set({ details: draft.details.filter((_, j) => j !== i) })}>Remove</Button>
+                  </div>
+                ))}
+                <div><Button size="sm" onClick={() => set({ details: [...draft.details, { label: '', value: '' }] })}>Add a detail at the top</Button></div>
+              </Fills>
+            </div>
 
             <SectionLabel>1. Breakdown</SectionLabel>
             <Fills part="breakdown">
@@ -161,13 +180,13 @@ function Statements() {
               </FieldRow>
               <FieldRow>
                 <Field label="Bank"><TextInput value={draft.bank} onChange={(bank) => set({ bank })} /></Field>
-                <Field label="First check number" hint="The rest follow it."><TextInput figures value={draft.firstCheck} onChange={(firstCheck) => set({ firstCheck })} /></Field>
+                <Field label="First check number" hint="The rest follow it. Click a check number in the preview to change it."><TextInput figures value={draft.firstCheck} onChange={(firstCheck) => set({ firstCheck })} /></Field>
               </FieldRow>
             </Fills>
             <Fills part="notes"><Field label="Notes"><TextArea rows={4} value={draft.notes} onChange={(notes) => set({ notes })} /></Field></Fills>
           </FormCard>
         }
-        preview={<SoaPaper ref={paper} soa={{ ...live, no: draft.editing ?? live.no }} company={companyOf(state)} />}
+        preview={<SoaPaper ref={paper} soa={{ ...live, no: draft.editing ?? live.no }} company={companyOf(state)} onCheckNumber={(no, check) => setDraft(withCheckNumber(draft, no, check))} />}
       />
     </>
   );
