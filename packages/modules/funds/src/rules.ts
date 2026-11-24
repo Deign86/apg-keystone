@@ -1,5 +1,5 @@
 import {
-  addDays, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesFromDraft, logged,
+  addDays, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesBlank, linesFromDraft, logged,
   moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
   toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
   type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type Reference, type TerminalState, type Tone,
@@ -245,6 +245,12 @@ export function newRequest(s: TerminalState, ctx: Ctx): RequestDraft {
     account: account ? { ...account } : { ...NO_ACCOUNT }, when: ASAP, by: '', requester: ctx.who?.name ?? '',
   };
 }
+
+/**
+ * Nothing typed worth keeping as a draft (docs/adr/0041): a new request with nothing said of what it is for, and no
+ * expense. One editing a saved request is never blank.
+ */
+export const requestDraftBlank = (d: RequestDraft) => !d.editing && !d.purpose.trim() && linesBlank(d.lines);
 
 /** What the Drafts list calls a saved request draft: what the money is for, and how much so far. */
 export const requestDraftTitle = (s: TerminalState, d: RequestDraft, ctx: Ctx) =>

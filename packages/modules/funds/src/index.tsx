@@ -4,7 +4,7 @@ import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate
 import { Fills, FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
   accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
-  fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestOf, requestPreview, requestsNewestFirst,
+  fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftBlank, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestOf, requestPreview, requestsNewestFirst,
   requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
   type Verdict, ID, TAG, refersTo,
 } from './rules';
@@ -105,7 +105,7 @@ function Funds() {
 
   // A request is read only by its requester and the CEO, so its drafts are kept to whoever wrote them (docs/adr/0041).
   const drafts = useSavedDrafts(draft, setDraft, {
-    module: ID, private: true, title: (d) => requestDraftTitle(state, d, ctx), restore: (d) => requestDraftFrom(state, ctx, d),
+    module: ID, private: true, title: (d) => requestDraftTitle(state, d, ctx), blank: requestDraftBlank, restore: (d) => requestDraftFrom(state, ctx, d),
   });
 
   const [error, setError] = useState<Refusal | null>(null);

@@ -1,4 +1,4 @@
-# 0041. Forms save drafts, kept with the records; a request's drafts are kept to their author
+# 0041. Forms save drafts by themselves, kept with the records; a request's drafts are kept to their author
 
 Status: Accepted · Date: 2026-11-24
 
@@ -10,6 +10,8 @@ Status: Accepted · Date: 2026-11-24
 - **The owner chose a Save draft button and a drafts list,** over keeping whatever is typed on one computer: drafts kept
   with the records, in the cloud, so they are on every computer; listed on their screen, marked Draft; opened again,
   finished or deleted; several on each screen. A draft is not numbered, not logged as issued and counted in nothing.
+- **Then the owner asked that drafts save themselves** as the person types and when they leave, so closing Keystone
+  without pressing anything loses nothing.
 - **Not every record is everyone's.** Vouchers, statements, statements of account and IDs are read by every member. A
   request for funds is read only by its requester and the CEO (docs/adr/0011, 0021): firestore.rules hold the `rf`
   collection to them. A request's draft must be held the same way, by the rules, not only hidden on screen.
@@ -31,9 +33,17 @@ Status: Accepted · Date: 2026-11-24
   `scripts/check-cloud-layout.mjs` now compares statuses only for a collection that declares some. No module may take
   either collection's name.
 - **The kit gives every form the same Save draft** (`useSavedDrafts`, `SaveDraftButton`, `SavedDrafts` in
-  `@keystone/kit`). A module says what a draft is called and how a saved one goes back in its form; a request for funds'
-  drafts are `private`. Saving or opening a draft marks the form with it (`Editing.savedDraft`), so the next save goes
-  over it and a new form starts a new draft. Saved for real, the form's draft is finished and leaves the list.
+  `@keystone/kit`). A module says what a draft is called, when its form is blank, and how a saved one goes back in its
+  form; a request for funds' drafts are `private`. Each form is given the id its draft saves under as soon as it shows
+  (`Editing.savedDraft`, `nextDraftId`): typing keeps the id, so it saves over the same draft, and a new form, a record
+  opened or a draft opened is another form with another id. Saving to an id with no draft yet makes it, so a shared
+  draft someone deleted while it was open is saved again rather than lost. Saved for real, the form's draft is finished
+  and leaves the list.
+- **Drafts save themselves, quietly** (`AUTOSAVE_MS`, 0.8 s): an edit is kept once typing rests; leaving the form for
+  another, leaving the screen, or Keystone hidden or closing (`pagehide`, `visibilitychange`) keeps what is waiting at
+  once and writes the records then, since the app's own write on leaving runs before a form's. A blank form saves
+  nothing, and a form emptied takes its draft away. Save draft still saves at once and says so; the form says when its
+  draft was last saved.
 - **A draft goes back in its form over a fresh one,** so a field an older Keystone did not save starts as a new form's,
   its lines get new ids, and a new document takes the next free number then, not the one free when it was saved. A
   draft of an edit to a saved record goes back to editing that record.

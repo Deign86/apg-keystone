@@ -1,5 +1,5 @@
 import {
-  addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesFromDraft, logged, nameOf, newestFirst,
+  addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesBlank, linesFromDraft, logged, nameOf, newestFirst,
   percent, peso, recordsOf, shortDate, sumCentavos, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type ISODate, type Payment, type Statement, type StatementPayments,
@@ -130,6 +130,13 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
  * A saved statement back in the form. One saved before it kept its own notes takes Company Details'; one saved before
  * Bill to was typed names its client by directory code, and comes back with that client's name.
  */
+/**
+ * Nothing typed worth keeping as a draft (docs/adr/0041): a new statement with no one billed, no address or Attention,
+ * and no charge. One editing a saved statement is never blank.
+ */
+export const statementDraftBlank = (d: StatementDraft) =>
+  !d.editing && !d.client.trim() && !d.address.trim() && !d.attention.trim() && linesBlank(d.lines);
+
 /** What the Drafts list calls a saved statement draft: who it bills, and what it comes to so far. */
 export const statementDraftTitle = (d: StatementDraft) => `${d.client.trim() || 'No client yet'} · ${peso(statementTotals(statementOf(d)).due)}`;
 

@@ -2,7 +2,7 @@ import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, Screen
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftFrom, voucherDraftOf, voucherDrafts, voucherDraftTitle,
+  approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftBlank, voucherDraftFrom, voucherDraftOf, voucherDrafts, voucherDraftTitle,
   voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
 import { BankAccountPicker, Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
@@ -35,7 +35,7 @@ function Vouchers() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx, bank));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
-  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: voucherDraftTitle, restore: (d) => voucherDraftFrom(state, ctx, bank, d) });
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: voucherDraftTitle, blank: voucherDraftBlank, restore: (d) => voucherDraftFrom(state, ctx, bank, d) });
   const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;

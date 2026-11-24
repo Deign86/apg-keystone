@@ -1,5 +1,5 @@
 import {
-  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesFromDraft, logged, nameOf, newestFirst, nextNumber,
+  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesBlank, linesFromDraft, logged, nameOf, newestFirst, nextNumber,
   peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
   type WaitingItem
@@ -114,6 +114,13 @@ function blankVoucher(s: TerminalState, ctx: Ctx, bank: string): VoucherDraft {
     preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
   };
 }
+
+/**
+ * Nothing typed worth keeping as a draft (docs/adr/0041): a new voucher with no payee, address, TIN or check, and no
+ * particular. One editing a saved voucher is never blank.
+ */
+export const voucherDraftBlank = (d: VoucherDraft) =>
+  !d.editing && !d.payee.trim() && !d.address.trim() && !d.tin.trim() && !d.check.trim() && linesBlank(d.lines);
 
 /** What the Drafts list calls a saved voucher draft: whom it pays, and how much so far. */
 export const voucherDraftTitle = (d: VoucherDraft) => `${d.payee.trim() || 'No payee yet'} · ${peso(voucherTotal(voucherOf(d)))}`;

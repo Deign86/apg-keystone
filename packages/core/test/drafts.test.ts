@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DRAFT_DOCUMENTS, DRAFT_LISTS, draftSavedLine, emptyState, fromDocuments, linesFromDraft, moduleData, removeDraft, saveDraft, savedDrafts,
+  DRAFT_DOCUMENTS, DRAFT_LISTS, draftSavedLine, emptyState, fromDocuments, linesBlank, linesFromDraft, moduleData, nextDraftId, removeDraft, saveDraft, savedDrafts,
   toDocuments, withModuleData, type Ctx, type Member,
 } from '../src';
 
@@ -40,9 +40,19 @@ describe('saved drafts', () => {
     expect(saveDraft(emptyState(), { module: 'billing', title: 'Here', body: 5 }, as()).record).toMatchObject({ id: 'here-billing-1', by: '' });
   });
 
-  it('refuses to save over a draft someone finished or deleted meanwhile', () => {
-    expect(() => saveDraft(emptyState(), { module: 'billing', id: 'ana-1-billing-9', title: 'Gone', body: 1 }, as(ana)))
-      .toThrow('That draft is no longer saved: someone finished or deleted it. Save this as a new draft.');
+  it('saves under the id a form was given before it was ever saved, or again under one someone deleted meanwhile', () => {
+    const given = nextDraftId(emptyState(), 'billing', as(ana));
+
+    expect(given).toBe('ana-1-billing-1');
+    const first = saveDraft(emptyState(), { module: 'billing', id: given, title: 'One', body: 1 }, as(ana));
+
+    expect(first.record.id).toBe(given);
+    expect(first.message).toBe('Draft saved. Open it again from Drafts.');
+    expect(nextDraftId(first.state, 'billing', as(ana))).toBe('ana-1-billing-2');
+    expect(nextDraftId(first.state, 'billing', as(ben))).toBe('ben-2-billing-1');
+    expect(nextDraftId(first.state, 'funds', as())).toBe('here-funds-1');
+    // Deleted by someone while it was open: saved again, under its own id, so nothing typed is lost.
+    expect(saveDraft(emptyState(), { module: 'billing', id: 'ana-1-billing-9', title: 'Back', body: 2 }, as(ana)).record.id).toBe('ana-1-billing-9');
   });
 
   it('keeps a private draft to its author: an owner is sent everyone\'s, and sees only their own', () => {
@@ -106,5 +116,12 @@ describe('lines from a saved draft', () => {
     expect(new Set(lines.map((l) => l.id)).size).toBe(2);
     expect(linesFromDraft(undefined)).toHaveLength(1);
     expect(linesFromDraft([])).toHaveLength(1);
+  });
+
+  it('are blank with nothing typed on any of them; a quantity alone is not something typed', () => {
+    expect(linesBlank(linesFromDraft(undefined))).toBe(true);
+    expect(linesBlank(linesFromDraft([{ desc: '  ', qty: '3' }]))).toBe(true);
+    expect(linesBlank(linesFromDraft([{}, { amount: '12' }]))).toBe(false);
+    expect(linesBlank(linesFromDraft([{ desc: 'Rent' }]))).toBe(false);
   });
 });

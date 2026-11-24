@@ -52,6 +52,12 @@ export function newID(s: TerminalState, ctx: Ctx): IDDraft {
   };
 }
 
+/**
+ * Nothing typed worth keeping as a draft (docs/adr/0041): a new card with no employee picked and no name. One editing
+ * a saved card is never blank.
+ */
+export const idDraftBlank = (d: IDDraft) => !d.editing && !d.emp && !d.name.trim();
+
 /** What the Drafts list calls a saved card draft: whose card, and as what. */
 export const idDraftTitle = (d: IDDraft) => [d.name.trim() || 'No name yet', d.pos.trim()].filter(Boolean).join(' · ');
 

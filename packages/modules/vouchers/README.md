@@ -65,9 +65,9 @@ Older vouchers keep the account code they were saved with; it is no longer enter
 - **On open:** void vouchers 7 days past voiding are cleared from the register.
 - **Activity:** log tag `CV`.
 - **Draft key:** `vouchers.draft`.
-- **Save draft:** the form's work kept with the records, listed under Drafts above the register, opened again or
-  deleted; saving the voucher for real finishes it (docs/adr/0041). A draft has no number: it takes the next one when it
-  is saved.
+- **Save draft:** the form's work kept with the records as it is typed, and when the form or Keystone is left, listed
+  under Drafts above the register, opened again or deleted; saving the voucher for real finishes it (docs/adr/0041). A
+  draft has no number: it takes the next one when it is saved.
 - **Directory:** a record that an older voucher names by code is kept (`refersTo`), marked `CV`.
 
 ## Needs

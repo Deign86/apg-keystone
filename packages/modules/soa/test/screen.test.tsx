@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { App, buildRegistry, KeystoneStore } from '@keystone/kit';
+import { savedDrafts } from '@keystone/core';
+import { App, AUTOSAVE_MS, buildRegistry, KeystoneStore } from '@keystone/kit';
 import { memoryPlatform } from '@keystone/kit/testing';
 import { UNDERSTOOD } from '@keystone/ui';
 import { soaModule } from '../src';
@@ -156,4 +157,85 @@ describe('the Statements of Account screen', () => {
     expect(statementsOf(store.state)).toEqual([]);
     expect(store.state.log[0]).toMatchObject({ mod: 'SOA', text: 'SOA-2026-001 for Northwind Retail Corp. removed.' });
   });
+});
+
+// Drafts that save themselves (docs/adr/0041): typing is kept as a draft once it rests, without a word; the form left
+// for another, the screen left, or Keystone hidden or closed keeps it at once; a form emptied, or saved for real,
+// takes its draft away. Real timers wait out the pause; only the date is fixed.
+describe('drafts that save themselves', () => {
+  /** Time for the pauses a test waits out in real time, under a full run's load. */
+  const PAUSES = 20_000;
+
+  /** Typing rests long enough for the draft to save itself. */
+  const rest = () => act(() => new Promise<void>((r) => { setTimeout(r, AUTOSAVE_MS + 150); }));
+  const draftsOf = (store: KeystoneStore) => savedDrafts(store.state, 'soa', store.ctx).map((d) => d.title);
+
+  it('keeps what is typed once typing rests, saying nothing, and saves over it as typing goes on', async () => {
+    const store = await open();
+
+    type('Client', 'Northwind Retail Corp.');
+    expect(draftsOf(store)).toEqual([]);
+    await rest();
+    expect(draftsOf(store)).toEqual(['Northwind Retail Corp.']);
+    expect(store.state.log).toEqual([]);
+    expect(screen.queryByText('Draft saved. Open it again from Drafts.')).toBeNull();
+    expect(form().getByText('Draft saved 09:05')).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Drafts' })).getByRole('listitem', { name: 'Northwind Retail Corp.' })).toBeInTheDocument();
+
+    type('Property address', 'Unit 5, Ortigas Avenue, Pasig');
+    await rest();
+    expect(draftsOf(store)).toEqual(['Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig']);
+  }, PAUSES);
+
+  it('keeps the form left for a new one at once, and saves nothing of the blank form', async () => {
+    const store = await open();
+
+    type('Client', 'Northwind Retail Corp.');
+    fireEvent.click(screen.getByRole('button', { name: 'New statement' }));
+    await act(async () => {});
+    expect(draftsOf(store)).toEqual(['Northwind Retail Corp.']);
+    expect(form().getByRole('textbox', { name: 'Client' })).toHaveValue('');
+    await rest();
+    expect(draftsOf(store)).toEqual(['Northwind Retail Corp.']);
+  }, PAUSES);
+
+  it('keeps what was typed when the screen is left, or Keystone is hidden, before typing rests', async () => {
+    const first = await open();
+
+    type('Client', 'Northwind Retail Corp.');
+    cleanup();
+    expect(draftsOf(first)).toEqual(['Northwind Retail Corp.']);
+
+    const platform = memoryPlatform();
+    const store = await KeystoneStore.open(platform.platform);
+
+    window.location.hash = '#soa';
+    render(<App store={store} registry={buildRegistry([soaModule], [])} />);
+    await act(async () => {});
+    type('Client', 'Harbor Point Logistics Corp.');
+    act(() => { window.dispatchEvent(new Event('pagehide')); });
+    await act(async () => {});
+    // Kept and written at once: the window may be gone before a later save.
+    expect(draftsOf(store)).toEqual(['Harbor Point Logistics Corp.']);
+    expect(platform.files.state).toContain('Harbor Point Logistics Corp.');
+  }, PAUSES);
+
+  it('takes the draft away when the form is emptied, and when the statement is saved for real', async () => {
+    const store = await open();
+
+    type('Client', 'Northwind Retail Corp.');
+    await rest();
+    type('Client', '');
+    await rest();
+    expect(draftsOf(store)).toEqual([]);
+    expect(screen.queryByRole('list', { name: 'Drafts' })).toBeNull();
+
+    fillLease();
+    await rest();
+    expect(draftsOf(store)).toEqual(['Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig']);
+    await save();
+    await rest();
+    expect(statementsOf(store.state).map((a) => a.no)).toEqual(['SOA-2026-001']);
+    expect(draftsOf(store)).toEqual([]);
+  }, PAUSES);
 });
