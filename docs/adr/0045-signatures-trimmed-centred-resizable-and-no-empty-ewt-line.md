@@ -1,4 +1,4 @@
-# 0042. Signatures are trimmed, centred and resizable, a statement prints no empty EWT line, and Enter adds a line
+# 0045. Signatures are trimmed, centred and resizable, a statement prints no empty EWT line, and Enter adds a line
 
 Status: Accepted · Date: 2026-11-24
 

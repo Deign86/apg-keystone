@@ -18,7 +18,7 @@ What each new voucher, statement and ID starts from. The company itself, its nam
   in `state.company.signatures` by the name in capitals, and replaces or removes it, each a log line. Every voucher,
   statement and request then prints it above the name of whoever signs. Saving the form keeps them. A signature is kept
   trimmed to its ink (kit's `trimSignature`), so every one is drawn the same size; `resizeSignature` keeps a size for
-  one signatory (`state.company.signatureSizes`, half to twice the standard height), only by the CEO (docs/adr/0042).
+  one signatory (`state.company.signatureSizes`, half to twice the standard height), only by the CEO (docs/adr/0045).
 - The data itself is the kernel's: `state.company` (`CompanyDetails` in core), read everywhere with `companyOf`, which
   gives the built-in company and "" (or 0) for anything not filled in.
 
