@@ -143,7 +143,7 @@ function Statements() {
               <Field label="Number of checks" hint={`Empty: ${pdcTotal({ ...live, pdcCount: 0 })}, the months the advance does not pay.`}>
                 <TextInput figures align="right" value={draft.pdcCount} onChange={(pdcCount) => set({ pdcCount })} />
               </Field>
-              <Field label="Checks dated on" hint="Day of the month before the rent month."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
+              <Field label="Checks dated on" hint="Day of the rent month it pays."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
             </FieldRow>
             <FieldRow>
               <Field label="Bank"><TextInput value={draft.bank} onChange={(bank) => set({ bank })} /></Field>

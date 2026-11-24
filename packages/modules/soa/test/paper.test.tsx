@@ -118,8 +118,8 @@ describe('the statement of account on paper', () => {
     const checks = cells(paper, 'Postdated checks');
 
     expect(checks).toHaveLength(12);
-    expect(checks[0]).toEqual(['1', 'January 28, 2027', 'BPI', '6000325749', '₱227,524.80', 'February 2027 Rent']);
-    expect(checks[11]).toEqual(['12', 'December 28, 2027', 'BPI', '6000325760', '₱238,901.04', 'January 2028 Rent']);
+    expect(checks[0]).toEqual(['1', 'February 28, 2027', 'BPI', '6000325749', '₱227,524.80', 'February 2027 Rent']);
+    expect(checks[11]).toEqual(['12', 'January 28, 2028', 'BPI', '6000325760', '₱238,901.04', 'January 2028 Rent']);
     // 11 × ₱227,524.80 + ₱238,901.04
     expect(within(paper).getByText('Total of 12 checks').nextElementSibling?.textContent).toBe('₱2,741,673.84');
   });
