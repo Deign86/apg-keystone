@@ -1,7 +1,7 @@
 import { Button, CellInput, EmptyState, Field, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm } from '@keystone/ui';
 import { Pin, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
+import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
 import { useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
@@ -185,16 +185,19 @@ export function Feed({ entries, compact = false }: { entries: LogEntry[]; compac
 const OTHER_NAME = 'Other…';
 
 /**
- * A signatory's name, picked from a list or typed under Other…, the same on every document that is signed. The list is
- * every employee in the directory, the names Company Details keeps, whoever is signed in, and `names` (those the
- * module's own documents were signed by), each once. `value` is shown as saved: a name not listed stays a choice.
+ * A signatory's name, picked from a list or typed under Other…, the same on every document that is signed. Once Company
+ * Details keeps signatures, the list is whose they are, as kept, so whoever is picked signs the paper. Before then, and
+ * with `anyone`, it is every employee in the directory, the names Company Details keeps, whoever is signed in, and
+ * `names` (those the module's own documents were signed by), each once. `value` is shown as saved: a name not listed stays a choice.
  * Other… clears the name and shows a field to type it in.
  */
-export function SignatoryPicker({ label, value, onChange, names = [], hint }: {
+export function SignatoryPicker({ label, value, onChange, names = [], hint, anyone }: {
   label: string; value: string; onChange: (name: string) => void;
   /** Names the module's own saved documents were signed by. */
   names?: Iterable<string>;
   hint?: string;
+  /** List everyone who could sign, not only those with a signature: for picking whose signature to add. */
+  anyone?: boolean;
 }) {
   const { state, ctx } = useKeystone();
   // The name as last typed under Other…, or null. The field stays while the value is still that name (in any capitals:
@@ -202,7 +205,8 @@ export function SignatoryPicker({ label, value, onChange, names = [], hint }: {
   const [typed, setTyped] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const d = companyOf(state);
-  const listed = signatoryNames(state, [d.preparedBy, d.checkedBy, d.approvedBy, d.signatory, ctx.who?.name ?? '', ...names]);
+  const signed = anyone ? [] : signedNames(d);
+  const listed = signed.length ? signed : signatoryNames(state, [d.preparedBy, d.checkedBy, d.approvedBy, d.signatory, ctx.who?.name ?? '', ...names]);
   // A name shows as the choice it matches, whatever its capitals: a voucher keeps names in capitals.
   const match = listed.find((n) => n.toUpperCase() === value.trim().toUpperCase());
   const options = [...(value.trim() && !match ? [value] : []), ...listed];

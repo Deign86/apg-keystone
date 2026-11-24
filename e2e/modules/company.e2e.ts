@@ -81,11 +81,21 @@ test('keeps a signature drawn for a signatory, which every paper they sign print
   await pad.getByRole('button', 'Save signature').tap();
   await expect(screen.getByRole('dialog', 'Signature for D. Lazaro added.')).toBeVisible();
   await expect(panel.getByRole('list', 'Signatures kept').getByRole('img', 'Signature of D. LAZARO')).toBeVisible();
+  // Whose signature to add still lists everyone who could sign.
+  await panel.getByRole('combobox', 'Whose signature').tap();
+  await expect(screen.getByRole('option', 'Accounting')).toBeVisible();
+  await screen.getByRole('option', 'D. Lazaro').tap();
 
   // D. Lazaro prepares the next statement and voucher: their signature is over the line.
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
+  // A signatory is picked from whose signatures are kept, as they are kept, so whoever is picked signs.
+  await screen.getByRole('form', 'New statement').getByRole('combobox', 'Checked by').tap();
+  await expect(screen.getByRole('listbox').getByRole('option')).toHaveCount(3);
+  await expect(screen.getByRole('option', 'D. LAZARO')).toBeVisible();
+  await screen.getByRole('option', 'D. LAZARO').tap();
+  await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. LAZARO')).toBeVisible();
 
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
