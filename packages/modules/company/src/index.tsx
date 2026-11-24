@@ -1,6 +1,6 @@
 import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput } from '@keystone/ui';
 import { useCallback, useState } from 'react';
-import { FormCard, useKeystone, type ModuleDef } from '@keystone/kit';
+import { FormCard, SignatoryPicker, useKeystone, type ModuleDef } from '@keystone/kit';
 import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft, ID } from './rules';
 
 /** The company's details, in one form. Staff see them; only an owner changes them. */
@@ -24,6 +24,11 @@ function CompanyDetailsScreen() {
     <Field label={label} hint={hint}><TextInput readOnly={!editable} value={d[field]} onChange={(v) => set({ [field]: v })} /></Field>
   );
 
+  // A signatory picked from the directory's employees and the names already signing, or typed under Other….
+  const signatory = (field: 'preparedBy' | 'checkedBy' | 'approvedBy' | 'signatory', label: string, hint?: string) => (editable
+    ? <SignatoryPicker label={label} hint={hint} value={d[field]} onChange={(v) => set({ [field]: v })} />
+    : text(field, label, hint));
+
   const paragraph = (field: keyof CompanyDraft, label: string, hint?: string) => (
     <Field label={label} hint={hint}><TextArea readOnly={!editable} rows={4} value={d[field]} onChange={(v) => set({ [field]: v })} /></Field>
   );
@@ -43,9 +48,9 @@ function CompanyDetailsScreen() {
         <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
           <legend className="mb-2 text-[12.5px] font-semibold text-ink-2">Check vouchers</legend>
           <FieldRow min={140}>
-            {text('preparedBy', 'Prepared by', 'When nobody is signed in. Signed in, it is the person preparing it.')}
-            {text('checkedBy', 'Audited by')}
-            {text('approvedBy', 'Approved by')}
+            {signatory('preparedBy', 'Prepared by', 'When nobody is signed in. Signed in, it is the person preparing it.')}
+            {signatory('checkedBy', 'Audited by')}
+            {signatory('approvedBy', 'Approved by')}
           </FieldRow>
         </fieldset>
         <fieldset className="m-0 flex flex-col gap-3 border-0 border-t border-line p-0 pt-3">
@@ -60,7 +65,7 @@ function CompanyDetailsScreen() {
         <fieldset className="m-0 flex flex-col gap-3 border-0 border-t border-line p-0 pt-3">
           <legend className="mb-2 text-[12.5px] font-semibold text-ink-2">Employee IDs</legend>
           <FieldRow>
-            {text('signatory', 'Signatory', 'Signs statements and IDs.')}
+            {signatory('signatory', 'Signatory', 'Signs statements and IDs.')}
             {text('idValidYears', 'Years an ID is valid', 'Blank: each new ID needs its end date typed.')}
           </FieldRow>
         </fieldset>

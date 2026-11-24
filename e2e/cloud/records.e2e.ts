@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { asMember, documentIds, emptyCloud, expectHome, idToken, keepRecordsHere, makeAccount, marker, record, recordsInCloud, saveElsewhere, signIn } from './emulators';
+import { typeSignatory } from '../support/signatory';
 
 // The records in the cloud (apps/keystone/src/platform/cloud.ts, firestore.ts; docs/adr/0009), their only source
 // (docs/adr/0018): the CEO's first sign-in starts them empty and nothing a computer holds is ever copied in, every
@@ -35,7 +36,7 @@ test('the CEO\'s first sign-in starts the records empty, copying in nothing this
   await app.open('/#company');
   const form = screen.getByRole('form', 'Company details');
 
-  await form.getByRole('textbox', 'Audited by').fill('Accounting');
+  await typeSignatory(screen, form, 'Audited by', 'Accounting');
   await form.getByRole('button', 'Save company details').tap();
   await expect(screen.getByRole('dialog', 'Company details saved.')).toBeVisible();
   await expect.poll(() => record('company', 'details'), { timeout: 10_000 }).toMatchObject({ checkedBy: 'Accounting', dueInDays: 0 });

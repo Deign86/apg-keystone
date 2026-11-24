@@ -23,7 +23,9 @@
   voided or deleted together. A voucher released before this month folds into a dropdown for the month it is dated, newest
   month first, each showing its count and total; everything still waiting, everything released this month and every
   void voucher stays on top (`voucherRegister`). A voucher is dated as it is released (`released`) and voided
-  (`voided`); older ones count from their own date.
+  (`voided`); older ones count from their own date. Vouchers to the same payee fold into one row with their count and
+  total, which opens to show them (`payeeKey`: the name in capitals, letters and digits only, so "Meralco" and "MERALCO."
+  are one payee).
 - **Names are in capitals:** the payee, the issuer and the three signatories turn to capitals as they are typed, are
   saved that way, and print that way, older vouchers too. Positions and addresses stay as typed.
 - `src/VoucherPaper.tsx`: the printed Check Voucher, headed by the Alpha Premier Group of Companies logo with the

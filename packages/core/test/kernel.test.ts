@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays, addYears, amountInWords, changeEach, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
-  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, shortDate,
+  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, signatoryNames, shortDate,
   KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
@@ -203,6 +203,17 @@ describe('directory (the shared kernel)', () => {
     expect(() => removeDirectoryRecord(s, 'E-001', ctx, [names('PAY', 'E-001'), names('DTR', 'E-001')])).toThrow('E-001 is used by PAY, DTR records and cannot be removed.');
     // No part installed that names it: nothing protects it.
     expect(removeDirectoryRecord(s, 'E-001', ctx, []).message).toBe('E-001 removed.');
+    // Told what names it, the person can remove it anyway.
+    expect(removeDirectoryRecord(s, 'E-001', ctx, [names('PAY', 'E-001')], true).state.dir.some((d) => d.code === 'E-001')).toBe(false);
+  });
+
+  it('lists signatories once each: employees and the names given, whatever their capitals or spacing, in order', () => {
+    const s = state();
+    const employees = s.dir.filter((d) => d.type === 'Employee').map((d) => d.name);
+    const listed = signatoryNames(s, ['  Zed  Reyes ', 'ZED REYES', '', employees[0].toUpperCase()]);
+
+    expect(listed).toEqual([...employees, 'Zed Reyes'].sort((a, b) => a.localeCompare(b)));
+    expect(signatoryNames({ ...s, dir: [] })).toEqual([]);
   });
 
   it('says where a new record can now be picked, as the installed screens name themselves, and nothing when none does', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
-  canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
+  canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeFoldLabel, payeeKey, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
   voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
@@ -311,6 +311,16 @@ describe('check vouchers', () => {
 
       expect(later.current.map((v) => v.no)).toEqual(['CV-2026-0141', 'CV-2026-0140', '888-002', '888-001']);
       expect(later.earlier.map((m) => [m.label, m.vouchers.map((v) => v.no), m.total])).toEqual([['October 2026', ['CV-2026-0139'], voucherTotal(s.cv[0])]]);
+    });
+
+    it('takes vouchers to one payee as one, whatever its capitals, spacing or stops', () => {
+      const s = state();
+      const v = (payee: string) => ({ payee, address: '' });
+
+      expect(payeeKey(s, v('Meralco'))).toBe(payeeKey(s, v('MERALCO.')));
+      expect(payeeKey(s, v('Juan  Dela Cruz'))).toBe(payeeKey(s, v('JUAN DELA CRUZ')));
+      expect(payeeKey(s, v('Meralco'))).not.toBe(payeeKey(s, v('Maynilad')));
+      expect(payeeFoldLabel(s, [s.cv[0], s.cv[0]])).toBe(`${payeeOf(s, s.cv[0]).name.toUpperCase()}, 2 vouchers`);
     });
 
     it('dates a voucher as it is released', () => {

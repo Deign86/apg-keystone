@@ -380,6 +380,15 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 /** "October 2026" for "2026-10". */
 const monthLabel = (month: string) => `${MONTHS[Number(month.slice(5, 7)) - 1]} ${month.slice(0, 4)}`;
 
+/**
+ * Which payee a voucher is to, for folding the register: the name in capitals with only its letters and digits, so
+ * "Meralco", "MERALCO" and "Meralco." are one payee.
+ */
+export const payeeKey = (s: TerminalState, v: Pick<Voucher, 'payee' | 'address'>) => caps(payeeOf(s, v).name).replace(/[^\p{L}\p{N}]+/gu, '');
+
+/** A fold of vouchers to one payee, as the register names it: "MERALCO, 3 vouchers". */
+export const payeeFoldLabel = (s: TerminalState, vs: readonly Voucher[]) => `${caps(payeeOf(s, vs[0]).name)}, ${count(vs.length, 'voucher')}`;
+
 /** The register as the screen shows it: see voucherRegister. */
 export interface VoucherRegister { current: Voucher[]; earlier: VoucherMonth[] }
 

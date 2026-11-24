@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { startEmpty } from '../support/sample-records';
+import { typeSignatory } from '../support/signatory';
 
 // Company Details (packages/modules/company): what each new voucher, statement and ID starts from, kept with the
 // records (docs/adr/0018). The company itself, its name, address and contacts, is built in (docs/adr/0023), so it is
@@ -22,7 +23,7 @@ test('is last under Settings, and shows what documents start from', async ({ app
   // Nothing to type for the company itself.
   await expect(form.getByRole('textbox', 'Name')).toBeHidden();
   await expect(form.getByRole('textbox', 'Address')).toBeHidden();
-  await expect(form.getByRole('textbox', 'Audited by')).toHaveValue('Accounting');
+  await expect(form.getByRole('combobox', 'Audited by')).toHaveText('Accounting');
   await expect(form.getByRole('textbox', 'Days to pay')).toHaveValue('15');
 });
 
@@ -30,15 +31,15 @@ test('saves a change, which new documents and the Activity Log show', async ({ a
   await app.open('/#company');
   const form = screen.getByRole('form', 'Company details');
 
-  await form.getByRole('textbox', 'Audited by').fill('  Finance ');
+  await typeSignatory(screen, form, 'Audited by', '  Finance ');
   await form.getByRole('button', 'Save company details').tap();
 
   await expect(screen.getByRole('dialog', 'Company details saved.')).toBeVisible();
-  await expect(form.getByRole('textbox', 'Audited by')).toHaveValue('Finance');
+  await expect(form.getByRole('combobox', 'Audited by')).toHaveText('Finance');
 
   // Saved with the records: still there after a reload.
   await app.open('/#company');
-  await expect(screen.getByRole('form', 'Company details').getByRole('textbox', 'Audited by')).toHaveValue('Finance');
+  await expect(screen.getByRole('form', 'Company details').getByRole('combobox', 'Audited by')).toHaveText('Finance');
 
   await app.open('/#activity');
   await expect(screen.getByRole('region', 'Entries').getByText('Company details for ALPHA PREMIER GROUP OF COMPANIES OPC saved.')).toBeVisible();
@@ -55,7 +56,7 @@ test('a computer with nothing saved still has the company, on Home, in the sideb
   await app.open('/#company');
   const form = screen.getByRole('form', 'Company details');
 
-  await expect(form.getByRole('textbox', 'Audited by')).toHaveValue('');
+  await expect(form.getByRole('combobox', 'Audited by')).toHaveText('—');
   await form.getByRole('textbox', 'Days to pay').fill('two weeks');
   await form.getByRole('button', 'Save company details').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the days to pay as a whole number from 0 to 365, or leave it blank.');

@@ -32,7 +32,7 @@ const row = (code: string) => screen.getByRole('cell', { name: code }).closest('
 afterEach(() => { window.location.hash = ''; });
 
 describe('the Directory screen and what the modules say they name', () => {
-  it('marks a record with each module that names it and keeps it; one nothing names can be removed', async () => {
+  it('marks a record with each module that names it; removing one says what names it, and either can be removed', async () => {
     const pay = naming('pay', 'PAY', ['E-001']);
     const dtr = naming('dtr', 'DTR', ['E-001', 'E-002']);
 
@@ -45,23 +45,29 @@ describe('the Directory screen and what the modules say they name', () => {
     expect(within(row('V-001')).queryByText('PAY')).toBeNull();
     expect(within(row('V-001')).queryByText('DTR')).toBeNull();
 
-    // Remove is refused for a record a module names, and removes one nobody names.
+    // A record a module names can be removed too, once the person is told which records name it.
     fireEvent.click(screen.getByRole('button', { name: /^Actions for .*E-001/ }));
-    expect(await screen.findByRole('menuitem', { name: 'Remove…' })).toHaveAttribute('aria-disabled', 'true');
-    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove…' }));
+    const used = within(await screen.findByRole('alertdialog', { name: 'Remove E-001?' }));
+
+    expect(used.getByText(/It is named on PAY, DTR records: they keep what was saved on them/)).toBeInTheDocument();
+    fireEvent.click(used.getByRole('checkbox', { name: UNDERSTOOD }));
+    fireEvent.click(used.getByRole('button', { name: 'Remove record' }));
     await act(async () => {});
+    expect(screen.queryByRole('cell', { name: 'E-001' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /^Actions for .*V-001/ }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove…' }));
     const dialog = within(await screen.findByRole('alertdialog', { name: 'Remove V-001?' }));
 
     // A destructive confirmation works only once it is ticked as understood.
+    expect(dialog.getByText(/Nothing refers to it yet, so no document changes\./)).toBeInTheDocument();
     expect(dialog.getByRole('button', { name: 'Remove record' })).toBeDisabled();
     fireEvent.click(dialog.getByRole('checkbox', { name: UNDERSTOOD }));
     fireEvent.click(dialog.getByRole('button', { name: 'Remove record' }));
     await act(async () => {});
     expect(screen.queryByRole('cell', { name: 'V-001' })).toBeNull();
-    expect(screen.getByRole('cell', { name: 'E-001' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'E-002' })).toBeInTheDocument();
   });
 
   it('asks each module once for a state however many rows it draws, and not again until the state changes', async () => {

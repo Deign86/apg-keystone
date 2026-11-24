@@ -13,7 +13,7 @@ export {
   useDraft, useKeystone, useModuleApp, usePhoto, type Backup, type Files, type Photos,
 } from './context';
 
-export { BankAccountPicker, ConnectorShortcut, Feed, FormCard, LineEditor, Workspace } from './components';
+export { BankAccountPicker, ConnectorShortcut, Feed, FormCard, LineEditor, SignatoryPicker, Workspace } from './components';
 
 export { amountColumn, FitWidth, LandscapePage, Letterhead, Lines, Masthead, Meta, orDash, paperHeading, paperLabel, paperLogo, Sheet, Signatures, TwoUp, type LineColumn } from './documents';
 
