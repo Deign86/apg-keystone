@@ -1,9 +1,9 @@
 import { Button, CellInput, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, shortDate } from '@keystone/core';
-import { FormCard, printElement, savePdf, useDraft, useKeystone, Workspace, type ModuleDef } from '@keystone/kit';
+import { FormCard, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
-  dueOnSigning, EWT_RATE, ID, monthlyRent, monthName, newSoa, pdcStart, pdcTotal, removeSoa, saveSoa, soaDraftOf, soaLine, soaOf,
+  dueOnSigning, EWT_RATE, ID, monthlyRent, monthName, newSoa, pdcStart, pdcTotal, removeSoa, saveSoa, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf,
   statementsNewestFirst, statementsOf, TAG, VAT_RATE, withCheckNumber, type Soa, type SoaDetail, type SoaDraft,
 } from './rules';
 import { SoaPaper } from './SoaPaper';
@@ -14,6 +14,7 @@ function Statements() {
   const { state, ctx, run, files, notify } = useKeystone();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft<SoaDraft>(DRAFT, () => newSoa(state, ctx));
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: soaDraftTitle, restore: (d) => soaDraftFrom(state, ctx, d) });
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLElement>(null);
   const live = soaOf(draft);
@@ -26,8 +27,10 @@ function Statements() {
     const r = run((s, c) => saveSoa(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newSoa(r.state, ctx));
-  }, [run, draft, ctx, setDraft]);
+    if (!r.ok) return;
+    drafts.finish(draft);
+    setDraft(newSoa(r.state, ctx));
+  }, [run, draft, ctx, setDraft, drafts]);
 
   const columns: Column<Soa>[] = [
     { key: 'no', header: 'No.', width: 128, cell: (a) => <span className="font-semibold text-gold-bright tabular-nums">{a.no}</span> },
@@ -46,6 +49,7 @@ function Statements() {
         line={soaLine(state)}
         actions={<Button onClick={() => { setDraft(newSoa(state, ctx)); setError(null); }}>New statement</Button>}
       />
+      <SavedDrafts drafts={drafts} noun="statement" onOpen={() => { setError(null); document.getElementById('soa-form')?.scrollIntoView({ block: 'start' }); }} />
       <Panel className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
           <SectionLabel>Statements saved</SectionLabel>
@@ -81,6 +85,7 @@ function Statements() {
               <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
               <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
               {draft.editing && <Button onClick={() => save(true)}>Save as new</Button>}
+              <SaveDraftButton drafts={drafts} />
               <Button kind="primary" type="submit">{draft.editing ? 'Save changes' : 'Save statement'}</Button>
             </>}
           >
@@ -90,10 +95,10 @@ function Statements() {
               </Field>
               <Field label="Prepared as of"><TextInput type="date" value={draft.date} onChange={(date) => set({ date })} /></Field>
             </FieldRow>
-            <Field label="Client"><TextInput placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field>
+            <Field label="Client"><TextInput capitalize placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field>
             <Field label="Property address"><TextInput value={draft.property} onChange={(property) => set({ property })} /></Field>
             <FieldRow>
-              <Field label="Payee" hint="Who the checks are made out to."><TextInput value={draft.payee} onChange={(payee) => set({ payee })} /></Field>
+              <Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize value={draft.payee} onChange={(payee) => set({ payee })} /></Field>
               <Field label="Payee’s title" hint="As it prints, e.g. Lessor."><TextInput placeholder="Payee" value={draft.payeeLabel} onChange={(payeeLabel) => set({ payeeLabel })} /></Field>
             </FieldRow>
             <div className="flex flex-col gap-2">

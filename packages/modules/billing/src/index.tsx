@@ -1,8 +1,8 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
-import { BankAccountPicker, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, statementDraftFrom, statementDraftTitle, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
+import { BankAccountPicker, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
 const DRAFT = `${ID}.draft`;
@@ -49,6 +49,7 @@ function Billing() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newStatement(state, ctx, accounts));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: statementDraftTitle, restore: (d) => statementDraftFrom(state, ctx, accounts, d) });
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.bs.find((b) => b.no === draft.editing) : undefined;
@@ -60,8 +61,10 @@ function Billing() {
     const r = run((s, c) => saveStatement(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newStatement(r.state, ctx, keptAccounts(app, r.state)));
-  }, [run, draft, ctx, setDraft, app]);
+    if (!r.ok) return;
+    drafts.finish(draft);
+    setDraft(newStatement(r.state, ctx, keptAccounts(app, r.state)));
+  }, [run, draft, ctx, setDraft, app, drafts]);
 
   const columns: Column<Statement>[] = [
     { key: 'no', header: 'Invoice No.', width: 128, cell: (b) => <span className="font-semibold text-gold-bright tabular-nums">{b.no}</span> },
@@ -92,6 +95,8 @@ function Billing() {
             label: 'Statements issued',
             note: state.bs.length,
             panel: (
+              <>
+              <SavedDrafts drafts={drafts} noun="statement" onOpen={() => { setError(null); setView('entry'); }} />
               <Panel>
                 <Register
                   label="Statements issued"
@@ -116,6 +121,7 @@ function Billing() {
                   empty={<EmptyState text="No statements yet." action={<Button size="sm" kind="primary" onClick={() => setView('entry')}>Bill the first client</Button>} />}
                 />
               </Panel>
+              </>
             ),
           },
           {
@@ -136,6 +142,7 @@ function Billing() {
                       <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
                       <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
                       {editing && <Button onClick={() => save(true)}>Save as new</Button>}
+                      <SaveDraftButton drafts={drafts} />
                       <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and mark as sent'}</Button>
                     </>}
                   >
@@ -150,10 +157,10 @@ function Billing() {
                       <Field label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field>
                     </FieldRow>
                     <Field label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
-                      <TextInput placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
+                      <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                     </Field>
                     <Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
-                    <Field label="Attention"><TextInput placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field>
+                    <Field label="Attention"><TextInput capitalize placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field>
                     <LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
                     <div className="flex flex-wrap gap-x-5 gap-y-2">
                       <Checkbox checked={draft.vat} onChange={(vat) => setDraft({ ...draft, vat })}>Add 12% VAT</Checkbox>

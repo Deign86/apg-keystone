@@ -124,3 +124,25 @@ test('prints the payee under its own title, such as Lessor', async ({ app, scree
   await form.getByRole('textbox', 'Payee’s title').fill('Lessor');
   await expect(screen.getByRole('article', 'Statement of account SOA-2026-001').getByText('Lessor', { exact: true })).toBeVisible();
 });
+
+// Save draft (docs/adr/0041): a statement's work kept with the records and listed under Drafts above the saved ones,
+// and opened again to be finished. Saved for real, it takes the next number and the draft leaves the list.
+test('saves a draft, opens it again from Drafts, and takes it away once the statement is saved', async ({ app, screen }) => {
+  await app.open('/#soa');
+  const form = await fillLease(screen);
+
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
+  await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
+
+  await screen.getByRole('button', 'New statement').tap();
+  await expect(screen.getByRole('form', 'New statement of account').getByRole('textbox', 'Client')).toHaveValue('');
+  await screen.getByRole('list', 'Drafts').getByRole('listitem', 'Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig').getByRole('button', 'Open').tap();
+  const opened = screen.getByRole('form', 'New statement of account');
+
+  await expect(opened.getByRole('textbox', 'Floor area (sqm)')).toHaveValue('354.4');
+  await expect(opened.getByRole('textbox', 'SOA No.')).toHaveValue('SOA-2026-001');
+  await opened.getByRole('button', 'Save statement').tap();
+  await expect(screen.getByRole('table', 'Statements saved').getByRole('row', /^SOA-2026-001 Northwind/)).toBeVisible();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
+});

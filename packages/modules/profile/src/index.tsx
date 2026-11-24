@@ -39,7 +39,7 @@ function YourProfile({ accounts, who }: { accounts: Accounts; who: Member }) {
       <Panel className="max-w-xl">
         <form className="flex flex-col gap-3.5" aria-label="Your profile" onSubmit={(e) => void save(e)}>
           <Field label="Your name" hint={`Your full name, up to ${MAX_NAME} characters. Everyone signed in sees it.`}>
-            <TextInput autoComplete="name" value={name} onChange={setName} />
+            <TextInput capitalize autoComplete="name" value={name} onChange={setName} />
           </Field>
           <p className="m-0 text-[13px] text-ink-2">Role: <span className="font-semibold text-ink">{roleLabel(who)}</span>. Only the CEO changes roles.</p>
           <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">

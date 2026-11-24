@@ -1,10 +1,10 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
-import { FormCard, LineEditor, printElement, savePdf, useDraft, useKeystone, useModuleApp, Workspace, type ModuleDef } from '@keystone/kit';
+import { FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
   accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
-  fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftOf, requestLock, requestOf, requestPreview, requestsNewestFirst,
+  fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestOf, requestPreview, requestsNewestFirst,
   requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
   type Verdict, ID, TAG, refersTo,
 } from './rules';
@@ -102,6 +102,12 @@ function Funds() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newRequest(state, ctx));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
+
+  // A request is read only by its requester and the CEO, so its drafts are kept to whoever wrote them (docs/adr/0041).
+  const drafts = useSavedDrafts(draft, setDraft, {
+    module: ID, private: true, title: (d) => requestDraftTitle(state, d, ctx), restore: (d) => requestDraftFrom(state, ctx, d),
+  });
+
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLElement>(null);
   const editing = draft.editing ? requestOf(state, draft.editing) : undefined;
@@ -130,9 +136,11 @@ function Funds() {
     const r = run((s, c) => fileRequest(s, draft, c));
     setError(r.ok ? null : r.error);
 
+    if (!r.ok) return;
+    drafts.finish(draft);
     // Number the next blank request from the state after the save.
-    if (r.ok) setDraft(newRequest(r.state, ctx));
-  }, [run, draft, ctx, setDraft]);
+    setDraft(newRequest(r.state, ctx));
+  }, [run, draft, ctx, setDraft, drafts]);
 
   const withdraw = (r: FundsRequest) => confirm({
     title: `Withdraw ${r.no}?`, body: `${peso(requestTotal(r))} to ${nameOf(state, r.payee)}. It stays on record as withdrawn; to ask again, file a new request.`, confirm: 'Withdraw', danger: true,
@@ -165,6 +173,7 @@ function Funds() {
         {ready && <Button onClick={() => paper.current && savePdf(paper.current, pdfName(ready), files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>}
         {editing?.voucher && app.has('vouchers') && <Button onClick={() => app.go('vouchers')}>Open Check Vouchers</Button>}
         {editing && !locked && <Button kind="danger" onClick={() => withdraw(editing)}>Withdraw…</Button>}
+        {!locked && <SaveDraftButton drafts={drafts} />}
         {locked
           ? <Button onClick={() => { setDraft(newRequest(state, ctx)); setError(null); }}>New request</Button>
           : <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Send for approval'}</Button>}
@@ -195,7 +204,7 @@ function Funds() {
               <Field label="Branch"><TextInput placeholder="Optional" value={shown.account.branch} onChange={(branch) => setAccount({ branch })} /></Field>
             </FieldRow>
             <FieldRow>
-              <Field label="Account name" hint="As the bank holds it."><TextInput value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field>
+              <Field label="Account name" hint="As the bank holds it."><TextInput capitalize value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field>
               <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" value={shown.account.number} onChange={(number) => setAccount({ number })} /></Field>
             </FieldRow>
           </>
@@ -207,7 +216,7 @@ function Funds() {
           {shown.when === 'date' && <Field label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
         </FieldRow>
         <Field label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
-          <TextInput readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
+          <TextInput capitalize readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
         </Field>
       </fieldset>
     </FormCard>
@@ -247,6 +256,8 @@ function Funds() {
             label: staff ? 'Your requests' : 'Requests',
             note: requestsNewestFirst(state).length,
             panel: (
+              <>
+              <SavedDrafts drafts={drafts} noun="request" onOpen={() => { setError(null); setView('entry'); }} />
               <Panel>
                 <Register
                   label="Requests for funds"
@@ -279,6 +290,7 @@ function Funds() {
                   empty={<EmptyState text="No requests yet." action={<Button size="sm" kind="primary" onClick={() => setView('entry')}>Ask for funds</Button>} />}
                 />
               </Panel>
+              </>
             ),
           },
           {

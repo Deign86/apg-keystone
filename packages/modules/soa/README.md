@@ -27,6 +27,9 @@
 - **Overview:** the "New statement of account" button.
 - **Activity:** log tag `SOA`.
 - **Draft key:** `soa.draft`.
+- **Save draft:** the form's work kept with the records, listed under Drafts above the register, opened again or
+  deleted; saving the statement for real finishes it (docs/adr/0041). A draft has no number: it takes the next one when
+  it is saved.
 
 ## Needs
 Nothing from another part.

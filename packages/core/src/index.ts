@@ -18,6 +18,9 @@ export * from './kernel/documents';
 // What firestore.rules allows, declared once and checked against the rules by `npm run check`.
 export * from './kernel/cloud-layout';
 
+// Saved drafts: a form's work kept with the records to be finished later (docs/adr/0041).
+export * from './kernel/drafts';
+
 export * from './kernel/lines';
 
 export * from './kernel/insight';

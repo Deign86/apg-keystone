@@ -118,6 +118,32 @@ test('adds an employee, who can then be given an ID and is counted on Home and O
   await expect(screen.getByRole('definition').filter({ hasText: '4 vendors · 3 clients · 5 employees' })).toBeVisible();
 });
 
+test('starts each word of a name with a capital as it is typed, here and on the documents', async ({ app, screen }) => {
+  await app.open('/#directory');
+  await screen.getByRole('button', 'Add record').tap();
+  const dialog = screen.getByRole('dialog', 'Add record');
+
+  await dialog.getByRole('textbox', 'Name').fill('pasig office depot');
+  await expect(dialog.getByRole('textbox', 'Name')).toHaveValue('Pasig Office Depot');
+
+  // Capitals already typed stay: an initialism or a name like McDonald is never lowered.
+  await dialog.getByRole('textbox', 'Name').fill('ALPHA PREMIER mcDonald opc');
+  await expect(dialog.getByRole('textbox', 'Name')).toHaveValue('ALPHA PREMIER McDonald Opc');
+
+  // Joining words stay small inside a name.
+  await dialog.getByRole('textbox', 'Name').fill('alpha premier group of companies');
+  await expect(dialog.getByRole('textbox', 'Name')).toHaveValue('Alpha Premier Group of Companies');
+
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  await form.getByRole('textbox', 'Bill to').fill('springfield properties inc.');
+  await form.getByRole('textbox', 'Attention').fill('ned flanders');
+  await expect(form.getByRole('textbox', 'Bill to')).toHaveValue('Springfield Properties Inc.');
+  await expect(form.getByRole('textbox', 'Attention')).toHaveValue('Ned Flanders');
+});
+
 test('needs a name for a new record', async ({ app, screen }) => {
   await app.open('/#directory');
   await screen.getByRole('button', 'Add record').tap();

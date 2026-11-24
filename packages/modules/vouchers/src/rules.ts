@@ -1,5 +1,5 @@
 import {
-  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst, nextNumber,
+  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesFromDraft, logged, nameOf, newestFirst, nextNumber,
   peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
   type WaitingItem
@@ -113,6 +113,20 @@ function blankVoucher(s: TerminalState, ctx: Ctx, bank: string): VoucherDraft {
     approved: last?.approved ?? d.approvedBy,
     preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
   };
+}
+
+/** What the Drafts list calls a saved voucher draft: whom it pays, and how much so far. */
+export const voucherDraftTitle = (d: VoucherDraft) => `${d.payee.trim() || 'No payee yet'} · ${peso(voucherTotal(voucherOf(d)))}`;
+
+/**
+ * A saved draft back in the form (docs/adr/0041): what was saved over a new voucher, so a field it lacks starts as a new
+ * one's does, its particulars as typed, and the next voucher number as it is saved, since a draft has none, unless it
+ * edits a saved voucher.
+ */
+export function voucherDraftFrom(s: TerminalState, ctx: Ctx, bank: string, saved: Partial<VoucherDraft>): VoucherDraft {
+  const fresh = newVoucher(s, ctx, bank);
+
+  return capsDraft({ ...fresh, ...saved, lines: linesFromDraft(saved.lines), no: saved.editing ?? fresh.no, typedNo: saved.editing ? saved.typedNo : false });
 }
 
 export const voucherDraftOf = (s: TerminalState, v: Voucher): VoucherDraft => capsDraft({

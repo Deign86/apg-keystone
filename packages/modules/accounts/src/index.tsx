@@ -35,7 +35,7 @@ function AccountForm({ accounts, members, onDone, onCancel }: {
   return (
     <form className="flex flex-col gap-3.5" aria-label="New account" onSubmit={(e) => void make(e)}>
       <Field label="Name" hint="As Keystone shows them: who asked for funds, who is signed in.">
-        <TextInput autoFocus autoComplete="off" value={d.name} onChange={(name) => setD({ ...d, name })} />
+        <TextInput capitalize autoFocus autoComplete="off" value={d.name} onChange={(name) => setD({ ...d, name })} />
       </Field>
       <Field label="Email" hint="They sign in with it.">
         <TextInput type="email" autoComplete="off" value={d.email} onChange={(email) => setD({ ...d, email })} />
