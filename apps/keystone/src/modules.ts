@@ -29,12 +29,13 @@ export const builtInModules: ModuleDef[] = [
 /**
  * The screens open in every build: Home, which holds the shortcuts to the connected systems, Check Vouchers, Requests
  * for Funds, where staff list expenses for the CEO to approve (docs/adr/0011, 0021), Billing Statements, with the
- * Directory its clients are picked from (a statement can bill no one without it), Profile, where whoever is signed
- * in changes their name (docs/adr/0020), User Accounts, where the CEO makes the staff's sign-ins, and Bank Accounts and
- * Company Details, which vouchers print from now that nothing is built in (docs/adr/0018). The others show behind
- * "Coming soon" except in a beta build (docs/adr/0017, 0019). To release one, add its id here.
+ * Directory its clients are picked from (a statement can bill no one without it), Statements of Account for leases
+ * (docs/adr/0040), Profile, where whoever is signed in changes their name (docs/adr/0020), User Accounts, where the
+ * CEO makes the staff's sign-ins, and Bank Accounts and Company Details, which vouchers print from now that nothing is
+ * built in (docs/adr/0018). The others show behind "Coming soon" except in a beta build (docs/adr/0017, 0019). To release
+ * one, add its id here.
  */
-export const RELEASED = ['home', 'vouchers', 'funds', 'billing', 'directory', 'profile', 'accounts', 'banks', 'company'];
+export const RELEASED = ['home', 'vouchers', 'funds', 'billing', 'soa', 'directory', 'profile', 'accounts', 'banks', 'company'];
 
 /** The installed screens as this build shows them: every one in a beta build, otherwise the unreleased coming soon. */
 export function shippedModules(beta: boolean): ModuleDef[] {
