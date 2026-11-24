@@ -2,7 +2,7 @@ import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox';
 import { Field as BaseField } from '@base-ui/react/field';
 import { Select } from '@base-ui/react/select';
 import { Check, ChevronDown } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { cn } from './primitives';
 
 // Labelled controls. Base UI's Field wires the label, description and error to the
@@ -32,16 +32,61 @@ type InputProps = {
   autoFocus?: boolean;
   /** What the browser may fill in: `new-password` keeps a saved password out of a field for someone else's. */
   autoComplete?: string;
+  /** A name: each word starts with a capital as it is typed (`capitalizeWords`). */
+  capitalize?: boolean;
 };
 
-export function TextInput({ value, onChange, placeholder, readOnly, figures, align = 'left', type = 'text', className, ...rest }: InputProps) {
+/** Words that join a name and stay in small letters inside it: "Alpha Premier Group of Companies". */
+const JOINING = ['of', 'and', 'the', 'for', 'in', 'on', 'at', 'by', 'to', 'or'];
+
+/**
+ * Each word's first letter in capitals, the rest as typed: "juan dela cruz" is "Juan Dela Cruz", and "OPC" or
+ * "McDonald" stay as they are. A word starts the text or follows a space, a hyphen, a slash or an opening bracket. A
+ * joining word (of, and, the…) stays small after the first word, and so does the word still being typed while it could
+ * become one: "o" waits, since it may be "of", until the next letter says otherwise.
+ */
+export function capitalizeWords(text: string): string {
+  let first = true;
+
+  return text.replace(/[^\s(/-]+/g, (word, at: number) => {
+    const lower = word.toLowerCase();
+    const typing = at + word.length === text.length;
+    const joining = JOINING.includes(lower) || (typing && JOINING.some((j) => j.startsWith(lower)));
+    const keep = !first && joining;
+
+    first = false;
+
+    return keep ? word : word.replace(/^\p{Ll}/u, (letter) => letter.toUpperCase());
+  });
+}
+
+export function TextInput({ value, onChange, placeholder, readOnly, figures, align = 'left', type = 'text', className, capitalize, ...rest }: InputProps) {
+  const input = useRef<HTMLInputElement>(null);
+
+  const change = (typed: string) => {
+    const next = capitalize ? capitalizeWords(typed) : typed;
+    const field = input.current;
+
+    // The capitals go into the field where they were typed and the caret stays put, so the field already shows the
+    // new value and React has nothing to reset (which would send the caret to the end of a name being corrected).
+    if (field && next !== typed) {
+      const { selectionStart, selectionEnd } = field;
+      field.value = next;
+      field.setSelectionRange(selectionStart, selectionEnd);
+    }
+
+    onChange(next);
+  };
+
   return (
     <BaseField.Control
+      ref={input}
       type={type}
       value={value}
       readOnly={readOnly}
       placeholder={placeholder}
-      onValueChange={(v) => onChange(String(v))}
+      onValueChange={(v) => change(String(v))}
+      autoCapitalize={capitalize ? 'words' : undefined}
       className={cn('input-chrome', (figures || readOnly) && 'text-gold-bright', readOnly && 'font-medium', align === 'right' && 'text-right', className)}
       {...rest}
     />

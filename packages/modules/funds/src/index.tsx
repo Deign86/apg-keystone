@@ -204,7 +204,7 @@ function Funds() {
               <Field label="Branch"><TextInput placeholder="Optional" value={shown.account.branch} onChange={(branch) => setAccount({ branch })} /></Field>
             </FieldRow>
             <FieldRow>
-              <Field label="Account name" hint="As the bank holds it."><TextInput value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field>
+              <Field label="Account name" hint="As the bank holds it."><TextInput capitalize value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field>
               <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" value={shown.account.number} onChange={(number) => setAccount({ number })} /></Field>
             </FieldRow>
           </>
@@ -216,7 +216,7 @@ function Funds() {
           {shown.when === 'date' && <Field label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
         </FieldRow>
         <Field label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
-          <TextInput readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
+          <TextInput capitalize readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
         </Field>
       </fieldset>
     </FormCard>
