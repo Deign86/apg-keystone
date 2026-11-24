@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { refusalOf } from '@keystone/kit/testing';
-import { COMPANY, companyOf, emptyState, parseState, signatureOf, type Ctx, type Member } from '@keystone/core';
-import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, setSignature, type CompanyDraft } from '../src/rules';
+import { COMPANY, companyOf, emptyState, parseState, SERVICES, signatureOf, signatureSizeOf, type Ctx, type Member } from '@keystone/core';
+import { canChange, COMPANY_LINE, companyDraftOf, resizeSignature, saveCompany, setSignature, signatureSizes, type CompanyDraft } from '../src/rules';
+import { companyModule } from '../src';
 import { sampleState } from '@keystone/core/sample';
 
 /** 12 Nov 2026, 09:05 in Manila. */
@@ -85,6 +86,46 @@ describe('company details', () => {
 
     expect(companyOf(removed.state).signatures).toBeUndefined();
     expect(removed.state.log.map((l) => l.text)).toContain('Signature for Mark Anthony Santos removed.');
+  });
+
+  it('draw a signature at the size the CEO picks, on every paper, from half to twice the standard height', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
+    const bigger = resizeSignature(signed, 'mark anthony santos', 1.234, at(owner));
+
+    expect(signatureSizeOf(companyOf(signed), 'Mark Anthony Santos')).toBe(1);
+    expect(bigger.message).toBe('Signature for mark anthony santos drawn at 123%.');
+    expect(companyOf(bigger.state).signatureSizes).toEqual({ 'MARK ANTHONY SANTOS': 1.23 });
+    expect(bigger.state.log[0]).toMatchObject({ mod: 'CO', text: 'Signature for mark anthony santos drawn at 123%.' });
+    // Kept within half to twice, and the standard size keeps nothing.
+    expect(signatureSizeOf(companyOf(resizeSignature(signed, 'Mark Anthony Santos', 9, at(owner)).state), 'Mark Anthony Santos')).toBe(2);
+    expect(signatureSizeOf(companyOf(resizeSignature(signed, 'Mark Anthony Santos', 0.1, at(owner)).state), 'Mark Anthony Santos')).toBe(0.5);
+    expect(companyOf(resizeSignature(bigger.state, 'Mark Anthony Santos', 1, at(owner)).state).signatureSizes).toBeUndefined();
+    expect(resizeSignature(bigger.state, 'Mark Anthony Santos', 1.23, at(owner)).state).toBe(bigger.state);
+  });
+
+  it('keep a signature’s size through a save and a saved file, and drop it with the signature', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
+    const sized = resizeSignature(signed, 'Mark Anthony Santos', 1.5, at(owner)).state;
+    const saved = saveCompany(sized, companyDraftOf(sized), at(owner)).state;
+
+    expect(companyOf(saved).signatureSizes).toEqual({ 'MARK ANTHONY SANTOS': 1.5 });
+    const read = parseState(JSON.stringify({ ...saved, company: { ...saved.company, signatureSizes: { 'mark anthony  santos': 1.5, 'BRIAN SY': 7, 'ANA': 'big' } } }));
+
+    expect(companyOf(read).signatureSizes).toEqual({ 'MARK ANTHONY SANTOS': 1.5 });
+    expect(companyOf(setSignature(saved, 'Mark Anthony Santos', null, at(owner)).state).signatureSizes).toBeUndefined();
+  });
+
+  it('let only the CEO resize, and only a signature that is kept, through the service papers use', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
+
+    expect(companyModule.provides?.[SERVICES.signatureSizes]).toBe(signatureSizes);
+    expect([signatureSizes.canResize(at(owner)), signatureSizes.canResize(at(staff)), signatureSizes.canResize(at())]).toEqual([true, false, true]);
+    expect(() => resizeSignature(signed, 'Mark Anthony Santos', 1.2, at(staff))).toThrow('Only the CEO resizes signatures.');
+    expect(() => resizeSignature(signed, 'Brian Sy', 1.2, at(owner))).toThrow('No signature is kept for Brian Sy.');
+    expect(() => resizeSignature(signed, 'Mark Anthony Santos', Number.NaN, at(owner))).toThrow('That is not a size.');
   });
 
   it('refuse a signature from staff, with no name, that is not an image, or too large', () => {

@@ -1,7 +1,7 @@
 import { Button, EmptyState, Panel, SectionLabel, Sheet, useConfirm } from '@keystone/ui';
 import { useRef, useState, type PointerEvent } from 'react';
 import { companyOf, sentenceOf } from '@keystone/core';
-import { SignatoryPicker, useKeystone } from '@keystone/kit';
+import { SignatoryPicker, trimSignature, useKeystone } from '@keystone/kit';
 import { setSignature } from './rules';
 
 // Each signatory's signature, kept with the company's details (docs/adr/0038). Uploaded once, as a scan or a photo, or
@@ -14,7 +14,7 @@ const HEIGHT = 160;
 /** How light a pixel of a scan has to be to count as the paper behind the ink, made see-through. */
 const PAPER = 215;
 
-/** A scan or photo of a signature as it is kept: scaled to fit 480 × 160, its paper see-through, as a PNG. */
+/** A scan or photo of a signature as it is kept: scaled to fit 480 × 160, its paper see-through, as a PNG (trimmed on saving). */
 async function signatureImage(bytes: Uint8Array): Promise<string> {
   const bitmap = await createImageBitmap(new Blob([new Uint8Array(bytes)]));
   const scale = Math.min(1, WIDTH / bitmap.width, HEIGHT / bitmap.height);
@@ -110,15 +110,18 @@ export function SignaturesPanel({ editable }: { editable: boolean }) {
   const [pad, setPad] = useState(false);
   const kept = Object.entries(companyOf(state).signatures ?? {}).sort(([a], [b]) => a.localeCompare(b));
 
-  const save = (image: string) => {
-    if (run((s, c) => setSignature(s, who, image, c)).ok) setPad(false);
+  // Kept trimmed to its ink, so it is drawn the same size as everyone else's on every paper.
+  const save = async (image: string) => {
+    const tight = await trimSignature(image).catch(() => image);
+
+    if (run((s, c) => setSignature(s, who, tight, c)).ok) setPad(false);
   };
 
   const upload = async () => {
     try {
       const file = await files.open([{ name: 'Signature', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]);
 
-      if (file) save(await signatureImage(file.bytes));
+      if (file) await save(await signatureImage(file.bytes));
     } catch (e) {
       notify(`That file could not be used as a signature: ${sentenceOf(e)}`, 'error');
     }

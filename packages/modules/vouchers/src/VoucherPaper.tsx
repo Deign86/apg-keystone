@@ -98,7 +98,7 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
               {/* Room to sign above the line; under it the signatory's name, then their position. */}
               <div className="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
                 {/* Their signature over the line, when Company Details keeps one. */}
-                {who && signatureOf(company, who) && <SignatureImage center src={signatureOf(company, who) ?? ''} who={who} />}
+                {who && signatureOf(company, who) && <SignatureImage src={signatureOf(company, who) ?? ''} who={who} />}
                 <p className="m-0 min-h-4 font-bold">{who}</p>
                 <p className="m-0 min-h-4 font-semibold">{position}</p>
               </div>

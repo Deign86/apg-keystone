@@ -20,7 +20,7 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `accounts/` | Settings, after Profile | Who can open the records in the cloud, the CEO making and removing staff accounts, and what an installed connected system lets the CEO give a member | log tag `ACCT` | |
 | `data/` | Settings, after User Accounts | Backup and restore, and the parts left out | Nothing | |
 | `banks/` | Settings, after Data | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
-| `company/` | last | Changing the company's details (the details themselves are kernel, in core: `state.company`) | finding, log tag `CO` | |
+| `company/` | last | Changing the company's details (the details themselves are kernel, in core: `state.company`) | finding, log tag `CO` | `company.signature-sizes` |
 
 No shipped part asks for `billing.statement-payments` yet: docs/adr/0007 keeps it for a part that settles statements
 from outside billing (the website connector is a shortcut and has no screen). Profile and User Accounts ask for

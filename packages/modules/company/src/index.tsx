@@ -1,8 +1,9 @@
 import { Button, Field, FieldRow, ScreenHeader, TextArea, TextInput, type Refusal } from '@keystone/ui';
 import { useCallback, useState } from 'react';
+import { SERVICES } from '@keystone/core';
 import { FormCard, SignatoryPicker, useKeystone, type ModuleDef } from '@keystone/kit';
 import { SignaturesPanel } from './Signatures';
-import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, TAG, type CompanyDraft, ID } from './rules';
+import { canChange, COMPANY_LINE, companyDraftOf, saveCompany, signatureSizes, TAG, type CompanyDraft, ID } from './rules';
 
 /** The company's details, in one form. Staff see them; only an owner changes them. */
 function CompanyDetailsScreen() {
@@ -83,5 +84,6 @@ export const companyModule: ModuleDef = {
   // Last under Settings, after Bank Accounts.
   order: 92,
   logTags: { [TAG]: 'Company Details' },
+  provides: { [SERVICES.signatureSizes]: signatureSizes },
   Screen: CompanyDetailsScreen,
 };
