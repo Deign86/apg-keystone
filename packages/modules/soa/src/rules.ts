@@ -1,7 +1,7 @@
 import {
   addDays, count, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged, longDate, moduleData, nextNumber, percent, peso,
   sumCentavos, thisYear, toCentavos, today, withModuleData,
-  type Centavos, type Change, type Ctx, type Editing, type ISODate, type JsonObject, type TerminalState,
+  type Centavos, type Change, type Ctx, type Editing, type ISODate, type JsonObject, type JsonValue, type TerminalState,
 } from '@keystone/core';
 
 // Statements of account for a lease: what a lessee pays, worked out from the floor area and the rate per square metre.
@@ -30,6 +30,12 @@ export type Soa = {
   leaseTerms: string;
   /** Who the checks are made out to. */
   payee: string;
+  /** The payee's title as it prints ("Lessor"); empty prints "Payee". */
+  payeeLabel: string;
+  /** The floor area prints among the details at the top, as well as in the breakdown. */
+  showSqm: boolean;
+  /** More details printed at the top, under the lease's own, each a label and its value. */
+  details: SoaDetail[];
   sqm: number;
   /** Pesos per square metre a month. */
   rate: number;
@@ -58,10 +64,46 @@ export type Soa = {
   bank: string;
   /** The first check's number; the rest follow it. */
   firstCheck: string;
+  /**
+   * A check's own number where the checks are not in order, typed on the paper, by its No. ("5"). The checks after it
+   * count on from it. A statement saved before it kept these has none.
+   */
+  checkNos: Record<string, string>;
   notes: string;
 };
 
+/** One more detail at the top of the statement: "Floor" · "3rd floor, Room 7". */
+export type SoaDetail = { label: string; value: string };
+
 export type SoaData = { statements: Soa[] };
+
+/** The payee's title as it prints. */
+export const payeeLabelOf = (a: Pick<Soa, 'payeeLabel'>) => a.payeeLabel.trim() || 'Payee';
+
+/** A number of square metres, with its decimals only when it has them: "354.4". */
+export const sqmFigure = (n: number) => n.toLocaleString('en-PH', { maximumFractionDigits: 2 });
+
+/**
+ * One of the details at the top: its label, its value, whether the value is a figure (set in even digits), and the
+ * part of the form that fills it, which the paper marks while one of its fields has focus.
+ */
+export interface TopDetail { label: string; value: string; part: string; figure?: boolean }
+
+/**
+ * The details printed at the top, in order: the client, the property, the floor area when chosen, the lease terms,
+ * the payee under its title, the commencement date, then any added, leaving out an added one with no label and no value.
+ */
+export function topDetails(a: Soa): TopDetail[] {
+  return [
+    { label: 'Client', value: a.client, part: 'client' },
+    { label: 'Property address', value: a.property, part: 'property' },
+    ...(a.showSqm ? [{ label: 'Floor area', value: a.sqm ? `${sqmFigure(a.sqm)} sqm` : '', part: 'breakdown', figure: true }] : []),
+    { label: 'Lease terms', value: leaseTermsOf(a), part: 'leaseTerms' },
+    { label: payeeLabelOf(a), value: a.payee, part: 'payee' },
+    { label: 'Contract commencement', value: a.commencement ? longDate(a.commencement) : '', part: 'commencement', figure: true },
+    ...a.details.filter((d) => d.label.trim() || d.value.trim()).map((d) => ({ label: d.label.trim(), value: d.value.trim(), part: 'details' })),
+  ];
+}
 
 // ---------- the computation ----------
 
@@ -172,13 +214,25 @@ export const pdcStart = (a: Soa) => a.pdcFirst || (a.commencement ? addMonths(a.
 /** How many checks: as set, or one for each month of the term the advance does not pay. */
 export const pdcTotal = (a: Soa) => a.pdcCount || Math.max(0, a.termMonths - a.advanceMonths);
 
-/** The check after this one by `n`: a number counts on with its leading zeros; anything else is left blank. */
-function checkNumber(first: string, n: number): string {
-  const digits = first.trim();
+/** The number after this check's: a number counts on with its leading zeros; anything else leaves the next blank. */
+function nextCheck(check: string): string {
+  return /^\d+$/.test(check) ? (BigInt(check) + 1n).toString().padStart(check.length, '0') : '';
+}
 
-  if (!/^\d+$/.test(digits)) return n ? '' : digits;
+/**
+ * Each check's number: the one typed for it on the paper, or else one past the check before (the first is the first
+ * check number), so a check typed out of order carries the checks after it with it.
+ */
+function checkNumbers(a: Pick<Soa, 'firstCheck' | 'checkNos'>, count: number): string[] {
+  const numbers: string[] = [];
 
-  return (BigInt(digits) + BigInt(n)).toString().padStart(digits.length, '0');
+  for (let i = 0; i < count; i += 1) {
+    const typed = a.checkNos[String(i + 1)]?.trim();
+
+    numbers.push(typed || (i ? nextCheck(numbers[i - 1]) : a.firstCheck.trim()));
+  }
+
+  return numbers;
 }
 
 export interface Pdc { no: number; date: ISODate; bank: string; check: string; amount: Centavos; month: string }
@@ -193,8 +247,10 @@ export function pdcSchedule(a: Soa): Pdc[] {
 
   if (!start || !a.commencement) return [];
   const day = Math.min(31, Math.max(1, a.pdcDay || 1));
+  const count = Math.min(pdcTotal(a), 120);
+  const numbers = checkNumbers(a, count);
 
-  return Array.from({ length: Math.min(pdcTotal(a), 120) }, (_, i) => {
+  return Array.from({ length: count }, (_, i) => {
     const month = addMonths(start, i);
     const dated = monthIndex(month);
 
@@ -202,7 +258,7 @@ export function pdcSchedule(a: Soa): Pdc[] {
       no: i + 1,
       date: `${month}-${String(Math.min(day, daysIn(dated))).padStart(2, '0')}`,
       bank: a.bank,
-      check: checkNumber(a.firstCheck, i),
+      check: numbers[i],
       amount: rentOn(a, baseRentInYear(a, leaseYearOf(a, month))).net,
       month,
     };
@@ -224,14 +280,27 @@ export function leaseTermsOf(a: Soa): string {
 /** A saved statement, field by field: a missing or damaged field becomes empty, zero or off. */
 const soaFrom = (o: JsonObject): Soa => ({
   no: jsonText(o.no), date: jsonText(o.date), client: jsonText(o.client), property: jsonText(o.property), leaseTerms: jsonText(o.leaseTerms),
-  payee: jsonText(o.payee), sqm: jsonNumber(o.sqm), rate: jsonNumber(o.rate), vat: o.vat === true, ewt: o.ewt === true,
+  payee: jsonText(o.payee), payeeLabel: jsonText(o.payeeLabel), showSqm: o.showSqm === true,
+  details: jsonObjects(o.details).map((d) => ({ label: jsonText(d.label), value: jsonText(d.value) })),
+  sqm: jsonNumber(o.sqm), rate: jsonNumber(o.rate), vat: o.vat === true, ewt: o.ewt === true,
   reservation: jsonNumber(o.reservation), reservationCoverage: jsonText(o.reservationCoverage), reservationCheck: jsonText(o.reservationCheck),
   depositMonths: jsonNumber(o.depositMonths), depositCoverage: jsonText(o.depositCoverage), depositCheck: jsonText(o.depositCheck),
   advanceMonths: jsonNumber(o.advanceMonths), advanceCoverage: jsonText(o.advanceCoverage), advanceCheck: jsonText(o.advanceCheck),
   commencement: jsonText(o.commencement), termMonths: jsonNumber(o.termMonths), escalation: jsonNumber(o.escalation),
   pdcFirst: jsonText(o.pdcFirst), pdcCount: jsonNumber(o.pdcCount), pdcDay: jsonNumber(o.pdcDay), bank: jsonText(o.bank),
-  firstCheck: jsonText(o.firstCheck), notes: jsonText(o.notes),
+  firstCheck: jsonText(o.firstCheck), notes: jsonText(o.notes), checkNos: checkNosFrom(o.checkNos),
 });
+
+/** The check numbers typed on the paper, as saved: only numbered checks with some text. */
+function checkNosFrom(raw: JsonValue | undefined): Record<string, string> {
+  if (!isJsonObject(raw)) return {};
+
+  return Object.fromEntries(Object.entries(raw).flatMap(([no, check]) => {
+    const text = jsonText(check).trim();
+
+    return /^\d+$/.test(no) && text ? [[no, text]] : [];
+  }));
+}
 
 /** The statements in the order they were saved. None saved: none (docs/adr/0018). */
 export function statementsOf(s: TerminalState): Soa[] {
@@ -257,10 +326,11 @@ export type SoaDraft = Editing & Omit<Soa, Typed> & Record<Typed, string>;
 /** A blank statement: VAT and 5% EWT on, two months' deposit and two months' advance, a year's term, checks dated the 28th. */
 export function newSoa(s: TerminalState, ctx: Ctx): SoaDraft {
   return {
-    no: nextSoaNo(s, ctx), date: today(ctx), client: '', property: '', leaseTerms: '', payee: '', sqm: '', rate: '', vat: true, ewt: true,
+    no: nextSoaNo(s, ctx), date: today(ctx), client: '', property: '', leaseTerms: '', payee: '', payeeLabel: '', showSqm: false, details: [],
+    sqm: '', rate: '', vat: true, ewt: true,
     reservation: '', reservationCoverage: '', reservationCheck: '', depositMonths: '2', depositCoverage: '', depositCheck: '',
     advanceMonths: '2', advanceCoverage: '', advanceCheck: '', commencement: '', termMonths: '12', escalation: '0',
-    pdcFirst: '', pdcCount: '', pdcDay: '28', bank: '', firstCheck: '', notes: '',
+    pdcFirst: '', pdcCount: '', pdcDay: '28', bank: '', firstCheck: '', checkNos: {}, notes: '',
   };
 }
 
@@ -297,6 +367,7 @@ export function soaOf(d: SoaDraft): Soa {
 
   return {
     ...a, no: a.no.trim(), client: a.client.trim(), property: a.property.trim(), leaseTerms: a.leaseTerms.trim(), payee: a.payee.trim(),
+    payeeLabel: a.payeeLabel.trim(), details: a.details.filter((d) => d.label.trim() || d.value.trim()).map((d) => ({ label: d.label.trim(), value: d.value.trim() })),
     reservationCoverage: a.reservationCoverage.trim(), reservationCheck: a.reservationCheck.trim(), depositCoverage: a.depositCoverage.trim(),
     depositCheck: a.depositCheck.trim(), advanceCoverage: a.advanceCoverage.trim(), advanceCheck: a.advanceCheck.trim(),
     pdcFirst: a.pdcFirst.trim(), bank: a.bank.trim(), firstCheck: a.firstCheck.trim(),
@@ -371,6 +442,18 @@ export function removeSoa(s: TerminalState, no: string, ctx: Ctx): Change<Soa> {
     state: logged(saved(s, all.filter((x) => x.no !== no)), TAG, `${no} for ${a.client} removed.`, ctx),
     record: a, message: `${no} removed.`,
   };
+}
+
+/**
+ * The statement with check `no`'s number as typed on the paper. Typing it back to empty, or to the number it would
+ * have anyway, lets it count on from the check before again.
+ */
+export function withCheckNumber(d: SoaDraft, no: number, check: string): SoaDraft {
+  const { [String(no)]: _, ...rest } = d.checkNos;
+  const counted = checkNumbers({ ...d, checkNos: rest }, no)[no - 1];
+  const typed = check.trim();
+
+  return { ...d, checkNos: typed && typed !== counted ? { ...rest, [no]: typed } : rest };
 }
 
 /** The line under the title. */
