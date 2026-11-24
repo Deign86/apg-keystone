@@ -38,7 +38,7 @@ export interface Platform extends SystemBridge {
   openFile(filters: FileFilter[]): Promise<{ name: string; bytes: Uint8Array } | null>;
   /**
    * Prints the page as it prints now (the print stylesheet, and the @page rule in place) to a PDF, and returns its
-   * bytes: real text with its fonts and lines as lines, on the pages Print makes (docs/adr/0042). The Windows desktop
+   * bytes: real text with its fonts and lines as lines, on the pages Print makes (docs/adr/0043). The Windows desktop
    * app only; absent elsewhere, where Export PDF draws the paper instead.
    */
   printPdf?(): Promise<Uint8Array>;

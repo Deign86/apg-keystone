@@ -341,7 +341,7 @@ fn pdf_from_answer(json: &str) -> Result<Vec<u8>, String> {
 }
 
 /// Prints the page to a PDF as it prints now, under the print stylesheet and the @page rule the page has put in place,
-/// and hands back its bytes (docs/adr/0042). WebView2 is Chromium: DevTools' Page.printToPDF keeps text as text, with
+/// and hands back its bytes (docs/adr/0043). WebView2 is Chromium: DevTools' Page.printToPDF keeps text as text, with
 /// its fonts, and lines as lines, on the pages Print makes.
 #[cfg(windows)]
 async fn printed_pdf(webview: &tauri::Webview) -> Result<Vec<u8>, String> {
