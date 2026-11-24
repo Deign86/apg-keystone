@@ -2,7 +2,7 @@ import { useNotify } from '@keystone/ui';
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { companyOf, DEADLINES, SERVICES, signatureOf, signatureSizeOf, type Change, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
+import { companyOf, DEADLINES, SERVICES, signatureOf, signatureOffsetOf, signatureSizeOf, type Change, type SignatureOffset, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
@@ -178,8 +178,12 @@ const noState = () => null;
 export interface SignatureSize {
   /** A share of the standard height: 1 unless it was resized. */
   size: number;
+  /** How far it is moved from its place on its line, in rem: none unless it was moved. */
+  offset: SignatureOffset;
   /** Keeps a new size for this signatory, on every paper; missing where whoever is signed in may not. */
   resize?: (size: number) => void;
+  /** Keeps a new place for this signatory's signature, on every paper; missing where whoever is signed in may not. */
+  move?: (offset: SignatureOffset) => void;
 }
 
 /**
@@ -191,14 +195,20 @@ export function useSignatureSize(who: string): SignatureSize {
   const v = useContext(KeystoneContext);
   const state = useSyncExternalStore(v?.store.subscribe ?? noSubscribe, v?.store.getState ?? noState);
 
-  if (!v || !state) return { size: 1 };
+  if (!v || !state) return { size: 1, offset: { x: 0, y: 0 } };
   const company = companyOf(state);
   const size = signatureSizeOf(company, who);
+  const offset = signatureOffsetOf(company, who);
   const sizes = findService(v.registry.modules, SERVICES.signatureSizes);
 
-  if (!sizes?.canResize(v.store.ctx) || !signatureOf(company, who)) return { size };
+  if (!sizes?.canResize(v.store.ctx) || !signatureOf(company, who)) return { size, offset };
 
-  return { size, resize: (next) => { v.store.run((s, c) => sizes.resize(s, who, next, c)); } };
+  return {
+    size,
+    offset,
+    resize: (next) => { v.store.run((s, c) => sizes.resize(s, who, next, c)); },
+    move: (next) => { v.store.run((s, c) => sizes.move(s, who, next, c)); },
+  };
 }
 
 /** A form draft that survives switching screens. */

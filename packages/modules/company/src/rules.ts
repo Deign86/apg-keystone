@@ -1,5 +1,5 @@
 import {
-  COMPANY, companyOf, isOwner, KeystoneError, logged, SIGNATURE_SIZE, signatureKey, signatureSizeOf, type Change, type SignatureSizes, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
+  clampOffset, COMPANY, companyOf, isOwner, KeystoneError, logged, SIGNATURE_SIZE, signatureKey, signatureOffsetOf, signatureSizeOf, type Change, type SignatureOffset, type SignatureSizes, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
 } from '@keystone/core';
 
 // What the company's documents start from (docs/adr/0018). Core keeps them with the records (`state.company`, in the
@@ -58,6 +58,8 @@ export function saveCompany(s: TerminalState, d: CompanyDraft, ctx: Ctx): Change
 
   if (s.company?.signatureSizes) details.signatureSizes = s.company.signatureSizes;
 
+  if (s.company?.signatureOffsets) details.signatureOffsets = s.company.signatureOffsets;
+
   return { state: logged({ ...s, company: details }, TAG, `Company details for ${name} saved.`, ctx), record: details, message: 'Company details saved.' };
 }
 
@@ -85,19 +87,23 @@ export function setSignature(s: TerminalState, name: string, image: string | nul
   const had = !!signatures[signatureKey(who)];
 
   const sizes = { ...current.signatureSizes };
+  const offsets = { ...current.signatureOffsets };
 
   if (image === null) {
     if (!had) throw new KeystoneError(`No signature is kept for ${who}.`);
     delete signatures[signatureKey(who)];
-    // A size goes with the signature it was for.
+    // A size and a place go with the signature they were for.
     delete sizes[signatureKey(who)];
+    delete offsets[signatureKey(who)];
   } else signatures[signatureKey(who)] = image;
 
-  const details: CompanyDetails = { ...current, signatures, signatureSizes: sizes };
+  const details: CompanyDetails = { ...current, signatures, signatureSizes: sizes, signatureOffsets: offsets };
 
   if (!Object.keys(signatures).length) delete details.signatures;
 
   if (!Object.keys(sizes).length) delete details.signatureSizes;
+
+  if (!Object.keys(offsets).length) delete details.signatureOffsets;
 
   if (JSON.stringify(details).length > DETAILS_MOST) throw new KeystoneError('There is no room for another signature. Remove one first.');
   const done = image === null ? 'removed' : had ? 'replaced' : 'added';
@@ -135,8 +141,39 @@ export function resizeSignature(s: TerminalState, name: string, size: number, ct
   return { state: logged({ ...s, company: details }, TAG, message, ctx), record: details, message };
 }
 
-/** Published as SERVICES.signatureSizes, for a paper that lets the CEO resize a signature where it shows it. */
-export const signatureSizes: SignatureSizes = { canResize: canChange, resize: resizeSignature };
+/**
+ * Moves whoever is named's signature from its place on its line, on every paper: a manual correction where trimming
+ * left it off. Kept within the signatory's area (`SIGNATURE_OFFSET`); no offset keeps nothing. Signed in, only an owner
+ * moves one, as only an owner changes signatures.
+ */
+export function moveSignature(s: TerminalState, name: string, offset: SignatureOffset, ctx: Ctx): Change<CompanyDetails> {
+  if (!canChange(ctx)) throw new KeystoneError('Only the CEO moves signatures.');
+  const who = line(name);
+  const current = companyOf(s);
+  const key = signatureKey(who);
+
+  if (!who || !current.signatures?.[key]) throw new KeystoneError(`No signature is kept for ${who || 'that name'}.`);
+
+  if (!Number.isFinite(offset.x) || !Number.isFinite(offset.y)) throw new KeystoneError('That is not a place.');
+  const next = clampOffset(offset);
+  const was = signatureOffsetOf(current, who);
+
+  if (next.x === was.x && next.y === was.y) return { state: s, record: current, message: `${who}'s signature is already there.` };
+  const offsets = { ...current.signatureOffsets };
+
+  if (!next.x && !next.y) delete offsets[key];
+  else offsets[key] = next;
+
+  const details: CompanyDetails = { ...current, signatureOffsets: offsets };
+
+  if (!Object.keys(offsets).length) delete details.signatureOffsets;
+  const message = next.x || next.y ? `Signature for ${who} moved.` : `Signature for ${who} back on its line.`;
+
+  return { state: logged({ ...s, company: details }, TAG, message, ctx), record: details, message };
+}
+
+/** Published as SERVICES.signatureSizes, for a paper that lets the CEO resize and move a signature where it shows it. */
+export const signatureSizes: SignatureSizes = { canResize: canChange, resize: resizeSignature, move: moveSignature };
 
 /** The line under the title. */
 export const COMPANY_LINE = 'What each new voucher, statement and ID starts from. The company\'s name, address and contacts are built in.';

@@ -67,7 +67,7 @@ test('a computer with nothing saved still has the company, on Home, in the sideb
   await expect(screen.getByRole('article', 'Check voucher 888-001').getByText(ADDRESS).first()).toBeVisible();
 });
 
-test('keeps a signature drawn for a signatory, which every paper they sign prints above their name', async ({ app, screen }) => {
+test('keeps a signature drawn for a signatory, which every paper they sign prints above their name', async ({ app, screen, browser }) => {
   await app.open('/#company');
   const panel = screen.getByRole('region', 'Signatures');
 
@@ -97,6 +97,21 @@ test('keeps a signature drawn for a signatory, which every paper they sign print
   await handle.press('ArrowUp');
   await handle.press('ArrowUp');
   await expect(handle).toHaveAttribute('aria-valuenow', '120');
+
+  // Trimmed to its ink: the drawing's empty pad (480 × 160) is cut away, so the signature fills its box, three times as
+  // wide as high, at the size picked (3rem × 1.2 high).
+  const signature = () => browser.evaluate(() => [...document.querySelectorAll<HTMLImageElement>('[data-ui="document"] img[alt="Signature of D. Lazaro"]')]
+    .map((img) => ({
+      trimmed: img.naturalWidth < 480 && img.naturalHeight < 160,
+      height: img.parentElement?.style.height, width: img.parentElement?.style.width, transform: img.parentElement?.style.transform,
+    }))[0]);
+
+  await expect.poll(async () => (await signature())?.trimmed).toBe(true);
+  expect(await signature()).toMatchObject({ height: '3.6rem', width: '10.8rem' });
+  // Moved with Shift and the arrows, a correction where trimming left it off.
+  await handle.press('Shift+ArrowRight');
+  await handle.press('Shift+ArrowUp');
+  await expect.poll(async () => (await signature())?.transform).toBe('translate(calc(-50% + 0.25rem), -0.25rem)');
   // A signatory is picked from whose signatures are kept, as they are kept, so whoever is picked signs.
   await screen.getByRole('form', 'New statement').getByRole('combobox', 'Checked by').tap();
   await expect(screen.getByRole('listbox').getByRole('option')).toHaveCount(3);

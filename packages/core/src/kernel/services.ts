@@ -1,7 +1,7 @@
 import type { MemberAccount, NewAccount } from './accounts';
 import type { ISODate } from './dates';
 import type { Centavos } from './money';
-import type { BankAccount, CompanyDetails, Statement, TerminalState, Voucher } from './schema';
+import type { BankAccount, CompanyDetails, SignatureOffset, Statement, TerminalState, Voucher } from './schema';
 import type { Change, Ctx } from './state';
 
 // Published service contracts. When one part needs something another part does, the
@@ -23,7 +23,7 @@ export const SERVICES = {
   voucherDrafts: 'vouchers.drafts',
   /** Offered by the platform of a build that signs in: who may open the records in the cloud (docs/adr/0014, 0033). */
   accounts: 'platform.accounts',
-  /** Offered by the company module: resizing a signatory's signature where a paper shows it. */
+  /** Offered by the company module: resizing and moving a signatory's signature where a paper shows it. */
   signatureSizes: 'company.signature-sizes',
 } as const;
 
@@ -109,6 +109,8 @@ export interface SignatureSizes {
   canResize(ctx: Ctx): boolean;
   /** Draws whoever is named's signature at `size` of the standard height, on every paper; 1 is the standard. */
   resize(state: TerminalState, name: string, size: number, ctx: Ctx): Change<CompanyDetails>;
+  /** Moves whoever is named's signature by `offset` from its place on its line, on every paper; zero puts it back. */
+  move(state: TerminalState, name: string, offset: SignatureOffset, ctx: Ctx): Change<CompanyDetails>;
 }
 
 export interface BankAccounts {

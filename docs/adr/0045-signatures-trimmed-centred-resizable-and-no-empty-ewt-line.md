@@ -28,6 +28,19 @@ Status: Accepted · Date: 2026-11-24
 - **Enter in the line editor** moves to the next line when the line is filled in, adding one after the last, and to the
   line's empty box when it is not; it never submits the form.
 
+## Changed 2026-11-24: one box, a frame to resize and move
+
+- **Trimming never ran** in the app: it waited on the image's `decode()`, which a webview can leave unsettled, so every
+  signature was shown as uploaded. It now loads by the image's load and error events, within five seconds.
+- **Every signature is drawn into the same box,** three times as wide as it is high (9 × 3 rem at the standard size),
+  scaled to fit and sitting on the middle of its line, so a tall signature and a wide one take the same room. The box
+  is not held to the line's width: a wide signature was squashed into it and could not grow.
+- **A dashed frame, not a dot,** shows around a signature on hover or focus, for the CEO. Drag the square at its top
+  right to resize from where it sits on the line; drag the signature itself to move it about its line, a manual
+  correction where trimming leaves it off (`state.company.signatureOffsets`, in rem, 8 either way across, 4 up and 1
+  down; `moveSignature`, the service's `move`). Arrow keys resize, Shift and the arrow keys move, Home puts back the
+  standard size and place; quick presses add up. The frame never prints.
+
 ## Consequences
 
 - Saved signatures need not be uploaded again; they are trimmed where they are shown.
