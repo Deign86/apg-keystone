@@ -1,6 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { markedPaperParts, paperSizes } from '../support/paper';
+import { markedPaperParts, paperLayoutWithAndWithoutMark } from '../support/paper';
 
 // Statements of Account (packages/modules/soa). The tests' sample records keep none, so a new one is SOA-2026-001. The
 // lease filled in below is the company's form: 354.4 sqm at ₱600 a month, two months' deposit and two months' advance,
@@ -106,11 +106,12 @@ test('refuses a statement with no floor area, saying what is missing', async ({ 
 test('marks on the statement where the field being typed in prints, part by part, and moves nothing', async ({ app, screen, browser }) => {
   await app.open('/#soa');
   const form = screen.getByRole('form', 'New statement of account');
-  const sizes = await paperSizes(browser);
 
   await form.getByRole('textbox', 'Client').fill('Northwind Retail Corp.');
   expect(await markedPaperParts(browser)).toEqual(['NORTHWIND RETAIL CORP. · solid 2px']);
-  expect(await paperSizes(browser)).toEqual(sizes);
+  const layout = await paperLayoutWithAndWithoutMark(browser);
+
+  expect(layout.marked).toEqual(layout.unmarked);
 
   // The floor area fills the first part, the breakdown of the monthly rent.
   await form.getByRole('textbox', 'Floor area (sqm)').fill('354.4');

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { markedPaperParts, paperSizes } from '../support/paper';
+import { markedPaperParts, paperLayoutWithAndWithoutMark } from '../support/paper';
 
 // ID Maker (packages/modules/id-maker). The sample data has APG-2026-0028 to 0030 issued, so a new card is
 // APG-2026-0031. 0028 (Juan) and 0029 (Angelica) are printed and active; 0030 (Rafael) waits to be printed.
@@ -305,11 +305,12 @@ test('opens a waiting card from Overview, and starts a new one from its button',
 test('marks on the card where the field being typed in shows, front or back, and moves nothing', async ({ app, screen, browser }) => {
   await app.open('/#id-maker');
   const form = screen.getByRole('form', 'New ID');
-  const sizes = await paperSizes(browser);
 
   await form.getByRole('textbox', 'Name on card').fill('Kristine Joy L. Villanueva');
   expect(await markedPaperParts(browser)).toEqual(['Kristine Joy L. Villanueva · solid 2px']);
-  expect(await paperSizes(browser)).toEqual(sizes);
+  const layout = await paperLayoutWithAndWithoutMark(browser);
+
+  expect(layout.marked).toEqual(layout.unmarked);
   await form.getByRole('textbox', 'Position').fill('Accounting Staff');
   expect(await markedPaperParts(browser)).toEqual(['Accounting Staff · solid 2px']);
 

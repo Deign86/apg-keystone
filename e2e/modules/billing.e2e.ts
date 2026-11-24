@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPartInView, markedPaperParts, paperSizes, tinyPaperText } from '../support/paper';
+import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, tinyPaperText } from '../support/paper';
 import { typeSignatory } from '../support/signatory';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
@@ -600,7 +600,6 @@ test('marks on the statement where the field being typed in prints, and brings i
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
-  const sizes = await paperSizes(browser);
   const scrolled = () => browser.evaluate(() => document.querySelector('section[aria-label="Document preview"]')?.scrollTop ?? 0);
 
   await form.getByRole('textbox', 'Bill to').fill('Dela Cruz Trading');
@@ -610,7 +609,9 @@ test('marks on the statement where the field being typed in prints, and brings i
   expect(await markedPaperParts(browser)).toEqual(['Invoice No. 888-110226 · solid 2px', 'INVOICE NO. 888-110226 · solid 2px']);
   await form.getByRole('textbox', 'Due date').fill('2026-12-02');
   expect(await markedPaperParts(browser)).toEqual(['DUE DATE December 2, 2026 · solid 2px']);
-  expect(await paperSizes(browser)).toEqual(sizes);
+  const layout = await paperLayoutWithAndWithoutMark(browser);
+
+  expect(layout.marked).toEqual(layout.unmarked);
   expect(await scrolled()).toBe(0);
 
   // With notes enough to run the statement past the window, the preview scrolls in its own box to the signatures at

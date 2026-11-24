@@ -1,6 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { faintPaperText, markedPaperParts, paperSizes, tinyPaperText } from '../support/paper';
+import { faintPaperText, markedPaperParts, paperLayoutWithAndWithoutMark, tinyPaperText } from '../support/paper';
 
 // Requests for Funds (packages/modules/funds, docs/adr/0011, 0021). This suite runs the build that keeps its records on
 // the computer, where nobody signs in: requests are filed, edited and withdrawn here, and never decided. The CEO's
@@ -224,11 +224,12 @@ test('marks on the fund transfer request where the field being typed in prints, 
   await app.open('/#funds');
   await screen.getByRole('tab', /^Request entry/).tap();
   const form = screen.getByRole('form', 'New request');
-  const sizes = await paperSizes(browser);
 
   await form.getByRole('textbox', 'What it is for').fill('Christmas party: venue deposit');
   expect(await markedPaperParts(browser)).toEqual(['Christmas party: venue deposit · solid 2px']);
-  expect(await paperSizes(browser)).toEqual(sizes);
+  const layout = await paperLayoutWithAndWithoutMark(browser);
+
+  expect(layout.marked).toEqual(layout.unmarked);
 
   // The expenses fill the amount box and the list under it.
   await form.getByRole('textbox', 'Line 1 description').fill('Venue deposit');

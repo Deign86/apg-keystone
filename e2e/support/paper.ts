@@ -107,9 +107,29 @@ export function markedPaperPartsDrawn(browser: Browser) {
   });
 }
 
-/** Each paper on screen as laid out ("703×1062"), so a test can show that marking a part of it moves nothing. */
-export function paperSizes(browser: Browser) {
-  return browser.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-ui="document"]')].map((e) => `${e.offsetWidth}×${e.offsetHeight}`));
+/**
+ * Each paper on screen and each marked part of it as laid out ("703×1062", "28,140 400×24"), with the mark on and with
+ * it taken off for a moment, so a test can show that marking a part moves nothing: the two are the same.
+ */
+export function paperLayoutWithAndWithoutMark(browser: Browser) {
+  return browser.evaluate(() => {
+    const marked = [...document.querySelectorAll<HTMLElement>('[data-ui="document"] [data-paper-active]')];
+
+    const layout = () => [
+      ...[...document.querySelectorAll<HTMLElement>('[data-ui="document"]')].map((e) => `${e.offsetWidth}×${e.offsetHeight}`),
+      ...marked.map((e) => `${e.offsetLeft},${e.offsetTop} ${e.offsetWidth}×${e.offsetHeight}`),
+    ];
+
+    const on = layout();
+
+    marked.forEach((e) => e.removeAttribute('data-paper-active'));
+
+    const off = layout();
+
+    marked.forEach((e) => e.setAttribute('data-paper-active', ''));
+
+    return { marked: on, unmarked: off };
+  });
 }
 
 /** Whether the first marked part lies wholly inside the preview beside the form (`label` names it), as scrolled. */

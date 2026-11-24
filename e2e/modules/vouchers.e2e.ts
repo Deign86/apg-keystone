@@ -1,7 +1,7 @@
 import { test, type Browser, type WebApp } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPaperParts, markedPaperPartsDrawn, paperMarkMedia, paperSizes, paperValueLines, tinyPaperText, voucherColumnLines } from '../support/paper';
+import { faintPaperText, markedPaperParts, markedPaperPartsDrawn, paperLayoutWithAndWithoutMark, paperMarkMedia, paperValueLines, tinyPaperText, voucherColumnLines } from '../support/paper';
 import { pickSignatory, typeSignatory } from '../support/signatory';
 
 // Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved (₱13,150.00 to
@@ -828,7 +828,6 @@ test('marks on both copies where the field being typed in prints, on screen only
   await app.open('/#vouchers');
   await screen.getByRole('tab', ENTRY).tap();
   const form = screen.getByRole('form', 'New voucher');
-  const sizes = await paperSizes(browser);
 
   expect(await markedPaperParts(browser)).toEqual([]);
 
@@ -836,7 +835,9 @@ test('marks on both copies where the field being typed in prints, on screen only
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PAYEE MANILA ELECTRIC COMPANY (MERALCO) · solid 2px'));
   // An outline takes no room: the paper is laid out as it was.
-  expect(await paperSizes(browser)).toEqual(sizes);
+  const layout = await paperLayoutWithAndWithoutMark(browser);
+
+  expect(layout.marked).toEqual(layout.unmarked);
 
   // The next field moves the ring to its own box.
   await form.getByRole('textbox', 'Check No.').fill('0004512');
