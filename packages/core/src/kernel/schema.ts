@@ -212,6 +212,11 @@ export interface CompanyDetails extends Company, Defaults {
    * A document prints it above the name of whoever signs it (docs/adr/0038).
    */
   signatures?: Record<string, string>;
+  /**
+   * How large each signature is drawn, as a share of the standard height (1), by the same key as `signatures`: 0.5 to
+   * 2. A signature with none is drawn at the standard height.
+   */
+  signatureSizes?: Record<string, number>;
 }
 
 /**
