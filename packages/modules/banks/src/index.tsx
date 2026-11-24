@@ -24,7 +24,7 @@ function AccountForm({ draft, onDone }: { draft: AccountDraft; onDone: () => voi
         <Field label="Bank"><TextInput autoFocus value={d.bank} onChange={(bank) => setD({ ...d, bank })} /></Field>
         <Field label="Branch"><TextInput placeholder="Optional" value={d.branch} onChange={(branch) => setD({ ...d, branch })} /></Field>
       </FieldRow>
-      <Field label="Account name" hint="As the bank holds it. Statements print it for the client."><TextInput value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
+      <Field label="Account name" hint="As the bank holds it. Statements print it for the client."><TextInput capitalize value={d.name} onChange={(name) => setD({ ...d, name })} /></Field>
       <Field label="Account number"><TextInput figures value={d.number} onChange={(number) => setD({ ...d, number })} /></Field>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {error
