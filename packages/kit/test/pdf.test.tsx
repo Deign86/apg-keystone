@@ -42,12 +42,12 @@ describe('Export PDF, printed by the platform', () => {
   });
 });
 
-// Where the platform cannot print a page to a PDF, Export PDF draws the paper and sets it on A4 pages
-// (packages/kit/src/output.ts › drawnPdf). jsdom draws nothing, so these hold the numbers it is drawn to; the file
-// itself, its pages and its size are checked end to end (e2e/modules/vouchers.e2e.ts, billing, soa, payroll,
-// id-maker, and e2e/cloud/funds.e2e.ts).
+// Where the platform cannot print a page to a PDF, Keystone draws the paper into one, as text, shapes and its real
+// pictures, on A4 pages (packages/kit/src/paper-pdf.ts). jsdom lays nothing out, so these hold the numbers it is
+// placed and scaled by; the file itself, its pages, its text and its pictures are checked end to end
+// (e2e/papers.e2e.ts, and the modules' Export PDF tests).
 
-/** The pixels across and down the image of a paper this size, drawn for this layout's PDF. */
+/** The pixels across and down a picture as wide and tall as a paper this size, drawn for this layout's PDF. */
 const drawn = (layout: typeof UPRIGHT, width: number, height: number) => {
   const ratio = pdfPixelRatio(layout, { width, height });
 
@@ -57,9 +57,9 @@ const drawn = (layout: typeof UPRIGHT, width: number, height: number) => {
 /** Millimetres on paper, as pixels at the PDF's resolution. */
 const atDpi = (mm: number) => Math.round((mm / 25.4) * PDF_DPI);
 
-describe('Export PDF, drawn', () => {
-  it('draws at print resolution: sharp on A4, without the tens of megabytes 4× made', () => {
-    // 300 dpi, where 4× drew an upright paper at about 380 dpi, and jsPDF stored every pixel raw.
+describe('Export PDF, drawn by Keystone', () => {
+  it('draws its pictures (the logo, signatures) at print resolution', () => {
+    // 300 dpi for the size a picture takes on the page: sharp on A4.
     expect(PDF_DPI).toBe(300);
   });
 
@@ -74,7 +74,7 @@ describe('Export PDF, drawn', () => {
     expect(pdfPage(TWO_UP)).toEqual({ page: a4, room: a4 });
   });
 
-  it('draws an upright paper across the page at 300 dpi, however long it is: it runs onto more pages', () => {
+  it('draws an upright paper across the page, however long it is: it runs onto more pages', () => {
     expect(UPRIGHT.pdf.flow).toBe(true);
     // A billing statement shorter than a page, and a statement of account twice as long: both 186 mm across, as printed.
     expect(drawn(UPRIGHT, PAPER_WIDTH, 930).across).toBe(atDpi(PRINTABLE.width));
@@ -97,7 +97,7 @@ describe('Export PDF, drawn', () => {
     expect(long.x - margin).toBeCloseTo(mmToPt(PAPER.height) - margin - (long.x + long.width));
   });
 
-  it('fits a two-up voucher and a payroll sheet to one page, and draws them at 300 dpi', () => {
+  it('fits a two-up voucher and a payroll sheet to one page', () => {
     expect([TWO_UP.pdf.flow, LANDSCAPE_PAGE.pdf.flow]).toEqual([undefined, undefined]);
     // Two half pages, each rounded down to whole px: within a few pixels of the page's 210 mm.
     expect(drawn(TWO_UP, PAGE_WIDTH, 2 * HALF_PAGE_HEIGHT).across).toBeCloseTo(atDpi(PAPER.width), -1);
@@ -106,8 +106,8 @@ describe('Export PDF, drawn', () => {
     expect(drawn(LANDSCAPE_PAGE, LANDSCAPE_PAPER_WIDTH, 1400).down).toBe(atDpi(PRINTABLE.width));
   });
 
-  it('draws a small paper, such as an ID card sheet, as large as it shows on the page, at 300 dpi', () => {
-    // Narrower than the page, so it is scaled up to fit: drawn with more pixels, not blown up from fewer.
+  it('draws a paper narrower than the page as wide as the page, its pictures with more pixels to match', () => {
+    // Scaled up to fit: a picture on it is drawn with more pixels, not blown up from fewer.
     expect(drawn(UPRIGHT, 520, 380).across).toBe(atDpi(PRINTABLE.width));
   });
 });
