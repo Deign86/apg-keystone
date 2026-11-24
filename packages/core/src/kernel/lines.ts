@@ -23,6 +23,13 @@ export const lineDraft = (init: Partial<Omit<LineDraft, 'id'>> = {}): LineDraft 
   id: `line-${++seq}`, desc: '', qty: '1', amount: '', ...init,
 });
 
+/**
+ * Lines from a saved draft (docs/adr/0041), each with a new id: one saved in another session could share an id with a
+ * line made in this one. What was typed is kept; anything missing starts blank. None saved: one blank line.
+ */
+export const linesFromDraft = (saved: readonly Partial<LineDraft>[] | undefined): LineDraft[] =>
+  (saved?.length ? saved.map((l) => lineDraft({ desc: l.desc ?? '', qty: l.qty ?? '1', amount: l.amount ?? '' })) : [lineDraft()]);
+
 const asTyped = (pesos: number) => (toCentavos(pesos) % 100 === 0 ? String(Math.round(pesos)) : pesos.toFixed(2));
 
 export const lineDraftOf = (l: LineItem) => lineDraft({ desc: l.desc, qty: String(l.qty ?? 1), amount: asTyped(l.price ?? l.amt) });
