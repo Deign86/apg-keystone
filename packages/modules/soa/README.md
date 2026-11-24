@@ -4,8 +4,10 @@
 - `src/index.tsx`: the register of saved statements (open one into the form, Remove… asks first), the form, Print, and
   Export PDF.
 - `src/SoaPaper.tsx`: the printed Statement of Account, the company's form set upright on one A4 page (the form itself
-  is drawn on its side) under the letterhead every paper carries (docs/adr/0038): Client, Property address, Lease terms,
-  Payee and the contract commencement, then four parts, each with its working shown:
+  is drawn on its side) under the letterhead every paper carries (docs/adr/0038): Client, Property address, the floor
+  area when **Show the floor area at the top** is ticked, Lease terms, the payee under its own title (**Payee's title**,
+  "Payee" unless changed, e.g. "Lessor"), the contract commencement, and any details added with **Add a detail at the
+  top**. Then four parts, each with its working shown:
   1. **Breakdown:** Particulars · Sqm · Rate · Computation · Amount. Base rent = floor area × rate per sqm; 12% VAT on
      the base rent; less 5% EWT on the base rent; monthly rent = base + VAT − EWT.
   2. **Deposit and advance:** Description · Amount · Qty · Total amount · Coverage · Check no. The security deposit is
@@ -15,7 +17,8 @@
      year from the second, on the year before's, and VAT and EWT follow it.
   4. **Postdated checks:** No. · Check date · Bank · Check number · Amount · Payment for. One check a month from the
      month after the advance (or the month set), dated on the set day of the month it pays (the 28th to start, cut to
-     the month's last day), for that month's rent in its lease year. Check numbers count on from the first.
+     the month's last day), for that month's rent in its lease year. Check numbers count on from the first; one that is
+     out of order is changed by clicking it on the paper preview, and the checks after it count on from it (`checkNos`).
 - `src/rules.ts`: the computation, numbering (`SOA-2026-001`, running within the year), saving, and the saved data
   under `state.ext.soa`. A refused save names the fields it is about (`client`, `sqm`, `depositMonths`…), which the
   form marks and focuses (docs/adr/0044). Tested in `test/rules.test.ts`.

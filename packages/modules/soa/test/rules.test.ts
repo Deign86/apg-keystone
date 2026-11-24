@@ -4,7 +4,7 @@ import { emptyState, moduleData, percent, toCentavos, withModuleData, type Ctx }
 import {
   addMonths, baseRentInYear, depositLines, dueOnSigning, leaseSchedule, leaseTermsOf, leaseYearOf, monthlyRent, monthName, newSoa,
   pdcSchedule, pdcStart, pdcTotal, removeSoa, rentOn, saveSoa, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf, statementsNewestFirst, statementsOf,
-  type SoaDraft,
+  topDetails, withCheckNumber, type SoaDraft,
 } from '../src/rules';
 import { soaModule } from '../src';
 
@@ -286,6 +286,72 @@ describe('what the module contributes', () => {
     expect(soaModule.stat?.(emptyState(), ctx, [soaModule])).toEqual(['Saved', '0']);
     expect(soaModule.stat?.(saved, ctx, [soaModule])).toEqual(['Saved', '1']);
     expect(soaModule.create?.label).toBe('New statement of account');
+  });
+});
+
+describe('check numbers typed on the paper', () => {
+  const lease = (patch: Partial<SoaDraft> = {}) => draft({ firstCheck: '029458', pdcCount: '6', ...patch });
+  const numbers = (d: SoaDraft) => pdcSchedule(soaOf(d)).map((c) => c.check);
+
+  it('count on from the first check number until one is typed', () => {
+    expect(numbers(lease())).toEqual(['029458', '029459', '029460', '029461', '029462', '029463']);
+  });
+
+  it('carry the checks after a typed one with it, as a new checkbook would', () => {
+    const d = withCheckNumber(lease(), 4, '030001');
+
+    expect(d.checkNos).toEqual({ 4: '030001' });
+    expect(numbers(d)).toEqual(['029458', '029459', '029460', '030001', '030002', '030003']);
+  });
+
+  it('keep each typed check, and count on from the latest before each', () => {
+    const d = withCheckNumber(withCheckNumber(lease(), 2, '029470'), 5, '000100');
+
+    expect(numbers(d)).toEqual(['029458', '029470', '029471', '029472', '000100', '000101']);
+  });
+
+  it('go back to counting when a typed number is cleared or typed as it would be anyway', () => {
+    const typed = withCheckNumber(lease(), 4, '030001');
+
+    expect(withCheckNumber(typed, 4, '  ').checkNos).toEqual({});
+    expect(withCheckNumber(lease(), 3, '029460').checkNos).toEqual({});
+    expect(numbers(withCheckNumber(typed, 4, ''))).toEqual(numbers(lease()));
+  });
+
+  it('are kept when the statement is saved and read back, and anything damaged is left out', () => {
+    const { record, state } = saveSoa(emptyState(), withCheckNumber(lease(), 4, '030001'), ctx);
+
+    expect(statementsOf(state)[0].checkNos).toEqual({ 4: '030001' });
+    expect(soaOf(soaDraftOf(record))).toEqual(record);
+    const damaged = withModuleData(emptyState(), 'soa', { statements: [{ no: 'SOA-2026-001', checkNos: { 2: '029470', x: '1', 3: '', 4: 7 } }] });
+
+    expect(statementsOf(damaged)[0].checkNos).toEqual({ 2: '029470' });
+  });
+});
+
+describe('the details at the top', () => {
+  it('are the lease’s own, the payee under "Payee" unless retitled', () => {
+    expect(topDetails(soaOf(draft())).map((d) => [d.label, d.value])).toEqual([
+      ['Client', 'Northwind Retail Corp.'], ['Property address', 'Unit 5, Ortigas Avenue, Pasig'],
+      ['Lease terms', '2 years, 5% escalation a year from the second year'], ['Payee', 'Juan Dela Cruz'], ['Contract commencement', 'January 1, 2027'],
+    ]);
+    expect(topDetails(soaOf(draft({ payeeLabel: ' Lessor ' })))[3]).toEqual({ label: 'Lessor', value: 'Juan Dela Cruz', part: 'payee' });
+  });
+
+  it('show the floor area when chosen, and the details added after the lease’s own, leaving out an empty one', () => {
+    const a = soaOf(draft({ showSqm: true, details: [{ label: ' Floor ', value: ' 3rd floor, Room 7 ' }, { label: ' ', value: '' }] }));
+
+    expect(topDetails(a).map((d) => d.label)).toEqual(['Client', 'Property address', 'Floor area', 'Lease terms', 'Payee', 'Contract commencement', 'Floor']);
+    expect(topDetails(a)[2]).toEqual({ label: 'Floor area', value: '354.4 sqm', part: 'breakdown', figure: true });
+    expect(a.details).toEqual([{ label: 'Floor', value: '3rd floor, Room 7' }]);
+  });
+
+  it('are kept when saved and read back; one saved before has none', () => {
+    const { record, state } = saveSoa(emptyState(), draft({ payeeLabel: 'Lessor', showSqm: true, details: [{ label: 'Floor', value: '3rd' }] }), ctx);
+
+    expect(statementsOf(state)[0]).toMatchObject({ payeeLabel: 'Lessor', showSqm: true, details: [{ label: 'Floor', value: '3rd' }] });
+    expect(soaOf(soaDraftOf(record))).toEqual(record);
+    expect(statementsOf(withModuleData(emptyState(), 'soa', { statements: [{ no: 'SOA-2026-001' }] }))[0]).toMatchObject({ payeeLabel: '', showSqm: false, details: [], checkNos: {} });
   });
 });
 

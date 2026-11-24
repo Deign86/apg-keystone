@@ -51,6 +51,39 @@ afterEach(() => {
 });
 
 describe('the Statements of Account screen', () => {
+  it('changes a check’s number where it is on the paper, and the checks after it follow', async () => {
+    await open();
+    fillLease();
+    type('First check number', '029458');
+    const preview = within(screen.getByRole('article', { name: 'Statement of account SOA-2026-001' }));
+
+    fireEvent.click(preview.getByRole('button', { name: '029460', description: 'Change check 3’s number' }));
+    const field = preview.getByRole('textbox', { name: 'Check 3 number' });
+
+    fireEvent.change(field, { target: { value: '030001' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    fireEvent.blur(field);
+    await act(async () => {});
+
+    expect(preview.getByRole('button', { name: '030001', description: 'Change check 3’s number' })).toBeInTheDocument();
+    expect(preview.getByRole('button', { name: '030002', description: 'Change check 4’s number' })).toBeInTheDocument();
+    expect(preview.getByRole('button', { name: '029459', description: 'Change check 2’s number' })).toBeInTheDocument();
+  });
+
+  it('prints the payee under the title typed, and a detail added at the top', async () => {
+    await open();
+    fillLease();
+    type('Payee', 'DC88 Corporation');
+    type('Payee\u2019s title', 'Lessor');
+    fireEvent.click(form().getByRole('button', { name: 'Add a detail at the top' }));
+    type('Detail 1 label', 'Floor');
+    type('Detail 1 value', '3rd floor, Room 7');
+    const preview = within(screen.getByRole('article', { name: 'Statement of account SOA-2026-001' }));
+
+    expect(preview.getByText('Lessor').nextElementSibling).toHaveTextContent('DC88 Corporation');
+    expect(preview.getByText('Floor').nextElementSibling).toHaveTextContent('3rd floor, Room 7');
+  });
+
   it('starts with none saved and the next number', async () => {
     await open();
 
