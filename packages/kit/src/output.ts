@@ -7,7 +7,7 @@ const PDF_FILES = [{ name: 'PDF', extensions: ['pdf'] }];
 
 /**
  * Saves a document element as an A4 PDF, asking where. Where the platform can print a page to a PDF (the Windows
- * app), the PDF is the print itself (docs/adr/0041): real text with its fonts, lines as lines, on the pages Print makes.
+ * app), the PDF is the print itself (docs/adr/0042): real text with its fonts, lines as lines, on the pages Print makes.
  * Elsewhere the paper is drawn (`drawnPdf`). Either way it is the paper's layout that says how it sits on the page.
  */
 export async function savePdf(node: HTMLElement, name: string, files: Pick<Files, 'save' | 'printPdf'>): Promise<string | null> {

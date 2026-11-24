@@ -14,7 +14,7 @@
   3. **Lease term and escalation:** each lease year's dates and its rent. The base rent rises by the escalation each
      year from the second, on the year before's, and VAT and EWT follow it.
   4. **Postdated checks:** No. · Check date · Bank · Check number · Amount · Payment for. One check a month from the
-     month after the advance (or the month set), dated on the set day of the month before (the 28th to start, cut to
+     month after the advance (or the month set), dated on the set day of the month it pays (the 28th to start, cut to
      the month's last day), for that month's rent in its lease year. Check numbers count on from the first.
 - `src/rules.ts`: the computation, numbering (`SOA-2026-001`, running within the year), saving, and the saved data
   under `state.ext.soa`. Tested in `test/rules.test.ts`.
@@ -24,6 +24,9 @@
 - **Overview:** the "New statement of account" button.
 - **Activity:** log tag `SOA`.
 - **Draft key:** `soa.draft`.
+- **Save draft:** the form's work kept with the records, listed under Drafts above the register, opened again or
+  deleted; saving the statement for real finishes it (docs/adr/0041). A draft has no number: it takes the next one when
+  it is saved.
 
 ## Needs
 Nothing from another part.

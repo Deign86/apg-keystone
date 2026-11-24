@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
   billingFigure, billingFinding, billingWaiting, EWT_RATE, EWT_RATES, ewtRateOf, markOverdue, newStatement, nextStatementNo, paidInto, withStatementDate, payInto,
-  recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftOf, statementPayments, statementTone, statementTotals, withClient,
+  recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftFrom, statementDraftOf, statementDraftTitle, statementPayments, statementTone, statementTotals, withClient,
 } from '../src/rules';
 import { billingModule } from '../src';
 import { sampleState } from '@keystone/core/sample';
@@ -247,5 +247,23 @@ describe('the account a client pays into', () => {
     const b = saveStatement(s, { ...d, notes: payInto(d.notes, bdo) }, ctx).record;
     expect(b.notes).toContain('Account Number: 0012 3456 7890');
     expect(paidInto(statementDraftOf(b, s).notes, [bpi, bdo])).toBe(bdo);
+  });
+});
+
+describe('a saved draft of a statement (docs/adr/0041)', () => {
+  it('is called by whom it bills and what it comes to so far', () => {
+    const s = state();
+
+    expect(statementDraftTitle({ ...billed(s), lines: [lineDraft({ desc: 'Rent', amount: '1000' })] })).toBe('Novatek BPO Solutions Inc. · ₱1,100.00');
+    expect(statementDraftTitle(newStatement(s, ctx))).toBe('No client yet · ₱0.00');
+  });
+
+  it('goes back in the form over a new statement, with the next invoice number unless it edits a saved one', () => {
+    const s = state();
+    const back = statementDraftFrom(s, ctx, [], { client: 'Springfield Properties Inc.', no: '010150-2026', lines: [{ id: 'line-1', desc: 'Rent', qty: '2', amount: '500' }] });
+
+    expect(back).toMatchObject({ client: 'Springfield Properties Inc.', no: '888-103026', ewtRate: EWT_RATE, notes: companyOf(s).paymentInstructions });
+    expect(back.lines.map((l) => [l.desc, l.qty, l.amount])).toEqual([['Rent', '2', '500']]);
+    expect(statementDraftFrom(s, ctx, [], { ...statementDraftOf(s.bs[2], s) }).no).toBe(s.bs[2].no);
   });
 });

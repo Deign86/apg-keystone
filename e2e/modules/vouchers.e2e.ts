@@ -827,3 +827,33 @@ test('folds vouchers to the same payee into one row that opens to show them', as
   await fold.tap();
   await expect(register.getByRole('row', /^888-002 /)).toBeHidden();
 });
+
+// Save draft (docs/adr/0041): a voucher's work kept with the records and listed under Drafts above the register. A
+// draft has no number, so the next voucher saved still takes 888-001, and saving it for real takes the draft away.
+test('saves a draft, opens it again from Drafts, and takes it away once the voucher is saved', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await screen.getByRole('tab', /^Voucher entry/).tap();
+  const form = screen.getByRole('form', 'New voucher');
+
+  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
+
+  await screen.getByRole('button', 'New voucher').tap();
+  await screen.getByRole('tab', /^Voucher register/).tap();
+  const draft = screen.getByRole('list', 'Drafts').getByRole('listitem', 'MANILA ELECTRIC COMPANY (MERALCO) · ₱1,250.50');
+
+  await expect(draft.getByText('Draft', { exact: true })).toBeVisible();
+  await draft.getByRole('button', 'Open').tap();
+  await expect(screen.getByRole('tab', /^Voucher entry/)).toHaveAttribute('aria-selected', 'true');
+  const opened = screen.getByRole('form', 'New voucher');
+
+  await expect(opened.getByRole('textbox', 'Payee')).toHaveValue('MANILA ELECTRIC COMPANY (MERALCO)');
+  await expect(opened.getByRole('textbox', 'Line 1 amount')).toHaveValue('1250.50');
+  await opened.getByRole('button', 'Save and route for approval').tap();
+  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
+  await screen.getByRole('tab', /^Voucher register/).tap();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
+});

@@ -53,7 +53,7 @@ export type Soa = {
   pdcFirst: string;
   /** How many checks; 0 is one for every month the advance does not cover. */
   pdcCount: number;
-  /** The day of the month before its rent month each check is dated, cut to the month's last day. */
+  /** The day of its rent month each check is dated, cut to the month's last day. */
   pdcDay: number;
   bank: string;
   /** The first check's number; the rest follow it. */
@@ -184,8 +184,9 @@ function checkNumber(first: string, n: number): string {
 export interface Pdc { no: number; date: ISODate; bank: string; check: string; amount: Centavos; month: string }
 
 /**
- * The postdated checks, one a month from the first rent month they pay, each dated `pdcDay` of the month before and for
- * that month's rent after VAT and EWT in its lease year, so an escalation shows in the checks of the year it starts.
+ * The postdated checks, one a month from the first rent month they pay, each dated `pdcDay` of the month it pays, so
+ * the check date and "Payment for" name the same month, and for that month's rent after VAT and EWT in its lease year,
+ * so an escalation shows in the checks of the year it starts.
  */
 export function pdcSchedule(a: Soa): Pdc[] {
   const start = pdcStart(a);
@@ -195,11 +196,11 @@ export function pdcSchedule(a: Soa): Pdc[] {
 
   return Array.from({ length: Math.min(pdcTotal(a), 120) }, (_, i) => {
     const month = addMonths(start, i);
-    const before = monthIndex(month) - 1;
+    const dated = monthIndex(month);
 
     return {
       no: i + 1,
-      date: `${monthOf(before)}-${String(Math.min(day, daysIn(before))).padStart(2, '0')}`,
+      date: `${month}-${String(Math.min(day, daysIn(dated))).padStart(2, '0')}`,
       bank: a.bank,
       check: checkNumber(a.firstCheck, i),
       amount: rentOn(a, baseRentInYear(a, leaseYearOf(a, month))).net,
@@ -263,6 +264,19 @@ export function newSoa(s: TerminalState, ctx: Ctx): SoaDraft {
   };
 }
 
+/** What the Drafts list calls a saved statement of account draft: the client, and where. */
+export const soaDraftTitle = (d: SoaDraft) => [d.client.trim() || 'No client yet', d.property.trim()].filter(Boolean).join(' · ');
+
+/**
+ * A saved draft back in the form (docs/adr/0041): what was saved over a new statement, so a field it lacks starts as a
+ * new one's does, and the next number, since a draft has none, unless it edits a saved statement.
+ */
+export function soaDraftFrom(s: TerminalState, ctx: Ctx, saved: Partial<SoaDraft>): SoaDraft {
+  const fresh = newSoa(s, ctx);
+
+  return { ...fresh, ...saved, no: saved.editing ?? fresh.no };
+}
+
 const typed = (n: number) => (n ? String(n) : '');
 
 export const soaDraftOf = (a: Soa): SoaDraft => ({
@@ -279,7 +293,7 @@ const numberOf = (x: string) => {
 
 /** The statement the form holds, as it prints and saves: text trimmed (the notes kept as typed), numbers read. */
 export function soaOf(d: SoaDraft): Soa {
-  const { editing: _, ...a } = d;
+  const { editing: _, savedDraft: __, ...a } = d;
 
   return {
     ...a, no: a.no.trim(), client: a.client.trim(), property: a.property.trim(), leaseTerms: a.leaseTerms.trim(), payee: a.payee.trim(),

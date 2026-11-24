@@ -135,7 +135,7 @@ const platformFor = (os: 'macos' | 'windows' | 'linux'): Platform => ({
   latestRelease,
   installFrom: (asset) => invoke(commands.installFrom, { asset }),
   openUrl: (url) => openUrl(url),
-  // Export PDF as Print makes it (docs/adr/0041): WebView2 is Chromium, and prints a page to a PDF with its text kept.
+  // Export PDF as Print makes it (docs/adr/0042): WebView2 is Chromium, and prints a page to a PDF with its text kept.
   // A Mac's WebKit has no such print, so there the paper is drawn instead.
   ...(os === 'windows' && { printPdf: async () => new Uint8Array(await invoke<ArrayBuffer>(commands.printPdf)) }),
   updater,

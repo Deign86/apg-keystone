@@ -15,6 +15,8 @@ export {
 
 export { BankAccountPicker, ConnectorShortcut, Feed, FormCard, LineEditor, SignatoryPicker, Workspace } from './components';
 
+export { SaveDraftButton, SavedDrafts, useSavedDrafts, type SavedDraftsApi, type SavedDraftsOf } from './drafts';
+
 export { amountColumn, FitWidth, LandscapePage, Letterhead, Lines, Meta, orDash, paperHeading, paperLabel, paperStripe, Sheet, SignatureImage, Signatures, TwoUp, type LineColumn } from './documents';
 
 export { printElement, savePdf } from './output';

@@ -1,4 +1,4 @@
-# 0041. Export PDF is the print, with its text, on as many A4 pages as it takes
+# 0042. Export PDF is the print, with its text, on as many A4 pages as it takes
 
 Status: Accepted · Date: 2026-11-24
 

@@ -68,9 +68,9 @@ test('works out the rent, the deposit, each lease year and the checks, on the pr
   const checks = paper.getByRole('table', 'Postdated checks');
 
   await expect(checks.getByRole('row')).toHaveCount(13);
-  await expect(checks.getByRole('row', '1 January 28, 2027 BPI 6000325749 ₱227,524.80 February 2027 Rent')).toBeVisible();
+  await expect(checks.getByRole('row', '1 February 28, 2027 BPI 6000325749 ₱227,524.80 February 2027 Rent')).toBeVisible();
   // The twelfth check pays the first month of the second year, at its escalated rent.
-  await expect(checks.getByRole('row', '12 December 28, 2027 BPI 6000325760 ₱238,901.04 January 2028 Rent')).toBeVisible();
+  await expect(checks.getByRole('row', '12 January 28, 2028 BPI 6000325760 ₱238,901.04 January 2028 Rent')).toBeVisible();
 });
 
 test('saves the statement to the register and the Activity Log, and opens it again', async ({ app, screen }) => {
@@ -131,4 +131,26 @@ test('refuses a statement with no floor area, saying what is missing', async ({ 
 
   await expect(form.getByRole('alert')).toHaveText('Enter the floor area in square metres.');
   await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
+});
+
+// Save draft (docs/adr/0041): a statement's work kept with the records and listed under Drafts above the saved ones,
+// and opened again to be finished. Saved for real, it takes the next number and the draft leaves the list.
+test('saves a draft, opens it again from Drafts, and takes it away once the statement is saved', async ({ app, screen }) => {
+  await app.open('/#soa');
+  const form = await fillLease(screen);
+
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
+  await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
+
+  await screen.getByRole('button', 'New statement').tap();
+  await expect(screen.getByRole('form', 'New statement of account').getByRole('textbox', 'Client')).toHaveValue('');
+  await screen.getByRole('list', 'Drafts').getByRole('listitem', 'Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig').getByRole('button', 'Open').tap();
+  const opened = screen.getByRole('form', 'New statement of account');
+
+  await expect(opened.getByRole('textbox', 'Floor area (sqm)')).toHaveValue('354.4');
+  await expect(opened.getByRole('textbox', 'SOA No.')).toHaveValue('SOA-2026-001');
+  await opened.getByRole('button', 'Save statement').tap();
+  await expect(screen.getByRole('table', 'Statements saved').getByRole('row', /^SOA-2026-001 Northwind/)).toBeVisible();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
 });
