@@ -1,12 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { test, type Browser } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { paperAsPrinted, pdfPlacements } from './support/paper';
+import { paperAsPrinted, readPdf } from './support/paper';
+import { pickSignatory } from './support/signatory';
 
-// Every paper Keystone prints or saves as a PDF (packages/kit/src/paper.ts, output.ts) fills an A4 page: an upright
-// one 186 mm across inside the 12 mm margins, the payroll sheet 273 mm across a page on its side, and the two-up
-// voucher the whole sheet; each centred, nothing cut off, not shrunk to one side. A test per paper, on its own screen:
-//   - the PDF as this browser saves it (drawn, docs/adr/0043): where each page puts the paper;
+// Every paper Keystone prints or saves as a PDF (packages/kit/src/paper.ts, output.ts, paper-pdf.ts), on every
+// platform, docs/adr/0043. A test per paper, on its own screen:
+//   - the PDF as this browser saves it, read as a PDF reader reads it (pdf.js): each page A4; the paper drawn across the
+//     printable width (186 mm upright, 273 mm on its side, the whole sheet for the two-up voucher), centred; its words
+//     and peso amounts there as text, which can be selected, searched and edited; and its only images real pictures
+//     (the logo), never a picture of the page;
 //   - the paper as Print lays it out, which is what the Windows app's PDF is: nothing else on the screen takes room
 //     (a wide table beside it made the browser shrink the whole print, the paper narrower than A4 and off to one side),
 //     and the paper starts at the page's edge at its full width.
@@ -14,31 +17,43 @@ import { paperAsPrinted, pdfPlacements } from './support/paper';
 const MARGIN = (12 / 25.4) * 72;
 const A4 = { w: 595.28, h: 841.89 };
 
-/** Exports the paper on screen with `button` and waits for `saved` to be said. */
+/** Exports the paper on screen with `button`, waits for `saved` to be said, and reads the PDF. */
 async function exportPdf(browser: Browser, screen: Screen, button: string, saved: string) {
   const file = await browser.waitForDownload(async () => {
     await screen.getByRole('button', button).tap();
     await expect(screen.getByRole('dialog', saved)).toBeVisible({ timeout: 30_000 });
   });
 
-  return pdfPlacements(await readFile(file.absolutePath));
+  return readPdf(await readFile(file.absolutePath));
 }
 
-/** Each page is A4 this way up, and the paper on it spans `across` points, centred, from the top of the page's room. */
-function expectFilled(pages: ReturnType<typeof pdfPlacements>, way: 'portrait' | 'landscape', across: number, margin = MARGIN) {
-  const page = way === 'portrait' ? A4 : { w: A4.h, h: A4.w };
+/** The text of every page, with letter-spaced words (headings set wide) closed up, as a search would match them. */
+const words = (pages: Awaited<ReturnType<typeof readPdf>>) => pages.map((p) => p.text).join(' ');
+const squeezed = (pages: Awaited<ReturnType<typeof readPdf>>) => words(pages).replace(/\s+/g, '');
+
+/**
+ * Each page is A4 this way up; what is drawn on it spans `across` points, centred, from the top of the page's room;
+ * and its images are pictures on the paper (each under a tenth of the page), not the page drawn as one.
+ */
+function expectFilled(pages: Awaited<ReturnType<typeof readPdf>>, way: 'portrait' | 'landscape', across: number, margin = MARGIN) {
+  const size = way === 'portrait' ? A4 : { w: A4.h, h: A4.w };
 
   expect(pages.length).toBeGreaterThanOrEqual(1);
 
-  for (const { page: size, paper } of pages) {
-    expect(size.w).toBeCloseTo(page.w, 1);
-    expect(size.h).toBeCloseTo(page.h, 1);
-    expect(paper.w).toBeCloseTo(across, 0);
-    // Centred: as much room on its left as on its right.
-    expect(paper.x).toBeCloseTo((page.w - paper.w) / 2, 0);
-    // From the top of the room on the page (a PDF counts up from the bottom), and inside it at the foot.
-    expect(paper.y + paper.h).toBeCloseTo(page.h - margin, 0);
-    expect(paper.y).toBeGreaterThanOrEqual(margin - 0.5);
+  for (const [i, page] of pages.entries()) {
+    expect(page.w).toBeCloseTo(size.w, 0);
+    expect(page.h).toBeCloseTo(size.h, 0);
+    // Within a point: across the printable width, centred, as much room on its left as on its right.
+    expect(Math.abs(page.drawn.x1 - page.drawn.x0 - across)).toBeLessThan(1);
+    expect(Math.abs(page.drawn.x0 - (page.w - page.drawn.x1))).toBeLessThan(1);
+
+    // The paper starts at the top of the room on the page (a PDF counts up from the bottom).
+    if (i === 0) expect(Math.abs(page.drawn.y1 - (page.h - margin))).toBeLessThan(1);
+
+    expect(page.drawn.y0).toBeGreaterThanOrEqual(margin - 1);
+    expect(page.text.trim().length).toBeGreaterThan(0);
+
+    for (const image of page.images) expect(image.w * image.h).toBeLessThan((page.w * page.h) / 10);
   }
 }
 
@@ -51,7 +66,7 @@ async function expectPrintedAlone(browser: Browser, label: string) {
   expect(printed?.width).toBe(printed?.laidOut);
 }
 
-test('saves and prints a long statement of account across every A4 page it runs to', async ({ app, screen, browser }) => {
+test('saves and prints a long statement of account across every A4 page it runs to, with its text', async ({ app, screen, browser }) => {
   await app.open('/#soa');
   const form = screen.getByRole('form', 'New statement of account');
 
@@ -63,10 +78,15 @@ test('saves and prints a long statement of account across every A4 page it runs 
 
   expect(pages).toHaveLength(2);
   expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
+  expect(squeezed(pages)).toContain('STATEMENTOFACCOUNT');
+  expect(words(pages)).toContain('NORTHWIND RETAIL CORP.');
+  expect(words(pages)).toContain('₱212,640.00');
+  // The second page's checks are text too: the last one's number, after the cut.
+  expect(pages[1].text).toContain('6000325772');
   await expectPrintedAlone(browser, 'Statement of account');
 });
 
-test('saves and prints a billing statement across an A4 page', async ({ app, screen, browser }) => {
+test('saves and prints a billing statement across an A4 page, with its text', async ({ app, screen, browser }) => {
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
@@ -74,11 +94,42 @@ test('saves and prints a billing statement across an A4 page', async ({ app, scr
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
 
-  expectFilled(await exportPdf(browser, screen, 'Export PDF', 'Saved 888-110226.pdf.'), 'portrait', A4.w - 2 * MARGIN);
+  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888-110226.pdf.');
+
+  expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
+  expect(squeezed(pages)).toContain('BILLINGSTATEMENT');
+  expect(words(pages)).toContain('Virtual office, November');
+  expect(words(pages)).toContain('₱10,000.00');
   await expectPrintedAlone(browser, 'Billing statement');
 });
 
-test('saves and prints the two-up check voucher across the whole sheet', async ({ app, screen, browser }) => {
+test('saves a signature over its line as a picture, the rest of the statement as text', async ({ app, screen, browser }) => {
+  // D. Lazaro's signature, drawn once, signs the statements they prepare.
+  await app.open('/#company');
+  const panel = screen.getByRole('region', 'Signatures');
+
+  await pickSignatory(screen, panel, 'Whose signature', 'D. Lazaro');
+  await panel.getByRole('button', 'Draw signature…').tap();
+  const pad = screen.getByRole('dialog', 'Signature of D. Lazaro');
+
+  await pad.getByRole('img', 'Sign here').dragTo(pad.getByRole('button', 'Clear'));
+  await pad.getByRole('button', 'Save signature').tap();
+  await expect(screen.getByRole('dialog', 'Signature for D. Lazaro added.')).toBeVisible();
+
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
+  await screen.getByRole('form', 'New statement').getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+
+  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888-110226.pdf.');
+
+  // The logo and the signature: two pictures, each a small part of the page; the name under the signature is text.
+  expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
+  expect(pages[0].images).toHaveLength(2);
+  expect(words(pages)).toContain('D. Lazaro');
+});
+
+test('saves and prints the two-up check voucher across the whole sheet, with its text', async ({ app, screen, browser }) => {
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
@@ -86,12 +137,16 @@ test('saves and prints the two-up check voucher across the whole sheet', async (
   await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
-  // No margin: two half pages of 148.5 mm each, rounded down to whole pixels, so within 2 pt of the page's width.
+  // No margin: the dashed line between the copies runs from edge to edge.
   const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888-001.pdf.');
 
   expect(pages).toHaveLength(1);
-  expect(pages[0].paper.w).toBeGreaterThan(A4.w - 2);
-  expectFilled(pages, 'portrait', pages[0].paper.w, 0);
+  expectFilled(pages, 'portrait', pages[0].drawn.x1 - pages[0].drawn.x0, 0);
+  expect(pages[0].drawn.x1 - pages[0].drawn.x0).toBeGreaterThan(A4.w - 2);
+  // Both copies, as text.
+  expect(squeezed(pages).split('CHECKVOUCHER')).toHaveLength(3);
+  expect(words(pages).split('Office supplies for November')).toHaveLength(3);
+  expect(words(pages)).toContain('₱1,250.50');
   await expectPrintedAlone(browser, 'Check voucher');
 });
 
@@ -105,14 +160,23 @@ test('saves and prints the payroll sheet across an A4 page on its side, and a pa
   await pay.getByRole('button', 'Save pay setup').tap();
   await expect(screen.getByRole('article', 'Payroll sheet, Oct 16–31, 2026')).toBeVisible();
 
-  expectFilled(await exportPdf(browser, screen, 'Export PDF', 'Saved Payroll Oct 16–31, 2026.pdf.'), 'landscape', A4.h - 2 * MARGIN);
+  const sheet = await exportPdf(browser, screen, 'Export PDF', 'Saved Payroll Oct 16–31, 2026.pdf.');
+
+  expectFilled(sheet, 'landscape', A4.h - 2 * MARGIN);
+  expect(words(sheet)).toContain('Juan Miguel P. Reyes');
+  expect(words(sheet)).toContain('APGCO-0013');
   await expectPrintedAlone(browser, 'Payroll sheet');
 
   // The payslip sits beside the cut-off's wide tables: printed, it once came out at 71% of the page's width.
   await screen.getByRole('group', 'Show').getByRole('button', 'Payslip: Juan Miguel P. Reyes').tap();
   await expect(screen.getByRole('article', 'Payslip, Juan Miguel P. Reyes, Oct 16–31, 2026')).toBeVisible();
 
-  expectFilled(await exportPdf(browser, screen, 'Export PDF', 'Saved Payslip Juan Miguel P. Reyes Oct 16–31, 2026.pdf.'), 'portrait', A4.w - 2 * MARGIN);
+  const slip = await exportPdf(browser, screen, 'Export PDF', 'Saved Payslip Juan Miguel P. Reyes Oct 16–31, 2026.pdf.');
+
+  expectFilled(slip, 'portrait', A4.w - 2 * MARGIN);
+  expect(squeezed(slip)).toContain('PAYSLIP');
+  expect(words(slip)).toContain('Juan Miguel P. Reyes');
+  expect(words(slip)).toContain('₱760.00');
   await expectPrintedAlone(browser, 'Payslip');
 });
 

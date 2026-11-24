@@ -2,8 +2,9 @@
 
 The APG design system: the look shared with the attendance tracker and the website admin, as React components.
 
-- `src/theme.css`: **generated** from `shared/design/tokens.json` by `npm run sync` (Tailwind `@theme` plus Orbitron
-  and Poppins). Never edit it by hand.
+- `src/theme.css`: **generated** from `shared/design/tokens.json` by `npm run sync` (Tailwind `@theme` plus Orbitron,
+  Poppins, and Keystone Peso, the peso sign Poppins lacks, from `scripts/build-peso-font.py`). Never edit it by
+  hand.
 - `src/styles.css`: base styles, the brand's eyebrow and input chrome, the print stylesheet, and the fixed z-index
   scale.
 - `src/primitives.tsx`: `Button`, `Panel`, `ScreenHeader`, `Eyebrow`, `SectionLabel`, `KeyBadge`, `StatusPill`, `Tag`,

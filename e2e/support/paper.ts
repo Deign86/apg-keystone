@@ -1,4 +1,3 @@
-import { inflateSync } from 'node:zlib';
 import type { Browser } from '@e2e-dev/web';
 
 /**
@@ -196,28 +195,65 @@ export function pdfPages(pdf: Buffer) {
 }
 
 /**
- * Where a drawn PDF puts the paper on each page, in points from the page's bottom left: each page's size and the
- * picture on it (jsPDF places a picture with `w 0 0 h x y cm` before drawing it).
+ * A saved PDF as a PDF reader sees it (pdf.js): each page's size, its text as text, the box everything drawn on it
+ * spans (its lines, boxes and bands; the page's clipping left out), and each image's size there, in points.
  */
-export function pdfPlacements(pdf: Buffer) {
-  const text = pdf.toString('latin1');
-  const pages = pdfPages(pdf);
-  const placed: { x: number; y: number; w: number; h: number }[] = [];
+export async function readPdf(pdf: Buffer) {
+  const { getDocument, OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const doc = await getDocument({ data: new Uint8Array(pdf), verbosity: 0 }).promise;
+  const pages = [];
 
-  for (const m of text.matchAll(/<<([^]*?)>>\s*stream\r?\n/g)) {
-    const length = Number(/\/Length (\d+)/.exec(m[1])?.[1] ?? 0);
+  for (let n = 1; n <= doc.numPages; n++) {
+    const page = await doc.getPage(n);
+    const [, , w, h] = page.view;
+    const content = await page.getTextContent();
+    const text = content.items.map((item) => ('str' in item ? item.str + (item.hasEOL ? ' ' : '') : '')).join('');
+    const { fnArray, argsArray } = await page.getOperatorList();
+    const images: { w: number; h: number }[] = [];
+    const drawn = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    // The transform and the clip in force, kept per saved graphics state as a reader keeps them.
+    let state = { ctm: [1, 0, 0, 1, 0, 0], clip: { x0: -Infinity, y0: -Infinity, x1: Infinity, y1: Infinity } };
+    const saved: (typeof state)[] = [];
 
-    if (/\/Subtype \/Image/.test(m[1])) continue;
+    for (let i = 0; i < fnArray.length; i++) {
+      const [fn, args] = [fnArray[i], argsArray[i]];
+      const m = state.ctm;
 
-    const start = (m.index ?? 0) + m[0].length;
-    const raw = pdf.subarray(start, start + length);
-    const content = (/FlateDecode/.test(m[1]) ? inflateSync(raw) : raw).toString('latin1');
-    const at = /([\d.]+) 0 0 ([\d.]+) ([\d.]+) ([\d.]+) cm\s*\/I\d+ Do/.exec(content);
+      if (fn === OPS.save) saved.push(state);
+      else if (fn === OPS.restore) state = saved.pop() ?? state;
+      else if (fn === OPS.transform) {
+        const [a, b, c, d, e, f] = args;
 
-    if (at) placed.push({ w: Number(at[1]), h: Number(at[2]), x: Number(at[3]), y: Number(at[4]) });
+        state = { ...state, ctm: [m[0] * a + m[2] * b, m[1] * a + m[3] * b, m[0] * c + m[2] * d, m[1] * c + m[3] * d, m[0] * e + m[2] * f + m[4], m[1] * e + m[3] * f + m[5]] };
+      } else if (fn === OPS.paintImageXObject) {
+        images.push({ w: Math.abs(m[0]), h: Math.abs(m[3]) });
+      } else if (fn === OPS.constructPath) {
+        // A path by its corners, [x0, y0, x1, y1], where the page puts them, inside the clip in force.
+        const [x0, y0, x1, y1] = args[2];
+        const { clip } = state;
+
+        const box = {
+          x0: Math.max(clip.x0, Math.min(m[0] * x0, m[0] * x1) + m[4]),
+          x1: Math.min(clip.x1, Math.max(m[0] * x0, m[0] * x1) + m[4]),
+          y0: Math.max(clip.y0, Math.min(m[3] * y0, m[3] * y1) + m[5]),
+          y1: Math.min(clip.y1, Math.max(m[3] * y0, m[3] * y1) + m[5]),
+        };
+
+        // A path that sets the clip draws nothing itself: what follows is drawn inside it.
+        if (fnArray[i + 1] === OPS.clip || fnArray[i + 1] === OPS.eoClip) state = { ...state, clip: box };
+        else if (box.x1 > box.x0 && box.y1 > box.y0) {
+          drawn.x0 = Math.min(drawn.x0, box.x0);
+          drawn.x1 = Math.max(drawn.x1, box.x1);
+          drawn.y0 = Math.min(drawn.y0, box.y0);
+          drawn.y1 = Math.max(drawn.y1, box.y1);
+        }
+      }
+    }
+
+    pages.push({ w, h, text, images, drawn });
   }
 
-  return pages.map((page, i) => ({ page, paper: placed[i] }));
+  return pages;
 }
 
 /**

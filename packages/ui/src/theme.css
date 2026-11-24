@@ -34,6 +34,34 @@
   font-style: normal;
   font-display: swap;
 }
+@font-face {
+  font-family: "Keystone Peso";
+  src: url("./assets/fonts/KeystonePeso-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Keystone Peso";
+  src: url("./assets/fonts/KeystonePeso-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Keystone Peso";
+  src: url("./assets/fonts/KeystonePeso-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Keystone Peso";
+  src: url("./assets/fonts/KeystonePeso-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @theme {
   --color-bg: #0b0a08;
@@ -67,8 +95,8 @@
   --color-card-bg: #0e0c09;
   --color-card-back: #151613;
 
-  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Orbitron", "Keystone Peso", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Poppins", "Keystone Peso", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 
   --radius-control: 6px;
   --radius-input: 5px;

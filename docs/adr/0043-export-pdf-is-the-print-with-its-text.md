@@ -56,6 +56,7 @@ Status: Accepted · Date: 2026-11-24
 - The two routes differ only in what the print can do that a picture cannot: on Windows the text is text and a table
   that runs onto a second page repeats its heading row, as Print does.
 - A Mac's PDF is a picture until someone gives the macOS app a native print to file (an `NSPrintOperation` that saves
-  without its panel). `printPdf` is where it would go, and nothing else would change.
+  without its panel). `printPdf` is where it would go, and nothing else would change. (Superseded 2026-11-25 by
+  docs/adr/0047: where the platform cannot print, Keystone draws the paper as text, shapes and its real pictures.)
 - The end-to-end tests run in a browser, so they test the drawn route. The native route is tested against a stand-in
   for the native side (`desktop.test.ts`), and DevTools' answer is read in `cargo test`.

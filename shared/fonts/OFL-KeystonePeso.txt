@@ -1,0 +1,5 @@
+Keystone Peso is a Modified Version of Poppins (Copyright 2020 The Poppins Project Authors,
+https://github.com/itfoundry/Poppins): the peso sign (U+20B1), made from each weight's capital P with two bars across
+it, by scripts/build-peso-font.py. Poppins has no Reserved Font Name. Keystone Peso is licensed, as Poppins is, under
+the SIL Open Font License, Version 1.1, copied in full in OFL-Poppins.txt beside this file and available with a FAQ at
+http://scripts.sil.org/OFL
