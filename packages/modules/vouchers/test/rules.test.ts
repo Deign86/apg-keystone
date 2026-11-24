@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { refusalOf } from '@keystone/kit/testing';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
-  canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeFoldLabel, payeeKey, payeeOf, saveVoucher, setVoucherStatus, voucherDraftOf, voucherDrafts, voucherFigure, voucherFinding,
+  canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeFoldLabel, payeeKey, payeeOf, saveVoucher, setVoucherStatus, voucherDraftFrom, voucherDraftOf, voucherDrafts, voucherDraftTitle, voucherFigure, voucherFinding,
   voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
@@ -350,5 +350,26 @@ describe('check vouchers', () => {
       // One not void: none are deleted.
       expect(() => deleteVouchers(voided.state, ['CV-2026-0140', 'CV-2026-0139'], ctx)).toThrow('Only a void voucher can be deleted. Void CV-2026-0139 first.');
     });
+  });
+});
+
+describe('a saved draft of a voucher (docs/adr/0041)', () => {
+  it('is called by whom it pays and how much so far', () => {
+    const s = state();
+
+    expect(voucherDraftTitle({ ...newVoucher(s, ctx), ...water, lines: [lineDraft({ desc: 'Water, October', amount: '1250.50' })] })).toBe('Manila Water Company · ₱1,250.50');
+    expect(voucherDraftTitle(newVoucher(s, ctx))).toBe('No payee yet · ₱0.00');
+  });
+
+  it('goes back in the form over a new voucher, names in capitals, and numbered as it is saved unless it edits a saved one', () => {
+    const s = state();
+    const back = voucherDraftFrom(s, ctx, '', { payee: 'Manila Water Company', no: '999-001', typedNo: true, lines: [{ id: 'line-1', desc: 'Water', qty: '1', amount: '1250.50' }] });
+
+    expect(back).toMatchObject({ payee: 'MANILA WATER COMPANY', no: nextVoucherNo(s), typedNo: false });
+    expect(draftNo(s, back)).toBe(nextVoucherNo(s));
+    expect(back.lines.map((l) => [l.desc, l.amount])).toEqual([['Water', '1250.50']]);
+    const editing = voucherDraftOf(s, s.cv[0]);
+
+    expect(voucherDraftFrom(s, ctx, '', { ...editing }).no).toBe(s.cv[0].no);
   });
 });

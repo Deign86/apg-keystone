@@ -43,6 +43,9 @@
   (docs/adr/0011). The expenses, the way it is paid and the account are in the body (docs/adr/0021). The rest of its
   data (the last number) stays in `ext/funds`.
 - **Draft key:** `funds.draft`.
+- **Save draft:** a request's work kept to whoever wrote it (`private`), listed under Drafts above their requests,
+  opened again or deleted; sending it for approval finishes it (docs/adr/0041). Only its author, and the CEO's Keystone,
+  hold it.
 - **Directory:** the payee of a request paid by check is kept (`refersTo`), marked `RF`; a new vendor is said to be
   selectable in Requests for Funds (`selects`). A staff member's Keystone knows only their own requests in the cloud.
 

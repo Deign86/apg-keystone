@@ -2,10 +2,10 @@ import { Button, EmptyState, Field, FieldRow, PAGE_SIZE, Panel, Register, Screen
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
-  approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftOf, voucherDrafts,
+  approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftFrom, voucherDraftOf, voucherDrafts, voucherDraftTitle,
   voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
 } from './rules';
-import { BankAccountPicker, SignatoryPicker, useDraft, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
+import { BankAccountPicker, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
@@ -35,6 +35,7 @@ function Vouchers() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newVoucher(state, ctx, bank));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: voucherDraftTitle, restore: (d) => voucherDraftFrom(state, ctx, bank, d) });
   const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.cv.find((v) => v.no === draft.editing) : undefined;
@@ -54,9 +55,11 @@ function Vouchers() {
     const r = run((s, c) => saveVoucher(s, draft, c, asNew));
     setError(r.ok ? null : r);
 
+    if (!r.ok) return;
+    drafts.finish(draft);
     // Number the next blank voucher from the state after the save.
-    if (r.ok) setDraft(newVoucher(r.state, ctx, bank));
-  }, [run, draft, ctx, setDraft, bank]);
+    setDraft(newVoucher(r.state, ctx, bank));
+  }, [run, draft, ctx, setDraft, bank, drafts]);
 
   /** Deletes a void voucher, and clears the form if it held that voucher. */
   const remove = (no: string) => {
@@ -146,6 +149,8 @@ function Vouchers() {
             label: 'Voucher register',
             note: state.cv.length,
             panel: (
+              <>
+              <SavedDrafts drafts={drafts} noun="voucher" onOpen={() => { setError(null); toForm(); }} />
               <Panel>
                 <Register
                   label="Voucher register"
@@ -176,6 +181,7 @@ function Vouchers() {
                   </details>
                 ))}
               </Panel>
+              </>
             ),
           },
           {
@@ -197,6 +203,7 @@ function Vouchers() {
                       <Button onClick={() => paper.current && savePdf(paper.current, `${no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
                       {editing && locked && <Button onClick={() => { setDraft(copyVoucher(state, editing, ctx)); setError(null); notify(`${editing.no} copied to a new voucher.`); }}>Copy to new voucher</Button>}
                       {editing && !locked && <Button onClick={() => save(true)}>Save as new</Button>}
+                      {!locked && <SaveDraftButton drafts={drafts} />}
                       {!locked && <Button kind="primary" type="submit">{editing ? (reapproves ? 'Save and return for approval' : 'Save changes') : approvesOnSave(ctx) ? 'Save and approve' : 'Save and route for approval'}</Button>}
                     </>}
                   >

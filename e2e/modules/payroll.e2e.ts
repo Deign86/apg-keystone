@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Locator, type Screen } from 'e2e';
-import { faintPaperText, tinyPaperText } from '../support/paper';
+import { faintPaperText, PDF_MOST_BYTES, tinyPaperText } from '../support/paper';
 
 // Payroll (packages/modules/payroll). The clock starts at 10:00 on Monday, Nov 2, 2026, so the cut-off to close is
 // Oct 16–31, 2026 (11 standard working days). The sample data has four employees and no pay setups. The cut-off
@@ -251,10 +251,13 @@ test('shows the payroll sheet or one payslip, the sheet on a landscape A4 with e
   expect(file.suggestedFilename).toBe('Payroll Oct 16–31, 2026.pdf');
 
   // The same paper, on an A4 page turned on its side: 842 × 595 pt.
-  const page = /\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/.exec(await readFile(file.absolutePath, 'latin1'));
+  const pdf = await readFile(file.absolutePath, 'latin1');
+  const page = /\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/.exec(pdf);
 
   expect(Number(page?.[1])).toBeCloseTo(841.89, 1);
   expect(Number(page?.[2])).toBeCloseTo(595.28, 1);
+  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES);
 });
 
 // 1100 px is Keystone's narrowest window. The cut-off cannot show all nine columns whole there, so it keeps Gross,

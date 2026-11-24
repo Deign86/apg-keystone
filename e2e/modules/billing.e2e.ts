@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, tinyPaperText } from '../support/paper';
+import { faintPaperText, PDF_MOST_BYTES, tinyPaperText } from '../support/paper';
 import { typeSignatory } from '../support/signatory';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
@@ -461,7 +461,11 @@ test('exports the statement as a PDF named after its number', async ({ app, scre
   });
 
   expect(file.suggestedFilename).toBe('888-110226.pdf');
-  expect((await readFile(file.absolutePath)).subarray(0, 5).toString()).toBe('%PDF-');
+  const pdf = await readFile(file.absolutePath);
+
+  expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES);
 });
 
 test('logs each statement sent, paid and voided, under the Billing filter', async ({ app, screen }) => {
@@ -611,4 +615,67 @@ test('numbers a statement 888- and its date, month, day and year, and prints the
   await expect(form.getByRole('textbox', 'Penalty')).toHaveValue('5% penalty charge will be applied to delayed monthly payments.');
   await form.getByRole('textbox', 'Penalty').fill('3% a month on balances unpaid after the due date.');
   await expect(paper).toContainText(/Payment instructions[\s\S]*Penalty\s*3% a month on balances unpaid after the due date\./i);
+});
+
+// Save draft (docs/adr/0041): a statement's work kept with the records, listed under Drafts above the register, and
+// opened again later. A draft is not a statement: it has no number and the register does not count it.
+test('saves a draft, lists it under Drafts, opens it again, and takes it away once the statement is sent', async ({ app, screen }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
+
+  // A fresh form, then the draft from the register's tab: ₱10,000 with 12% VAT and 2% EWT is ₱11,000.
+  await screen.getByRole('button', 'New statement').tap();
+  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Bill to')).toHaveValue('');
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await expect(screen.getByRole('tab', /^Statements issued/)).toHaveText(/3/);
+  const draft = screen.getByRole('list', 'Drafts').getByRole('listitem', 'Novatek BPO Solutions Inc. · ₱11,000.00');
+
+  await expect(draft.getByText('Draft', { exact: true })).toBeVisible();
+  await expect(draft.getByText(/^Saved Nov 2, 2026, 10:\d\d$/)).toBeVisible();
+  await draft.getByRole('button', 'Open').tap();
+  await expect(screen.getByRole('tab', /^Statement entry/)).toHaveAttribute('aria-selected', 'true');
+
+  const opened = screen.getByRole('form', 'New statement');
+
+  await expect(opened.getByRole('textbox', 'Bill to')).toHaveValue('Novatek BPO Solutions Inc.');
+  await expect(opened.getByRole('textbox', 'Line 1 description')).toHaveValue('Virtual office, November');
+  await expect(opened.getByRole('textbox', 'Invoice No.')).toHaveValue('888-110226');
+
+  // Sent for real, the draft is finished and leaves the list.
+  await opened.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', '888-110226 saved and marked as sent.')).toBeVisible();
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
+  await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^888-110226 Novatek/)).toBeVisible();
+});
+
+test('saves a draft again over itself, and deletes one only once asked', async ({ app, screen }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('button', 'Save draft').tap();
+  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc. (Unit 5)');
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved again.')).toBeVisible();
+
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  const drafts = screen.getByRole('list', 'Drafts');
+
+  await expect(drafts.getByRole('listitem')).toHaveCount(1);
+  await drafts.getByRole('listitem', 'Springfield Properties Inc. (Unit 5) · ₱0.00').getByRole('button', 'Delete…').tap();
+  const confirm = screen.getByRole('alertdialog', 'Delete the draft “Springfield Properties Inc. (Unit 5) · ₱0.00”?');
+
+  await confirm.getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await confirm.getByRole('button', 'Delete draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft “Springfield Properties Inc. (Unit 5) · ₱0.00” deleted.')).toBeVisible();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
 });

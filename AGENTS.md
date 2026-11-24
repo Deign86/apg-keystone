@@ -88,7 +88,9 @@ COMPOSITION (the only place that knows the full list)
 9. **The saved state keeps the prototype's schema.**
    - `state.json` keeps the keys `dir`, `cv`, `bs`, `ids`, `log`.
    - Add only optional fields.
-   - A new module keeps its own data under `state.ext[<module id>]`. Never rename or remove a key.
+   - A new module keeps its own data under `state.ext[<module id>]`. Never rename or remove a key. The kernel keeps
+     every form's saved drafts under `state.ext._drafts` and `_mydrafts` (docs/adr/0041); a form saves one with kit's
+     `useSavedDrafts`, never a list of its own.
    - In the cloud (docs/adr/0009) the same state is one Firestore document per record (`toDocuments` in core). The
      collections, checked fields, statuses and limits are declared once in core (`CLOUD_LAYOUT`,
      `kernel/cloud-layout.json`); `npm run check:cloud` fails when `firestore.rules` differs. Change both together. Never

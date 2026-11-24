@@ -7,8 +7,8 @@ import layout from './cloud-layout.json';
  * - `lists`: the collections every member reads and writes, one { pos, body } document per record (`recordFields`),
  *   its body shorter than `maxBody` characters. A module's whole `ext` data is one such document.
  * - `company`: the collection of the company's details and its one document, which only an owner writes.
- * - `own`: a collection the rules name for one module's records (ModuleDef.documents), with the fields they check
- *   beside the body and the statuses they accept.
+ * - `own`: a collection the rules name for one module's records (ModuleDef.documents), or for the kernel's saved drafts
+ *   (DRAFT_DOCUMENTS, docs/adr/0041), with the fields they check beside the body and the statuses they accept, if any.
  * - `reserved`: collections the rules keep for something that is not a list of records; no module may take one.
  * - `maxName`: the longest name of a member or a device.
  */

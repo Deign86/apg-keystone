@@ -85,6 +85,19 @@ service cloud.firestore {
         && d.by == request.auth.uid;
     }
 
+    // A saved draft any member reads and writes (docs/adr/0041): a voucher's, a statement's, an ID's.
+    function sharedDraft() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['pos', 'body']) && d.pos is int && d.pos >= 0 && d.body is string && d.body.size() < 900000;
+    }
+
+    // A saved draft only its author and an owner read (docs/adr/0041): a request for funds before it is filed.
+    function privateDraft() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['pos', 'body', 'uid']) && d.pos is int && d.pos >= 0
+        && d.body is string && d.body.size() < 900000 && d.uid is string;
+    }
+
     // A request a member files, edits or withdraws: their own, waiting or withdrawn, and with no decision.
     function ownUndecided(d) {
       return d.uid == request.auth.uid && d.status in ['For Approval', 'Withdrawn'] && !('decision' in d);
@@ -139,6 +152,22 @@ service cloud.firestore {
         allow update: if fundsRequest() && (owner(company)
           || (member(company) && resource.data.status == 'For Approval' && resource.data.uid == request.auth.uid && ownUndecided(request.resource.data)));
         allow delete: if owner(company);
+      }
+
+      // Saved drafts every member shares (docs/adr/0041): read, saved over and deleted by any member.
+      match /drafts/{id} {
+        allow read, delete: if member(company);
+        allow create, update: if member(company) && sharedDraft();
+      }
+
+      // Private drafts (docs/adr/0041): an owner reads and writes any of them (restoring a backup moves them all); a member
+      // reads, saves and deletes only their own, and never gives one to someone else.
+      match /mydrafts/{id} {
+        allow read: if owner(company) || (member(company) && resource.data.uid == request.auth.uid);
+        allow create: if privateDraft() && (owner(company) || (member(company) && request.resource.data.uid == request.auth.uid));
+        allow update: if privateDraft() && (owner(company)
+          || (member(company) && resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid));
+        allow delete: if owner(company) || (member(company) && resource.data.uid == request.auth.uid);
       }
 
       // Issued employee IDs (docs/adr/0025). Created only: there is no update and no delete, for an owner either, so

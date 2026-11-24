@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { refusalOf } from '@keystone/kit/testing';
 import { usedBy, type Ctx } from '@keystone/core';
-import { ID_STATUSES, idDraftOf, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, refersTo, withEmployee } from '../src/rules';
+import { ID_STATUSES, idDraftFrom, idDraftOf, idDraftTitle, idFigure, idFinding, idTone, issueID, markExpired, newID, nextIDNo, refersTo, withEmployee } from '../src/rules';
 import { verificationCells } from '../src/verification';
 import { sampleState } from '@keystone/core/sample';
 
@@ -57,5 +57,22 @@ describe('ID maker', () => {
       '101110101001000000000', '101110101001111111001', '101110100101111110000', '100000100001010000101',
       '111111100100010011010',
     ]);
+  });
+});
+
+describe('a saved draft of a card (docs/adr/0041)', () => {
+  it('is called by whose card it is, and as what', () => {
+    const s = state();
+    const d = withEmployee(s, newID(s, ctx), 'E-004');
+
+    expect(idDraftTitle(d)).toBe(`${d.name} · ${d.pos}`);
+    expect(idDraftTitle(newID(s, ctx))).toBe('No name yet');
+  });
+
+  it('goes back in the form over a new card, with the next ID number unless it edits an issued one', () => {
+    const s = state();
+
+    expect(idDraftFrom(s, ctx, { name: 'Jean Ashley Chico', no: 'APG-2026-0001' })).toMatchObject({ name: 'Jean Ashley Chico', no: nextIDNo(s, ctx), blood: newID(s, ctx).blood });
+    expect(idDraftFrom(s, ctx, { ...idDraftOf(s.ids[0]) }).no).toBe(s.ids[0].no);
   });
 });
