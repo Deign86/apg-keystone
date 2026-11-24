@@ -67,10 +67,11 @@ export interface PaperLayout {
   fit?(paper: HTMLElement): void;
   unfit?(paper: HTMLElement): void;
   /**
-   * The PDF page: which way up, its margin in points, and anything the drawn copy of the paper needs changed. A paper
-   * that flows runs onto as many pages as it needs, at the page's width, as it prints; any other is fitted to one page.
+   * The PDF page: which way up, and its margin in points. A paper that flows runs onto as many pages as it needs, at the
+   * page's width, as it prints; any other is fitted to one page. A frameless one leaves out the frame that marks its
+   * edge on screen.
    */
-  pdf: { orientation: 'portrait' | 'landscape'; margin: number; flow?: boolean; style?: Partial<CSSStyleDeclaration> };
+  pdf: { orientation: 'portrait' | 'landscape'; margin: number; flow?: boolean; frameless?: boolean };
 }
 
 /** An upright A4 page inside the print margins: the paper as tall as what it holds, on as many pages as that takes. */
@@ -132,9 +133,9 @@ export const TWO_UP: PaperLayout = {
       copy.style.height = '';
     }
   },
-  // The frame marks the paper's edge on screen only. The copy html-to-image draws keeps the frame's sides as
-  // border-inline, which `border: 0` alone leaves in place: two lines down the page's edges, printed when it is fit.
-  pdf: { orientation: 'portrait', margin: 0, style: { border: '0', borderInline: '0', borderBlock: '0' } },
+  // The frame marks the paper's edge on screen only: drawn, it would be two lines down the page's edges, and a box
+  // around a sheet that is cut in half.
+  pdf: { orientation: 'portrait', margin: 0, frameless: true },
 };
 
 const LAYOUTS = [TWO_UP, LANDSCAPE_PAGE, UPRIGHT];
