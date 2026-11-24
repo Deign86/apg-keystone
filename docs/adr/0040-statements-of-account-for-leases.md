@@ -1,6 +1,6 @@
 # 0040. Statements of account for leases are a module of their own, upright on one A4 page
 
-Status: Proposed · Date: 2026-11-24
+Status: Accepted · Date: 2026-11-24
 
 ## Context
 
@@ -29,7 +29,7 @@ Status: Proposed · Date: 2026-11-24
 - **The paper is upright, one A4 page** (the kit's `Sheet`), under the letterhead every paper carries (docs/adr/0038),
   each part a ruled table with a Computation column where the form asks for the working, its lines banded white and
   gold as every paper's are (docs/adr/0039).
-- **It ships in beta builds only** until its id is added to `RELEASED` (docs/adr/0017).
+- **It opens in every build:** its id is in `RELEASED` (docs/adr/0017). It shipped in beta builds first, the same day.
 
 ## Consequences
 
