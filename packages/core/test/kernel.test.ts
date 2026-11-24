@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays, addYears, amountInWords, changeEach, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
-  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, signatoryNames, shortDate,
+  newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, signatoryNames, signedNames, shortDate,
   KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
 } from '../src';
 import { sampleState } from '../sample';
@@ -214,6 +214,13 @@ describe('directory (the shared kernel)', () => {
 
     expect(listed).toEqual([...employees, 'Zed Reyes'].sort((a, b) => a.localeCompare(b)));
     expect(signatoryNames({ ...s, dir: [] })).toEqual([]);
+  });
+
+  it('names whose signatures Company Details keeps, as kept, in alphabetical order', () => {
+    const image = 'data:image/png;base64,AA==';
+
+    expect(signedNames({ signatures: { 'MARK ANTHONY SANTOS': image, 'DEIGN GREY O. LAZARO': image } })).toEqual(['DEIGN GREY O. LAZARO', 'MARK ANTHONY SANTOS']);
+    expect(signedNames({})).toEqual([]);
   });
 
   it('says where a new record can now be picked, as the installed screens name themselves, and nothing when none does', () => {

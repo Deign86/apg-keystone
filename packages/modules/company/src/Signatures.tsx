@@ -133,7 +133,7 @@ export function SignaturesPanel({ editable }: { editable: boolean }) {
       {editable && (
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-56 flex-1">
-            <SignatoryPicker label="Whose signature" value={who} onChange={setWho} />
+            <SignatoryPicker anyone label="Whose signature" value={who} onChange={setWho} />
           </div>
           <Button disabled={!who.trim()} onClick={() => void upload()}>Upload signature…</Button>
           <Button disabled={!who.trim()} onClick={() => setPad(true)}>Draw signature…</Button>

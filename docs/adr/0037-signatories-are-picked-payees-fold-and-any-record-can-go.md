@@ -1,6 +1,6 @@
 # 0037. Signatories are picked from a list, the voucher register folds by payee, and a record in use can be removed
 
-Status: Accepted · Date: 2026-11-23
+Status: Accepted, the list changed 2026-11-24 · Date: 2026-11-23
 
 ## Context
 
@@ -15,6 +15,10 @@ Status: Accepted · Date: 2026-11-23
   directory's employees, Company Details' names, whoever is signed in and the names on the module's own saved documents,
   each once whatever its capitals (`signatoryNames` in core). Nothing is hardcoded (docs/adr/0018): empty records
   list only whoever is signed in, then Other…. Saved documents keep the names as they are; no field changes in the saved state.
+- **Changed 2026-11-24: once Company Details keeps signatures (docs/adr/0038), the list is whose they are,** as kept
+  ("DEIGN GREY O. LAZARO"), then Other…, so a signatory picked always signs the paper; the same person was listed
+  several ways ("Deign Lazaro", "DEIGN GREY LAZARO") with no signature under any. Before the first signature, the list
+  is as above. Picking whose signature to add (Company Details › Signatures) always lists everyone who could sign.
 - **The voucher register folds vouchers to one payee** into a row with their count and total, which opens to show them
   (`Register`'s `group`, `payeeKey` in the vouchers module). A payee is its name in capitals, letters and digits only.
   A page counts folds; the fold holding the voucher open in the form starts open.

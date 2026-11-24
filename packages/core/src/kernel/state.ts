@@ -166,6 +166,10 @@ export const signatureKey = (name: string) => name.trim().replace(/\s+/g, ' ').t
 export const signatureOf = (company: Pick<CompanyDetails, 'signatures'>, name: string): string | undefined =>
   (name.trim() ? company.signatures?.[signatureKey(name)] : undefined);
 
+/** Whose signatures Company Details keeps, by name as kept (in capitals), in alphabetical order. */
+export const signedNames = (company: Pick<CompanyDetails, 'signatures'>): string[] =>
+  Object.keys(company.signatures ?? {}).sort((a, b) => a.localeCompare(b));
+
 /**
  * The company itself, built in (docs/adr/0023): every document, the rail and every new record print these, whatever
  * was saved before. Changing them is a code change and a release.
