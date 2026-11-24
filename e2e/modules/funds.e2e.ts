@@ -219,3 +219,37 @@ test('shows a waiting request on Home and Overview, opens it from there, and log
   // The log, which everyone reads, names who asked but not what for or how much.
   await expect(entries.first()).toContainText('RF RF-2026-0001 filed by Paolo Santos.');
 });
+
+// Save draft (docs/adr/0041): a request's work kept to whoever wrote it, listed under Drafts above their requests.
+// Nothing is sent to the CEO until it is sent for approval; then the draft is finished and leaves the list.
+test('saves a draft of a request, opens it again, and takes it away once it is sent for approval', async ({ app, screen }) => {
+  await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
+  const form = screen.getByRole('form', 'New request');
+
+  await form.getByRole('textbox', 'What it is for').fill('Pantry, November');
+  await form.getByRole('textbox', 'Line 1 description').fill('Coffee and sugar');
+  await form.getByRole('textbox', 'Line 1 amount').fill('1550.50');
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
+  await expect(screen.getByText('No request is waiting. Ask for funds here, and the CEO approves or declines.')).toBeVisible();
+
+  await screen.getByRole('tab', /^Requests/).tap();
+  const draft = screen.getByRole('list', 'Drafts').getByRole('listitem', 'Pantry, November · ₱1,550.50');
+
+  await draft.getByRole('button', 'Open').tap();
+  await expect(screen.getByRole('tab', /^Request entry/)).toHaveAttribute('aria-selected', 'true');
+  const opened = screen.getByRole('form', 'New request');
+
+  await expect(opened.getByRole('textbox', 'What it is for')).toHaveValue('Pantry, November');
+  await expect(opened.getByRole('textbox', 'Line 1 amount')).toHaveValue('1550.50');
+  await opened.getByRole('combobox', 'Paid by').tap();
+  await screen.getByRole('option', 'Check').tap();
+  await opened.getByRole('combobox', 'Payee').tap();
+  await screen.getByRole('option', 'Manila Water Company (V-002)').tap();
+  await opened.getByRole('textbox', 'Requested by').fill('Ana Cruz');
+  await opened.getByRole('button', 'Send for approval').tap();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
+  await screen.getByRole('tab', /^Requests/).tap();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
+});

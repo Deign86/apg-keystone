@@ -52,7 +52,8 @@ for (const [collection, own] of Object.entries(layout.own)) {
     continue;
   }
 
-  expectAll(`${collection}: its statuses`, [...checked.matchAll(/\bstatus in (\[[^\]]*\])/g)].map((m) => m[1]), list(own.statuses));
+  // A collection whose records have no status (saved drafts) declares none, and its function checks none.
+  if (own.statuses) expectAll(`${collection}: its statuses`, [...checked.matchAll(/\bstatus in (\[[^\]]*\])/g)].map((m) => m[1]), list(own.statuses));
 }
 
 // Every collection the rules name under keystone/{company} is declared, and the other way round.

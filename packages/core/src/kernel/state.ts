@@ -90,6 +90,8 @@ export const newestFirst = <T extends { no: string }>(xs: T[]) => [...xs].sort((
 /** Set on a draft that holds a saved record, so saving can update it in place. */
 export interface Editing {
   editing?: string;
+  /** The saved draft this form was opened from (docs/adr/0041): saving the draft again saves over it, and saving the form for real takes it away. */
+  savedDraft?: string;
 }
 
 /** What a backup must hold to load: the four record lists. The log and module data may be missing. */

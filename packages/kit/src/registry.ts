@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import {
-  CLOUD_LAYOUT, COLLECTIONS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type MemberGrant, type RecordDocuments, type Reference,
+  CLOUD_LAYOUT, COLLECTIONS, DRAFT_DOCUMENTS, validateConnector, type Connector, type Ctx, type DocumentLayout, type Figure, type Finding, type MemberGrant, type RecordDocuments, type Reference,
   type RecordType, type ServiceContracts, type ServiceName, type ServiceProviders, type TerminalState, type WaitingItem,
 } from '@keystone/core';
 
@@ -151,9 +151,10 @@ export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Reg
     return true;
   });
 
-  // A collection of its own must be one firestore.rules can name, and nobody else's: not one of Keystone's lists, and
-  // not one the rules keep for members, devices or the ID register.
-  const collections = new Map<string, string>([...COLLECTIONS, ...CLOUD_LAYOUT.reserved].map((c) => [c, 'Keystone']));
+  // A collection of its own must be one firestore.rules can name, and nobody else's: not one of Keystone's lists, not
+  // one the rules keep for members, devices or the ID register, and not the saved drafts'.
+  const drafts = Object.values(DRAFT_DOCUMENTS).map((d) => d.collection);
+  const collections = new Map<string, string>([...COLLECTIONS, ...CLOUD_LAYOUT.reserved, ...drafts].map((c) => [c, 'Keystone']));
   modules = modules.filter((m) => {
     const c = m.documents?.collection;
 
@@ -181,9 +182,12 @@ export function buildRegistry(builtIn: ModuleDef[], installed: Connector[]): Reg
 
 const COLLECTION = /^[a-z]+$/;
 
-/** The lists the installed modules keep as documents of their own, for the cloud platform (docs/adr/0011). */
+/**
+ * The lists kept as documents of their own, for the cloud platform: the installed modules' (docs/adr/0011), and the
+ * kernel's saved drafts (docs/adr/0041).
+ */
 export function documentLayout(modules: ModuleDef[]): DocumentLayout {
-  return Object.fromEntries(modules.flatMap((m) => (m.documents ? [[m.id, m.documents]] : [])));
+  return { ...DRAFT_DOCUMENTS, ...Object.fromEntries(modules.flatMap((m) => (m.documents ? [[m.id, m.documents]] : []))) };
 }
 
 /** What the installed connected systems let the CEO give a member (`Connector.memberGrant`, docs/adr/0033). */
