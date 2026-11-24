@@ -71,7 +71,8 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
         <tbody>
           <Row label="Subtotal" first>{peso(t.subtotal)}</Row>
           <Row label={`VAT (${VAT_RATE}%)`}>{b.vat ? peso(t.vat) : DASH}</Row>
-          <Row label={`Less: EWT (${ewtRateOf(b)}%)`}>{b.ewt ? `(${peso(t.ewt)})` : DASH}</Row>
+          {/* EWT shows only when it is withheld: a statement that withholds none has no line for it. */}
+          {b.ewt && <Row label={`Less: EWT (${ewtRateOf(b)}%)`}>{`(${peso(t.ewt)})`}</Row>}
           <Row label="Total amount due" strong>{peso(t.due)}</Row>
         </tbody>
       </table>

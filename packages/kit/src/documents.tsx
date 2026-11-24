@@ -1,8 +1,9 @@
 // The Group of Companies logo made for white paper, drawn in HD so it stays sharp on screen and in print.
 import companiesLogo from '@keystone/ui/logo-paper-companies.png';
-import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { forwardRef, Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, MARKS, TWO_UP, TWO_UP_EDGE, UPRIGHT, type PaperLayout } from './paper';
+import { useSignatureSize } from './context';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
@@ -268,14 +269,134 @@ export function Signatures({ names, signed }: {
   );
 }
 
-/** A signature over the line it is signed on, in the room above it. Its box sits on the line, so it never moves the line. */
-export function SignatureImage({ src, who, center }: { src: string; who: string; center?: boolean }) {
+/** How much empty paper is left around a signature's ink once it is trimmed, in the image's own pixels. */
+const SIGNATURE_MARGIN = 4;
+
+/** How strongly a pixel has to be inked to count as part of the signature, out of 255. */
+const INKED = 24;
+
+/**
+ * The signature with the empty paper around its ink cut away, so every signature, however much margin its scan or
+ * drawing had, fills the same height over its line. Signatures are kept with their paper see-through (company
+ * Details), so the ink is whatever is not see-through. Unchanged when this computer cannot read the image.
+ */
+export async function trimSignature(src: string): Promise<string> {
+  const image = new Image();
+
+  image.src = src;
+  await image.decode();
+  const { naturalWidth: width, naturalHeight: height } = image;
+  const read = document.createElement('canvas');
+
+  read.width = width;
+  read.height = height;
+  const g = read.getContext('2d');
+
+  if (!g || !width || !height) return src;
+  g.drawImage(image, 0, 0);
+  const alpha = g.getImageData(0, 0, width, height).data;
+  let [left, top, right, bottom] = [width, height, -1, -1];
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (alpha[(y * width + x) * 4 + 3] > INKED) {
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+
+  if (right < 0) return src;
+  [left, top] = [Math.max(0, left - SIGNATURE_MARGIN), Math.max(0, top - SIGNATURE_MARGIN)];
+  [right, bottom] = [Math.min(width - 1, right + SIGNATURE_MARGIN), Math.min(height - 1, bottom + SIGNATURE_MARGIN)];
+  const cut = document.createElement('canvas');
+
+  cut.width = right - left + 1;
+  cut.height = bottom - top + 1;
+  cut.getContext('2d')?.drawImage(read, left, top, cut.width, cut.height, 0, 0, cut.width, cut.height);
+
+  return cut.toDataURL('image/png');
+}
+
+/** Each kept signature trimmed once for as long as Keystone is open: every paper that shows it shares the work. */
+const trimmed = new Map<string, Promise<string>>();
+
+/** The signature to show: the kept one at first, then trimmed once that is done (it stays as kept if it cannot be). */
+function useTrimmed(src: string): string {
+  const [shown, setShown] = useState(src);
+
+  useEffect(() => {
+    let live = true;
+
+    setShown(src);
+
+    if (!trimmed.has(src)) trimmed.set(src, trimSignature(src).catch(() => src));
+    void trimmed.get(src)?.then((t) => { if (live) setShown(t); });
+
+    return () => { live = false; };
+  }, [src]);
+
+  return shown;
+}
+
+/** A signature's standard height, in rem (h-12): its size is a share of this. */
+const SIGNATURE_HEIGHT = 3;
+
+/** How far the resize handle is dragged, in CSS px, to add the standard height once more. */
+const DRAG_PER_SIZE = 48;
+
+/** A size step for the arrow keys on the resize handle. */
+const SIZE_STEP = 0.1;
+
+const clampSize = (n: number) => Math.min(2, Math.max(0.5, n));
+
+/**
+ * A signature over the line it is signed on, in the room above it, centered on its line. Trimmed to its ink and drawn
+ * at one height (its signatory's size, kept with the signatures), so every signature reads alike whatever was
+ * uploaded. Its box sits on the line, so it never moves the line. Where it may be resized (the CEO, on screen), a
+ * handle shows on hover or focus: drag it up to enlarge, down to shrink, or use the arrow keys; Home is the standard
+ * size. The handle never prints.
+ */
+export function SignatureImage({ src, who }: { src: string; who: string }) {
+  const shown = useTrimmed(src);
+  const { size, resize } = useSignatureSize(who);
+  // The size while the handle is being dragged, before it is let go and kept.
+  const [dragging, setDragging] = useState<{ from: number; at: number; size: number } | null>(null);
+  const live = dragging?.size ?? size;
+
   return (
-    <img
-      src={src}
-      alt={`Signature of ${who}`}
-      className={`pointer-events-none absolute bottom-full mb-0.5 h-12 max-w-full object-contain ${center ? 'left-1/2 -translate-x-1/2 object-bottom' : 'left-0 object-left-bottom'}`}
-    />
+    // The full width of the line, centring what it holds, so a wide signature may use all of it.
+    <span className="absolute inset-x-0 bottom-full mb-0.5 flex justify-center" style={{ height: `${SIGNATURE_HEIGHT * live}rem` }}>
+      <span className="group relative flex h-full max-w-full items-end">
+        <img src={shown} alt={`Signature of ${who}`} className="pointer-events-none h-full max-w-full object-contain object-bottom" />
+        {resize && (
+          <span
+            role="slider"
+            tabIndex={0}
+            aria-label={`Size of ${who}'s signature`}
+            aria-valuemin={50}
+            aria-valuemax={200}
+            aria-valuenow={Math.round(live * 100)}
+            aria-valuetext={`${Math.round(live * 100)}%`}
+            title="Drag to resize this signature on every paper"
+            className="absolute -top-1.5 -right-1.5 size-3 cursor-ns-resize touch-none rounded-full border border-paper-gold bg-paper opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden"
+            onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging({ from: e.clientY, at: size, size }); }}
+            onPointerMove={(e) => { if (dragging) setDragging({ ...dragging, size: clampSize(dragging.at + (dragging.from - e.clientY) / DRAG_PER_SIZE) }); }}
+            onPointerUp={() => { if (dragging) resize(dragging.size); setDragging(null); }}
+            onPointerCancel={() => setDragging(null)}
+            onKeyDown={(e) => {
+              const step = { ArrowUp: SIZE_STEP, ArrowRight: SIZE_STEP, ArrowDown: -SIZE_STEP, ArrowLeft: -SIZE_STEP }[e.key];
+
+              if (step !== undefined) { e.preventDefault(); resize(clampSize(size + step)); }
+
+              if (e.key === 'Home') { e.preventDefault(); resize(1); }
+            }}
+          />
+        )}
+      </span>
+    </span>
   );
 }
 

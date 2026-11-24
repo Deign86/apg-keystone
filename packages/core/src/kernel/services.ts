@@ -1,7 +1,7 @@
 import type { MemberAccount, NewAccount } from './accounts';
 import type { ISODate } from './dates';
 import type { Centavos } from './money';
-import type { BankAccount, Statement, TerminalState, Voucher } from './schema';
+import type { BankAccount, CompanyDetails, Statement, TerminalState, Voucher } from './schema';
 import type { Change, Ctx } from './state';
 
 // Published service contracts. When one part needs something another part does, the
@@ -23,6 +23,8 @@ export const SERVICES = {
   voucherDrafts: 'vouchers.drafts',
   /** Offered by the platform of a build that signs in: who may open the records in the cloud (docs/adr/0014, 0033). */
   accounts: 'platform.accounts',
+  /** Offered by the company module: resizing a signatory's signature where a paper shows it. */
+  signatureSizes: 'company.signature-sizes',
 } as const;
 
 /**
@@ -35,6 +37,7 @@ export interface ServiceContracts {
   [SERVICES.bankAccounts]: BankAccounts;
   [SERVICES.voucherDrafts]: VoucherDrafts;
   [SERVICES.accounts]: Accounts;
+  [SERVICES.signatureSizes]: SignatureSizes;
 }
 
 export type ServiceName = keyof ServiceContracts;
@@ -98,6 +101,14 @@ export type AttendanceTally = {
 export interface EmployeeAttendance {
   /** The tally for one employee (a directory code) from one date to another, both included. */
   tally(state: TerminalState, emp: string, from: ISODate, to: ISODate, ctx: Ctx): AttendanceTally;
+}
+
+/** Resizing a signature from a paper, by the rules Company Details keeps signatures by. */
+export interface SignatureSizes {
+  /** Whether whoever is signed in may resize signatures: the CEO, or anyone on a computer nobody signs in on. */
+  canResize(ctx: Ctx): boolean;
+  /** Draws whoever is named's signature at `size` of the standard height, on every paper; 1 is the standard. */
+  resize(state: TerminalState, name: string, size: number, ctx: Ctx): Change<CompanyDetails>;
 }
 
 export interface BankAccounts {

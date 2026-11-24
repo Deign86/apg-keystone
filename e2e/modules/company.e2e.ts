@@ -90,6 +90,13 @@ test('keeps a signature drawn for a signatory, which every paper they sign print
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
+  // The CEO resizes it where the paper shows it, from its handle: kept for that signatory, on every paper.
+  const handle = screen.getByRole('article', /^Billing statement /).getByRole('slider', 'Size of D. Lazaro\'s signature');
+
+  await expect(handle).toHaveAttribute('aria-valuenow', '100');
+  await handle.press('ArrowUp');
+  await handle.press('ArrowUp');
+  await expect(handle).toHaveAttribute('aria-valuenow', '120');
   // A signatory is picked from whose signatures are kept, as they are kept, so whoever is picked signs.
   await screen.getByRole('form', 'New statement').getByRole('combobox', 'Checked by').tap();
   await expect(screen.getByRole('listbox').getByRole('option')).toHaveCount(3);
@@ -100,6 +107,7 @@ test('keeps a signature drawn for a signatory, which every paper they sign print
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
   await expect(screen.getByRole('article', /^Check voucher /).getByRole('img', 'Signature of D. LAZARO')).toBeVisible();
+  await expect(screen.getByRole('article', /^Check voucher /).getByRole('slider', 'Size of D. LAZARO\'s signature').first()).toHaveAttribute('aria-valuenow', '120');
 
   // Removed, it prints no more.
   await app.open('/#company');

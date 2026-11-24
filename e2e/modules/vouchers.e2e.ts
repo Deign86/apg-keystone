@@ -823,3 +823,27 @@ test('folds vouchers to the same payee into one row that opens to show them', as
   await fold.tap();
   await expect(register.getByRole('row', /^888-002 /)).toBeHidden();
 });
+
+test('Enter on a filled-in line of particulars adds the next line and moves to it, and never saves the voucher', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await screen.getByRole('tab', ENTRY).tap();
+  const form = screen.getByRole('form', 'New voucher');
+
+  // A line not filled in yet: Enter goes to its empty box.
+  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('textbox', 'Line 1 description').press('Enter');
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toBeFocused();
+
+  await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
+  await form.getByRole('textbox', 'Line 1 amount').press('Enter');
+  await expect(form.getByRole('textbox', 'Line 2 description')).toBeFocused();
+
+  await form.getByRole('textbox', 'Line 2 description').fill('Courier');
+  await form.getByRole('textbox', 'Line 2 amount').fill('250');
+  await form.getByRole('textbox', 'Line 2 amount').press('Enter');
+  await expect(form.getByRole('textbox', 'Line 3 description')).toBeFocused();
+
+  // Still the same, unsaved voucher.
+  await expect(screen.getByRole('form', 'New voucher')).toBeVisible();
+  await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('888-001');
+});

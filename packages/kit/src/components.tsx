@@ -1,25 +1,60 @@
 import { Button, CellInput, EmptyState, Field, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm } from '@keystone/ui';
 import { Pin, X } from 'lucide-react';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
 import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
 import { useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector } from './context';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
 
-/** Description · amount · remove; or, priced by unit, description · quantity · unit price · remove. */
+/**
+ * Description · amount · remove; or, priced by unit, description · quantity · unit price · remove. Enter in a line that
+ * is filled in moves to the next line, adding one after the last; in a line that is not, it moves to its empty box.
+ * Either way it never submits the form around it.
+ */
 export function LineEditor({ title, lines, onChange, pricing = 'amount' }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; pricing?: LinePricing }) {
   const set = (id: string, patch: Partial<LineDraft>) => onChange(lines.map((l) => (l.id === id ? { ...l, ...patch } : l)));
   const unit = pricing === 'unit';
+  const box = useRef<HTMLFieldSetElement>(null);
+  // The line whose description takes the caret once it is drawn (counted from 1), after Enter moved on.
+  const [focusLine, setFocusLine] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (focusLine === null) return;
+    box.current?.querySelector<HTMLInputElement>(`input[aria-label="Line ${focusLine} description"]`)?.focus();
+    setFocusLine(null);
+  }, [focusLine, lines.length]);
+
+  const filled = (l: LineDraft) => !!(l.desc.trim() && l.amount.trim() && (!unit || l.qty.trim()));
+
+  const enter = (e: KeyEvent<HTMLDivElement>, i: number) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+
+    if (!filled(lines[i])) {
+      [...e.currentTarget.querySelectorAll('input')].find((cell) => !cell.value.trim())?.focus();
+
+      return;
+    }
+
+    if (i === lines.length - 1) onChange([...lines, lineDraft()]);
+    setFocusLine(i + 2);
+  };
 
   return (
-    <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
+    <fieldset ref={box} className="m-0 flex flex-col gap-1.5 border-0 p-0">
       <div className="flex items-center justify-between">
         <legend className="text-[12.5px] font-medium">{title}</legend>
         <Button size="sm" onClick={() => onChange([...lines, lineDraft()])}>Add line</Button>
       </div>
       {lines.map((l, i) => (
-        <div key={l.id} className={cn('grid items-center gap-1.5', unit ? 'grid-cols-[minmax(0,1fr)_64px_112px_32px]' : 'grid-cols-[minmax(0,1fr)_112px_32px]')}>
+        <div
+          key={l.id}
+          role="group"
+          aria-label={`Line ${i + 1}`}
+          onKeyDown={(e) => enter(e, i)}
+          className={cn('grid items-center gap-1.5', unit ? 'grid-cols-[minmax(0,1fr)_64px_112px_32px]' : 'grid-cols-[minmax(0,1fr)_112px_32px]')}
+        >
           <CellInput label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} onChange={(v) => set(l.id, { desc: v })} />
           {unit && <CellInput label={`Line ${i + 1} quantity`} placeholder="Qty" align="right" value={l.qty} onChange={(v) => set(l.id, { qty: v })} />}
           <CellInput label={unit ? `Line ${i + 1} unit price` : `Line ${i + 1} amount`} placeholder={unit ? 'Unit price' : '0.00'} align="right" value={l.amount} onChange={(v) => set(l.id, { amount: v })} />

@@ -143,7 +143,21 @@ function companyDetails(raw: JsonObject): CompanyDetails {
     paymentInstructions: text('paymentInstructions'), billingNote: text('billingNote'), signatory: text('signatory'),
     billingTerms: text('billingTerms'), dueInDays: whole('dueInDays'), idValidYears: whole('idValidYears'),
     ...signaturesOf(raw.signatures),
+    ...signatureSizesOf(raw.signatureSizes),
   };
+}
+
+/** Signature sizes read back: only numbers in range, under the names they were saved for. */
+function signatureSizesOf(raw: JsonValue | undefined): Pick<CompanyDetails, 'signatureSizes'> {
+  if (raw === undefined || !isJsonObject(raw)) return {};
+
+  const kept = Object.entries(raw).flatMap(([name, value]) => {
+    const size = jsonNumber(value);
+
+    return size >= SIGNATURE_SIZE.least && size <= SIGNATURE_SIZE.most ? [[signatureKey(name), size] as const] : [];
+  });
+
+  return kept.length ? { signatureSizes: Object.fromEntries(kept) } : {};
 }
 
 /** Signatures read back: only images, under the names they were saved for. */
@@ -165,6 +179,13 @@ export const signatureKey = (name: string) => name.trim().replace(/\s+/g, ' ').t
 /** The signature Company Details keeps for whoever is named, if any. */
 export const signatureOf = (company: Pick<CompanyDetails, 'signatures'>, name: string): string | undefined =>
   (name.trim() ? company.signatures?.[signatureKey(name)] : undefined);
+
+/** How small and how large a signature may be drawn, as a share of the standard height. */
+export const SIGNATURE_SIZE = { least: 0.5, most: 2 } as const;
+
+/** How large whoever is named has their signature drawn: a share of the standard height, 1 unless it was resized. */
+export const signatureSizeOf = (company: Pick<CompanyDetails, 'signatureSizes'>, name: string): number =>
+  (name.trim() ? company.signatureSizes?.[signatureKey(name)] : undefined) ?? 1;
 
 /** Whose signatures Company Details keeps, by name as kept (in capitals), in alphabetical order. */
 export const signedNames = (company: Pick<CompanyDetails, 'signatures'>): string[] =>

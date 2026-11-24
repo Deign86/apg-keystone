@@ -1,5 +1,5 @@
 import {
-  COMPANY, companyOf, isOwner, KeystoneError, logged, signatureKey, type Change, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
+  COMPANY, companyOf, isOwner, KeystoneError, logged, SIGNATURE_SIZE, signatureKey, signatureSizeOf, type Change, type SignatureSizes, type CompanyDetails, type Ctx, type Defaults, type TerminalState,
 } from '@keystone/core';
 
 // What the company's documents start from (docs/adr/0018). Core keeps them with the records (`state.company`, in the
@@ -53,8 +53,10 @@ export function saveCompany(s: TerminalState, d: CompanyDraft, ctx: Ctx): Change
     billingTerms: line(d.billingTerms), dueInDays: whole(d.dueInDays, 365, 'the days to pay'), idValidYears: whole(d.idValidYears, 10, 'the years an ID is valid'),
   };
 
-  // The signatures are saved one at a time (setSignature); saving the form keeps them.
+  // The signatures and their sizes are saved one at a time (setSignature, resizeSignature); saving the form keeps them.
   if (s.company?.signatures) details.signatures = s.company.signatures;
+
+  if (s.company?.signatureSizes) details.signatureSizes = s.company.signatureSizes;
 
   return { state: logged({ ...s, company: details }, TAG, `Company details for ${name} saved.`, ctx), record: details, message: 'Company details saved.' };
 }
@@ -82,20 +84,59 @@ export function setSignature(s: TerminalState, name: string, image: string | nul
   const signatures = { ...current.signatures };
   const had = !!signatures[signatureKey(who)];
 
+  const sizes = { ...current.signatureSizes };
+
   if (image === null) {
     if (!had) throw new KeystoneError(`No signature is kept for ${who}.`);
     delete signatures[signatureKey(who)];
+    // A size goes with the signature it was for.
+    delete sizes[signatureKey(who)];
   } else signatures[signatureKey(who)] = image;
 
-  const details: CompanyDetails = { ...current, signatures };
+  const details: CompanyDetails = { ...current, signatures, signatureSizes: sizes };
 
   if (!Object.keys(signatures).length) delete details.signatures;
+
+  if (!Object.keys(sizes).length) delete details.signatureSizes;
 
   if (JSON.stringify(details).length > DETAILS_MOST) throw new KeystoneError('There is no room for another signature. Remove one first.');
   const done = image === null ? 'removed' : had ? 'replaced' : 'added';
 
   return { state: logged({ ...s, company: details }, TAG, `Signature for ${who} ${done}.`, ctx), record: details, message: `Signature for ${who} ${done}.` };
 }
+
+/**
+ * Draws whoever is named's signature at `size` of the standard height on every paper (from half to twice it, to the
+ * nearest hundredth). The standard size keeps nothing. Signed in, only an owner resizes, as only an owner changes
+ * signatures.
+ */
+export function resizeSignature(s: TerminalState, name: string, size: number, ctx: Ctx): Change<CompanyDetails> {
+  if (!canChange(ctx)) throw new KeystoneError('Only the CEO resizes signatures.');
+  const who = line(name);
+  const current = companyOf(s);
+  const key = signatureKey(who);
+
+  if (!who || !current.signatures?.[key]) throw new KeystoneError(`No signature is kept for ${who || 'that name'}.`);
+
+  if (!Number.isFinite(size)) throw new KeystoneError('That is not a size.');
+  const next = Math.round(Math.min(SIGNATURE_SIZE.most, Math.max(SIGNATURE_SIZE.least, size)) * 100) / 100;
+
+  if (next === signatureSizeOf(current, who)) return { state: s, record: current, message: `${who}'s signature is already that size.` };
+  const sizes = { ...current.signatureSizes };
+
+  if (next === 1) delete sizes[key];
+  else sizes[key] = next;
+
+  const details: CompanyDetails = { ...current, signatureSizes: sizes };
+
+  if (!Object.keys(sizes).length) delete details.signatureSizes;
+  const message = `Signature for ${who} drawn at ${Math.round(next * 100)}%.`;
+
+  return { state: logged({ ...s, company: details }, TAG, message, ctx), record: details, message };
+}
+
+/** Published as SERVICES.signatureSizes, for a paper that lets the CEO resize a signature where it shows it. */
+export const signatureSizes: SignatureSizes = { canResize: canChange, resize: resizeSignature };
 
 /** The line under the title. */
 export const COMPANY_LINE = 'What each new voucher, statement and ID starts from. The company\'s name, address and contacts are built in.';
