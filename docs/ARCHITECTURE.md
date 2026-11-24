@@ -14,7 +14,8 @@ packages/kit               @keystone/kit    registries, services, store, connect
 packages/modules/<id>      @keystone/module-<id>      home · overview · vouchers · funds · billing ·
                                                       id-maker · directory · activity · timekeeping ·
                                                       payroll · profile · accounts · data · banks ·
-                                                      company                                          (parts)
+                                                      company; id-maker is kept but not installed
+                                                      (docs/adr/0046)                                  (parts)
 packages/connectors/<id>   @keystone/connector-<id>   attendance · id-maker-app · branding-studio ·
                                                       website                                          (parts)
 apps/keystone              @keystone/app    the composition root

@@ -25,7 +25,7 @@ These go against a skill rule because every APG system does them. Each one is ma
 - **The 58px Orbitron greeting on Home:** the kiosk's own front door. Every other screen title is 34px. Home is
   inspected with `--allow app-title-size`.
 - **Small type on the ID card:** the card is drawn at true CR80 size (54mm wide), so its 8px text is about 2mm, normal
-  for a printed card. The ID Maker screen is inspected with `--allow tiny-text`; every other screen, its papers
+  for a printed card. The ID Maker screen, when installed (it is not: docs/adr/0046), is inspected with `--allow tiny-text`; every other screen, its papers
   included, has nothing under 11px.
 
 The ID card's foil stripe is flat gold. There are no gradients anywhere.

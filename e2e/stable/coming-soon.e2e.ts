@@ -11,11 +11,12 @@ test('opens Home with every tile, those coming soon marked, and the connected sy
   await app.open('/');
   const tiles = screen.getByRole('main').getByRole('list').first();
 
-  await expect(tiles.getByRole('listitem')).toHaveCount(10);
+  // One per screen on Home: 10 less the ID Maker's, which is no longer installed (docs/adr/0046).
+  await expect(tiles.getByRole('listitem')).toHaveCount(9);
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding/)).not.toContainText('Coming soon');
-  await expect(tiles.getByRole('button', /^ID Maker Coming soon /)).toBeVisible();
+  await expect(tiles.getByRole('button', /^Timekeeping Coming soon /)).toBeVisible();
   await expect(screen.getByText('Connected systems')).toBeVisible();
   await expect(screen.getByRole('button', 'Open Attendance Tracker')).toBeVisible();
 });
@@ -30,9 +31,9 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
   await expect(screen.getByText('This screen hit a problem')).toBeHidden();
 
-  await rail.getByRole('button', 'ID Maker, coming soon').tap();
+  await rail.getByRole('button', 'Timekeeping, coming soon').tap();
 
-  await expect(screen.getByRole('heading', { name: 'ID Maker', level: 1 })).toBeVisible();
+  await expect(screen.getByRole('heading', { name: 'Timekeeping', level: 1 })).toBeVisible();
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 

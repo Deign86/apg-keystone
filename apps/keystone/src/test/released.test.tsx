@@ -80,7 +80,7 @@ describe('a build that is not a beta', () => {
     expect(main.getByRole('button', { name: /^Check Vouchers/ })).not.toHaveTextContent('Coming soon');
     expect(main.getByRole('button', { name: /^Requests for Funds/ })).not.toHaveTextContent('Coming soon');
     expect(main.getByRole('button', { name: /^Billing Statements/ })).not.toHaveTextContent('Coming soon');
-    expect(main.getByRole('button', { name: /^ID Maker Coming soon/ })).toBeInTheDocument();
+    expect(main.getByRole('button', { name: /^Timekeeping Coming soon/ })).toBeInTheDocument();
     expect(main.getAllByRole('listitem').length).toBeGreaterThan(stable.connectors.length + 1);
     expect(main.getByText('Connected systems')).toBeInTheDocument();
   });

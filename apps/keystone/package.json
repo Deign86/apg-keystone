@@ -28,7 +28,6 @@
     "@keystone/module-directory": "*",
     "@keystone/module-funds": "*",
     "@keystone/module-home": "*",
-    "@keystone/module-id-maker": "*",
     "@keystone/module-overview": "*",
     "@keystone/module-payroll": "*",
     "@keystone/module-timekeeping": "*",
