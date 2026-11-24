@@ -157,6 +157,8 @@ export interface LogEntry {
   when: string;
   mod: ModuleTag;
   text: string;
+  /** Who saved it, when someone was signed in: their name (docs/adr/0047). Older entries, and a computer's own records, name nobody. */
+  by?: string;
 }
 
 /** Everything Keystone saves: one JSON document. */

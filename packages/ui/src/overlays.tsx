@@ -120,12 +120,15 @@ export function Sheet({ open, onOpenChange, title, description, children }: { op
 
 // ---------- toasts ----------
 
-/** `notify("CV-2026-0142 saved.")`, or `notify(text, "error")` for a refusal. */
+/**
+ * `notify("CV-2026-0142 saved.")`, `notify(text, "error")` for a refusal, or `notify(text, "info")` for a quiet word of
+ * something that happened elsewhere, which stays up a little longer, to be read.
+ */
 export function useNotify() {
   const manager = Toast.useToastManager();
 
   return useCallback(
-    (text: string, type: 'success' | 'error' = 'success') => manager.add({ title: text, type, timeout: type === 'error' ? 6000 : 3200 }),
+    (text: string, type: 'success' | 'error' | 'info' = 'success') => manager.add({ title: text, type, timeout: type === 'success' ? 3200 : 6000 }),
     [manager],
   );
 }
@@ -145,7 +148,7 @@ function Toasts() {
               'flex w-full items-start gap-3 rounded-control px-4 py-2.5 text-[13px] font-semibold',
               'shadow-[0_10px_30px_rgb(0_0_0/0.45)] transition-[opacity,transform] duration-200 ease-out', // taste-skill-ignore: toasts float
               'data-[ending-style]:translate-y-2 data-[ending-style]:opacity-0 data-[starting-style]:translate-y-2 data-[starting-style]:opacity-0',
-              t.type === 'error' ? 'border border-bad/60 bg-surface-2 text-bad' : 'bg-gold-bright text-gold-ink',
+              t.type === 'error' ? 'border border-bad/60 bg-surface-2 text-bad' : t.type === 'info' ? 'border border-line-bright bg-surface-2 text-ink' : 'bg-gold-bright text-gold-ink',
             )}
           >
             <Toast.Content className="min-w-0 flex-1">

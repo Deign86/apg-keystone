@@ -21,6 +21,9 @@ export * from './kernel/cloud-layout';
 // Saved drafts: a form's work kept with the records to be finished later (docs/adr/0041).
 export * from './kernel/drafts';
 
+// Live updates: what others save, told as it arrives (docs/adr/0047).
+export * from './kernel/live';
+
 export * from './kernel/lines';
 
 export * from './kernel/insight';

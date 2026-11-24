@@ -1,13 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import {
-  DRAFT_DOCUMENTS, emptyState, fromDocuments, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState,
+  DRAFT_DOCUMENTS, emptyState, fromDocuments, LIVE_REREAD_MS, logged, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument,
+  type TerminalState,
 } from '@keystone/core';
 import { documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SignIn, StartFailed } from '../Gate';
 import { builtInModules } from '../modules';
 import { browserPlatform } from '../platform/browser';
-import { cloudPlatform, NOT_READ, NOT_STARTED, type RemoteDocs } from '../platform/cloud';
+import { cloudPlatform, NOT_READ, NOT_STARTED, type RemoteDocs, type RemoteListener, type Wake } from '../platform/cloud';
 import { firebaseConfig, firebaseEmulators } from '../platform/config';
 import type { StoredText } from '../platform/web-storage';
 import { sampleState } from '@keystone/core/sample';
@@ -384,6 +385,133 @@ describe('a save the cloud has not confirmed (docs/adr/0013)', () => {
     expect(again.state).toEqual(changed);
     await vi.waitFor(() => expect(localStorage.getItem('keystone-pending-saves:hr-1')).toBeNull());
     expect(recordIn(docs, 'cv', 'CV-2026-0139').check).toBe('000777');
+  });
+});
+
+describe('live updates (docs/adr/0047)', () => {
+  /**
+   * The memory cloud with listeners: `send` stands in for Firestore sending some collections as they are now, `live` for
+   * a listener stopping or coming back. `retries` counts asks to listen again; `wake` stands in for the person coming back.
+   */
+  function watched(start: StateDocument[]) {
+    const memory = memoryCloud(start);
+    let listener: RemoteListener | undefined;
+    let woken: () => void = () => {};
+    const watch = { retries: 0, stopped: false, reads: 0 };
+    const readAll = memory.remote.readAll;
+
+    memory.remote.readAll = async () => {
+      watch.reads += 1;
+
+      return readAll();
+    };
+
+    memory.remote.watch = (l) => {
+      listener = l;
+
+      return { stop: () => { watch.stopped = true; }, retry: () => { watch.retries += 1; } };
+    };
+
+    const wake: Wake = (fn) => {
+      woken = fn;
+
+      return () => { woken = () => {}; };
+    };
+
+    return {
+      ...memory,
+      watch,
+      wake,
+      send: (lists: Record<string, StateDocument[]>) => listener!.change(new Map(Object.entries(lists))),
+      live: (on: boolean) => listener!.live(on),
+      woken: () => woken(),
+    };
+  }
+
+  /** The sample records with Ana's voucher 888-012 added, as the cloud would hold them after her save. */
+  const withAnas = () => {
+    const s = sample();
+
+    return logged({ ...s, cv: [...s.cv, { ...s.cv[0], no: '888-012', status: 'For Approval' }] }, 'CV', '888-012 routed for approval.', { now: () => new Date(2026, 10, 2, 10), who: staff });
+  };
+
+  it('puts a collection that changed over what was read, leaves the others, and writes nothing', async () => {
+    vi.useFakeTimers();
+    const cloud = watched(toDocuments(sample()));
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, cloud.remote, {}, owner, memoryText(), cloud.wake));
+    const after = toDocuments(withAnas());
+
+    cloud.send({ cv: after.filter((d) => d.collection === 'cv') });
+    expect(store.state.cv.map((v) => v.no)).toContain('888-012');
+    expect(store.state.dir).toEqual(sample().dir);
+    cloud.send({ log: after.filter((d) => d.collection === 'log') });
+    expect(store.state.log[0].text).toBe('888-012 routed for approval.');
+
+    await vi.advanceTimersByTimeAsync(LIVE_REREAD_MS * 2);
+    await store.flush();
+    expect(cloud.cloud.writes).toEqual([]);
+    expect(cloud.watch.reads).toBe(1);
+
+    // A save here after that is measured from what arrived: only its own change is written.
+    store.commit({ ...store.state, cv: store.state.cv.map((v) => (v.no === '888-012' ? { ...v, check: '0004600' } : v)) });
+    await store.flush();
+    expect(cloud.cloud.writes.flatMap((w) => w.set.map((d) => `${d.collection}/${d.id}`))).toEqual(['cv/888-012']);
+    store.close();
+    expect(cloud.watch.stopped).toBe(true);
+  });
+
+  it('reads the records again while a listener has stopped: at once, every two minutes, and when the person comes back', async () => {
+    vi.useFakeTimers();
+    const cloud = watched(toDocuments(sample()));
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, cloud.remote, {}, owner, memoryText(), cloud.wake));
+
+    expect(cloud.watch.reads).toBe(1);
+    // Ana saves while this computer's listener has stopped.
+    cloud.live(false);
+    expect(store.live).toBe(false);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(cloud.watch.reads).toBe(2);
+
+    for (const d of toDocuments(withAnas())) cloud.docs.set(`${d.collection}/${d.id}`, d);
+
+    await vi.advanceTimersByTimeAsync(LIVE_REREAD_MS);
+    expect(cloud.watch.reads).toBe(3);
+    expect(store.state.cv.map((v) => v.no)).toContain('888-012');
+
+    // Coming back to Keystone listens again at once, and reads again; not twice in a row.
+    await vi.advanceTimersByTimeAsync(20_000);
+    cloud.woken();
+    cloud.woken();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(cloud.watch.retries).toBe(1);
+    expect(cloud.watch.reads).toBe(4);
+
+    // The listener is back: no more reading again.
+    cloud.live(true);
+    expect(store.live).toBe(true);
+    await vi.advanceTimersByTimeAsync(LIVE_REREAD_MS * 3);
+    cloud.woken();
+    expect(cloud.watch.reads).toBe(4);
+    expect(cloud.cloud.writes).toEqual([]);
+  });
+
+  it('does not take a re-read a save here overtook, so the save never disappears from the screen', async () => {
+    vi.useFakeTimers();
+    const cloud = watched(toDocuments(sample()));
+    const platform = cloudPlatform(localPlatform(null).platform, cloud.remote, {}, owner, memoryText(), cloud.wake);
+    const store = await KeystoneStore.open(platform);
+    let answer: (docs: StateDocument[]) => void = () => {};
+
+    cloud.remote.readAll = () => new Promise((resolve) => { answer = resolve; });
+    cloud.live(false);
+    // A save here while the read is on its way, of what the cloud held when it was asked.
+    const before = [...cloud.docs.values()];
+
+    store.commit({ ...store.state, cv: store.state.cv.map((v, i) => (i === 0 ? { ...v, check: '000777' } : v)) });
+    await store.flush();
+    answer(before);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(store.state.cv[0].check).toBe('000777');
   });
 });
 

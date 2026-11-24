@@ -2,7 +2,7 @@ import { Button, CellInput, EmptyState, Field, FieldMarks, FieldRow, Panel, Sect
 import { Pin, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
 import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
-import { useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector } from './context';
+import { useChangedElsewhere, useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector, type HeldRecord } from './context';
 import { MARKS } from './paper';
 import { ActivePart, FILLS } from './parts';
 
@@ -160,10 +160,15 @@ export function Workspace({ form, preview, previewTitle, previewNote = 'Updates 
  * until each is edited, and the first takes the focus (FieldMarks).
  */
 export function FormCard({
-  id, eyebrow, title, children, actions, onSubmit, error,
-}: { id?: string; eyebrow: string; title: string; children: ReactNode; actions: ReactNode; onSubmit: () => void; error?: Refusal | null }) {
+  id, eyebrow, title, children, actions, onSubmit, error, holds,
+}: {
+  id?: string; eyebrow: string; title: string; children: ReactNode; actions: ReactNode; onSubmit: () => void; error?: Refusal | null;
+  /** The saved record the form holds, if any: the form says so when someone else changes it meanwhile (docs/adr/0047). */
+  holds?: HeldRecord;
+}) {
   const said = useId();
   const sentence = error?.error;
+  const elsewhere = useChangedElsewhere(holds);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -182,6 +187,8 @@ export function FormCard({
         <h2 className="mt-1 mb-0 font-display text-[15px] font-semibold">{title}</h2>
       </div>
       <FieldMarks refusal={error} describedBy={said}>{children}</FieldMarks>
+      {/* By the save button, where it is read before saving over their change. */}
+      {elsewhere && <p role="status" className="m-0 rounded-control bg-warn-soft px-3 py-2 text-[13px] text-pretty text-warn">{elsewhere}</p>}
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {sentence && <p id={said} role="alert" className="m-0 mr-auto max-w-[44ch] text-[13px] text-bad">{sentence}</p>}
         {actions}

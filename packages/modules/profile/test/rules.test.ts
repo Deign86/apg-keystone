@@ -25,7 +25,7 @@ describe('your profile', () => {
   it('logs the change from the old name to the new', () => {
     const r = nameChanged(emptyState(), 'Deign Lazaro', 'Mark Anthony Santos', ctx);
 
-    expect(r.state.log[0]).toEqual({ when: '2026-11-12 10:46', mod: 'PROF', text: 'Deign Lazaro changed their name to Mark Anthony Santos.' });
+    expect(r.state.log[0]).toEqual({ when: '2026-11-12 10:46', mod: 'PROF', text: 'Deign Lazaro changed their name to Mark Anthony Santos.', by: 'Deign Lazaro' });
     expect(r.record).toEqual({ uid: 'owner-1', name: 'Mark Anthony Santos', role: 'owner' });
     expect(r.message).toBe('Keystone shows you as Mark Anthony Santos from now on.');
   });

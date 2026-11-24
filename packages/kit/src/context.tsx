@@ -1,8 +1,8 @@
 import { useNotify } from '@keystone/ui';
 import {
-  createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode,
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode,
 } from 'react';
-import { companyOf, DEADLINES, SERVICES, signatureOf, signatureOffsetOf, signatureSizeOf, type Change, type SignatureOffset, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
+import { changedElsewhere, companyOf, DEADLINES, SERVICES, signatureOf, signatureOffsetOf, signatureSizeOf, type Change, type SignatureOffset, type Connector, type ConnectorEnv, type ConnectorUpdate, type Ctx, type ServiceName, type ServiceProviders, type SystemBridge, type TerminalState } from '@keystone/core';
 import type { Platform } from './platform';
 import { findService, type ModuleApp, type Registry } from './registry';
 import type { KeystoneStore, Outcome } from './store';
@@ -222,6 +222,47 @@ export function useDraft<T>(key: string, make: () => T): [T, (next: T) => void] 
   }, [store, key]);
 
   return [value, set];
+}
+
+/** The saved record a form holds: its number, as the form names it, and how to find it in a state. */
+export interface HeldRecord {
+  label: string;
+  /** The record in `s`, or undefined when it is not there (deleted). */
+  find: (s: TerminalState) => object | undefined;
+}
+
+/**
+ * Whether someone else changed the saved record a form holds since the form opened it (docs/adr/0047): core's sentence
+ * saying so, or null. The form keeps what it holds, so nothing changes under the person typing; they are told instead.
+ * A change saved here (the form's own save) clears it. Outside the app, as a form in a test, never anything.
+ */
+export function useChangedElsewhere(held: HeldRecord | undefined): string | null {
+  const store = useContext(KeystoneContext)?.store;
+  const [said, setSaid] = useState<string | null>(null);
+  // The latest `find`, read when the store changes: not the one of the render that subscribed.
+  const latest = useRef(held);
+  latest.current = held;
+  const label = held?.label;
+
+  useEffect(() => {
+    setSaid(null);
+
+    if (!store || !label) return;
+    const text = () => JSON.stringify(latest.current?.find(store.state) ?? null);
+    let seen = text();
+
+    const stop = store.subscribe(() => {
+      const now = text();
+
+      if (now === seen) return;
+      seen = now;
+      setSaid(store.lastChange === 'elsewhere' ? changedElsewhere(label) : null);
+    });
+
+    return () => { stop(); };
+  }, [store, label]);
+
+  return said;
 }
 
 /** What a connector is handed: the operating system and nothing else of the platform (no records, accounts or session). */
