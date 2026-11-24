@@ -9,8 +9,13 @@ import { useKeystone, useRuntime } from './context';
 // says what a draft is called, when its form holds nothing worth keeping, how a saved one goes back in the form, and
 // whether only its author reads it.
 
-/** How long typing rests before the draft saves itself. */
-export const AUTOSAVE_MS = 800;
+/**
+ * The longest an edit waits to be kept: the first edit not kept yet starts this clock, and typing on does not restart
+ * it, so a draft is kept at least this often while someone types. A force close (taskkill /F, Force Quit, the desktop
+ * window destroyed) warns the page of nothing, so this is all of the typing it can lose. Once a second also keeps a
+ * draft's document within the cloud's sustained rate for one document.
+ */
+export const AUTOSAVE_MS = 1000;
 
 export interface SavedDraftsOf<T> {
   /** The module the form belongs to. */
@@ -64,9 +69,9 @@ function bodyOf<T extends Editing>(d: T): DraftBody {
  * under (`savedDraft`) as soon as it shows, so typing keeps saving over the same draft, and a new form, a record opened
  * or a draft opened is another form with another id.
  *
- * It saves itself, quietly: an edit (typing, picking) saves AUTOSAVE_MS after the last one; leaving the form for another,
- * leaving the screen, or hiding or closing Keystone saves what is waiting at once, and writes it. A blank form saves
- * nothing, and a form emptied takes its draft away.
+ * It saves itself, quietly, and writes the records at once each time: an edit (typing, picking) is kept no more than
+ * AUTOSAVE_MS after it, however long the typing goes on; leaving the form for another, leaving the screen, or hiding or
+ * closing Keystone keeps what is waiting at once. A blank form saves nothing, and a form emptied takes its draft away.
  */
 export function useSavedDrafts<T extends Editing>(draft: T, setDraft: (next: T) => void, of: SavedDraftsOf<T>): SavedDraftsApi<T> {
   const { state, ctx, run } = useKeystone();
@@ -94,19 +99,26 @@ export function useSavedDrafts<T extends Editing>(draft: T, setDraft: (next: T) 
     if (formOf(latest.current.draft) === formOf(d) && shown.current.form === formOf(d)) shown.current.text = text;
   };
 
-  /** Keeps the edit waiting, if there is one, now. */
+  /**
+   * Keeps the edit waiting, if there is one, now, and writes it to disk or the cloud at once rather than after the
+   * store's usual pause: a process killed straight after loses nothing kept.
+   */
   const flush = () => {
     clearTimeout(timer.current);
+    timer.current = undefined;
     const d = pending.current;
 
     pending.current = null;
 
-    if (d) keep(d);
+    if (!d) return;
+    keep(d);
+    void store.flush();
   };
 
   /** Nothing of this form waits to be kept any more: it was saved by hand, saved for real, or its draft deleted. */
   const drop = () => {
     clearTimeout(timer.current);
+    timer.current = undefined;
     pending.current = null;
   };
 
@@ -120,9 +132,9 @@ export function useSavedDrafts<T extends Editing>(draft: T, setDraft: (next: T) 
       flush();
       shown.current = { form, text };
     } else if (text !== shown.current.text) {
+      // The latest edit is what is kept; the clock started by the first one still runs.
       pending.current = draft;
-      clearTimeout(timer.current);
-      timer.current = setTimeout(flush, AUTOSAVE_MS);
+      timer.current ??= setTimeout(flush, AUTOSAVE_MS);
     }
 
     if (!draft.savedDraft) setDraft({ ...draft, savedDraft: nextDraftId(store.state, of.module, store.ctx) });
