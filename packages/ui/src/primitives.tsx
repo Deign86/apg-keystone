@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
@@ -136,18 +136,29 @@ export interface Figure {
   caption: string;
 }
 
-/** One container split by 1px lines: label, figure, and what the figure counts. No icons. */
+/**
+ * One container split by 1px lines: label, figure, and what the figure counts. No icons. In one row from 1280px wide;
+ * narrower (a tablet, a phone) the figures wrap onto as many rows as they need, as wide as a figure needs.
+ */
 export function FigureStrip({ figures, lead }: { figures: Figure[]; lead?: number }) {
   return (
-    // The lead figure is drawn larger, so its column is wider: a peso amount must never be cut off.
-    <dl className="m-0 grid rounded-card border border-line bg-surface" style={{ gridTemplateColumns: figures.map((_, i) => `minmax(0, ${i === lead ? 1.6 : 1}fr)`).join(' ') }}>
-      {figures.map((f, i) => (
-        <div key={f.label} className={cn('min-w-0 p-[18px]', i > 0 && 'border-l border-line')}>
-          <dt className="text-[12.5px] font-medium text-ink-2">{f.label}</dt>
-          <dd title={f.value} className={cn('m-0 mt-1.5 truncate font-display tabular-nums text-ink', i === lead ? 'text-[30px]' : 'text-[24px]')}>{f.value}</dd>
-          <dd className="m-0 mt-1 text-xs text-ink-3">{f.caption}</dd>
-        </div>
-      ))}
-    </dl>
+    // Each figure draws the line above and left of it; the grid is pulled 1px up and left under the clipped edge, so
+    // only the lines between figures show, however they wrap.
+    <div className="overflow-hidden rounded-card border border-line bg-surface">
+      {/* The lead figure is drawn larger, so its column is wider: a peso amount must never be cut off. */}
+      <dl
+        className="m-0 -mt-px -ml-px grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] xl:[grid-template-columns:var(--figure-columns)]"
+        // SAFETY: a custom property is a valid inline style, which React passes on as it is; CSSProperties lists none.
+        style={{ '--figure-columns': figures.map((_, i) => `minmax(0, ${i === lead ? 1.6 : 1}fr)`).join(' ') } as CSSProperties}
+      >
+        {figures.map((f, i) => (
+          <div key={f.label} className="min-w-0 border-t border-l border-line p-[18px]">
+            <dt className="text-[12.5px] font-medium text-ink-2">{f.label}</dt>
+            <dd title={f.value} className={cn('m-0 mt-1.5 truncate font-display tabular-nums text-ink', i === lead ? 'text-[30px]' : 'text-[24px]')}>{f.value}</dd>
+            <dd className="m-0 mt-1 text-xs text-ink-3">{f.caption}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }

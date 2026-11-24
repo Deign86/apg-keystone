@@ -5,6 +5,7 @@ import keystoneMark from '@keystone/ui/keystone-mark.png';
 import { Component, useEffect, useState, useSyncExternalStore, type ErrorInfo, type ReactNode } from 'react';
 import { useKeystone, useRuntime } from './context';
 import type { ModuleDef } from './registry';
+import { InstallNotice } from './InstallNotice';
 import { IdleSignOut, SignOutButton } from './Session';
 import { UpdateNotice } from './UpdateNotice';
 
@@ -70,6 +71,7 @@ function RailFoot() {
   return (
     <div className="mt-auto text-[11.5px] leading-relaxed text-ink-2">
       <UpdateNotice />
+      <InstallNotice />
       <p className="m-0 flex items-center gap-1.5 font-semibold text-ink">
         <span aria-hidden="true" className="size-[7px] rounded-full bg-good" />
         {who ? `${who.name} · ${roleLabel(who)}` : 'Administrator access'}
@@ -178,12 +180,13 @@ export function Shell() {
   }, [route]);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
+    // Installed on a phone or tablet, Keystone runs under the status bar and round the notch: it keeps clear of them.
+    <div className="flex h-dvh flex-col overflow-hidden pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] md:flex-row">
       <TopBar />
       <Rail />
       <main id="main" className="min-w-0 flex-1 overflow-y-auto">
         {active ? (
-          <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-4 pt-5 pb-14 md:px-8 md:pt-7 motion-safe:animate-[fade-in_180ms_ease-out]">
+          <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-4 pt-5 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-7 motion-safe:animate-[fade-in_180ms_ease-out]">
             <ModuleBoundary module={active}>
               <active.Screen />
             </ModuleBoundary>

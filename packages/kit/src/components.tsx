@@ -45,7 +45,8 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount', name = 
   };
 
   return (
-    <fieldset ref={box} className="m-0 flex flex-col gap-1.5 border-0 p-0">
+    // Narrow (a phone), a line's description takes a row of its own, its figures and its remove button the next.
+    <fieldset ref={box} className="@container m-0 flex flex-col gap-1.5 border-0 p-0">
       <div className="flex items-center justify-between">
         <legend className="text-[12.5px] font-medium">{title}</legend>
         <Button size="sm" onClick={() => onChange([...lines, lineDraft()])}>Add line</Button>
@@ -56,7 +57,12 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount', name = 
           role="group"
           aria-label={`Line ${i + 1}`}
           onKeyDown={(e) => enter(e, i)}
-          className={cn('grid items-center gap-1.5', unit ? 'grid-cols-[minmax(0,1fr)_64px_112px_32px]' : 'grid-cols-[minmax(0,1fr)_112px_32px]')}
+          className={cn(
+            'grid items-center gap-1.5',
+            unit
+              ? 'grid-cols-[minmax(0,1fr)_64px_112px_auto] @max-md:grid-cols-[64px_minmax(0,1fr)_auto] @max-md:[&>:first-child]:col-span-full'
+              : 'grid-cols-[minmax(0,1fr)_112px_auto] @max-sm:grid-cols-[minmax(0,1fr)_auto] @max-sm:[&>:first-child]:col-span-full',
+          )}
         >
           <CellInput name={`${name}.${i}.desc`} label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} onChange={(v) => set(l.id, { desc: v })} />
           {unit && <CellInput name={`${name}.${i}.qty`} label={`Line ${i + 1} quantity`} placeholder="Qty" align="right" value={l.qty} onChange={(v) => set(l.id, { qty: v })} />}
@@ -241,10 +247,11 @@ export function Feed({ entries, compact = false }: { entries: LogEntry[]; compac
   return (
     <ol className="m-0 list-none p-0">
       {entries.map((e, i) => (
-        <li key={`${e.when}-${i}`} className={cn('grid items-baseline gap-x-3 border-t border-line py-2.5 text-[13px]', compact ? 'grid-cols-[46px_1fr]' : 'grid-cols-[140px_46px_1fr]', i === 0 && !compact && 'border-t-0')}>
-          {!compact && <time className="text-xs text-ink-3 tabular-nums">{e.when}</time>}
+        // On a phone the time goes on a line of its own, over the tag and what happened.
+        <li key={`${e.when}-${i}`} className={cn('grid items-baseline gap-x-3 border-t border-line py-2.5 text-[13px]', compact ? 'grid-cols-[46px_minmax(0,1fr)]' : 'grid-cols-[46px_minmax(0,1fr)] sm:grid-cols-[140px_46px_minmax(0,1fr)]', i === 0 && !compact && 'border-t-0')}>
+          {!compact && <time className="text-xs text-ink-3 tabular-nums max-sm:col-span-2 max-sm:mb-1">{e.when}</time>}
           <Tag>{e.mod}</Tag>
-          <span className="text-pretty">
+          <span className="text-pretty [overflow-wrap:anywhere]">
             {e.text}
             {compact && <time className="ml-2 text-xs text-ink-3 tabular-nums">{shortDate(e.when.slice(0, 10))}</time>}
           </span>

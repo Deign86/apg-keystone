@@ -109,6 +109,40 @@
   }
 }
 
+/*
+  A finger, not a mouse: the kit marks the page `data-touch` where the main pointer is coarse (a phone, a tablet). Every
+  control is then at least 44px each way (WCAG 2.5.5), and a text field's text is 16px, the size below which iOS zooms
+  into the page as the field is tapped. A min- size overrides a control's own height, so nothing else changes. A box to
+  tick keeps its look and gets a 44px area around it that takes the tap.
+*/
+[data-touch] :is(button, [role="button"], [role="tab"], [role="combobox"], [role="menuitem"], [role="option"], summary, a[href]):not([data-touch-inline]) {
+  min-height: 44px;
+  min-width: 44px;
+}
+[data-touch] :is(.input-chrome, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [aria-hidden="true"]), select, textarea) {
+  min-height: 44px;
+  font-size: 16px;
+}
+[data-touch] label:has([role="checkbox"]) {
+  min-height: 44px;
+}
+[data-touch] [role="checkbox"] {
+  position: relative;
+}
+/* 15px past a 14px box inside its 1px border: 44px across, centred on it. */
+[data-touch] [role="checkbox"]::after {
+  content: "";
+  position: absolute;
+  inset: -15px;
+}
+/* A register's box column and heading row make room for that area. */
+[data-touch] [data-tick-col] {
+  width: 48px !important; /* over the column's own width, set where the register lays out its columns */
+}
+[data-touch] thead th {
+  height: 44px;
+}
+
 /* A field whose label is read by screen readers but not shown (search boxes). */
 .sr-only-label > label:first-child {
   position: absolute;

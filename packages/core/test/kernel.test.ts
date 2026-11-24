@@ -360,11 +360,11 @@ describe('connector contract', () => {
     }
   });
 
-  it('asks for the desktop app in the browser preview', async () => {
-    const { system, did } = computer('web', null);
+  it('opens the download page in the web app, which cannot start an app, and says where to install it', async () => {
+    const { system, did } = computer('web', { path: '/never/looked/for' });
 
-    await expect(openDesktopApp(system, studio)).rejects.toThrow('Open Keystone’s desktop app to open Alpha Branding Studio.');
-    expect(did).toEqual([]);
+    expect(await openDesktopApp(system, studio)).toBe('Alpha Branding Studio runs on a computer, so its download page is open. Install it there, or open it from Keystone’s desktop app.');
+    expect(did).toEqual(['open https://github.com/Deign86/x/releases/latest']);
   });
 });
 

@@ -109,7 +109,7 @@ Needs Node 22 and Rust (stable). On Linux it also needs the WebKitGTK libraries 
 ```bash
 npm install
 npm run desktop     # the desktop app, with hot reload
-npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (shortcuts to desktop apps say they need it)
+npm run dev         # the same UI in a browser at http://127.0.0.1:5174 (shortcuts to desktop apps open their download page)
 npm run check       # everything CI checks: theme in sync, boundaries, skills, Oxlint, typecheck, tests, Taste Skill lint
 npm test            # every package's tests, plus the removal, contract and service regression suites
 npm run test:e2e    # every screen and its flows in Chromium against a dev server it starts, then the cloud build against the Firebase emulators (needs Java 21)
