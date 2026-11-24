@@ -1,7 +1,7 @@
 import { test, type Browser, type WebApp } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPaperParts, markedPaperPartsDrawn, paperLayoutWithAndWithoutMark, paperMarkMedia, paperValueLines, PDF_MOST_BYTES, tinyPaperText, voucherColumnLines } from '../support/paper';
+import { faintPaperText, markedPaperParts, markedPaperPartsDrawn, paperLayoutWithAndWithoutMark, paperMarkMedia, paperValueLines, PDF_MOST_BYTES_A_PAGE, tinyPaperText, voucherColumnLines } from '../support/paper';
 import { pickSignatory, typeSignatory } from '../support/signatory';
 
 // Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved (₱13,150.00 to
@@ -527,8 +527,8 @@ test('exports the voucher as a PDF named after its number', async ({ app, screen
   const pdf = await readFile(file.absolutePath);
 
   expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
-  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
-  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES);
+  // Drawn at print resolution and compressed: a few hundred kilobytes a page, not the tens of megabytes of raw pixels.
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE);
 });
 
 test('Ctrl+S saves the voucher being written', async ({ app, screen }) => {

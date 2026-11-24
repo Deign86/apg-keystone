@@ -1,5 +1,5 @@
-//! Keystone's native side: only what a web page cannot do. Reading and saving files, and finding, starting and
-//! installing the other APG apps. Everything else is in the TypeScript app.
+//! Keystone's native side: only what a web page cannot do. Reading and saving files, finding, starting and
+//! installing the other APG apps, and printing the page to a PDF. Everything else is in the TypeScript app.
 
 use serde::{Deserialize, Serialize};
 use std::{fs, path::Path, process::Command};
@@ -320,6 +320,74 @@ async fn install_from(asset: ReleaseAsset) -> Result<(), String> {
     tauri_plugin_opener::open_path(&target, None::<&str>).map_err(|e| format!("Could not open {name}: {e}"))
 }
 
+/// What Chromium is asked for when it prints the page to a PDF: the page's own @page size and margins, which the page
+/// sets as Print does. Backgrounds stay off, as Print leaves them: the paper prints its own tinted bands
+/// (print-color-adjust in the print stylesheet), and the window's dark background stays off the page.
+#[cfg_attr(not(windows), allow(dead_code))]
+const PRINT_TO_PDF: &str = r#"{"preferCSSPageSize":true,"printBackground":false}"#;
+
+/// How long a print may take before the page is told it failed: a long statement prints in well under a second.
+#[cfg_attr(not(windows), allow(dead_code))]
+const PRINT_GIVES_UP: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// The PDF in DevTools' answer to Page.printToPDF, `{"data": "<base64>"}`.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn pdf_from_answer(json: &str) -> Result<Vec<u8>, String> {
+    use base64::Engine;
+    let unreadable = |e: &dyn std::fmt::Display| format!("The printed PDF could not be read: {e}");
+    let answer: serde_json::Value = serde_json::from_str(json).map_err(|e| unreadable(&e))?;
+    let data = answer.get("data").and_then(|d| d.as_str()).ok_or("The printed PDF came back empty.")?;
+    base64::engine::general_purpose::STANDARD.decode(data).map_err(|e| unreadable(&e))
+}
+
+/// Prints the page to a PDF as it prints now, under the print stylesheet and the @page rule the page has put in place,
+/// and hands back its bytes (docs/adr/0043). WebView2 is Chromium: DevTools' Page.printToPDF keeps text as text, with
+/// its fonts, and lines as lines, on the pages Print makes.
+#[cfg(windows)]
+async fn printed_pdf(webview: &tauri::Webview) -> Result<Vec<u8>, String> {
+    use webview2_com::CallDevToolsProtocolMethodCompletedHandler;
+    use windows::core::HSTRING;
+
+    let failed = |e: &dyn std::fmt::Display| format!("Keystone could not print the page to a PDF: {e}");
+    let (answer, answered) = std::sync::mpsc::channel::<Result<String, String>>();
+    let refused = answer.clone();
+    webview
+        .with_webview(move |view| {
+            // SAFETY: WebView2 is called on the window's own thread, which is where with_webview runs this.
+            let asked = unsafe {
+                view.controller().CoreWebView2().and_then(|core| {
+                    let done = CallDevToolsProtocolMethodCompletedHandler::create(Box::new(move |printed, json| {
+                        let _ = answer.send(printed.map(|()| json).map_err(|e| e.message()));
+                        Ok(())
+                    }));
+                    core.CallDevToolsProtocolMethod(&HSTRING::from("Page.printToPDF"), &HSTRING::from(PRINT_TO_PDF), &done)
+                })
+            };
+            if let Err(e) = asked {
+                let _ = refused.send(Err(e.message()));
+            }
+        })
+        .map_err(|e| failed(&e))?;
+    let json = tauri::async_runtime::spawn_blocking(move || answered.recv_timeout(PRINT_GIVES_UP))
+        .await
+        .map_err(|e| failed(&e))?
+        .map_err(|_| "Printing the page to a PDF took too long.".to_string())?
+        .map_err(|e| failed(&e))?;
+    pdf_from_answer(&json)
+}
+
+/// A Mac's WebKit cannot print a page to a PDF without a print dialog, so the page draws the paper itself there and
+/// never asks.
+#[cfg(not(windows))]
+async fn printed_pdf(_: &tauri::Webview) -> Result<Vec<u8>, String> {
+    Err("Only Keystone for Windows prints a page to a PDF.".into())
+}
+
+#[tauri::command]
+async fn print_pdf(webview: tauri::Webview) -> Result<Response, String> {
+    printed_pdf(&webview).await.map(Response::new)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -341,6 +409,17 @@ mod tests {
         named.sort_unstable();
         registered.sort_unstable();
         assert_eq!(named, registered);
+    }
+
+    #[test]
+    fn the_printed_pdf_is_read_from_devtools_answer() {
+        assert_eq!(pdf_from_answer(r#"{"data":"JVBERi0xLjQ="}"#).unwrap(), b"%PDF-1.4");
+        assert_eq!(pdf_from_answer(r#"{"stream":"1"}"#).unwrap_err(), "The printed PDF came back empty.");
+        assert!(pdf_from_answer(r#"{"data":"%%%"}"#).unwrap_err().starts_with("The printed PDF could not be read"));
+        assert!(pdf_from_answer("not json").unwrap_err().starts_with("The printed PDF could not be read"));
+        // Chromium is asked for the page's own A4 and margins, and leaves the window's background off, as Print does.
+        let asked: serde_json::Value = serde_json::from_str(PRINT_TO_PDF).unwrap();
+        assert_eq!(asked, serde_json::json!({ "preferCSSPageSize": true, "printBackground": false }));
     }
 
     #[test]
@@ -496,7 +575,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![read_file, file_exists, write_file, locate_app, launch_app, cpu_arch, latest_release, install_from])
+        .invoke_handler(tauri::generate_handler![read_file, file_exists, write_file, locate_app, launch_app, cpu_arch, latest_release, install_from, print_pdf])
         .run(tauri::generate_context!())
         .expect("Keystone could not start");
 }

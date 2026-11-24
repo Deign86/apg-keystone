@@ -43,7 +43,8 @@ PARTS (removable; nothing may depend on them)
 COMPOSITION (the only place that knows the full list)
   apps/keystone     @keystone/app    src/modules.ts lists the modules, src/connectors.ts the connectors, src/main.tsx
                                      starts the app; src/platform/ implements Platform for Tauri and the browser;
-                                     src-tauri/ is the native side (files, finding and starting other apps).
+                                     src-tauri/ is the native side (files, finding and starting other apps, printing
+                                     a page to a PDF).
 ```
 
 ## The rules (CI fails if you break one)

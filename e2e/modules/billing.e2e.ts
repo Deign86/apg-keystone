@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES, tinyPaperText } from '../support/paper';
+import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES_A_PAGE, pdfPages, tinyPaperText } from '../support/paper';
 import { typeSignatory } from '../support/signatory';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
@@ -450,8 +450,33 @@ test('exports the statement as a PDF named after its number', async ({ app, scre
   const pdf = await readFile(file.absolutePath);
 
   expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
-  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
-  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES);
+  // Drawn at print resolution and compressed: a few hundred kilobytes a page, not the tens of megabytes of raw pixels.
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE);
+});
+
+test('exports a statement with many charges onto as many A4 pages as it takes', async ({ app, screen, browser }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  for (let i = 1; i <= 30; i++) {
+    if (i > 1) await form.getByRole('button', 'Add line').tap();
+    await form.getByRole('textbox', `Line ${i} description`).fill(`Virtual office service, unit ${i}, November`);
+    await form.getByRole('textbox', `Line ${i} unit price`).fill(String(1000 + i * 37.5));
+  }
+
+  const file = await browser.waitForDownload(async () => {
+    await form.getByRole('button', 'Export PDF').tap();
+    await expect(screen.getByRole('dialog', 'Saved 888-110226.pdf.')).toBeVisible({ timeout: 30_000 });
+  });
+
+  const pdf = await readFile(file.absolutePath);
+  const pages = pdfPages(pdf);
+
+  // Thirty charges, the totals, the payment instructions and the signatures run past one page: each page an upright A4.
+  expect(pages.length).toBeGreaterThanOrEqual(2);
+  expect(pages.every((p) => Math.abs(p.w - 595.28) < 0.1 && Math.abs(p.h - 841.89) < 0.1)).toBe(true);
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE * pages.length);
 });
 
 test('logs each statement sent, paid and voided, under the Billing filter', async ({ app, screen }) => {
