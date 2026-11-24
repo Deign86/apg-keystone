@@ -41,7 +41,6 @@ registered:
 ```
 module-vouchers   ──contributes──▶  figure · finding · waiting · openWaiting · create · stat · logTags
 module-billing    ──contributes──▶  figure · finding · waiting · openWaiting · create · stat · logTags · onOpen
-module-id-maker   ──contributes──▶  figure · finding · waiting · openWaiting · create · stat · logTags · onOpen
 module-directory  ──contributes──▶  figure · stat · logTags
 module-timekeeping ─contributes──▶  figure · finding · stat · logTags
 module-payroll    ──contributes──▶  figure · finding · stat · logTags
@@ -68,7 +67,7 @@ changes.
 | `id`, `title`, `blurb`, `order`, `Screen` | yes | Identity, rail position (`order`) and the screen itself. The id is written once in the module (`ID` in its `rules.ts`) and used for its `ext` key, draft key and own `go` calls |
 | `onHome`, `stat` | | A tile on Home with one live figure. `stat` is given the installed modules too, so a collector such as Overview can count what they contribute (docs/adr/0021). |
 | `figure` | | A cell in Overview's figure strip. Mark the one that answers the screen's question `lead: true`. |
-| `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20, IDs 10. |
+| `finding` | | A candidate for the one sentence under Home and Overview. Highest `priority` wins: a requester's answer 40, requests for funds the owner must decide 35 (ASAP) or 25, billing 30, vouchers 20 (and IDs 10, from the ID Maker, which is not installed: docs/adr/0046). |
 | `waiting`, `openWaiting` | | Records waiting on someone, listed on Overview, and how to open one |
 | `create` | | A "New …" button on Overview |
 | `selects` | | The directory records a person picks from on its screen, by type, as a sentence names the screen (`{ Vendor: 'Requests for Funds' }`). The Directory says so when a record of that type is added |

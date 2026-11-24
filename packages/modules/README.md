@@ -11,7 +11,7 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `funds/` | 3 | Requests for funds: filing, the CEO's decision, and the voucher an approval drafts | figure, finding, waiting, create, stat, log tag `RF`, its requests as cloud documents of their own | |
 | `billing/` | 4 | Billing statements, their rules (VAT, EWT, payments) and the statement document | figure (lead), finding, waiting, create, stat, log tag `BS`, overdue on open | `billing.statement-payments` |
 | `soa/` | 4, after Billing | Statements of account for leases: rent from area and rate, VAT, EWT, deposit, escalation, postdated checks | create, stat, log tag `SOA` | |
-| `id-maker/` | 5 | Employee ID cards, their rules and the verification pattern | figure, finding, waiting, create, stat, log tag `ID`, expiry on open | |
+| `id-maker/` | Not installed | Employee ID cards, their rules and the verification pattern | figure, finding, waiting, create, stat, log tag `ID`, expiry on open | |
 | `directory/` | 6 | The directory screen (the records themselves are shared kernel, in core) | figure, stat, log tag `DIR` | |
 | `activity/` | 7 | The audit trail | Nothing; its filters come from every module's `logTags` | |
 | `timekeeping/` | 8 | Employees' time-ins and time-outs, the weekly grace, holidays | figure, finding, stat, log tag `DTR` | `timekeeping.employee-attendance` |
@@ -21,6 +21,11 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `data/` | Settings, after User Accounts | Backup and restore, and the parts left out | Nothing | |
 | `banks/` | Settings, after Data | The company's bank accounts | log tag `BANK` | `banks.bank-accounts` |
 | `company/` | last | Changing the company's details (the details themselves are kernel, in core: `state.company`) | finding, log tag `CO` | `company.signature-sizes` |
+
+`id-maker/` is not installed (docs/adr/0046): the Alpha Premier ID Maker desktop app, the `id-maker-app` connector on
+Home, makes the IDs. The folder stays, tests and all, so the screen can be put back by adding its line to
+`apps/keystone/src/modules.ts`, its entry to `apps/keystone/package.json` and its `e2e/modules/id-maker.e2e.ts` again.
+The IDs it saved stay in the records (`state.ids`).
 
 No shipped part asks for `billing.statement-payments` yet: docs/adr/0007 keeps it for a part that settles statements
 from outside billing (the website connector is a shortcut and has no screen). Profile and User Accounts ask for

@@ -18,9 +18,10 @@ Modularity comes from design, not from tools. The checks only stop it from slipp
 
 ## What Keystone is
 
-Alpha Premier Group's admin app: check vouchers, requests for funds, billing statements, employee IDs, a shared
-directory, an activity log, and employee timekeeping and payroll. It connects to the other APG systems: the attendance tracker (`Deign86/alpha-premier-attendance`),
-Alpha Branding Studio (`Deign86/Alpha_Branding`) and the website (`Deign86/apg-website`). It is one Tauri 2 + React 18
+Alpha Premier Group's admin app: check vouchers, requests for funds, billing statements, a shared directory, an
+activity log, and employee timekeeping and payroll. It connects to the other APG systems: the attendance tracker (`Deign86/alpha-premier-attendance`),
+the Alpha Premier ID Maker (`Deign86/apg-id-creator`), which makes the employee IDs (docs/adr/0046), Alpha Branding
+Studio (`Deign86/Alpha_Branding`) and the website (`Deign86/apg-website`). It is one Tauri 2 + React 18
 + TypeScript codebase for macOS and Windows.
 
 ## The map: a fixed kernel and removable packages

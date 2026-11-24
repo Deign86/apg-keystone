@@ -84,18 +84,22 @@ describe('across the installed modules', () => {
 
   const referencesOf = (without: string[] = []) => registry.modules.filter((m) => !without.includes(m.id)).flatMap((m) => m.refersTo ?? []);
 
-  it('a directory record that a voucher, statement or ID names is kept, as it always was', () => {
+  it('a directory record that a voucher or statement names is kept, as it always was', () => {
     const s = state();
     const used = Object.fromEntries(s.dir.map((d) => [d.code, usedBy(s, d.code, referencesOf())]));
 
-    // What core's own list answered before the modules said it themselves.
+    // What core's own list answered before the modules said it themselves. Its third entry, a saved ID, said so
+    // through the ID Maker, which is no longer installed (docs/adr/0046): the IDs stay in the records, but none of
+    // them keeps its employee now.
     const before = Object.fromEntries(s.dir.map((d) => [d.code, [
-      ...(s.cv.some((v) => v.payee === d.code) ? ['CV'] : []), ...(s.bs.some((b) => b.client === d.code) ? ['BS'] : []), ...(s.ids.some((i) => i.emp === d.code) ? ['ID'] : []),
+      ...(s.cv.some((v) => v.payee === d.code) ? ['CV'] : []), ...(s.bs.some((b) => b.client === d.code) ? ['BS'] : []),
     ]]));
 
     expect(used).toEqual(before);
     expect(used['V-001']).toEqual(['CV']);
     expect(used['V-002']).toEqual([]);
+    expect(s.ids.length).toBeGreaterThan(0);
+    expect(Object.values(used).flat()).not.toContain('ID');
     expect(() => removeDirectoryRecord(s, 'V-001', ctx, referencesOf())).toThrow('V-001 is used by CV records and cannot be removed.');
   });
 
@@ -118,10 +122,12 @@ describe('across the installed modules', () => {
   it('the Directory is told where a new record can be picked, in the words it has always used', () => {
     const where = (type: 'Vendor' | 'Client' | 'Employee') => registry.modules.flatMap((m) => m.selects?.[type] ?? []);
 
-    // "V-005 added. It is now selectable in Requests for Funds." and its two siblings (e2e/modules/directory.e2e.ts).
+    // "V-005 added. It is now selectable in Requests for Funds." and its sibling (e2e/modules/directory.e2e.ts).
     expect(where('Vendor')).toEqual(['Requests for Funds']);
     expect(where('Client')).toEqual(['Billing Statements']);
-    expect(where('Employee')).toEqual(['the ID Maker']);
+    // The ID Maker was the one screen an employee was picked on, and it is no longer installed (docs/adr/0046), so a
+    // new employee is "E-005 added." and nothing more.
+    expect(where('Employee')).toEqual([]);
   });
 
   it('every published service has a provider: a module, or for the accounts the platform of a build that signs in', () => {

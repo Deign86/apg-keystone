@@ -1,5 +1,8 @@
 # ID Maker
 
+**Not installed** (docs/adr/0046): the Alpha Premier ID Maker desktop app, the `id-maker-app` connector on Home,
+makes the IDs. This folder is kept so the screen can be put back (see Removing it, in reverse).
+
 ## Owns
 - `src/index.tsx`: the register, the form, filling a card from an employee (photo included), choosing a photo (cropped
   square at 640px), Print, and Export print file.

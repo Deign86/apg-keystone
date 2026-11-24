@@ -23,8 +23,12 @@ test('filters by the screen that wrote the entry', async ({ app, screen }) => {
   await expect(entries).toHaveCount(2);
   await expect(entries.first()).toContainText('BS 010099-2026');
 
-  await filters.getByRole('button', 'IDs').tap();
-  await expect(entries).toHaveCount(1);
+  await filters.getByRole('button', 'Vouchers').tap();
+  await expect(entries).toHaveCount(3);
+  await expect(entries.first()).toContainText('CV CV-2026-0141');
+
+  // The ID Maker is no longer installed (docs/adr/0046), so its filter is gone, though its entry stays in the log.
+  await expect(filters.getByRole('button', 'IDs')).toBeHidden();
 
   await filters.getByRole('button', 'All').tap();
   await expect(entries).toHaveCount(6);

@@ -70,7 +70,7 @@ it('every shipped part has a distinct id and loads without refusal', () => {
   const r = buildRegistry(builtInModules, connectors);
   expect(r.refused).toEqual([]);
   expect(r.modules.map((m) => m.id)).toEqual([...new Set(r.modules.map((m) => m.id))]);
-  expect(r.modules.map((m) => m.id)).toEqual(expect.arrayContaining(['home', 'vouchers', 'billing', 'id-maker', 'directory', 'activity', 'data']));
+  expect(r.modules.map((m) => m.id)).toEqual(expect.arrayContaining(['home', 'vouchers', 'billing', 'directory', 'activity', 'data']));
   expect(r.connectors.map((c) => c.id)).toEqual(['attendance', 'id-maker-app', 'branding-studio', 'website']);
 });
 

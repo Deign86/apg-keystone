@@ -82,7 +82,7 @@ test('adds a client with the VAT setup Billing Statements then follows', async (
   await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).not.toBeChecked();
 });
 
-test('adds an employee, who can then be given an ID and is counted on Home and Overview', async ({ app, screen }) => {
+test('adds an employee, who can then be timed in and is counted on Home and Overview', async ({ app, screen }) => {
   await app.open('/#directory');
 
   // While the list shows employees, a new record is an employee.
@@ -98,17 +98,14 @@ test('adds an employee, who can then be given an ID and is counted on Home and O
   await dialog.getByRole('textbox', 'Department').fill('Administration');
   await dialog.getByRole('button', 'Add record').tap();
 
-  await expect(screen.getByRole('dialog', 'E-005 added. It is now selectable in the ID Maker.')).toBeVisible();
+  // No installed screen picks an employee from here now that the ID Maker is not installed (docs/adr/0046), so the
+  // message names none.
+  await expect(screen.getByRole('dialog', 'E-005 added.')).toBeVisible();
   await expect(screen.getByRole('table', 'Directory').getByRole('row', /^E-005 Employee Paolo R\. Santiago — Security Officer · Administration — /)).toBeVisible();
   await expect(screen.getByRole('button', 'Employees 5')).toBeVisible();
 
-  await app.open('/#id-maker');
-  const form = screen.getByRole('form', 'New ID');
-
-  await form.getByRole('combobox', 'Employee').tap();
-  await screen.getByRole('option', 'Paolo R. Santiago (E-005)').tap();
-  await expect(form.getByRole('textbox', 'Position')).toHaveValue('Security Officer');
-  await expect(form.getByRole('textbox', 'Department')).toHaveValue('Administration');
+  await app.open('/#timekeeping');
+  await expect(screen.getByRole('table', 'Today').getByRole('button', 'Time in Paolo R. Santiago')).toBeVisible();
 
   await app.open('/');
   await expect(screen.getByRole('button', /^Directory .* Records 12$/)).toBeVisible();

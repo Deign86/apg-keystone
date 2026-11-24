@@ -441,7 +441,9 @@ test('paying the overdue statement moves Home and Overview on to the voucher wai
 
   await expect(screen.getByText('1 voucher worth ₱35,000.00 waits for approval.')).toBeVisible();
   await expect(screen.getByRole('definition').filter({ hasText: '1 statement open · 0 overdue' })).toBeVisible();
-  await expect(waiting.getByRole('listitem')).toHaveCount(3);
+  // The sample's three waiting items (a voucher and two statements; the ID card waited in the ID Maker, which is no
+  // longer installed, docs/adr/0046) less the one paid.
+  await expect(waiting.getByRole('listitem')).toHaveCount(2);
   await expect(waiting.getByRole('button', /^010098-2026 /)).toBeHidden();
 });
 
