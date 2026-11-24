@@ -3,7 +3,7 @@ import { DASH, longDate, peso, shortDate, sumCentavos, toCentavos, type Company 
 import {
   depositLines, dueOnSigning, EWT_RATE, leaseSchedule, monthlyRent, monthName, pdcSchedule, sqmFigure, topDetails, VAT_RATE, type Soa,
 } from './rules';
-import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet } from '@keystone/kit';
+import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet, usePaperPart } from '@keystone/kit';
 
 // The company's Statement of Account, on an upright A4 page (the form it follows is drawn on its side). Under the
 // letterhead every paper carries (docs/adr/0038): who and what the lease is for, then four parts, each worked out in
@@ -50,9 +50,12 @@ function Table({ label, columns, rows, total, empty }: { label: string; columns:
   );
 }
 
-function Part({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+/** One of the statement's four parts; `part` is also the part of the paper the form's fields for it fill. */
+function Part({ n, title, part, children }: { n: number; title: string; part: string; children: ReactNode }) {
+  const mark = usePaperPart();
+
   return (
-    <section className="mt-4">
+    <section {...mark(part)} className="mt-4">
       <h2 className={`m-0 ${paperHeading}`}>{n}. {title}</h2>
       {children}
     </section>
@@ -101,6 +104,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
   const checks = pdcSchedule(a);
   const base = peso(rent.base);
   const rate = peso(toCentavos(a.rate));
+  const mark = usePaperPart();
 
   return (
     <Sheet ref={ref} label={`Statement of account ${a.no}`}>
@@ -110,12 +114,12 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
         {topDetails(a).map((d, i) => (
           <Fragment key={i}>
             <dt className={paperLabel}>{orDash(d.label)}</dt>
-            <dd className={`m-0 ${i ? 'font-medium' : 'font-bold uppercase'}${d.figure ? ' tabular-nums' : ''}`}>{orDash(d.value)}</dd>
+            <dd {...mark(d.part)} className={`m-0 ${i ? 'font-medium' : 'font-bold uppercase'}${d.figure ? ' tabular-nums' : ''}`}>{orDash(d.value)}</dd>
           </Fragment>
         ))}
       </dl>
 
-      <Part n={1} title="Breakdown of the monthly rent">
+      <Part n={1} title="Breakdown of the monthly rent" part="breakdown">
         <Table
           label="Breakdown"
           columns={[{ header: 'Particulars' }, { header: 'Sqm', figure: true }, { header: 'Rate', figure: true }, { header: 'Computation' }, { header: 'Amount', figure: true }]}
@@ -129,7 +133,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
         />
       </Part>
 
-      <Part n={2} title="Deposit and advance">
+      <Part n={2} title="Deposit and advance" part="deposit">
         <Table
           label="Deposit and advance"
           columns={[{ header: 'Description' }, { header: 'Amount', figure: true }, { header: 'Qty', figure: true }, { header: 'Total amount', figure: true }, { header: 'Coverage' }, { header: 'Check no.' }]}
@@ -144,7 +148,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
         </p>
       </Part>
 
-      <Part n={3} title="Lease term and escalation">
+      <Part n={3} title="Lease term and escalation" part="lease">
         <Table
           label="Lease term and escalation"
           columns={[{ header: 'Year' }, { header: 'Period' }, { header: 'Escalation', figure: true }, { header: 'Base rent', figure: true }, { header: 'VAT', figure: true }, { header: 'EWT', figure: true }, { header: 'Monthly rent', figure: true }]}
@@ -156,7 +160,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
         />
       </Part>
 
-      <Part n={4} title="Postdated checks (PDC): rental schedule">
+      <Part n={4} title="Postdated checks (PDC): rental schedule" part="checks">
         <Table
           label="Postdated checks"
           columns={[{ header: 'No.', figure: true }, { header: 'Check date' }, { header: 'Bank' }, { header: 'Check number' }, { header: 'Amount', figure: true }, { header: 'Payment for' }]}
@@ -176,7 +180,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
       </Part>
 
       {a.notes.trim() && (
-        <section className="mt-4">
+        <section {...mark('notes')} className="mt-4">
           <h2 className={`m-0 ${paperHeading}`}>Notes</h2>
           <p className="m-0 mt-1 text-[11px] whitespace-pre-line">{a.notes}</p>
         </section>

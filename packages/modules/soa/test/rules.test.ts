@@ -333,14 +333,14 @@ describe('the details at the top', () => {
       ['Client', 'Northwind Retail Corp.'], ['Property address', 'Unit 5, Ortigas Avenue, Pasig'],
       ['Lease terms', '2 years, 5% escalation a year from the second year'], ['Payee', 'Juan Dela Cruz'], ['Contract commencement', 'January 1, 2027'],
     ]);
-    expect(topDetails(soaOf(draft({ payeeLabel: ' Lessor ' })))[3]).toEqual({ label: 'Lessor', value: 'Juan Dela Cruz' });
+    expect(topDetails(soaOf(draft({ payeeLabel: ' Lessor ' })))[3]).toEqual({ label: 'Lessor', value: 'Juan Dela Cruz', part: 'payee' });
   });
 
   it('show the floor area when chosen, and the details added after the lease’s own, leaving out an empty one', () => {
     const a = soaOf(draft({ showSqm: true, details: [{ label: ' Floor ', value: ' 3rd floor, Room 7 ' }, { label: ' ', value: '' }] }));
 
     expect(topDetails(a).map((d) => d.label)).toEqual(['Client', 'Property address', 'Floor area', 'Lease terms', 'Payee', 'Contract commencement', 'Floor']);
-    expect(topDetails(a)[2]).toEqual({ label: 'Floor area', value: '354.4 sqm', figure: true });
+    expect(topDetails(a)[2]).toEqual({ label: 'Floor area', value: '354.4 sqm', part: 'breakdown', figure: true });
     expect(a.details).toEqual([{ label: 'Floor', value: '3rd floor, Room 7' }]);
   });
 

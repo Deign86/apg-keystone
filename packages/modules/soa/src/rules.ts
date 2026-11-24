@@ -83,8 +83,11 @@ export const payeeLabelOf = (a: Pick<Soa, 'payeeLabel'>) => a.payeeLabel.trim() 
 /** A number of square metres, with its decimals only when it has them: "354.4". */
 export const sqmFigure = (n: number) => n.toLocaleString('en-PH', { maximumFractionDigits: 2 });
 
-/** One of the details at the top: its label, its value, and whether the value is a figure (set in even digits). */
-export interface TopDetail { label: string; value: string; figure?: boolean }
+/**
+ * One of the details at the top: its label, its value, whether the value is a figure (set in even digits), and the
+ * part of the form that fills it, which the paper marks while one of its fields has focus.
+ */
+export interface TopDetail { label: string; value: string; part: string; figure?: boolean }
 
 /**
  * The details printed at the top, in order: the client, the property, the floor area when chosen, the lease terms,
@@ -92,13 +95,13 @@ export interface TopDetail { label: string; value: string; figure?: boolean }
  */
 export function topDetails(a: Soa): TopDetail[] {
   return [
-    { label: 'Client', value: a.client },
-    { label: 'Property address', value: a.property },
-    ...(a.showSqm ? [{ label: 'Floor area', value: a.sqm ? `${sqmFigure(a.sqm)} sqm` : '', figure: true }] : []),
-    { label: 'Lease terms', value: leaseTermsOf(a) },
-    { label: payeeLabelOf(a), value: a.payee },
-    { label: 'Contract commencement', value: a.commencement ? longDate(a.commencement) : '', figure: true },
-    ...a.details.filter((d) => d.label.trim() || d.value.trim()).map((d) => ({ label: d.label.trim(), value: d.value.trim() })),
+    { label: 'Client', value: a.client, part: 'client' },
+    { label: 'Property address', value: a.property, part: 'property' },
+    ...(a.showSqm ? [{ label: 'Floor area', value: a.sqm ? `${sqmFigure(a.sqm)} sqm` : '', part: 'breakdown', figure: true }] : []),
+    { label: 'Lease terms', value: leaseTermsOf(a), part: 'leaseTerms' },
+    { label: payeeLabelOf(a), value: a.payee, part: 'payee' },
+    { label: 'Contract commencement', value: a.commencement ? longDate(a.commencement) : '', part: 'commencement', figure: true },
+    ...a.details.filter((d) => d.label.trim() || d.value.trim()).map((d) => ({ label: d.label.trim(), value: d.value.trim(), part: 'details' })),
   ];
 }
 
