@@ -68,30 +68,38 @@ export function savedDrafts(s: TerminalState, module: string, ctx: Pick<Ctx, 'wh
   return [...shared, ...own].sort((a, b) => b.saved.localeCompare(a.saved));
 }
 
+/**
+ * The id a form's draft saves under, given before it is first saved, so the form is told apart from the next new one:
+ * the author, the module, and one past the author's drafts on it, so two computers never make the same id.
+ */
+export function nextDraftId(s: TerminalState, module: string, ctx: Pick<Ctx, 'who'>): string {
+  const prefix = `${ctx.who?.uid ?? 'here'}-${module}-`;
+  const mine = [...listOf(s, DRAFT_LISTS.shared), ...listOf(s, DRAFT_LISTS.private)].filter((x) => x.id.startsWith(prefix));
+
+  return `${prefix}${1 + Math.max(0, ...mine.map((x) => Number(x.id.slice(prefix.length)) || 0))}`;
+}
+
 export interface DraftToSave {
   module: string;
   /** Kept to its author: a request for funds. */
   private?: boolean;
-  /** The saved draft this form was opened from, saved over; none saves a new one. */
+  /**
+   * The draft's id: the one it was saved under before, saved over, or one given to its form (nextDraftId) and not saved
+   * yet, or one someone deleted meanwhile, which is saved again. None takes the next one.
+   */
   id?: string;
   title: string;
   body: JsonValue;
 }
 
-/** Saves a form's draft, over the one it was opened from if there is one. Nothing is logged: a draft is not a record. */
+/** Saves a form's draft under its id, over what was saved under it before. Nothing is logged: a draft is not a record. */
 export function saveDraft(s: TerminalState, d: DraftToSave, ctx: Ctx): Change<SavedDraft> {
   const key = d.private ? DRAFT_LISTS.private : DRAFT_LISTS.shared;
   const list = listOf(s, key);
-  const author = ctx.who?.uid ?? 'here';
   const original = d.id ? list.find((x) => x.id === d.id) : undefined;
 
-  if (d.id && !original) throw new KeystoneError('That draft is no longer saved: someone finished or deleted it. Save this as a new draft.');
-  // The next number among this author's drafts on this form, so two computers never make the same id.
-  const prefix = `${author}-${d.module}-`;
-  const next = 1 + Math.max(0, ...list.filter((x) => x.id.startsWith(prefix)).map((x) => Number(x.id.slice(prefix.length)) || 0));
-
   const draft: SavedDraft = {
-    id: original?.id ?? `${prefix}${next}`, module: d.module, title: d.title.trim() || 'Untitled draft', saved: stamp(ctx.now()),
+    id: d.id ?? nextDraftId(s, d.module, ctx), module: d.module, title: d.title.trim() || 'Untitled draft', saved: stamp(ctx.now()),
     by: ctx.who?.name ?? '', body: d.body,
   };
 

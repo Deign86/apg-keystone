@@ -1,7 +1,7 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, ID_STATUSES, idDraftFrom, idDraftOf, idDraftTitle, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
+import { BLOOD_TYPES, ID_STATUSES, idDraftBlank, idDraftFrom, idDraftOf, idDraftTitle, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
 import { Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useKeystone, usePhoto, useSavedDrafts, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
@@ -25,7 +25,7 @@ const DRAFT = `${ID}.draft`;
 function IDMaker() {
   const { state, ctx, run, files, photos, notify } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
-  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: idDraftTitle, restore: (d) => idDraftFrom(state, ctx, d) });
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: idDraftTitle, blank: idDraftBlank, restore: (d) => idDraftFrom(state, ctx, d) });
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const photo = usePhoto(draft.photo);

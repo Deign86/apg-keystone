@@ -1,7 +1,7 @@
 import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, statementDraftFrom, statementDraftTitle, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
+import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, statementDraftBlank, statementDraftFrom, statementDraftTitle, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
 import { BankAccountPicker, Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
@@ -49,7 +49,7 @@ function Billing() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newStatement(state, ctx, accounts));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
-  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: statementDraftTitle, restore: (d) => statementDraftFrom(state, ctx, accounts, d) });
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: statementDraftTitle, blank: statementDraftBlank, restore: (d) => statementDraftFrom(state, ctx, accounts, d) });
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.bs.find((b) => b.no === draft.editing) : undefined;

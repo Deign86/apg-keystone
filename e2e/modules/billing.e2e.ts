@@ -722,3 +722,28 @@ test('marks on the statement where the field being typed in prints, and brings i
   await screen.getByRole('heading', { name: 'Billing Statements', level: 1 }).tap();
   expect(await markedPaperParts(browser)).toEqual([]);
 });
+
+// Drafts save themselves (docs/adr/0041): what is typed is kept as a draft without Save draft, once typing rests and
+// at once when Keystone is closed, so closing it straight after typing loses nothing.
+test('keeps what is typed as a draft by itself, even when Keystone is closed straight after', async ({ app, screen, browser }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
+  // Typing rests: the form says its draft is saved, without a word in a notice.
+  await expect(form.getByText(/^Draft saved \d\d:\d\d$/)).toBeVisible();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeHidden();
+
+  // More typing, and closed in the same instant: no pause, no Save draft.
+  await form.getByRole('textbox', 'Address').fill('12 Evergreen Terrace, Pasig City');
+  await browser.evaluate(() => { location.reload(); });
+
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  const draft = screen.getByRole('list', 'Drafts').getByRole('listitem', 'Springfield Properties Inc. · ₱25,000.00');
+
+  await draft.getByRole('button', 'Open').tap();
+  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Address')).toHaveValue('12 Evergreen Terrace, Pasig City');
+});

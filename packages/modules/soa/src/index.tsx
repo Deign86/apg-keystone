@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { companyOf, count, peso, shortDate } from '@keystone/core';
 import { Fills, FormCard, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
-  dueOnSigning, EWT_RATE, ID, monthlyRent, monthName, newSoa, pdcStart, pdcTotal, removeSoa, saveSoa, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf,
+  dueOnSigning, EWT_RATE, ID, monthlyRent, monthName, newSoa, pdcStart, pdcTotal, removeSoa, saveSoa, soaDraftBlank, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf,
   statementsNewestFirst, statementsOf, TAG, VAT_RATE, withCheckNumber, type Soa, type SoaDetail, type SoaDraft,
 } from './rules';
 import { SoaPaper } from './SoaPaper';
@@ -14,7 +14,7 @@ function Statements() {
   const { state, ctx, run, files, notify } = useKeystone();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft<SoaDraft>(DRAFT, () => newSoa(state, ctx));
-  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: soaDraftTitle, restore: (d) => soaDraftFrom(state, ctx, d) });
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: soaDraftTitle, blank: soaDraftBlank, restore: (d) => soaDraftFrom(state, ctx, d) });
   const [error, setError] = useState<string | null>(null);
   const paper = useRef<HTMLElement>(null);
   const live = soaOf(draft);
