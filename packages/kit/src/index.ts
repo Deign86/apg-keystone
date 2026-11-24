@@ -19,6 +19,8 @@ export { SaveDraftButton, SavedDrafts, useSavedDrafts, type SavedDraftsApi, type
 
 export { amountColumn, FitWidth, LandscapePage, Letterhead, Lines, Meta, orDash, paperHeading, paperLabel, paperStripe, Sheet, SignatureImage, Signatures, trimSignature, TwoUp, type LineColumn } from './documents';
 
+export { Fills, usePaperPart } from './parts';
+
 export { printElement, savePdf } from './output';
 
 export type { AppSession, AppUpdate, AppUpdater, Platform } from './platform';

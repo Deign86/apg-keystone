@@ -1,8 +1,10 @@
 import { Button, CellInput, EmptyState, Field, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm } from '@keystone/ui';
 import { Pin, X } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
 import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
 import { useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector } from './context';
+import { MARKS } from './paper';
+import { ActivePart, FILLS } from './parts';
 
 // The module kit: building blocks any module may use. Everything here belongs to the
 // kernel, so a module that uses it can be removed without touching another module.
@@ -84,14 +86,45 @@ const PINNED = 'workspace.pinned';
  * taller than the window, so a paper taller than that (a full A4 statement, a two-up voucher in a wide or short window)
  * scrolls inside its own box and its foot can be read without scrolling to the end of the form. That box can be
  * scrolled from the keyboard too. Unpinned, the preview scrolls with the page and shows the whole paper at once.
+ *
+ * While a field the form wraps in `Fills` has focus, the part of the paper it fills is marked (parts.tsx), and the
+ * pinned preview scrolls, at once, to bring that part into view. Leaving the field clears the mark.
  */
 export function Workspace({ form, preview, previewTitle, previewNote = 'Updates as you type' }: { form: ReactNode; preview: ReactNode; previewTitle: string; previewNote?: string }) {
   const [pinned, setPinned] = useDraft(PINNED, () => true);
+  const [active, setActive] = useState<string | null>(null);
+  const fields = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLElement>(null);
+  // The part the last field in the form filled. A picker's list opens outside the form, on top of the page, but its
+  // focus still comes through the form: while the list is open, the part its field fills stays marked.
+  const filled = useRef<string | null>(null);
+
+  const onFocus = (e: FocusEvent) => {
+    if (fields.current?.contains(e.target)) filled.current = e.target.closest(`[${FILLS}]`)?.getAttribute(FILLS) ?? null;
+    setActive(filled.current);
+  };
+
+  useEffect(() => {
+    const b = box.current;
+    const part = active ? b?.querySelector(`[${MARKS.active}]`) : null;
+
+    // Only a pinned preview that scrolls in its own box: stacked or unpinned, scrolling would take the page, and the
+    // field with it, out of view.
+    if (!b || !part || b.scrollHeight <= b.clientHeight) return;
+
+    const r = part.getBoundingClientRect();
+    const view = b.getBoundingClientRect();
+
+    // In the middle of the box, or its top at the top when it is taller than the box. No smooth scroll: no motion.
+    if (r.top < view.top || r.bottom > view.bottom) b.scrollTop += r.top - view.top - Math.max(0, (view.height - r.height) / 2);
+  }, [active]);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1100px]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      {form}
+      {/* Takes no room, so the form is still the grid's first column. */}
+      <div ref={fields} className="contents" onFocus={onFocus} onBlur={() => setActive(null)}>{form}</div>
       <section
+        ref={box}
         aria-label={previewTitle}
         // A box that scrolls on its own takes focus, so the arrow keys scroll it.
         tabIndex={pinned ? 0 : undefined}
@@ -114,7 +147,7 @@ export function Workspace({ form, preview, previewTitle, previewNote = 'Updates 
             Pin preview
           </Button>
         </div>
-        {preview}
+        <ActivePart.Provider value={active}>{preview}</ActivePart.Provider>
       </section>
     </div>
   );

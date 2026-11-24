@@ -52,6 +52,7 @@ Consequences**.
 | [0039](0039-lines-on-a-paper-are-banded.md) | The lines on a paper are banded, white and gold | Accepted |
 | [0040](0040-statements-of-account-for-leases.md) | Statements of account for leases are a module of their own, upright on one A4 page | Accepted |
 | [0041](0041-forms-save-drafts-kept-with-the-records.md) | Forms save drafts, kept with the records; a request's drafts are kept to their author | Accepted |
+| [0042](0042-the-paper-shows-where-you-are-typing.md) | The paper shows where you are typing | Accepted |
 | [0045](0045-signatures-trimmed-centred-resizable-and-no-empty-ewt-line.md) | Signatures are trimmed, centred and resizable, a statement prints no empty EWT line, and Enter adds a line | Accepted |
 
 Template:

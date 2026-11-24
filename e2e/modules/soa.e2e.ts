@@ -1,5 +1,6 @@
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
+import { markedPaperParts, paperLayoutWithAndWithoutMark } from '../support/paper';
 
 // Statements of Account (packages/modules/soa). The tests' sample records keep none, so a new one is SOA-2026-001. The
 // lease filled in below is the company's form: 354.4 sqm at ₱600 a month, two months' deposit and two months' advance,
@@ -122,4 +123,26 @@ test('saves a draft, opens it again from Drafts, and takes it away once the stat
   await opened.getByRole('button', 'Save statement').tap();
   await expect(screen.getByRole('table', 'Statements saved').getByRole('row', /^SOA-2026-001 Northwind/)).toBeVisible();
   await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
+});
+
+test('marks on the statement where the field being typed in prints, part by part, and moves nothing', async ({ app, screen, browser }) => {
+  await app.open('/#soa');
+  const form = screen.getByRole('form', 'New statement of account');
+
+  await form.getByRole('textbox', 'Client').fill('Northwind Retail Corp.');
+  expect(await markedPaperParts(browser)).toEqual(['NORTHWIND RETAIL CORP. · solid 2px']);
+  const layout = await paperLayoutWithAndWithoutMark(browser);
+
+  expect(layout.marked).toEqual(layout.unmarked);
+
+  // The floor area fills the first part, the breakdown of the monthly rent.
+  await form.getByRole('textbox', 'Floor area (sqm)').fill('354.4');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^1\. BREAKDOWN OF THE MONTHLY RENT .* · solid 2px$/);
+  await form.getByRole('textbox', 'Term (months)').fill('24');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^3\. LEASE TERM AND ESCALATION .* · solid 2px$/);
+  await form.getByRole('textbox', 'Number of checks').fill('12');
+  expect((await markedPaperParts(browser))[0]).toMatch(/^4\. POSTDATED CHECKS \(PDC\): RENTAL SCHEDULE .* · solid 2px$/);
+
+  await screen.getByRole('heading', { name: 'Statements of Account', level: 1 }).tap();
+  expect(await markedPaperParts(browser)).toEqual([]);
 });

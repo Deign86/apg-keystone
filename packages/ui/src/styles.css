@@ -128,6 +128,17 @@
   }
 }
 
+/* The part of a paper the field being typed in fills (kit's Workspace): a ring around it, as a focused control has, in
+   the papers' own gold (3:1 or more on white paper and on the dark ID card). An outline takes no room, so the paper's
+   layout never moves. On screen only: never printed, and not while Export PDF draws the paper. No transition: it
+   moves nothing. */
+@media screen {
+  [data-paper-active]:not([data-pdf-drawing] *) {
+    outline: 2px solid var(--color-paper-gold);
+    outline-offset: 2px;
+  }
+}
+
 /* Printing a document prints the paper only. */
 @media print {
   body * {
