@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LandscapePage } from '../src/documents';
 import { savePdf } from '../src/output';
-import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, LANDSCAPE_PAPER_WIDTH, mmToPt, PAGE_WIDTH, pageCuts, PAPER, PAPER_WIDTH, PDF_DPI, pdfPage, pdfPixelRatio, pdfScale, PRINTABLE, TWO_UP, UPRIGHT } from '../src/paper';
+import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, LANDSCAPE_PAPER_WIDTH, mmToPt, PAGE_WIDTH, pageCuts, PAPER, PAPER_WIDTH, pdfAcross, PDF_DPI, pdfPage, pdfPixelRatio, pdfScale, PRINTABLE, TWO_UP, UPRIGHT } from '../src/paper';
 
 /** The @page rules in the document's head. */
 const pageRules = () => [...document.head.querySelectorAll('style')].flatMap((s) => (s.textContent?.startsWith('@page') ? [s.textContent] : []));
@@ -81,6 +81,20 @@ describe('Export PDF, drawn', () => {
     expect(drawn(UPRIGHT, PAPER_WIDTH, 2000).across).toBe(atDpi(PRINTABLE.width));
     // 1 CSS px is 0.75 pt there, as it prints at 96 px to the inch: the PDF is the size the print is.
     expect(pdfScale(UPRIGHT, { width: PAPER_WIDTH, height: 2000 })).toBeCloseTo(0.75, 2);
+  });
+
+  it('spans the page inside its margins, and centres a paper fitted to one page by its height', () => {
+    const margin = mmToPt(PAPER.margin);
+
+    // An upright paper, however long: the full 186 mm, from the left margin.
+    expect(pdfAcross(UPRIGHT, { width: PAPER_WIDTH, height: 2000 }).x).toBeCloseTo(margin);
+    expect(pdfAcross(UPRIGHT, { width: PAPER_WIDTH, height: 2000 }).width).toBeCloseTo(mmToPt(PRINTABLE.width));
+    // A short payroll sheet spans the landscape page's 273 mm; a long one shrinks to its height and stays centred.
+    expect(pdfAcross(LANDSCAPE_PAGE, { width: LANDSCAPE_PAPER_WIDTH, height: 340 }).width).toBeCloseTo(mmToPt(PRINTABLE.height));
+    const long = pdfAcross(LANDSCAPE_PAGE, { width: LANDSCAPE_PAPER_WIDTH, height: 1400 });
+
+    expect(long.width).toBeLessThan(mmToPt(PRINTABLE.height));
+    expect(long.x - margin).toBeCloseTo(mmToPt(PAPER.height) - margin - (long.x + long.width));
   });
 
   it('fits a two-up voucher and a payroll sheet to one page, and draws them at 300 dpi', () => {

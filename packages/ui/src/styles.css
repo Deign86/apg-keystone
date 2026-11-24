@@ -167,6 +167,31 @@
   [data-print-root] * {
     visibility: visible;
   }
+  /* Only the paper and what holds it are laid out. Anything else on the screen still took room when only hidden, and
+     one wider than the page (a screen's table) made the browser shrink the whole page to fit it, the paper with it,
+     narrower than A4 and off to one side. */
+  body *:not([data-print-root], [data-print-root] *, :has([data-print-root])) {
+    display: none !important;
+  }
+  /* What holds the paper takes no room of its own (no padding, margin, border, height, position or clipping), so the
+     paper starts at the page's edge, spans its printable width, and runs onto as many pages as it needs. */
+  html,
+  body,
+  body :has([data-print-root]) {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
   /* Centred, so a sheet scaled down to one page keeps even margins either side. */
   [data-print-root] {
     /* A document's tinted bands print as they show; browsers leave backgrounds out by default. */

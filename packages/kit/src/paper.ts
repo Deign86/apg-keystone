@@ -157,6 +157,16 @@ export function pdfScale(layout: PaperLayout, paper: { width: number; height: nu
   return layout.pdf.flow ? room.w / paper.width : Math.min(room.w / paper.width, room.h / paper.height);
 }
 
+/**
+ * Where a paper this size is drawn across its PDF page, in points: its left edge and width. The full width inside the
+ * margin, or for a paper fitted to one page by its height, narrower and centred, as a print centres it.
+ */
+export function pdfAcross(layout: PaperLayout, paper: { width: number; height: number }) {
+  const width = paper.width * pdfScale(layout, paper);
+
+  return { x: layout.pdf.margin + (pdfPage(layout).room.w - width) / 2, width };
+}
+
 /** The pixels to draw for each CSS px of a paper this size, so it comes out at PDF_DPI on its PDF page. */
 export const pdfPixelRatio = (layout: PaperLayout, paper: { width: number; height: number }) => (PDF_DPI / 72) * pdfScale(layout, paper);
 
