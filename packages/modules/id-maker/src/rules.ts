@@ -52,6 +52,19 @@ export function newID(s: TerminalState, ctx: Ctx): IDDraft {
   };
 }
 
+/** What the Drafts list calls a saved card draft: whose card, and as what. */
+export const idDraftTitle = (d: IDDraft) => [d.name.trim() || 'No name yet', d.pos.trim()].filter(Boolean).join(' · ');
+
+/**
+ * A saved draft back in the form (docs/adr/0041): what was saved over a new card, so a field it lacks starts as a new
+ * one's does, and the next ID number, since a draft has none, unless it edits a card already issued.
+ */
+export function idDraftFrom(s: TerminalState, ctx: Ctx, saved: Partial<IDDraft>): IDDraft {
+  const fresh = newID(s, ctx);
+
+  return { ...fresh, ...saved, no: saved.editing ?? fresh.no };
+}
+
 export const idDraftOf = (i: IDRecord): IDDraft => ({
   editing: i.no, no: i.no, emp: i.emp, name: i.name, pos: i.pos, dept: i.dept, issued: i.issued, valid: i.valid,
   blood: i.blood, iceName: i.iceName, iceNo: i.iceNo, signatory: i.signatory, photo: i.photo,

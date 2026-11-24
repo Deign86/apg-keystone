@@ -1,4 +1,4 @@
-# 0041. The paper shows where you are typing
+# 0042. The paper shows where you are typing
 
 Status: Accepted · Date: 2026-11-24
 

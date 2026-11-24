@@ -1,5 +1,5 @@
 import {
-  addDays, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, logged,
+  addDays, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesFromDraft, logged,
   moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
   toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
   type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type Reference, type TerminalState, type Tone,
@@ -244,6 +244,21 @@ export function newRequest(s: TerminalState, ctx: Ctx): RequestDraft {
     payee: mine.find((r) => r.pay === 'check' && recordOf(s, r.payee))?.payee ?? payees(s)[0]?.code ?? '',
     account: account ? { ...account } : { ...NO_ACCOUNT }, when: ASAP, by: '', requester: ctx.who?.name ?? '',
   };
+}
+
+/** What the Drafts list calls a saved request draft: what the money is for, and how much so far. */
+export const requestDraftTitle = (s: TerminalState, d: RequestDraft, ctx: Ctx) =>
+  `${d.purpose.trim() || 'No purpose yet'} · ${peso(requestTotal(requestPreview(s, d, ctx)))}`;
+
+/**
+ * A saved draft back in the form (docs/adr/0041): what was saved over a new request, so a field it lacks starts as a new
+ * one's does, with its expenses as typed. A request is numbered only when it is filed, so a draft never had a number.
+ * Its drafts are private (`private` on useSavedDrafts): a request is read only by its requester and the CEO.
+ */
+export function requestDraftFrom(s: TerminalState, ctx: Ctx, saved: Partial<RequestDraft>): RequestDraft {
+  const fresh = newRequest(s, ctx);
+
+  return { ...fresh, ...saved, account: { ...fresh.account, ...saved.account }, lines: linesFromDraft(saved.lines) };
 }
 
 export const requestDraftOf = (r: FundsRequest): RequestDraft => ({
