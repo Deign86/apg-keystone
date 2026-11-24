@@ -162,6 +162,12 @@ export function Letterhead({ company, title, no, date }: { company: Company; tit
 /** A heading on a paper's tinted band (a table's columns, a total): the paper's gold, in tracked capitals. */
 export const paperHeading = 'text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase';
 
+/**
+ * A row of a paper's lines, banded as Sir Mark asked (docs/adr/0039): white, then the paper's gold tint, then white,
+ * down the list, so each line reads across on its own. `i` counts from 0.
+ */
+export const paperStripe = (i: number) => (i % 2 ? 'bg-paper-tint' : 'bg-paper');
+
 /** The label of a box on a paper: small tracked capitals in the paper's grey. */
 export const paperLabel = 'text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase';
 
@@ -217,7 +223,7 @@ export function Lines({ columns, lines, empty, footer }: { columns: LineColumn[]
           <tr className="border-b border-paper-rule"><td colSpan={columns.length} className="px-2.5 py-1.5 text-paper-muted">{empty}</td></tr>
         )}
         {lines.map((l, i) => (
-          <tr key={i} className="border-b border-paper-rule align-top">
+          <tr key={i} className={`border-b border-paper-rule align-top ${paperStripe(i)}`}>
             {columns.map((c, j) => <td key={c.header} className={cell(j, c.figure)}>{c.cell(l)}</td>)}
           </tr>
         ))}

@@ -65,7 +65,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold">
+<tr class="align-top font-bold bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -186,7 +186,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold">
+<tr class="align-top font-bold bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -317,7 +317,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold">
+<tr class="align-top font-bold bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -438,7 +438,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold">
+<tr class="align-top font-bold bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>

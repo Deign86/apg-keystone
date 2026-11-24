@@ -1,6 +1,6 @@
 import { forwardRef, type ReactNode } from 'react';
 import { DASH, peso, periodLabel, type Centavos, type Company } from '@keystone/core';
-import { FitWidth, LandscapePage, Letterhead, Meta, Sheet, Signatures, orDash, paperHeading } from '@keystone/kit';
+import { FitWidth, LandscapePage, Letterhead, Meta, Sheet, Signatures, orDash, paperHeading, paperStripe } from '@keystone/kit';
 import { totalOf, type Cutoff, type PayKey, type PayLine } from './rules';
 
 // These documents only lay out the fields of a Pay (./pay.ts). They add up nothing themselves: the payslip's late and
@@ -55,8 +55,8 @@ export const PayrollSheet = forwardRef<HTMLDivElement, { cutoff: Cutoff; company
             </tr>
           </thead>
           <tbody>
-            {cutoff.lines.map((l) => (
-              <tr key={l.setup.emp} className="border-b border-paper-rule">
+            {cutoff.lines.map((l, n) => (
+              <tr key={l.setup.emp} className={`border-b border-paper-rule ${paperStripe(n)}`}>
                 {COLUMNS.map((c, i) => <td key={c.header} className={`px-1 py-1.5 whitespace-nowrap ${i > 1 ? 'text-right tabular-nums' : ''} ${c.header === 'Signature' ? 'min-w-20' : ''}`}>{c.cell(l)}</td>)}
               </tr>
             ))}
