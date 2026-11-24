@@ -1,8 +1,8 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, ID_STATUSES, idDraftFrom, idDraftOf, idDraftTitle, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
-import { Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useKeystone, usePhoto, useSavedDrafts, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
+import { BLOOD_TYPES, ID_STATUSES, idDraftBlank, idDraftFrom, idDraftOf, idDraftTitle, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
+import { SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useKeystone, usePhoto, useSavedDrafts, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
 /** The select's value for "no directory record"; Base UI treats an empty value as unselected. */
@@ -25,7 +25,7 @@ const DRAFT = `${ID}.draft`;
 function IDMaker() {
   const { state, ctx, run, files, photos, notify } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
-  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: idDraftTitle, restore: (d) => idDraftFrom(state, ctx, d) });
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: idDraftTitle, blank: idDraftBlank, restore: (d) => idDraftFrom(state, ctx, d) });
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const photo = usePhoto(draft.photo);
@@ -119,38 +119,34 @@ function IDMaker() {
             </>}
           >
             <FieldRow>
-              <Fills part="no"><Field label="ID No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field></Fills>
+              <Field label="ID No."><TextInput readOnly value={draft.editing ?? draft.no} onChange={() => {}} /></Field>
               <Field label="Employee">
                 <SelectInput value={draft.emp || MANUAL} onChange={(emp) => setDraft(withEmployee(state, draft, emp === MANUAL ? '' : emp))} options={[{ value: MANUAL, label: 'Type details by hand' }, ...employees.map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))]} />
               </Field>
             </FieldRow>
-            <Fills part="name"><Field label="Name on card"><TextInput capitalize value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field></Fills>
+            <Field label="Name on card"><TextInput capitalize value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field>
             <FieldRow>
-              <Fills part="pos"><Field label="Position"><TextInput value={draft.pos} onChange={(pos) => setDraft({ ...draft, pos })} /></Field></Fills>
-              <Fills part="dept"><Field label="Department"><TextInput value={draft.dept} onChange={(dept) => setDraft({ ...draft, dept })} /></Field></Fills>
+              <Field label="Position"><TextInput value={draft.pos} onChange={(pos) => setDraft({ ...draft, pos })} /></Field>
+              <Field label="Department"><TextInput value={draft.dept} onChange={(dept) => setDraft({ ...draft, dept })} /></Field>
             </FieldRow>
             <FieldRow min={130}>
               <Field label="Date issued"><TextInput type="date" value={draft.issued} onChange={(issued) => setDraft({ ...draft, issued })} /></Field>
-              <Fills part="valid"><Field label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field></Fills>
-              <Fills part="ice"><Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={BLOOD_TYPES.map((b) => ({ value: b, label: b }))} /></Field></Fills>
+              <Field label="Valid until"><TextInput type="date" value={draft.valid} onChange={(valid) => setDraft({ ...draft, valid })} /></Field>
+              <Field label="Blood type"><SelectInput value={draft.blood} onChange={(blood) => setDraft({ ...draft, blood })} options={BLOOD_TYPES.map((b) => ({ value: b, label: b }))} /></Field>
             </FieldRow>
-            <Fills part="photo">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[12.5px] font-medium">Photo</span>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <Button size="sm" onClick={choosePhoto}>{draft.photo ? 'Replace photo…' : 'Choose photo…'}</Button>
-                  {draft.photo && <Button size="sm" kind="quiet" onClick={() => setDraft({ ...draft, photo: undefined })}>Remove</Button>}
-                  <span className="text-xs text-ink-2">Cropped square from the centre.</span>
-                </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[12.5px] font-medium">Photo</span>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Button size="sm" onClick={choosePhoto}>{draft.photo ? 'Replace photo…' : 'Choose photo…'}</Button>
+                {draft.photo && <Button size="sm" kind="quiet" onClick={() => setDraft({ ...draft, photo: undefined })}>Remove</Button>}
+                <span className="text-xs text-ink-2">Cropped square from the centre.</span>
               </div>
-            </Fills>
+            </div>
             <FieldRow>
-              <Fills part="ice">
-                <Field label="Emergency contact"><TextInput capitalize placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
-                <Field label="Contact number"><TextInput type="tel" placeholder="09XX XXX XXXX" value={draft.iceNo} onChange={(iceNo) => setDraft({ ...draft, iceNo })} /></Field>
-              </Fills>
+              <Field label="Emergency contact"><TextInput capitalize placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
+              <Field label="Contact number"><TextInput type="tel" placeholder="09XX XXX XXXX" value={draft.iceNo} onChange={(iceNo) => setDraft({ ...draft, iceNo })} /></Field>
             </FieldRow>
-            <Fills part="signatory"><SignatoryPicker label="Authorized signatory" names={state.ids.map((i) => i.signatory)} value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} /></Fills>
+            <SignatoryPicker label="Authorized signatory" names={state.ids.map((i) => i.signatory)} value={draft.signatory} onChange={(signatory) => setDraft({ ...draft, signatory })} />
           </FormCard>
         }
         preview={<div className="overflow-hidden rounded-card border border-line"><IDCardSheet ref={sheet} card={{ ...idOf(draft), no: draft.editing ?? draft.no }} photo={photo} company={companyOf(state)} /></div>}

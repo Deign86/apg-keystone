@@ -1,7 +1,7 @@
 import { test, type Browser, type WebApp } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPaperParts, markedPaperPartsDrawn, paperLayoutWithAndWithoutMark, paperMarkMedia, paperValueLines, PDF_MOST_BYTES, tinyPaperText, voucherColumnLines } from '../support/paper';
+import { faintPaperText, paperValueLines, PDF_MOST_BYTES, tinyPaperText, voucherColumnLines } from '../support/paper';
 import { pickSignatory, typeSignatory } from '../support/signatory';
 
 // Check Vouchers (packages/modules/vouchers). The sample data has CV-2026-0139 released, 0140 approved (₱13,150.00 to
@@ -856,37 +856,4 @@ test('saves a draft, opens it again from Drafts, and takes it away once the vouc
   await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
   await screen.getByRole('tab', /^Voucher register/).tap();
   await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
-});
-
-test('marks on both copies where the field being typed in prints, on screen only, and moves nothing', async ({ app, screen, browser }) => {
-  await app.open('/#vouchers');
-  await screen.getByRole('tab', ENTRY).tap();
-  const form = screen.getByRole('form', 'New voucher');
-
-  expect(await markedPaperParts(browser)).toEqual([]);
-
-  // A ring around the payee's box, on each copy, as the payee is typed.
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PAYEE MANILA ELECTRIC COMPANY (MERALCO) · solid 2px'));
-  // An outline takes no room: the paper is laid out as it was.
-  const layout = await paperLayoutWithAndWithoutMark(browser);
-
-  expect(layout.marked).toEqual(layout.unmarked);
-
-  // The next field moves the ring to its own box.
-  await form.getByRole('textbox', 'Check No.').fill('0004512');
-  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('CHECK NO. 0004512 · solid 2px'));
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies');
-  expect((await markedPaperParts(browser))[0]).toMatch(/^PARTICULARS AMOUNT Office supplies ₱0\.00 TOTAL ₱0\.00 · solid 2px$/);
-  await form.getByRole('textbox', "Preparer's position").fill('Accounting Staff');
-  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
-
-  // The ring is drawn on screen only: it never prints, and Export PDF draws the paper without it.
-  expect(await paperMarkMedia(browser)).toEqual(['screen']);
-  expect(await markedPaperPartsDrawn(browser)).toEqual(['none', 'none']);
-  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
-
-  // A field that prints nowhere on the voucher, or leaving the form, clears it.
-  await screen.getByRole('heading', { name: 'Check Vouchers', level: 1 }).tap();
-  expect(await markedPaperParts(browser)).toEqual([]);
 });

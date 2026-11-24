@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES, tinyPaperText } from '../support/paper';
+import { faintPaperText, PDF_MOST_BYTES, tinyPaperText } from '../support/paper';
 import { typeSignatory } from '../support/signatory';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
@@ -662,38 +662,27 @@ test('saves a draft again over itself, and deletes one only once asked', async (
   await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
 });
 
-test('marks on the statement where the field being typed in prints, and brings it into the pinned preview', async ({ app, screen, browser }) => {
-  await browser.setViewport({ width: 1440, height: 900 });
+// Drafts save themselves (docs/adr/0041): what is typed is kept as a draft without Save draft, once typing rests and
+// at once when Keystone is closed, so closing it straight after typing loses nothing.
+test('keeps what is typed as a draft by itself, even when Keystone is closed straight after', async ({ app, screen, browser }) => {
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
-  const scrolled = () => browser.evaluate(() => document.querySelector('section[aria-label="Document preview"]')?.scrollTop ?? 0);
 
-  await form.getByRole('textbox', 'Bill to').fill('Dela Cruz Trading');
-  expect(await markedPaperParts(browser)).toEqual(['DELA CRUZ TRADING · solid 2px']);
-  // The number prints twice: on the letterhead and in the invoice box.
-  await form.getByRole('textbox', 'Invoice No.').tap();
-  expect(await markedPaperParts(browser)).toEqual(['Invoice No. 888-110226 · solid 2px', 'INVOICE NO. 888-110226 · solid 2px']);
-  await form.getByRole('textbox', 'Due date').fill('2026-12-02');
-  expect(await markedPaperParts(browser)).toEqual(['DUE DATE December 2, 2026 · solid 2px']);
-  const layout = await paperLayoutWithAndWithoutMark(browser);
+  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
+  // Typing rests: the form says its draft is saved, without a word in a notice.
+  await expect(form.getByText(/^Draft saved \d\d:\d\d$/)).toBeVisible();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeHidden();
 
-  expect(layout.marked).toEqual(layout.unmarked);
-  expect(await scrolled()).toBe(0);
+  // More typing, and closed in the same instant: no pause, no Save draft.
+  await form.getByRole('textbox', 'Address').fill('12 Evergreen Terrace, Pasig City');
+  await browser.evaluate(() => { location.reload(); });
 
-  // With notes enough to run the statement past the window, the preview scrolls in its own box to the signatures at
-  // its foot, and back up to Bill to at its head.
-  await form.getByRole('textbox', 'Notes').fill(Array.from({ length: 24 }, (_, i) => `Note ${i + 1}`).join('\n'));
-  await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
-  expect((await markedPaperParts(browser))[0]).toMatch(/Chief Executive Officer APPROVED BY · solid 2px$/);
-  const foot = await scrolled();
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  const draft = screen.getByRole('list', 'Drafts').getByRole('listitem', 'Springfield Properties Inc. · ₱25,000.00');
 
-  expect(foot).toBeGreaterThan(0);
-  expect(await markedPartInView(browser, 'Document preview')).toBe(true);
-  await form.getByRole('textbox', 'Bill to').tap();
-  expect(await scrolled()).toBeLessThan(foot);
-  expect(await markedPartInView(browser, 'Document preview')).toBe(true);
-
-  await screen.getByRole('heading', { name: 'Billing Statements', level: 1 }).tap();
-  expect(await markedPaperParts(browser)).toEqual([]);
+  await draft.getByRole('button', 'Open').tap();
+  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Address')).toHaveValue('12 Evergreen Terrace, Pasig City');
 });

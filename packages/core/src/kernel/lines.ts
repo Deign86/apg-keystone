@@ -30,6 +30,9 @@ export const lineDraft = (init: Partial<Omit<LineDraft, 'id'>> = {}): LineDraft 
 export const linesFromDraft = (saved: readonly Partial<LineDraft>[] | undefined): LineDraft[] =>
   (saved?.length ? saved.map((l) => lineDraft({ desc: l.desc ?? '', qty: l.qty ?? '1', amount: l.amount ?? '' })) : [lineDraft()]);
 
+/** Nothing typed on any line: no description and no amount. A quantity alone, which starts at 1, is not something typed. */
+export const linesBlank = (lines: readonly LineDraft[]) => lines.every((l) => !l.desc.trim() && !l.amount.trim());
+
 const asTyped = (pesos: number) => (toCentavos(pesos) % 100 === 0 ? String(Math.round(pesos)) : pesos.toFixed(2));
 
 export const lineDraftOf = (l: LineItem) => lineDraft({ desc: l.desc, qty: String(l.qty ?? 1), amount: asTyped(l.price ?? l.amt) });

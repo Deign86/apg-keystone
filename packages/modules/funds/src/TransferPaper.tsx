@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { amountInWords, longDate, peso, signatureOf, type Company, type CompanyDetails } from '@keystone/core';
-import { amountColumn, Letterhead, Lines, Meta, orDash, paperLabel, Sheet, Signatures, usePaperPart } from '@keystone/kit';
+import { amountColumn, Letterhead, Lines, Meta, orDash, paperLabel, Sheet, Signatures } from '@keystone/kit';
 import { expensesOf, requestTotal, settleText, type FundsRequest } from './rules';
 
 // The fund transfer request (docs/adr/0021): once the CEO approves a request paid by transfer, the paper that asks
@@ -24,18 +24,17 @@ function standing(r: FundsRequest): string {
 export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPaper({ request: r, company }, ref) {
   const total = requestTotal(r);
   const a = r.account;
-  const mark = usePaperPart();
 
   return (
     <Sheet ref={ref} label={`Fund transfer request ${r.no}`}>
       <Letterhead company={company} title="Fund Transfer Request" no={r.no} date={longDate(r.decision?.at.slice(0, 10) || r.date)} />
 
-      <Meta rows={[['Requested by', orDash(r.requester), true, 'requester'], ['Date filed', longDate(r.date)], ['For', orDash(r.purpose), true, 'purpose'], ['Settle by', settleText(r), false, 'settle']]} />
+      <Meta rows={[['Requested by', orDash(r.requester), true], ['Date filed', longDate(r.date)], ['For', orDash(r.purpose), true], ['Settle by', settleText(r)]]} />
 
-      <p {...mark('pay')} className={`m-0 mb-1 ${paperLabel}`}>Transfer to</p>
-      <Meta rows={[['Bank', orDash(a?.bank), true, 'bank'], ['Branch', orDash(a?.branch), false, 'branch'], ['Account name', orDash(a?.name), true, 'accountName'], ['Account no.', orDash(a?.number), true, 'accountNo']]} />
+      <p className={`m-0 mb-1 ${paperLabel}`}>Transfer to</p>
+      <Meta rows={[['Bank', orDash(a?.bank), true], ['Branch', orDash(a?.branch)], ['Account name', orDash(a?.name), true], ['Account no.', orDash(a?.number), true]]} />
 
-      <div {...mark('lines')} className="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
+      <div className="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
         <span className={paperLabel}>Amount</span>
         <span className="text-right">
           <span className="block text-sm font-bold tabular-nums">{peso(total)}</span>
@@ -49,10 +48,9 @@ export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPap
         lines={r.lines.length || r.amount ? expensesOf(r) : []}
         empty="No expenses listed yet."
         footer={[['Total', peso(total), true]]}
-        part="lines"
       />
 
-      <Signatures signed={(who) => signatureOf(company, who)} names={[[r.requester, 'Requested by', '', 'requester'], [r.status === 'Approved' ? r.decision?.by ?? '' : '', 'Approved by']]} />
+      <Signatures signed={(who) => signatureOf(company, who)} names={[[r.requester, 'Requested by'], [r.status === 'Approved' ? r.decision?.by ?? '' : '', 'Approved by']]} />
       <p className="m-0 mt-3 text-[11px] font-medium text-pretty">{standing(r)}</p>
     </Sheet>
   );

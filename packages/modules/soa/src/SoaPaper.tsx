@@ -3,7 +3,7 @@ import { DASH, longDate, peso, shortDate, sumCentavos, toCentavos, type Company 
 import {
   depositLines, dueOnSigning, EWT_RATE, leaseSchedule, leaseTermsOf, monthlyRent, monthName, pdcSchedule, VAT_RATE, type Soa,
 } from './rules';
-import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet, usePaperPart } from '@keystone/kit';
+import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet } from '@keystone/kit';
 
 // The company's Statement of Account, on an upright A4 page (the form it follows is drawn on its side). Under the
 // letterhead every paper carries (docs/adr/0038): who and what the lease is for, then four parts, each worked out in
@@ -51,12 +51,9 @@ function Table({ label, columns, rows, total, empty }: { label: string; columns:
   );
 }
 
-/** One of the statement's four parts; `part` is also the part of the paper the form's fields for it fill. */
-function Part({ n, title, part, children }: { n: number; title: string; part: string; children: ReactNode }) {
-  const mark = usePaperPart();
-
+function Part({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
-    <section {...mark(part)} className="mt-4">
+    <section className="mt-4">
       <h2 className={`m-0 ${paperHeading}`}>{n}. {title}</h2>
       {children}
     </section>
@@ -73,7 +70,6 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
   const checks = pdcSchedule(a);
   const base = peso(rent.base);
   const rate = peso(toCentavos(a.rate));
-  const mark = usePaperPart();
 
   return (
     <Sheet ref={ref} label={`Statement of account ${a.no}`}>
@@ -81,18 +77,18 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
 
       <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
         <dt className={paperLabel}>Client</dt>
-        <dd {...mark('client')} className="m-0 font-bold uppercase">{orDash(a.client)}</dd>
+        <dd className="m-0 font-bold uppercase">{orDash(a.client)}</dd>
         <dt className={paperLabel}>Property address</dt>
-        <dd {...mark('property')} className="m-0 font-medium">{orDash(a.property)}</dd>
+        <dd className="m-0 font-medium">{orDash(a.property)}</dd>
         <dt className={paperLabel}>Lease terms</dt>
-        <dd {...mark('leaseTerms')} className="m-0 font-medium">{orDash(leaseTermsOf(a))}</dd>
+        <dd className="m-0 font-medium">{orDash(leaseTermsOf(a))}</dd>
         <dt className={paperLabel}>Payee</dt>
-        <dd {...mark('payee')} className="m-0 font-medium">{orDash(a.payee)}</dd>
+        <dd className="m-0 font-medium">{orDash(a.payee)}</dd>
         <dt className={paperLabel}>Contract commencement</dt>
-        <dd {...mark('commencement')} className="m-0 font-medium tabular-nums">{a.commencement ? longDate(a.commencement) : DASH}</dd>
+        <dd className="m-0 font-medium tabular-nums">{a.commencement ? longDate(a.commencement) : DASH}</dd>
       </dl>
 
-      <Part n={1} title="Breakdown of the monthly rent" part="breakdown">
+      <Part n={1} title="Breakdown of the monthly rent">
         <Table
           label="Breakdown"
           columns={[{ header: 'Particulars' }, { header: 'Sqm', figure: true }, { header: 'Rate', figure: true }, { header: 'Computation' }, { header: 'Amount', figure: true }]}
@@ -106,7 +102,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
         />
       </Part>
 
-      <Part n={2} title="Deposit and advance" part="deposit">
+      <Part n={2} title="Deposit and advance">
         <Table
           label="Deposit and advance"
           columns={[{ header: 'Description' }, { header: 'Amount', figure: true }, { header: 'Qty', figure: true }, { header: 'Total amount', figure: true }, { header: 'Coverage' }, { header: 'Check no.' }]}
@@ -121,7 +117,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
         </p>
       </Part>
 
-      <Part n={3} title="Lease term and escalation" part="lease">
+      <Part n={3} title="Lease term and escalation">
         <Table
           label="Lease term and escalation"
           columns={[{ header: 'Year' }, { header: 'Period' }, { header: 'Escalation', figure: true }, { header: 'Base rent', figure: true }, { header: 'VAT', figure: true }, { header: 'EWT', figure: true }, { header: 'Monthly rent', figure: true }]}
@@ -133,7 +129,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
         />
       </Part>
 
-      <Part n={4} title="Postdated checks (PDC): rental schedule" part="checks">
+      <Part n={4} title="Postdated checks (PDC): rental schedule">
         <Table
           label="Postdated checks"
           columns={[{ header: 'No.', figure: true }, { header: 'Check date' }, { header: 'Bank' }, { header: 'Check number' }, { header: 'Amount', figure: true }, { header: 'Payment for' }]}
@@ -149,7 +145,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company }>(
       </Part>
 
       {a.notes.trim() && (
-        <section {...mark('notes')} className="mt-4">
+        <section className="mt-4">
           <h2 className={`m-0 ${paperHeading}`}>Notes</h2>
           <p className="m-0 mt-1 text-[11px] whitespace-pre-line">{a.notes}</p>
         </section>

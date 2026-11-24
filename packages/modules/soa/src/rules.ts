@@ -264,6 +264,13 @@ export function newSoa(s: TerminalState, ctx: Ctx): SoaDraft {
   };
 }
 
+/**
+ * Nothing typed worth keeping as a draft (docs/adr/0041): a new statement with no client, property, floor area or
+ * rate. One editing a saved statement is never blank.
+ */
+export const soaDraftBlank = (d: SoaDraft) =>
+  !d.editing && !d.client.trim() && !d.property.trim() && !d.sqm.trim() && !d.rate.trim();
+
 /** What the Drafts list calls a saved statement of account draft: the client, and where. */
 export const soaDraftTitle = (d: SoaDraft) => [d.client.trim() || 'No client yet', d.property.trim()].filter(Boolean).join(' · ');
 

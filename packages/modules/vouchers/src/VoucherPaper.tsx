@@ -2,7 +2,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { amountInWords, longDate, peso, signatureOf, toCentavos, type Company, type CompanyDetails, type Voucher } from '@keystone/core';
 import { caps, voucherTotal, type Payee } from './rules';
-import { Letterhead, paperHeading as heading, paperLabel, paperStripe, SignatureImage, TwoUp, usePaperPart } from '@keystone/kit';
+import { Letterhead, paperHeading as heading, paperLabel, paperStripe, SignatureImage, TwoUp } from '@keystone/kit';
 
 // The company's Check Voucher, twice on one A4 sheet: once on each half, cut apart along the dashed line across the
 // middle. Ruled into boxes as the printed cash voucher is, out to near the paper's edges: who and where on the left, the
@@ -12,12 +12,10 @@ import { Letterhead, paperHeading as heading, paperLabel, paperStripe, Signature
 /** `payee` is who the voucher pays, as printed (payeeOf). */
 type Props = { voucher: Voucher; payee: Payee; company: Company & Pick<CompanyDetails, 'signatures'> };
 
-/** One labelled box in the ruled grid; `part` is the part of the paper the form's field for it fills. */
-function Box({ label, part, children, className = '' }: { label: string; part?: string; children?: ReactNode; className?: string }) {
-  const mark = usePaperPart();
-
+/** One labelled box in the ruled grid. */
+function Box({ label, children, className = '' }: { label: string; children?: ReactNode; className?: string }) {
   return (
-    <div {...mark(part)} className={`flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ${className}`}>
+    <div className={`flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ${className}`}>
       <dt className={`shrink-0 ${paperLabel}`}>{label}</dt>
       <dd className="m-0 min-w-0 font-bold tabular-nums break-words">{children || '\u00a0'}</dd>
     </div>
@@ -26,11 +24,10 @@ function Box({ label, part, children, className = '' }: { label: string; part?: 
 
 export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPaper({ voucher: v, payee, company }, ref) {
   const total = voucherTotal(v);
-  const mark = usePaperPart();
 
   const signatures = [
-    [v.preparedPos, caps(v.prepared), 'Prepared by', 'prepared'], [v.checkedPos, caps(v.checked), 'Audited by', 'checked'], [v.approvedPos, caps(v.approved), 'Approved by', 'approved'],
-    ['', '', 'Received payment by', ''],
+    [v.preparedPos, caps(v.prepared), 'Prepared by'], [v.checkedPos, caps(v.checked), 'Audited by'], [v.approvedPos, caps(v.approved), 'Approved by'],
+    ['', '', 'Received payment by'],
   ];
 
   return (
@@ -46,17 +43,17 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
             rest. The line before the dates is drawn on their left, as it is down the amounts below, so the two meet
             in one straight line. */}
         <dl className="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
-          <Box label="Payee" part="payee" className="border-b border-paper-line">{caps(payee.name)}</Box>
-          <Box label="TIN" part="tin" className="max-w-[18rem] border-b border-paper-line">{v.tin}</Box>
-          <Box label="Date" part="date" className="border-b border-l border-paper-line">{longDate(v.date)}</Box>
-          <Box label="Address" part="address" className="col-span-2 border-b border-paper-line">{payee.address}</Box>
-          <Box label="Check no." part="check" className="border-b border-l border-paper-line">{v.check}</Box>
-          <Box label="Issuer" part="issuer">{v.issuer && caps(v.issuer)}</Box>
-          <Box label="Bank" part="bank" className="max-w-[18rem]">{v.bank}</Box>
-          <Box label="Date of check" part="checkDate" className="border-l border-paper-line">{v.checkDate ? longDate(v.checkDate) : ''}</Box>
+          <Box label="Payee" className="border-b border-paper-line">{caps(payee.name)}</Box>
+          <Box label="TIN" className="max-w-[18rem] border-b border-paper-line">{v.tin}</Box>
+          <Box label="Date" className="border-b border-l border-paper-line">{longDate(v.date)}</Box>
+          <Box label="Address" className="col-span-2 border-b border-paper-line">{payee.address}</Box>
+          <Box label="Check no." className="border-b border-l border-paper-line">{v.check}</Box>
+          <Box label="Issuer">{v.issuer && caps(v.issuer)}</Box>
+          <Box label="Bank" className="max-w-[18rem]">{v.bank}</Box>
+          <Box label="Date of check" className="border-l border-paper-line">{v.checkDate ? longDate(v.checkDate) : ''}</Box>
         </dl>
 
-        <div {...mark('lines')} className="flex flex-1 flex-col border-t border-paper-ink">
+        <div className="flex flex-1 flex-col border-t border-paper-ink">
           {/* Separate borders, each inside its cell: collapsed ones sit astride the cell's edge, half a pixel off the
               line the boxes above and the filler below draw. */}
           <table className="w-full border-separate border-spacing-0">
@@ -92,8 +89,8 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
         </dl>
 
         <div className="grid grid-cols-4 border-t border-paper-ink text-[11px]">
-          {signatures.map(([position, who, role, part], i) => (
-            <div key={role} {...mark(part)} className={`flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
+          {signatures.map(([position, who, role], i) => (
+            <div key={role} className={`flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
               <p className={`m-0 ${paperLabel}`}>{role}</p>
               {/* Room to sign above the line; under it the signatory's name, then their position. */}
               <div className="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">

@@ -3,7 +3,6 @@ import companiesLogo from '@keystone/ui/logo-paper-companies.png';
 import { forwardRef, Fragment, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { DASH, peso, toCentavos, type Company, type LineItem } from '@keystone/core';
 import { HALF_PAGE_HEIGHT, LANDSCAPE_PAGE, MARKS, TWO_UP, TWO_UP_EDGE, UPRIGHT, type PaperLayout } from './paper';
-import { usePaperPart } from './parts';
 
 // Building blocks for printed documents, on white paper tokens. A module composes its
 // own document from these (the voucher, the statement); the element on screen is the
@@ -138,12 +137,9 @@ export function FitWidth({ children }: { children: ReactNode }) {
 /**
  * Every paper's header, the same on each (docs/adr/0038): the document's title across the top, then the Group of
  * Companies logo with the company's address beside it, and the document's number and date on the right. The logo
- * names the company, so its name and contact are left out. Its number is the part `no` and its date the part `date`,
- * for the fields that fill them (`Fills`).
+ * names the company, so its name and contact are left out.
  */
 export function Letterhead({ company, title, no, date }: { company: Company; title: string; no: string; date?: string }) {
-  const part = usePaperPart();
-
   return (
     <header className="mb-3.5 border-b-2 border-paper-gold pb-2.5">
       <p className="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">{title}</p>
@@ -153,8 +149,8 @@ export function Letterhead({ company, title, no, date }: { company: Company; tit
           {company.address && <p className="m-0 min-w-0 border-l border-paper-line pl-4 text-[11px] text-pretty text-paper-muted">{company.address}</p>}
         </div>
         <div className="shrink-0 text-right">
-          <p {...part('no')} className="m-0 text-[12.5px] font-semibold tabular-nums">{no}</p>
-          {date && <p {...part('date')} className="m-0 text-xs font-medium tabular-nums">{date}</p>}
+          <p className="m-0 text-[12.5px] font-semibold tabular-nums">{no}</p>
+          {date && <p className="m-0 text-xs font-medium tabular-nums">{date}</p>}
         </div>
       </div>
     </header>
@@ -177,22 +173,20 @@ export const paperLabel = 'text-[11px] font-semibold tracking-[0.08em] text-pape
 
 /**
  * A document's facts as one ruled box, two to a row: a firm line around it and light ones between, each column's
- * labels lined up so the values start together. `strong` sets a value in bold; `part` names the value as the part of
- * the paper a field fills (`Fills`).
+ * labels lined up so the values start together. `strong` sets a value in bold.
  */
-export function Meta({ rows }: { rows: [label: string, value: ReactNode, strong?: boolean, part?: string][] }) {
+export function Meta({ rows }: { rows: [string, ReactNode, boolean?][] }) {
   const lastRow = Math.ceil(rows.length / 2) - 1;
-  const mark = usePaperPart();
 
   return (
     <dl className="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
-      {rows.map(([k, v, strong, part], i) => {
+      {rows.map(([k, v, strong], i) => {
         const under = Math.floor(i / 2) < lastRow ? 'border-b border-paper-line' : '';
 
         return (
           <Fragment key={k}>
             <dt className={`flex items-center py-1.5 pr-3 pl-2.5 ${paperLabel} ${under} ${i % 2 ? 'border-l border-paper-line' : ''}`}>{k}</dt>
-            <dd {...mark(part)} className={`m-0 flex items-center py-1.5 pr-2.5 tabular-nums ${strong ? 'font-bold' : 'font-medium'} ${under}`}>{v}</dd>
+            <dd className={`m-0 flex items-center py-1.5 pr-2.5 tabular-nums ${strong ? 'font-bold' : 'font-medium'} ${under}`}>{v}</dd>
           </Fragment>
         );
       })}
@@ -212,15 +206,13 @@ export const amountColumn = (): LineColumn => ({ header: 'Amount', figure: true,
 
 /**
  * A document's lines, ruled as the check voucher is: a firm line around the table and above its totals, light ones
- * between columns and rows, the headings on a pale gold band and the grand total on another. `part` names the table
- * as the part of the paper a field fills (`Fills`).
+ * between columns and rows, the headings on a pale gold band and the grand total on another.
  */
-export function Lines({ columns, lines, empty, footer, part }: { columns: LineColumn[]; lines: LineItem[]; empty: string; footer: [string, string, boolean?][]; part?: string }) {
-  const mark = usePaperPart();
+export function Lines({ columns, lines, empty, footer }: { columns: LineColumn[]; lines: LineItem[]; empty: string; footer: [string, string, boolean?][] }) {
   const cell = (i: number, figure?: boolean) => `px-2.5 py-1.5 ${i ? 'border-l border-paper-line' : ''} ${figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`;
 
   return (
-    <table {...mark(part)} className="my-2 w-full border-collapse border border-paper-ink">
+    <table className="my-2 w-full border-collapse border border-paper-ink">
       <thead>
         <tr className={`border-b border-paper-line bg-paper-tint text-left ${paperHeading}`}>
           {columns.map((c, i) => <th key={c.header} className={`${cell(i, c.figure)} font-semibold`}>{c.header}</th>)}
@@ -251,21 +243,19 @@ export function Lines({ columns, lines, empty, footer, part }: { columns: LineCo
 /**
  * Who signs, side by side: a line, the name under it, the position when the document keeps one, and what they sign as.
  * With `signed` (a lookup of the signatures Company Details keeps, `signatureOf`), a signatory's signature prints above
- * their line. A signatory's `part` names their place as the part of the paper a field fills (`Fills`).
+ * their line.
  */
 export function Signatures({ names, signed }: {
-  names: [who: string, role: string, position?: string, part?: string][];
+  names: ([who: string, role: string] | [who: string, role: string, position: string])[];
   signed?: (who: string) => string | undefined;
 }) {
-  const mark = usePaperPart();
-
   return (
     <div className="mt-14 grid gap-8" style={{ gridTemplateColumns: `repeat(${names.length}, minmax(0,1fr))` }}>
-      {names.map(([who, role, position, part]) => {
+      {names.map(([who, role, position]) => {
         const signature = who ? signed?.(who) : undefined;
 
         return (
-          <div key={role} {...mark(part)} className="relative border-t border-paper-ink pt-1 text-[11px]">
+          <div key={role} className="relative border-t border-paper-ink pt-1 text-[11px]">
             {signature && <SignatureImage src={signature} who={who} />}
             <p className="m-0 min-h-4 font-bold">{who}</p>
             {/* Under the name, the signatory's position, when the document keeps one. */}
