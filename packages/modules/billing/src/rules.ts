@@ -1,5 +1,5 @@
 import {
-  addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, logged, nameOf, newestFirst,
+  addDays, changeEach, companyOf, count, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesFromDraft, logged, nameOf, newestFirst,
   percent, peso, recordsOf, shortDate, sumCentavos, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type ISODate, type Payment, type Statement, type StatementPayments,
@@ -130,6 +130,20 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
  * A saved statement back in the form. One saved before it kept its own notes takes Company Details'; one saved before
  * Bill to was typed names its client by directory code, and comes back with that client's name.
  */
+/** What the Drafts list calls a saved statement draft: who it bills, and what it comes to so far. */
+export const statementDraftTitle = (d: StatementDraft) => `${d.client.trim() || 'No client yet'} · ${peso(statementTotals(statementOf(d)).due)}`;
+
+/**
+ * A saved draft back in the form (docs/adr/0041): what was saved over a new statement, so a field it lacks starts as a
+ * new one's does, its charges as typed, and the next invoice number, since a draft has none, unless it edits a saved
+ * statement.
+ */
+export function statementDraftFrom(s: TerminalState, ctx: Ctx, accounts: BankAccount[], saved: Partial<StatementDraft>): StatementDraft {
+  const fresh = newStatement(s, ctx, accounts);
+
+  return { ...fresh, ...saved, lines: linesFromDraft(saved.lines), no: saved.editing ?? fresh.no };
+}
+
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
   editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: nameOf(s, b.client),
   address: b.address ?? '', attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),

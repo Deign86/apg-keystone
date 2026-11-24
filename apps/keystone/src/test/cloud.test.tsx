@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import {
-  emptyState, fromDocuments, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState,
+  DRAFT_DOCUMENTS, emptyState, fromDocuments, parseState, toDocuments, type DocumentChanges, type Member, type StateDocument, type TerminalState,
 } from '@keystone/core';
 import { documentLayout, KeystoneStore, type Platform } from '@keystone/kit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -210,7 +210,7 @@ describe('the records in the cloud', () => {
     const who: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
     const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, layout, who));
 
-    expect(layout).toEqual({ funds: expect.objectContaining({ collection: 'rf', readBy: 'uid' }) });
+    expect(layout).toEqual({ ...DRAFT_DOCUMENTS, funds: expect.objectContaining({ collection: 'rf', readBy: 'uid' }) });
     expect(store.ctx.who).toEqual(who);
     expect(store.state).toEqual(filed);
 

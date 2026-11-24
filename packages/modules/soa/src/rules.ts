@@ -263,6 +263,19 @@ export function newSoa(s: TerminalState, ctx: Ctx): SoaDraft {
   };
 }
 
+/** What the Drafts list calls a saved statement of account draft: the client, and where. */
+export const soaDraftTitle = (d: SoaDraft) => [d.client.trim() || 'No client yet', d.property.trim()].filter(Boolean).join(' · ');
+
+/**
+ * A saved draft back in the form (docs/adr/0041): what was saved over a new statement, so a field it lacks starts as a
+ * new one's does, and the next number, since a draft has none, unless it edits a saved statement.
+ */
+export function soaDraftFrom(s: TerminalState, ctx: Ctx, saved: Partial<SoaDraft>): SoaDraft {
+  const fresh = newSoa(s, ctx);
+
+  return { ...fresh, ...saved, no: saved.editing ?? fresh.no };
+}
+
 const typed = (n: number) => (n ? String(n) : '');
 
 export const soaDraftOf = (a: Soa): SoaDraft => ({
@@ -279,7 +292,7 @@ const numberOf = (x: string) => {
 
 /** The statement the form holds, as it prints and saves: text trimmed (the notes kept as typed), numbers read. */
 export function soaOf(d: SoaDraft): Soa {
-  const { editing: _, ...a } = d;
+  const { editing: _, savedDraft: __, ...a } = d;
 
   return {
     ...a, no: a.no.trim(), client: a.client.trim(), property: a.property.trim(), leaseTerms: a.leaseTerms.trim(), payee: a.payee.trim(),

@@ -300,3 +300,26 @@ test('opens a waiting card from Overview, and starts a new one from its button',
   await expect(screen.getByRole('heading', { name: 'ID Maker', level: 1 })).toBeVisible();
   await expect(screen.getByRole('form', 'New ID').getByRole('textbox', 'ID No.')).toHaveValue('APG-2026-0031');
 });
+
+// Save draft (docs/adr/0041): a card's work kept with the records and listed under Drafts above the issued IDs. A draft
+// has no number: the card issued from it takes the next one.
+test('saves a draft of a card, opens it again, and takes it away once the card is issued', async ({ app, screen }) => {
+  await app.open('/#id-maker');
+  const form = screen.getByRole('form', 'New ID');
+
+  await form.getByRole('combobox', 'Employee').tap();
+  await screen.getByRole('option', /Kristine Joy L\. Villanueva/).tap();
+  await form.getByRole('button', 'Save draft').tap();
+  await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
+
+  await screen.getByRole('button', 'New ID').tap();
+  await expect(screen.getByRole('form', 'New ID').getByRole('textbox', 'Name on card')).toHaveValue('');
+  await screen.getByRole('list', 'Drafts').getByRole('listitem', 'Kristine Joy L. Villanueva · Admin Assistant').getByRole('button', 'Open').tap();
+  const opened = screen.getByRole('form', 'New ID');
+
+  await expect(opened.getByRole('textbox', 'Name on card')).toHaveValue('Kristine Joy L. Villanueva');
+  await expect(opened.getByRole('textbox', 'ID No.')).toHaveValue('APG-2026-0031');
+  await opened.getByRole('button', 'Save and issue').tap();
+  await expect(screen.getByRole('dialog', 'APG-2026-0031 issued and queued for printing.')).toBeVisible();
+  await expect(screen.getByRole('list', 'Drafts')).toBeHidden();
+});

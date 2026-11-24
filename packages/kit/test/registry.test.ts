@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DRAFT_DOCUMENTS } from '@keystone/core';
 import { buildRegistry, documentLayout, findService, memberGrants, type ModuleDef } from '../src/registry';
 import { okConnector } from './fakes';
 
@@ -67,6 +68,7 @@ describe('registry', () => {
       mod('vouchers', { order: 3, documents: own('cv') }),
       mod('shouty', { order: 4, documents: own('Big-List') }),
       mod('roster', { order: 5, documents: own('members') }),
+      mod('scribble', { order: 6, documents: own('mydrafts') }),
     ], []);
 
     expect(r.modules.map((m) => m.id)).toEqual(['funds']);
@@ -75,9 +77,11 @@ describe('registry', () => {
       { id: 'vouchers', reason: 'Vouchers keeps its records in "cv", which Keystone already uses.' },
       { id: 'shouty', reason: 'Shouty keeps its records in "Big-List", which must be lowercase letters.' },
       { id: 'roster', reason: 'Roster keeps its records in "members", which Keystone already uses.' },
+      { id: 'scribble', reason: 'Scribble keeps its records in "mydrafts", which Keystone already uses.' },
     ]);
-    expect(documentLayout(r.modules)).toEqual({ funds: own('rf') });
-    expect(documentLayout([mod('home')])).toEqual({});
+    // The kernel's saved drafts are always laid out (docs/adr/0041), with or without a module that keeps records.
+    expect(documentLayout(r.modules)).toEqual({ ...DRAFT_DOCUMENTS, funds: own('rf') });
+    expect(documentLayout([mod('home')])).toEqual(DRAFT_DOCUMENTS);
   });
 });
 

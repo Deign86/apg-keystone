@@ -1,8 +1,8 @@
 import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, TextInput, type Column, type RowAction } from '@keystone/ui';
 import { useCallback, useRef, useState } from 'react';
 import { changeEach, companyOf, count, recordsOf, sentenceOf, shortDate, type IDRecord } from '@keystone/core';
-import { BLOOD_TYPES, ID_STATUSES, idDraftOf, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
-import { SignatoryPicker, useDraft, useKeystone, usePhoto, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
+import { BLOOD_TYPES, ID_STATUSES, idDraftFrom, idDraftOf, idDraftTitle, idTone, idFigure, idFinding, idOf, idsNewestFirst, idWaiting, issueID, markExpired, newID, queuedForPrinting, setIDStatus, withEmployee, ID, TAG, refersTo } from './rules';
+import { SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useKeystone, usePhoto, useSavedDrafts, type ModuleDef, printElement, savePdf, FormCard, Workspace } from '@keystone/kit';
 import { IDCardSheet } from './IDCard';
 
 /** The select's value for "no directory record"; Base UI treats an empty value as unselected. */
@@ -25,6 +25,7 @@ const DRAFT = `${ID}.draft`;
 function IDMaker() {
   const { state, ctx, run, files, photos, notify } = useKeystone();
   const [draft, setDraft] = useDraft(DRAFT, () => newID(state, ctx));
+  const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: idDraftTitle, restore: (d) => idDraftFrom(state, ctx, d) });
   const [error, setError] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const photo = usePhoto(draft.photo);
@@ -35,8 +36,10 @@ function IDMaker() {
     const r = run((s, c) => issueID(s, draft, c, asNew));
     setError(r.ok ? null : r.error);
 
-    if (r.ok) setDraft(newID(r.state, ctx));
-  }, [run, draft, ctx, setDraft]);
+    if (!r.ok) return;
+    drafts.finish(draft);
+    setDraft(newID(r.state, ctx));
+  }, [run, draft, ctx, setDraft, drafts]);
 
   const choosePhoto = async () => {
     try {
@@ -72,6 +75,7 @@ function IDMaker() {
           : 'No card is waiting to be printed. Pick an employee and the card renders front and back.'}
         actions={<Button onClick={() => { setDraft(newID(state, ctx)); setError(null); }}>New ID</Button>}
       />
+      <SavedDrafts drafts={drafts} noun="card" onOpen={() => { setError(null); document.getElementById('id-form')?.scrollIntoView({ block: 'start' }); }} />
       <Panel className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
           <SectionLabel>Issued IDs</SectionLabel>
@@ -110,6 +114,7 @@ function IDMaker() {
               <Button onClick={() => sheet.current && printElement(sheet.current)}>Print</Button>
               <Button onClick={() => sheet.current && savePdf(sheet.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export print file</Button>
               {editing && <Button onClick={() => save(true)}>Issue as new</Button>}
+              <SaveDraftButton drafts={drafts} />
               <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and issue'}</Button>
             </>}
           >

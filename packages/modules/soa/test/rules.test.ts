@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyState, moduleData, percent, toCentavos, withModuleData, type Ctx } from '@keystone/core';
 import {
   addMonths, baseRentInYear, depositLines, dueOnSigning, leaseSchedule, leaseTermsOf, leaseYearOf, monthlyRent, monthName, newSoa,
-  pdcSchedule, pdcStart, pdcTotal, removeSoa, rentOn, saveSoa, soaDraftOf, soaLine, soaOf, statementsNewestFirst, statementsOf,
+  pdcSchedule, pdcStart, pdcTotal, removeSoa, rentOn, saveSoa, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf, statementsNewestFirst, statementsOf,
   type SoaDraft,
 } from '../src/rules';
 import { soaModule } from '../src';
@@ -282,5 +282,25 @@ describe('what the module contributes', () => {
     expect(soaModule.stat?.(emptyState(), ctx, [soaModule])).toEqual(['Saved', '0']);
     expect(soaModule.stat?.(saved, ctx, [soaModule])).toEqual(['Saved', '1']);
     expect(soaModule.create?.label).toBe('New statement of account');
+  });
+});
+
+describe('a saved draft of a statement of account (docs/adr/0041)', () => {
+  it('is called by its client and property', () => {
+    expect(soaDraftTitle(draft())).toBe('Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig');
+    expect(soaDraftTitle(newSoa(emptyState(), ctx))).toBe('No client yet');
+  });
+
+  it('goes back in the form over a new statement, with the next number unless it edits a saved one', () => {
+    const { state } = saveSoa(emptyState(), draft(), ctx);
+    const back = soaDraftFrom(state, ctx, { client: 'Northwind Retail Corp.', no: 'SOA-2026-009', sqm: '20' });
+
+    expect(back).toMatchObject({ client: 'Northwind Retail Corp.', sqm: '20', no: 'SOA-2026-002', depositMonths: '2' });
+    expect(soaDraftFrom(state, ctx, { ...soaDraftOf(statementsOf(state)[0]) }).no).toBe('SOA-2026-001');
+  });
+
+  it('never carries which saved draft it came from into the statement saved', () => {
+    expect(soaOf({ ...draft(), savedDraft: 'ana-1-soa-1' })).not.toHaveProperty('savedDraft');
+    expect(saveSoa(emptyState(), { ...draft(), savedDraft: 'ana-1-soa-1' }, ctx).record).not.toHaveProperty('savedDraft');
   });
 });

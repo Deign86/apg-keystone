@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CLOUD_LAYOUT, lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
   dataOf, decideRefusal, decideRequest, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
-  nextRequestNo, REQUEST_STATUSES, requestDocuments, requestDraftOf, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
+  nextRequestNo, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -276,5 +276,23 @@ describe('the saved data', () => {
     expect(r).not.toHaveProperty('account');
     expect(expensesOf(r)).toEqual([{ desc: 'Christmas party: venue deposit', amt: 48000 }]);
     expect(requestDraftOf(r).lines).toMatchObject([{ desc: 'Christmas party: venue deposit', amount: '48000' }]);
+  });
+});
+
+describe('a saved draft of a request (docs/adr/0041)', () => {
+  it('is called by what the money is for and how much so far', () => {
+    const s = state();
+    const d: RequestDraft = { ...newRequest(s, at(hr)), purpose: 'Pantry, November', lines: lines(['Coffee', '1,250'], ['Sugar', '300.50']) };
+
+    expect(requestDraftTitle(s, d, at(hr))).toBe('Pantry, November · ₱1,550.50');
+    expect(requestDraftTitle(s, newRequest(s, at(hr)), at(hr))).toBe('No purpose yet · ₱0.00');
+  });
+
+  it('goes back in the form over a new request, its expenses as typed and its account filled out', () => {
+    const s = state();
+    const back = requestDraftFrom(s, at(hr), { purpose: 'Pantry', account: { bank: 'BDO', branch: '', name: '', number: '' }, lines: [{ id: 'line-1', desc: 'Coffee', qty: '1', amount: '1250' }] });
+
+    expect(back).toMatchObject({ purpose: 'Pantry', requester: 'Ana Cruz', account: { bank: 'BDO', branch: '', name: '', number: '' } });
+    expect(back.lines.map((l) => [l.desc, l.amount])).toEqual([['Coffee', '1250']]);
   });
 });
