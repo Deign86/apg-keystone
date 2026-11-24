@@ -23,4 +23,4 @@ export { Fills, usePaperPart } from './parts';
 
 export { printElement, savePdf } from './output';
 
-export type { AppSession, AppUpdate, AppUpdater, Platform } from './platform';
+export type { AppInstaller, AppSession, AppUpdate, AppUpdater, InstallWay, Platform } from './platform';

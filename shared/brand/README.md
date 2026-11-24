@@ -16,6 +16,7 @@ full APG logo, the phoenix with its wordmark, made for paper (`logo-paper.png`).
 | `icon-macos.png` | The same tile on Apple's grid: an 824 px squircle with a 100 px margin | macOS (`icon.icns`) |
 | `icon-ios.png` | The mark on a full-bleed black square, no transparency | iOS, which rounds its own corners |
 | `icon-android-fg.png` | The mark alone, inside the adaptive-icon safe zone | Android, on a `#0b0a08` background |
+| `icon-maskable.png` | The mark inside the web's maskable safe zone, on a full-bleed black square | The web app's icon on Android, which cuts it to its own shape (docs/adr/0046) |
 | `icons.json` | The `tauri icon` manifest | `npm run icons` |
 
 ## Changing the logo
@@ -25,5 +26,5 @@ full APG logo, the phoenix with its wordmark, made for paper (`logo-paper.png`).
 3. `npm run sync` copies the sidebar mark into `@keystone/ui`; `npm run icons` builds every platform's icons:
    - `apps/keystone/src-tauri/icons/`: `icon.icns` (macOS), `icon.ico` and the Store tiles (Windows), the PNG sizes
      (Linux), and `ios/` and `android/`, ready for a mobile build.
-   - `apps/keystone/public/`: the browser preview's favicon, Apple touch icon and web-app icons.
+   - `apps/keystone/public/`: the web app's favicon, Apple touch icon and manifest icons, maskable ones included.
 4. Look at the 16 and 32 px icons before committing; small sizes are where a logo stops reading.

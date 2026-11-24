@@ -368,7 +368,7 @@ const clampSize = (n: number) => Math.min(2, Math.max(0.5, n));
  * at one height (its signatory's size, kept with the signatures), so every signature reads alike whatever was
  * uploaded. Its box sits on the line, so it never moves the line. Where it may be resized (the CEO, on screen), a
  * handle shows on hover or focus: drag it up to enlarge, down to shrink, or use the arrow keys; Home is the standard
- * size. The handle never prints.
+ * size. The handle never prints. On a touch screen it always shows, as there is no hover.
  */
 export function SignatureImage({ src, who }: { src: string; who: string }) {
   const shown = useTrimmed(src);
@@ -392,7 +392,9 @@ export function SignatureImage({ src, who }: { src: string; who: string }) {
             aria-valuenow={Math.round(live * 100)}
             aria-valuetext={`${Math.round(live * 100)}%`}
             title="Drag to resize this signature on every paper"
-            className="absolute -top-1.5 -right-1.5 size-3 cursor-ns-resize touch-none rounded-full border border-paper-gold bg-paper opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden"
+            // A finger has no hover: on a phone or tablet the handle always shows, and takes a tap or a drag from well
+            // around it. Never drawn into an exported PDF.
+            className="absolute -top-1.5 -right-1.5 size-3 cursor-ns-resize touch-none rounded-full border border-paper-gold bg-paper opacity-0 group-hover:opacity-100 focus:opacity-100 print:hidden [[data-pdf-drawing]_&]:hidden [[data-touch]_&]:opacity-100 [[data-touch]_&]:after:absolute [[data-touch]_&]:after:-inset-5 [[data-touch]_&]:after:content-['']"
             onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setDragging({ from: e.clientY, at: size, size }); }}
             onPointerMove={(e) => { if (dragging) setDragging({ ...dragging, size: clampSize(dragging.at + (dragging.from - e.clientY) / DRAG_PER_SIZE) }); }}
             onPointerUp={() => { if (dragging) resize(dragging.size); setDragging(null); }}

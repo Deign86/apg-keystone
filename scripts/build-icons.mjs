@@ -5,7 +5,8 @@
 //   apps/keystone/src-tauri/icons/   Windows (icon.ico, Store tiles), Linux and the PNG sizes from icon-app.png;
 //                                    macOS (icon.icns) from icon-macos.png; ios/ from icon-ios.png and android/
 //                                    (adaptive, on the tile colour) from icon-android-fg.png, ready for a mobile build
-//   apps/keystone/public/            the browser preview's favicon, Apple touch icon and web-app icons
+//   apps/keystone/public/            the web app's favicon, Apple touch icon and manifest icons, the maskable ones
+//                                    (Android cuts them to its own shape) from icon-maskable.png
 
 import { copyFileSync, cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -34,6 +35,10 @@ try {
   copyFileSync(join(scratch, 'web', '180x180.png'), join(web, 'apple-touch-icon.png'));
   copyFileSync(join(scratch, 'web', '192x192.png'), join(web, 'icon-192.png'));
   copyFileSync(join(scratch, 'web', '512x512.png'), join(web, 'icon-512.png'));
+
+  tauri('shared/brand/icon-maskable.png', '--output', join(scratch, 'maskable'), '--png', '192,512');
+  copyFileSync(join(scratch, 'maskable', '192x192.png'), join(web, 'icon-maskable-192.png'));
+  copyFileSync(join(scratch, 'maskable', '512x512.png'), join(web, 'icon-maskable-512.png'));
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }

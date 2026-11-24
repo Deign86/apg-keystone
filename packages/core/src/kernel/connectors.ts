@@ -172,13 +172,21 @@ async function fetchInstaller(env: ConnectorEnv, app: DesktopApp, release?: AppR
 /**
  * Starts an installed desktop app. When it is not on this computer, downloads its installer from its latest release
  * and opens it; when that cannot be done (offline, no installer for this computer), opens its download page, and says
- * why the installer was not fetched when fetching it failed (offline, a download that did not match its digest).
+ * why the installer was not fetched when fetching it failed (offline, a download that did not match its digest). In
+ * the web app, which cannot start an app, it opens the download page.
  */
 export async function openDesktopApp(env: ConnectorEnv | SystemBridge, app: DesktopApp): Promise<string | void> {
   const e: ConnectorEnv = 'system' in env ? env : { system: env };
   const { system } = e;
 
-  if (system.platform === 'web') throw new Error(`Open Keystone’s desktop app to open ${app.name}.`);
+  // The web app (a phone, a tablet, a browser) cannot start another app: it opens where the app is downloaded, to
+  // install it on a computer (docs/adr/0046).
+  if (system.platform === 'web') {
+    await system.openUrl(downloadsPage(app));
+
+    return `${app.name} runs on a computer, so its download page is open. Install it there, or open it from Keystone’s desktop app.`;
+  }
+
   const installed = await system.locateApp(app.locator);
 
   if (installed) return system.launchApp(installed);

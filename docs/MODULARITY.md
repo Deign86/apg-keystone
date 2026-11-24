@@ -139,8 +139,8 @@ newer version on Home (docs/adr/0035).
 | `memberGrant` | | Something of this system's that the CEO gives a staff member's account: the yes-or-no field kept on the member, and the words User Accounts shows for it (docs/adr/0030, 0033) |
 
 Desktop apps spread `desktopAppShortcut({ name, locator, repo, installers })` from core: its `open` starts the
-installed app, or fetches its installer, or opens its download page, and in the browser preview says the desktop app is
-needed; its `update` compares the installed version with the latest release.
+installed app, or fetches its installer, or opens its download page, and in the web app opens the download page and
+says the app runs on a computer; its `update` compares the installed version with the latest release.
 
 `buildRegistry` validates every connector; a broken one (no name, no logo) is refused, not loaded. The kit's
 `ConnectorShortcut` runs `open` under a 15-second deadline and shows any failure as a message, so a connector that

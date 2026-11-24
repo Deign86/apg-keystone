@@ -7,3 +7,5 @@ export * from './register';
 export * from './overlays';
 
 export * from './tabs';
+
+export * from './touch';
