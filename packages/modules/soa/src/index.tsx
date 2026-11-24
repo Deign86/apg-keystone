@@ -91,9 +91,9 @@ function Statements() {
               </Fills>
               <Fills part="date"><Field label="Prepared as of"><TextInput type="date" value={draft.date} onChange={(date) => set({ date })} /></Field></Fills>
             </FieldRow>
-            <Fills part="client"><Field label="Client"><TextInput placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field></Fills>
+            <Fills part="client"><Field label="Client"><TextInput capitalize placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field></Fills>
             <Fills part="property"><Field label="Property address"><TextInput value={draft.property} onChange={(property) => set({ property })} /></Field></Fills>
-            <Fills part="payee"><Field label="Payee" hint="Who the checks are made out to."><TextInput value={draft.payee} onChange={(payee) => set({ payee })} /></Field></Fills>
+            <Fills part="payee"><Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize value={draft.payee} onChange={(payee) => set({ payee })} /></Field></Fills>
 
             <SectionLabel>1. Breakdown</SectionLabel>
             <Fills part="breakdown">
@@ -152,7 +152,7 @@ function Statements() {
                 <Field label="Number of checks" hint={`Empty: ${pdcTotal({ ...live, pdcCount: 0 })}, the months the advance does not pay.`}>
                   <TextInput figures align="right" value={draft.pdcCount} onChange={(pdcCount) => set({ pdcCount })} />
                 </Field>
-                <Field label="Checks dated on" hint="Day of the month before the rent month."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
+                <Field label="Checks dated on" hint="Day of the rent month it pays."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
               </FieldRow>
               <FieldRow>
                 <Field label="Bank"><TextInput value={draft.bank} onChange={(bank) => set({ bank })} /></Field>

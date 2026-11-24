@@ -119,7 +119,7 @@ function IDMaker() {
                 <SelectInput value={draft.emp || MANUAL} onChange={(emp) => setDraft(withEmployee(state, draft, emp === MANUAL ? '' : emp))} options={[{ value: MANUAL, label: 'Type details by hand' }, ...employees.map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))]} />
               </Field>
             </FieldRow>
-            <Fills part="name"><Field label="Name on card"><TextInput value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field></Fills>
+            <Fills part="name"><Field label="Name on card"><TextInput capitalize value={draft.name} onChange={(name) => setDraft({ ...draft, name })} /></Field></Fills>
             <FieldRow>
               <Fills part="pos"><Field label="Position"><TextInput value={draft.pos} onChange={(pos) => setDraft({ ...draft, pos })} /></Field></Fills>
               <Fills part="dept"><Field label="Department"><TextInput value={draft.dept} onChange={(dept) => setDraft({ ...draft, dept })} /></Field></Fills>
@@ -141,7 +141,7 @@ function IDMaker() {
             </Fills>
             <FieldRow>
               <Fills part="ice">
-                <Field label="Emergency contact"><TextInput placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
+                <Field label="Emergency contact"><TextInput capitalize placeholder="Name" value={draft.iceName} onChange={(iceName) => setDraft({ ...draft, iceName })} /></Field>
                 <Field label="Contact number"><TextInput type="tel" placeholder="09XX XXX XXXX" value={draft.iceNo} onChange={(iceNo) => setDraft({ ...draft, iceNo })} /></Field>
               </Fills>
             </FieldRow>

@@ -267,7 +267,7 @@ export function SignatoryPicker({ label, value, onChange, names = [], hint, anyo
       </Field>
       {typing && (
         <div onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
-          <CellInput label={`${label}, name`} placeholder="Type the name" autoFocus value={value} onChange={type} />
+          <CellInput capitalize label={`${label}, name`} placeholder="Type the name" autoFocus value={value} onChange={type} />
         </div>
       )}
     </div>
@@ -379,7 +379,7 @@ export function BankAccountPicker({ label, value, onChange, hint, noneHint, afte
             <Field label="Account number"><TextInput figures placeholder="0012 3456 7890" {...field('number')} /></Field>
           </FieldRow>
           <FieldRow>
-            <Field label="Account name" hint="As the bank holds it."><TextInput {...field('name')} /></Field>
+            <Field label="Account name" hint="As the bank holds it."><TextInput capitalize {...field('name')} /></Field>
             <Field label="Branch"><TextInput placeholder="Optional" {...field('branch')} /></Field>
           </FieldRow>
           <div className="flex flex-wrap items-center justify-end gap-2">

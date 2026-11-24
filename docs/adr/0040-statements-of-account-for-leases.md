@@ -10,6 +10,8 @@ Status: Accepted · Date: 2026-11-24
   "Description | Amount | Qty | Total amount", with Coverage and Check no., the reservation "1 month deductible"; (3) the
   lease term and escalation; (4) the postdated checks, one a month (No., Check date, Bank, Check number, Amount,
   Payment for), each dated the 28th of the month before the rent it pays. Then the contract commencement and notes.
+  (Changed 2026-11-24, from the leasing manager: a check is dated in the month it pays, so its date and its
+  "Payment for" name the same month.)
 - **The owner wants it upright,** and the computation shown, not only the totals.
 - **Its numbers reconcile as one formula:** ₱212,640 base rent (354.4 sqm × ₱600) is ₱227,524.80 after 12% VAT and 5%
   EWT on the base, and two months of that is the form's ₱455,049.60 advance; the deposit is months of base rent. The

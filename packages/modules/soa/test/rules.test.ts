@@ -69,13 +69,15 @@ describe('the lease years', () => {
 });
 
 describe('the postdated checks', () => {
-  it('are the form’s schedule: dated the 28th of the month before, numbered on, the next year’s at its escalated rent', () => {
+  it('are the form’s schedule: each dated in the month it pays, numbered on, the next year’s at its escalated rent', () => {
     const checks = pdcSchedule(soaOf(draft()));
 
     expect(checks).toHaveLength(12);
-    expect(checks[0]).toEqual({ no: 1, date: '2027-01-28', bank: 'BPI', check: '6000325749', amount: 22752480, month: '2027-02' });
-    expect(checks[10]).toMatchObject({ date: '2027-11-28', check: '6000325759', amount: 22752480, month: '2027-12' });
-    expect(checks[11]).toMatchObject({ date: '2027-12-28', check: '6000325760', amount: 23890104, month: '2028-01' });
+    expect(checks[0]).toEqual({ no: 1, date: '2027-02-28', bank: 'BPI', check: '6000325749', amount: 22752480, month: '2027-02' });
+    expect(checks[10]).toMatchObject({ date: '2027-12-28', check: '6000325759', amount: 22752480, month: '2027-12' });
+    expect(checks[11]).toMatchObject({ date: '2028-01-28', check: '6000325760', amount: 23890104, month: '2028-01' });
+    // Its date and "Payment for" always name the same month.
+    expect(checks.every((c) => c.date.slice(0, 7) === c.month)).toBe(true);
   });
 
   it('start the month after the advance, one for each month it does not pay, unless set', () => {
@@ -88,7 +90,7 @@ describe('the postdated checks', () => {
   it('are dated no later than the month’s last day, and keep a check number’s leading zeros', () => {
     const checks = pdcSchedule(soaOf(draft({ pdcFirst: '2027-03', pdcDay: '31', firstCheck: '0099' })));
 
-    expect(checks.slice(0, 2).map((c) => [c.date, c.check])).toEqual([['2027-02-28', '0099'], ['2027-03-31', '0100']]);
+    expect(checks.slice(0, 2).map((c) => [c.date, c.check])).toEqual([['2027-03-31', '0099'], ['2027-04-30', '0100']]);
   });
 
   it('are none before the commencement date is set', () => {

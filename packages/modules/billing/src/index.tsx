@@ -153,11 +153,11 @@ function Billing() {
                     </FieldRow>
                     <Fills part="billTo">
                       <Field label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
-                        <TextInput placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
+                        <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                       </Field>
                     </Fills>
                     <Fills part="address"><Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field></Fills>
-                    <Fills part="attention"><Field label="Attention"><TextInput placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field></Fills>
+                    <Fills part="attention"><Field label="Attention"><TextInput capitalize placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field></Fills>
                     <Fills part="lines"><LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
                     <Fills part="totals">
                       <div className="flex flex-wrap gap-x-5 gap-y-2">

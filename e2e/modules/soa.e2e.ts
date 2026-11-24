@@ -67,9 +67,9 @@ test('works out the rent, the deposit, each lease year and the checks, on the pr
   const checks = paper.getByRole('table', 'Postdated checks');
 
   await expect(checks.getByRole('row')).toHaveCount(13);
-  await expect(checks.getByRole('row', '1 January 28, 2027 BPI 6000325749 ₱227,524.80 February 2027 Rent')).toBeVisible();
+  await expect(checks.getByRole('row', '1 February 28, 2027 BPI 6000325749 ₱227,524.80 February 2027 Rent')).toBeVisible();
   // The twelfth check pays the first month of the second year, at its escalated rent.
-  await expect(checks.getByRole('row', '12 December 28, 2027 BPI 6000325760 ₱238,901.04 January 2028 Rent')).toBeVisible();
+  await expect(checks.getByRole('row', '12 January 28, 2028 BPI 6000325760 ₱238,901.04 January 2028 Rent')).toBeVisible();
 });
 
 test('saves the statement to the register and the Activity Log, and opens it again', async ({ app, screen }) => {
