@@ -14,6 +14,12 @@ export const mmToPx = (mm: number) => (mm / 25.4) * 96;
 /** Millimetres as PDF points, 72 to the inch. */
 export const mmToPt = (mm: number) => (mm / 25.4) * 72;
 
+/**
+ * How finely Export PDF draws a paper, in dots per inch of the page it lands on: print resolution, so text, peso
+ * figures, logos and signatures stay sharp on A4 and when zoomed in, without the file running to megabytes.
+ */
+export const PDF_DPI = 300;
+
 /** The paper's width in CSS px: an A4 page less the print margins (186 mm). */
 export const PAPER_WIDTH = Math.round(mmToPx(PRINTABLE.width));
 
@@ -129,6 +135,24 @@ export const TWO_UP: PaperLayout = {
 };
 
 const LAYOUTS = [TWO_UP, LANDSCAPE_PAGE, UPRIGHT];
+
+/** A layout's PDF page, in points, which way up it asks for, and the room inside the margin it asks for. */
+export function pdfPage({ pdf }: PaperLayout) {
+  const [short, long] = [mmToPt(PAPER.width), mmToPt(PAPER.height)];
+  const page = pdf.orientation === 'landscape' ? { w: long, h: short } : { w: short, h: long };
+
+  return { page, room: { w: page.w - 2 * pdf.margin, h: page.h - 2 * pdf.margin } };
+}
+
+/**
+ * The pixels to draw for each CSS px of a paper this size, laid out to this layout, so it comes out at PDF_DPI on its
+ * PDF page: fitted inside the room there, by its width or, for a paper longer than the page, by its height.
+ */
+export function pdfPixelRatio(layout: PaperLayout, paper: { width: number; height: number }) {
+  const { room } = pdfPage(layout);
+
+  return (PDF_DPI / 72) * Math.min(room.w / paper.width, room.h / paper.height);
+}
 
 /** The layout a paper was rendered with, read back from the marks it carries. */
 export const layoutOf = (paper: HTMLElement): PaperLayout =>

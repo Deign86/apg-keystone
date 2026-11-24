@@ -182,3 +182,9 @@ export function voucherColumnLines(browser: Browser) {
     }))];
   });
 }
+
+/**
+ * The most a saved PDF may weigh. A paper drawn at print resolution and kept compressed is a few hundred kilobytes;
+ * stored as raw pixels it ran to tens of megabytes (packages/kit/src/output.ts › savePdf).
+ */
+export const PDF_MOST_BYTES = 1_000_000;

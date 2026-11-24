@@ -1,7 +1,7 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 import { readFile } from 'node:fs/promises';
-import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, tinyPaperText } from '../support/paper';
+import { faintPaperText, markedPaperParts, markedPartInView, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES, tinyPaperText } from '../support/paper';
 import { typeSignatory } from '../support/signatory';
 
 // Billing Statements (packages/modules/billing). The sample data has 010097-2026 paid, 010098-2026 overdue (due Oct 10)
@@ -447,7 +447,11 @@ test('exports the statement as a PDF named after its number', async ({ app, scre
   });
 
   expect(file.suggestedFilename).toBe('888-110226.pdf');
-  expect((await readFile(file.absolutePath)).subarray(0, 5).toString()).toBe('%PDF-');
+  const pdf = await readFile(file.absolutePath);
+
+  expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+  // Drawn at print resolution and compressed: a few hundred kilobytes, not the tens of megabytes of raw pixels.
+  expect(pdf.length).toBeLessThan(PDF_MOST_BYTES);
 });
 
 test('logs each statement sent, paid and voided, under the Billing filter', async ({ app, screen }) => {

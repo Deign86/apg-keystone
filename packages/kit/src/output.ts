@@ -1,29 +1,32 @@
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { layoutOf, MARKS } from './paper';
+import { layoutOf, MARKS, pdfPage, pdfPixelRatio } from './paper';
 import type { Files } from './context';
 
 /**
- * Renders a document element to an A4 PDF (sharp at 4×, about 380 dpi on A4) and asks where to save it, on a landscape
- * page for a landscape sheet, with what its layout asks of the PDF: a two-up sheet fills the whole page, as it prints,
- * a copy on each half and the dashed line between them.
+ * Renders a document element to an A4 PDF and asks where to save it, on a landscape page for a landscape sheet, with
+ * what its layout asks of the PDF: a two-up sheet fills the whole page, as it prints, a copy on each half and the dashed
+ * line between them. The paper is drawn at PDF_DPI for the size it takes on the page and kept lossless, compressed:
+ * sharp in print and a few hundred kilobytes, where raw pixels ran to tens of megabytes.
  */
 export async function savePdf(node: HTMLElement, name: string, files: Pick<Files, 'save'>): Promise<string | null> {
-  const { orientation, margin, style } = layoutOf(node).pdf;
+  const layout = layoutOf(node);
+  const { orientation, margin, style } = layout.pdf;
+  const pixelRatio = pdfPixelRatio(layout, { width: node.offsetWidth, height: node.offsetHeight });
 
   // Drawn with no part of it marked, whatever field has focus meanwhile (the stylesheet leaves a drawn paper's mark out).
   node.setAttribute(MARKS.drawing, '');
 
-  const png = await toPng(node, { pixelRatio: 4, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style })
+  const png = await toPng(node, { pixelRatio, backgroundColor: getComputedStyle(node).backgroundColor || '#ffffff', cacheBust: true, style })
     .finally(() => node.removeAttribute(MARKS.drawing));
 
-  const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation });
-  const page = { w: pdf.internal.pageSize.getWidth(), h: pdf.internal.pageSize.getHeight() };
-  const room = { w: page.w - margin * 2, h: page.h - margin * 2 };
+  const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation, compress: true });
+  const { room } = pdfPage(layout);
   const img = pdf.getImageProperties(png);
   const scale = Math.min(room.w / img.width, room.h / img.height);
 
-  pdf.addImage(png, 'PNG', margin, margin, img.width * scale, img.height * scale);
+  // Without a compression jsPDF stores the PNG's pixels raw: 43 MB for a two-up voucher.
+  pdf.addImage(png, 'PNG', margin, margin, img.width * scale, img.height * scale, undefined, 'SLOW');
 
   const bytes = new Uint8Array(pdf.output('arraybuffer'));
 
