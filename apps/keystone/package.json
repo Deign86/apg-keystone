@@ -19,6 +19,7 @@
     "@keystone/kit": "*",
     "@keystone/module-accounts": "*",
     "@keystone/module-profile": "*",
+    "@keystone/module-soa": "*",
     "@keystone/module-activity": "*",
     "@keystone/module-banks": "*",
     "@keystone/module-billing": "*",
