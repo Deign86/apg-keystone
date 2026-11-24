@@ -152,6 +152,7 @@ function Billing() {
                     <Field label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
                       <TextInput placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                     </Field>
+                    <Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field>
                     <Field label="Attention"><TextInput placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field>
                     <LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} />
                     <div className="flex flex-wrap gap-x-5 gap-y-2">

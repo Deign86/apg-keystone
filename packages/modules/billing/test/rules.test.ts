@@ -136,6 +136,23 @@ describe('billing statements', () => {
     expect(statementDraftOf(s.bs[2], s).client).toBe('Harbor Point Logistics Corp.');
   });
 
+  it('keeps Bill to\'s address as typed, only when there is one, and a client typed by name leaves it as it is', () => {
+    const s = state();
+    const d = { ...billed(s), address: '  Ortigas Ave., Pasig City ' };
+
+    expect(newStatement(s, ctx).address).toBe('');
+    expect(withClient(s, d, 'Dela Cruz, Maria Teresa').address).toBe('  Ortigas Ave., Pasig City ');
+    const saved = saveStatement(s, { ...d, lines: [lineDraft({ desc: 'Rent', amount: '1000' })] }, ctx);
+
+    expect(saved.record.address).toBe('Ortigas Ave., Pasig City');
+    expect(statementDraftOf(saved.record, saved.state).address).toBe('Ortigas Ave., Pasig City');
+    // None typed: none kept, as on a statement saved before Bill to had an address.
+    const bare = saveStatement(s, { ...billed(s), lines: [lineDraft({ desc: 'Rent', amount: '1000' })] }, ctx);
+
+    expect(bare.record).not.toHaveProperty('address');
+    expect(statementDraftOf(bare.record, bare.state).address).toBe('');
+  });
+
   it('refuses a statement due before its invoice date', () => {
     const s = state();
     const d = { ...billed(s), due: '2026-10-01', lines: [lineDraft({ desc: 'Rent', amount: '100' })] };

@@ -99,6 +99,8 @@ export interface Statement {
    * directory code instead, and prints that client's name.
    */
   client: string;
+  /** Bill to's address, printed under its name, typed on the statement. A statement with none typed keeps none. */
+  address?: string;
   /** Who the statement is addressed to at the client. */
   attention?: string;
   /** Older statements: the billing period. No longer entered. */
