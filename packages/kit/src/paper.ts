@@ -50,6 +50,10 @@ export const MARKS = {
   /** The frame that clips the scaled preview, and the wrapper that scales it. Print undoes both. */
   frame: 'data-sheet-frame',
   scale: 'data-sheet-scale',
+  /** The part of the paper the field being typed in fills, while it has focus (parts.tsx): marked on screen only. */
+  active: 'data-paper-active',
+  /** The paper while Export PDF draws it, which leaves the active part unmarked. */
+  drawing: 'data-pdf-drawing',
 } as const;
 
 export interface PaperLayout {

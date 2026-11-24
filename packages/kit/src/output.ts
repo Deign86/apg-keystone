@@ -55,11 +55,15 @@ async function drawnPdf(node: HTMLElement): Promise<Uint8Array> {
   return new Uint8Array(pdf.output('arraybuffer'));
 }
 
-/** The paper as a picture at its own size, which a canvas can draw any part of at any resolution (it is an SVG). */
+/**
+ * The paper as a picture at its own size, which a canvas can draw any part of at any resolution (it is an SVG). Taken
+ * with no part of it marked, whatever field has focus meanwhile (the stylesheet leaves a drawn paper's mark out).
+ */
 async function pictureOf(node: HTMLElement, style: Partial<CSSStyleDeclaration> | undefined) {
   const picture = new Image();
 
-  picture.src = await toSvg(node, { cacheBust: true, style });
+  node.setAttribute(MARKS.drawing, '');
+  picture.src = await toSvg(node, { cacheBust: true, style }).finally(() => node.removeAttribute(MARKS.drawing));
   await picture.decode();
 
   return picture;
