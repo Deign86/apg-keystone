@@ -93,7 +93,7 @@ export const VoucherPaper = forwardRef<HTMLDivElement, Props>(function VoucherPa
 
         <div className="grid grid-cols-4 border-t border-paper-ink text-[11px]">
           {signatures.map(([position, who, role, part], i) => (
-            <div key={role} {...mark(part)} className={`flex min-h-28 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
+            <div key={role} {...mark(part)} className={`flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ${i ? 'border-l border-paper-line' : ''}`}>
               <p className={`m-0 ${paperLabel}`}>{role}</p>
               {/* Room to sign above the line; under it the signatory's name, then their position. */}
               <div className="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">

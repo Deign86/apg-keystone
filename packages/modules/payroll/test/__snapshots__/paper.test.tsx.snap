@@ -136,7 +136,7 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 </table>
 </div>
 </div>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -291,7 +291,7 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 </table>
 </div>
 </div>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -463,7 +463,7 @@ exports[`the payslip on paper > is laid out, and prints, exactly as it has > at 
 <span class="text-base font-bold tabular-nums">₱7,387.91</span>
 </div>
 <p class="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -618,7 +618,7 @@ exports[`the payslip on paper > is laid out, and prints, exactly as it has > on 
 <span class="text-base font-bold tabular-nums">₱7,387.91</span>
 </div>
 <p class="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
