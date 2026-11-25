@@ -159,6 +159,7 @@ function Billing() {
                       <Fills part="invoiceDate"><Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field></Fills>
                       <Fills part="due"><Field name="due" label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field></Fills>
                     </FieldRow>
+                    <Fills part="paymentMode"><Field label="Mode of payment" hint="How Bill to pays, as it prints in the invoice box under the due date."><TextInput placeholder="Check, bank transfer, cash" value={draft.paymentMode} onChange={(paymentMode) => setDraft({ ...draft, paymentMode })} /></Field></Fills>
                     <Fills part="billTo">
                       <Field name="client" label="Bill to" hint="As it prints. A client’s name from the directory brings its TIN, VAT, withholding and Attention.">
                         <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
@@ -194,7 +195,7 @@ function Billing() {
                       <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
                     </Fills>
                     <Fills part="penalty"><Field label="Penalty" hint="The late-payment penalty, printed under the payment instructions."><TextArea rows={2} value={draft.penalty} onChange={(penalty) => setDraft({ ...draft, penalty })} /></Field></Fills>
-                    <Fills part="note"><Field label="Notes"><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field></Fills>
+                    <Fills part="note"><Field label="Notes" hint="Optional. The statement prints Notes only when something is typed here."><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field></Fills>
                     {/* Each signatory's name over their position, as the statement prints them. */}
                     <FieldRow min={120}>
                       <Fills part="prepared">

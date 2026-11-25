@@ -15,11 +15,12 @@
 - `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under every paper's
   letterhead (kit's `Letterhead`: the title across the top, the Group of Companies logo with the address beside it, the
   number and date): Bill to, Address, TIN and Attention (a dash for one not filled in), the invoice box (number, invoice and
-  due dates), Qty · Description · Unit price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%)
+  due dates, and **Mode of payment**: typed on the form under the dates, kept only when typed, a dash when none is), Qty · Description · Unit price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%)
   and the total amount due; VAT shows a dash where it does not apply, and the EWT line shows only when EWT is withheld
   (docs/adr/0045). Then payment instructions, the
   **Penalty** line (the statement's own, `penalty`, started from Company Details' penalty; one saved before it kept one
-  prints Company Details'), notes and who signs, each with the signature Company Details keeps for them (docs/adr/0038).
+  prints Company Details'), **Notes** (optional: a new statement starts with none, and the paper has no Notes until
+  something is typed in them) and who signs, each with the signature Company Details keeps for them (docs/adr/0038).
   It prints once, on a whole upright A4 page (the kit's `Sheet`), not twice on a sheet cut in two as the check voucher
   does.
 - `src/rules.ts`: its rules (totals with VAT and EWT, numbering, the client typed or from the directory,

@@ -61,6 +61,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
           <Row label="Invoice No." strong first part="no">{b.no}</Row>
           <Row label="Invoice date" part="invoiceDate">{longDate(b.invoiceDate ?? b.date)}</Row>
           <Row label="Due date" part="due">{b.due ? longDate(b.due) : DASH}</Row>
+          <Row label="Mode of payment" part="paymentMode">{orDash(b.paymentMode)}</Row>
         </tbody>
       </table>
 
@@ -91,6 +92,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
       <Note title="Payment instructions" text={b.notes} part="notes" />
       {/* The late-payment penalty: the statement's own, or Company Details' terms on one saved before it kept one. */}
       <Note title="Penalty" text={b.penalty ?? terms} part="penalty" />
+      {/* Notes are optional: none typed, and the paper has no Notes. */}
       <Note title="Notes" text={b.note} part="note" />
       <Signatures signed={(who) => signatureOf(company, who)} names={[[b.prepared ?? '', 'Prepared by', b.preparedPos ?? '', 'prepared'], [b.checked ?? '', 'Checked by', b.checkedPos ?? '', 'checked'], [b.approved ?? '', 'Approved by', b.approvedPos ?? '', 'approved']]} />
     </Sheet>

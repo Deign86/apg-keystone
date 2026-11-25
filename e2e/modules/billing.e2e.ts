@@ -267,6 +267,38 @@ test('prints Bill to\'s TIN under the address, a directory client\'s brought wit
   await expect(paper.getByText('008-771-402-001', { exact: true })).toBeVisible();
 });
 
+test('prints the mode of payment in the invoice box, and Notes only once something is typed in them', async ({ app, screen }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+  const paper = screen.getByRole('article', 'Billing statement 888110226');
+  const invoice = paper.getByRole('table', 'Invoice');
+
+  // A new statement starts with neither: a dash in the invoice box, and no Notes on the paper.
+  await expect(form.getByRole('textbox', 'Mode of payment')).toHaveValue('');
+  await expect(form.getByRole('textbox', 'Notes')).toHaveValue('');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('—');
+  await expect(paper.getByText('Notes', { exact: true })).toBeHidden();
+
+  await form.getByRole('textbox', 'Mode of payment').fill('Bank transfer');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
+  await form.getByRole('textbox', 'Notes').fill('Thank you.');
+  await expect(paper.getByText('Notes', { exact: true })).toBeVisible();
+  await form.getByRole('textbox', 'Notes').fill('');
+  await expect(paper.getByText('Notes', { exact: true })).toBeHidden();
+
+  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
+
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await screen.getByRole('table', 'Statements issued').getByRole('cell', '888110226').tap();
+  await expect(screen.getByRole('form', 'Editing 888110226').getByRole('textbox', 'Mode of payment')).toHaveValue('Bank transfer');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
+});
+
 test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();

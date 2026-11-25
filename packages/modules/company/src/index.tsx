@@ -58,7 +58,6 @@ function CompanyDetailsScreen() {
         <fieldset className="m-0 flex flex-col gap-3 border-0 border-t border-line p-0 pt-3">
           <legend className="mb-2 text-[12.5px] font-semibold text-ink-2">Billing statements</legend>
           {paragraph('paymentInstructions', 'Payment instructions', 'Where clients pay and send proof of payment.')}
-          {paragraph('billingNote', 'Closing note')}
           <FieldRow>
             {text('billingTerms', 'Penalty', 'The late-payment penalty each new statement prints under its payment instructions.')}
             {text('dueInDays', 'Days to pay', 'Blank: each new statement needs its due date typed.')}

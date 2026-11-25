@@ -105,6 +105,8 @@ export interface Statement {
   tin?: string;
   /** Who the statement is addressed to at the client. */
   attention?: string;
+  /** How Bill to pays (check, bank transfer, cash), printed in the invoice box under the due date. A statement with none typed keeps none. */
+  paymentMode?: string;
   /** Older statements: the billing period. No longer entered. */
   period?: string;
   /** Older statements: the contract or unit reference. No longer entered. */
@@ -116,7 +118,7 @@ export interface Statement {
   ewtRate?: number;
   /** Payment instructions. */
   notes?: string;
-  /** The closing note under the payment instructions. */
+  /** Notes, optional, printed under the penalty only when typed. A statement with none typed keeps none. */
   note?: string;
   /** The late-payment penalty, printed under the payment instructions. Older statements have none and print Company Details' terms. */
   penalty?: string;

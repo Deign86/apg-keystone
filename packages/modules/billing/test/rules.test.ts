@@ -177,6 +177,37 @@ describe('billing statements', () => {
     expect(statementDraftOf(bare.record, bare.state).tin).toBe('');
   });
 
+  it('keeps the mode of payment as typed, and none when there is none', () => {
+    const s = state();
+    const rent = [lineDraft({ desc: 'Rent', amount: '1000' })];
+
+    expect(newStatement(s, ctx).paymentMode).toBe('');
+    const saved = saveStatement(s, { ...billed(s), paymentMode: ' Bank transfer ', lines: rent }, ctx);
+
+    expect(saved.record.paymentMode).toBe('Bank transfer');
+    expect(statementDraftOf(saved.record, saved.state).paymentMode).toBe('Bank transfer');
+    const bare = saveStatement(s, { ...billed(s), paymentMode: '  ', lines: rent }, ctx);
+
+    expect(bare.record).not.toHaveProperty('paymentMode');
+    expect(statementDraftOf(bare.record, bare.state).paymentMode).toBe('');
+  });
+
+  it('starts with no notes, whatever Company Details keeps, and keeps notes only when they are typed', () => {
+    const s = state();
+    const rent = [lineDraft({ desc: 'Rent', amount: '1000' })];
+
+    expect(companyOf(s).billingNote).not.toBe('');
+    expect(newStatement(s, ctx).note).toBe('');
+    const bare = saveStatement(s, { ...billed(s), note: ' \n ', lines: rent }, ctx);
+
+    expect(bare.record).not.toHaveProperty('note');
+    expect(statementDraftOf(bare.record, bare.state).note).toBe('');
+    const noted = saveStatement(s, { ...billed(s), note: ' Thank you. ', lines: rent }, ctx);
+
+    expect(noted.record.note).toBe('Thank you.');
+    expect(statementDraftOf(noted.record, noted.state).note).toBe('Thank you.');
+  });
+
   it('refuses a statement due before its invoice date', () => {
     const s = state();
     const d = { ...billed(s), due: '2026-10-01', lines: [lineDraft({ desc: 'Rent', amount: '100' })] };

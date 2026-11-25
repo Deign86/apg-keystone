@@ -43,6 +43,10 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -163,6 +167,10 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -282,6 +290,10 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 10, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -392,6 +404,10 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">November 5, 2026</td>
+</tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
 </tr>
 </tbody>
 </table>
@@ -507,6 +523,10 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
+</tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
 </tr>
 </tbody>
 </table>
