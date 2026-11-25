@@ -1,10 +1,11 @@
 import { jsPDF } from 'jspdf';
-import { layoutOf, MARKS, pageCuts, pdfAcross, pdfPage, pdfPixelRatio, pdfScale, type PaperLayout } from './paper';
+import { layoutOf, MARKS, pageCuts, pdfAcross, pdfPage, pdfPixelRatio, pdfScale } from './paper';
 
 // A paper as a PDF of its own drawing, for a platform that cannot print a page to one (a Mac, a browser, a phone;
 // docs/adr/0043). The paper is read as the browser laid it out, and each part drawn as what it is: its text as text, in
-// the fonts the page uses, embedded and selectable, so a PDF editor can change it; backgrounds and borders as filled
-// and stroked shapes; and only real pictures (the logo, signatures) as images. Nothing is drawn as a picture of the page.
+// the fonts the page uses, embedded and selectable, so a PDF editor can change it; backgrounds as filled shapes and
+// borders as lines, each drawn once; and only real pictures (the logo, signatures) as images. Nothing is drawn as a
+// picture of the page.
 
 type Rgb = [number, number, number];
 
@@ -28,12 +29,19 @@ interface TextLine {
 }
 
 type Part =
-  | ({ kind: 'fill'; color: Rgb; radius: number } & Box)
-  | ({ kind: 'border'; radius: number; sides: Side[] } & Box)
+  | Fill
+  | ({ kind: 'border'; radius: number; side: Side } & Box)
+  | Rule
   | ({ kind: 'image'; source: HTMLImageElement | SVGSVGElement; fit: string; position: string } & Box)
   | TextLine;
 
 type Side = { at: 'top' | 'right' | 'bottom' | 'left'; width: number; color: Rgb; style: string };
+
+/** A background: its box, filled. */
+type Fill = { kind: 'fill'; color: Rgb; radius: number } & Box;
+
+/** A straight border line: the band it covers on the paper, running down it or across it. */
+type Rule = { kind: 'rule'; down: boolean; color: Rgb; style: string } & Box;
 
 /** Draws the paper into an A4 PDF the way it prints, as text, shapes and its real pictures. */
 export async function paperPdf(node: HTMLElement): Promise<Uint8Array> {
@@ -50,7 +58,7 @@ export async function paperPdf(node: HTMLElement): Promise<Uint8Array> {
   let parts: Part[];
 
   try {
-    parts = partsOf(node, layout);
+    parts = partsOf(node);
   } finally {
     node.removeAttribute(MARKS.drawing);
   }
@@ -148,15 +156,13 @@ const ink = (() => {
 const families = (stack: string) => stack.split(',').map((f) => f.trim().replace(/^["']|["']$/g, ''));
 
 /** Every part of the paper to draw, in the order the browser paints them, in the paper's own px. */
-function partsOf(node: HTMLElement, layout: PaperLayout): Part[] {
+function partsOf(node: HTMLElement): Part[] {
   const box = node.getBoundingClientRect();
   const k = box.width / node.offsetWidth || 1;
   const at = (r: DOMRect): Box => ({ x: (r.left - box.left) / k, y: (r.top - box.top) / k, w: r.width / k, h: r.height / k });
   const parts: Part[] = [];
   const measure = document.createElement('canvas').getContext('2d');
   const range = document.createRange();
-  // A layout may take the paper's own frame away in its PDF (the two-up sheet's, which marks its edge on screen only).
-  const { frameless } = layout.pdf;
 
   const lines = (text: Text, style: CSSStyleDeclaration) => {
     const color = ink(style.color);
@@ -228,9 +234,10 @@ function partsOf(node: HTMLElement, layout: PaperLayout): Part[] {
     const radius = parseFloat(style.borderTopLeftRadius) * own || 0;
     const fill = ink(style.backgroundColor);
 
-    if (fill && r.w > 0 && r.h > 0) parts.push({ kind: 'fill', color: fill, radius, ...r });
+    if (fill && r.w > 0 && r.h > 0) parts.push({ kind: 'fill', color: fill, radius, ...snapped(r) });
 
-    const sides = (['top', 'right', 'bottom', 'left'] as const).flatMap((side): Side[] => {
+    // The paper's own frame marks its edge on screen only, and does not print.
+    const sides = root ? [] : (['top', 'right', 'bottom', 'left'] as const).flatMap((side): Side[] => {
       const width = parseFloat(style.getPropertyValue(`border-${side}-width`)) * own;
       const color = ink(style.getPropertyValue(`border-${side}-color`));
       const line = style.getPropertyValue(`border-${side}-style`);
@@ -238,7 +245,13 @@ function partsOf(node: HTMLElement, layout: PaperLayout): Part[] {
       return width > 0 && color && line !== 'none' && line !== 'hidden' ? [{ at: side, width, color, style: line }] : [];
     });
 
-    if (sides.length && !(root && frameless)) parts.push({ kind: 'border', radius, sides, ...r });
+    const [first] = sides;
+    const even = sides.length === 4 && sides.every((s) => s.width === first.width && s.style === first.style && s.color.join() === first.color.join());
+    // A table whose borders collapse shares each edge between two cells, and draws its line centred on it.
+    const shared = style.borderCollapse === 'collapse' && style.display.startsWith('table-');
+
+    if (radius && even) parts.push({ kind: 'border', radius, side: first, ...r });
+    else for (const side of sides) parts.push(ruleOf(side, r, shared));
 
     if (el instanceof HTMLImageElement || el instanceof SVGSVGElement) {
       if (r.w > 0 && r.h > 0) parts.push({ kind: 'image', source: el, fit: style.objectFit, position: style.objectPosition, ...r });
@@ -256,10 +269,105 @@ function partsOf(node: HTMLElement, layout: PaperLayout): Part[] {
 
   // Painted as the browser paints a paper: every background first, then every border, the heaviest last, as a table's
   // collapsed borders let the heavier win where two meet; then the pictures, then the text on top.
-  const layer = (p: Part) => ({ fill: 0, border: 1, image: 2, text: 3 })[p.kind];
-  const weight = (p: Part) => (p.kind === 'border' ? Math.max(...p.sides.map((s) => s.width)) : 0);
+  const layer = (p: Part) => ({ fill: 0, border: 1, rule: 1, image: 2, text: 3 })[p.kind];
+  const weight = (p: Part) => (p.kind === 'border' ? p.side.width : p.kind === 'rule' ? thickness(p) : 0);
+  const painted = parts.map((p, i) => ({ p, i })).sort((a, b) => layer(a.p) - layer(b.p) || weight(a.p) - weight(b.p) || a.i - b.i).map(({ p }) => p);
+  const fills = painted.filter((p): p is Fill => p.kind === 'fill');
+  const rounded = painted.filter((p) => p.kind === 'border');
+  const rules = painted.filter((p): p is Rule => p.kind === 'rule');
 
-  return parts.map((p, i) => ({ p, i })).sort((a, b) => layer(a.p) - layer(b.p) || weight(a.p) - weight(b.p) || a.i - b.i).map(({ p }) => p);
+  return [...seamless(fills), ...rounded, ...drawnOnce(rules), ...painted.filter((p) => layer(p) > 1)];
+}
+
+/**
+ * Backgrounds that meet with no seam between them. A reader smooths each shape's edges on its own, so where two only
+ * meet, edge to edge, the page shows through between them: a pale line between two rows' bands. Each runs half a px
+ * under a square one painted over it where they meet, which hides that half.
+ */
+function seamless(fills: Fill[]): Fill[] {
+  const under = 0.5;
+
+  return fills.map((f, i) => {
+    const over = fills.slice(i + 1).filter((g) => !g.radius);
+    const across = (g: Fill) => g.x < f.x + f.w && g.x + g.w > f.x;
+    const down = (g: Fill) => g.y < f.y + f.h && g.y + g.h > f.y;
+    const [top, bottom] = [over.some((g) => across(g) && g.y + g.h === f.y), over.some((g) => across(g) && g.y === f.y + f.h)];
+    const [left, right] = [over.some((g) => down(g) && g.x + g.w === f.x), over.some((g) => down(g) && g.x === f.x + f.w)];
+    const [x, y] = [f.x - (left ? under : 0), f.y - (top ? under : 0)];
+
+    return { ...f, x, y, w: f.x + f.w + (right ? under : 0) - x, h: f.y + f.h + (bottom ? under : 0) - y };
+  });
+}
+
+/** A box with its edges on whole px, as the browser paints backgrounds and borders on the screen's pixels. */
+const snapped = (r: Box): Box => {
+  const [x, y] = [Math.round(r.x), Math.round(r.y)];
+
+  return { x, y, w: Math.round(r.x + r.w) - x, h: Math.round(r.y + r.h) - y };
+};
+
+const thickness = (r: Rule) => (r.down ? r.w : r.h);
+
+/** Where a rule runs along its length, from and to. */
+const span = (r: Rule): [number, number] => (r.down ? [r.y, r.y + r.h] : [r.x, r.x + r.w]);
+
+/** A rule's piece, from and to along its length. */
+const piece = (r: Rule, from: number, to: number): Rule => (r.down ? { ...r, y: from, h: to - from } : { ...r, x: from, w: to - from });
+
+/**
+ * One side of a box's border as the browser paints it: a band just inside the box, or, where a table's borders
+ * collapse, centred on the edge the cell shares with the next; on whole px and at least one thick, as the browser puts
+ * it on the screen's pixels, so every line of a kind is as thick as the next.
+ */
+function ruleOf({ at, width, color, style }: Side, r: Box, shared: boolean): Rule {
+  const thick = Math.max(1, Math.round(width));
+  const down = at === 'left' || at === 'right';
+  const edge = { top: r.y, bottom: r.y + r.h, left: r.x, right: r.x + r.w }[at];
+  const inward = at === 'top' || at === 'left' ? 1 : -1;
+  const start = Math.round((shared ? edge : edge + (inward * width) / 2) - thick / 2);
+  const { x, y, w, h } = snapped(r);
+
+  return down ? { kind: 'rule', down, color, style, x: start, y, w: thick, h } : { kind: 'rule', down, color, style, x, y: start, w, h: thick };
+}
+
+/**
+ * Every line once. Where borders fall on one line (two cells' shared edge, a row's and its table's), the one painted
+ * last wins where they overlap, as the browser resolves a table's collapsed borders; then the pieces that look the same
+ * and touch are joined, so a column's rule runs down its table as one line.
+ */
+function drawnOnce(rules: Rule[]): Rule[] {
+  const lines = new Map<string, Rule[]>();
+
+  for (const rule of rules) {
+    const key = rule.down ? `down ${rule.x} ${rule.w}` : `across ${rule.y} ${rule.h}`;
+    const [from, to] = span(rule);
+
+    const kept = (lines.get(key) ?? []).flatMap((r) => {
+      const [a, b] = span(r);
+
+      return [...(a < from ? [piece(r, a, Math.min(b, from))] : []), ...(b > to ? [piece(r, Math.max(a, to), b)] : [])];
+    });
+
+    lines.set(key, [...kept, rule]);
+  }
+
+  const looksSame = (a: Rule, b: Rule) => a.style === b.style && a.color.join() === b.color.join();
+
+  const joined = [...lines.values()].flatMap((line) => {
+    const out: Rule[] = [];
+
+    for (const r of [...line].sort((a, b) => span(a)[0] - span(b)[0])) {
+      const last = out.at(-1);
+
+      if (last && span(last)[1] >= span(r)[0] && looksSame(last, r)) out[out.length - 1] = piece(last, span(last)[0], Math.max(span(last)[1], span(r)[1]));
+      else out.push(r);
+    }
+
+    return out;
+  });
+
+  // The heaviest last still, where lines of two weights cross.
+  return joined.filter((r) => span(r)[1] > span(r)[0]).sort((a, b) => thickness(a) - thickness(b));
 }
 
 // Pictures.
@@ -463,20 +571,38 @@ class Fonts {
 
 // Drawing.
 
+/** One of red, green and blue as a PDF writes it, from 0 to 1, to four places. */
+const channel = (c: number) => String(Number((c / 255).toFixed(4)));
+
 /** Draws the paper's parts on one page: its px placed and scaled to points there. */
 class Pen {
-  constructor(private pdf: jsPDF, private place: { x: number; y: number; scale: number }) {}
+  /** jsPDF's pens, given each of red, green and blue as written: given numbers, it rounds them to two places. */
+  private ink: { setDrawColor(r: string, g: string, b: string): jsPDF; setFillColor(r: string, g: string, b: string): jsPDF };
+
+  constructor(private pdf: jsPDF, private place: { x: number; y: number; scale: number }) {
+    this.ink = pdf;
+  }
+
+  /** A colour exactly as the page has it, for the lines and for the shapes filled. */
+  private draw = ([r, g, b]: Rgb) => this.ink.setDrawColor(channel(r), channel(g), channel(b));
+  private fill = ([r, g, b]: Rgb) => this.ink.setFillColor(channel(r), channel(g), channel(b));
 
   private x = (px: number) => this.place.x + px * this.place.scale;
   private y = (px: number) => this.place.y + px * this.place.scale;
   private len = (px: number) => px * this.place.scale;
 
   part(part: Exclude<Part, TextLine>, picture?: string) {
+    if (part.kind === 'rule') {
+      this.rule(part);
+
+      return;
+    }
+
     const { pdf } = this;
     const [x, y, w, h] = [this.x(part.x), this.y(part.y), this.len(part.w), this.len(part.h)];
 
     if (part.kind === 'fill') {
-      pdf.setFillColor(...part.color);
+      this.fill(part.color);
 
       if (part.radius) pdf.roundedRect(x, y, w, h, this.len(part.radius), this.len(part.radius), 'F');
       else pdf.rect(x, y, w, h, 'F');
@@ -487,49 +613,31 @@ class Pen {
     }
   }
 
+  /** A rounded border, its four sides alike: one line round the box, inside it. */
   private border(part: Extract<Part, { kind: 'border' }>, b: Box) {
     const { pdf } = this;
-    const [first] = part.sides;
-    const even = part.sides.length === 4 && part.sides.every((s) => s.width === first.width && s.style === first.style && s.color.join() === first.color.join());
+    const width = this.len(part.side.width);
 
-    if (part.radius && even) {
-      const width = this.len(first.width);
+    this.draw(part.side.color);
+    pdf.setLineWidth(width);
+    pdf.roundedRect(b.x + width / 2, b.y + width / 2, b.w - width, b.h - width, this.len(part.radius), this.len(part.radius), 'S');
+  }
 
-      pdf.setDrawColor(...first.color);
-      pdf.setLineWidth(width);
-      pdf.roundedRect(b.x + width / 2, b.y + width / 2, b.w - width, b.h - width, this.len(part.radius), this.len(part.radius), 'S');
+  /** A border line, stroked down the middle of its band; dashed or dotted as the page draws it. */
+  private rule(part: Rule) {
+    const { pdf } = this;
+    const width = this.len(thickness(part));
+    const [x, y, w, h] = [this.x(part.x), this.y(part.y), this.len(part.w), this.len(part.h)];
 
-      return;
-    }
+    this.draw(part.color);
+    pdf.setLineWidth(width);
 
-    for (const side of part.sides) {
-      const width = this.len(side.width);
-      const solid = side.style !== 'dashed' && side.style !== 'dotted';
+    if (part.style === 'dashed' || part.style === 'dotted') pdf.setLineDashPattern(part.style === 'dotted' ? [width, width] : [width * 3, width * 3], 0);
 
-      // Each side's band, inside the box, as CSS draws it.
-      const band: Box = {
-        top: { x: b.x, y: b.y, w: b.w, h: width },
-        bottom: { x: b.x, y: b.y + b.h - width, w: b.w, h: width },
-        left: { x: b.x, y: b.y, w: width, h: b.h },
-        right: { x: b.x + b.w - width, y: b.y, w: width, h: b.h },
-      }[side.at];
+    if (part.down) pdf.line(x + w / 2, y, x + w / 2, y + h);
+    else pdf.line(x, y + h / 2, x + w, y + h / 2);
 
-      if (solid) {
-        pdf.setFillColor(...side.color);
-        pdf.rect(band.x, band.y, band.w, band.h, 'F');
-      } else {
-        const across = side.at === 'top' || side.at === 'bottom';
-        const dash = side.style === 'dotted' ? [width, width] : [width * 3, width * 3];
-
-        pdf.setDrawColor(...side.color);
-        pdf.setLineWidth(width);
-        pdf.setLineDashPattern(dash, 0);
-
-        if (across) pdf.line(band.x, band.y + width / 2, band.x + band.w, band.y + width / 2);
-        else pdf.line(band.x + width / 2, band.y, band.x + width / 2, band.y + band.h);
-        pdf.setLineDashPattern([], 0);
-      }
-    }
+    pdf.setLineDashPattern([], 0);
   }
 
   /** A run of text where the browser set it: on the line's baseline, spaced so it is exactly as wide. */
@@ -546,7 +654,7 @@ class Pen {
     const stroke = run.stroke * size * 0.012;
 
     if (stroke) {
-      pdf.setDrawColor(...line.color);
+      this.draw(line.color);
       pdf.setLineWidth(stroke);
     }
 

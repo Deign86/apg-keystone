@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test, type Browser } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { paperAsPrinted, readPdf } from './support/paper';
+import { expectCleanPdf, paperAsPrinted, paperInks, readPdf, runsDown } from './support/paper';
 import { pickSignatory } from './support/signatory';
 
 // Every paper Keystone prints or saves as a PDF (packages/kit/src/paper.ts, output.ts, paper-pdf.ts), on every
@@ -9,7 +9,9 @@ import { pickSignatory } from './support/signatory';
 //   - the PDF as this browser saves it, read as a PDF reader reads it (pdf.js): each page A4; the paper drawn across the
 //     printable width (186 mm upright, 273 mm on its side, the whole sheet for the two-up voucher), centred; its words
 //     and peso amounts there as text, which can be selected, searched and edited; and its only images real pictures
-//     (the logo), never a picture of the page;
+//     (the logo), never a picture of the page; and as clean as the paper (docs/adr/0048, "Every exported PDF"): its
+//     borders as lines, each in its colour on screen and drawn once, no rule stitched from pieces, no seam between two
+//     backgrounds, and no frame;
 //   - the paper as Print lays it out, which is what the Windows app's PDF is: nothing else on the screen takes room
 //     (a wide table beside it made the browser shrink the whole print, the paper narrower than A4 and off to one side),
 //     and the paper starts at the page's edge at its full width.
@@ -17,14 +19,21 @@ import { pickSignatory } from './support/signatory';
 const MARGIN = (12 / 25.4) * 72;
 const A4 = { w: 595.28, h: 841.89 };
 
-/** Exports the paper on screen with `button`, waits for `saved` to be said, and reads the PDF. */
+/** Exports the paper on screen with `button`, waits for `saved` to be said, reads the PDF, and checks it is clean. */
 async function exportPdf(browser: Browser, screen: Screen, button: string, saved: string) {
+  const inks = await paperInks(browser);
+
   const file = await browser.waitForDownload(async () => {
     await screen.getByRole('button', button).tap();
     await expect(screen.getByRole('dialog', saved)).toBeVisible({ timeout: 30_000 });
   });
 
-  return readPdf(await readFile(file.absolutePath));
+  const pages = await readPdf(await readFile(file.absolutePath));
+
+  expect(pages.every((p) => p.lines.length > 0)).toBe(true);
+  expectCleanPdf(pages, inks);
+
+  return pages;
 }
 
 /** The text of every page, with letter-spaced words (headings set wide) closed up, as a search would match them. */
@@ -83,6 +92,15 @@ test('saves and prints a long statement of account across every A4 page it runs 
   expect(words(pages)).toContain('₱212,640.00');
   // The second page's checks are text too: the last one's number, after the cut.
   expect(pages[1].text).toContain('6000325772');
+  // Its ruled table as the page rules it: the paper's ink round it, its light grey between columns, its pale grey between
+  // rows, each 1 px (¾ pt), in exactly those colours; each column's rule one line down the page, not a piece a row.
+  const rules = pages[1].lines;
+  const columns = rules.filter((l) => runsDown(l) && l.color === '#9a9a9a');
+
+  expect([...new Set(rules.map((l) => l.color))].sort()).toEqual(['#111111', '#9a9a9a', '#e3e3e3']);
+  expect(new Set(rules.map((l) => l.width.toFixed(2)))).toEqual(new Set(['0.75']));
+  expect(columns).toHaveLength(5);
+  expect(new Set(columns.map((l) => `${l.y0.toFixed(1)} ${l.y1.toFixed(1)}`)).size).toBe(1);
   await expectPrintedAlone(browser, 'Statement of account');
 });
 

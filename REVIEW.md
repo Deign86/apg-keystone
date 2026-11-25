@@ -24,6 +24,7 @@ against this change).
 | --- | --- | --- |
 | Tax, totals, amount in words, numbering, payroll | The existing expectations are unchanged. If one changed, the pull request names the rule that changed and who asked for it | The prototype's results are kept exactly |
 | The company's details, or payment instructions on a document | Only an owner can change them, in the app and in `firestore.rules` | docs/adr/0018 |
+| A paper, its styles, `paper-pdf.ts`, `output.ts` or the print stylesheet | Its exported PDF is as clean as the paper: each rule a line, once, in its colour and width on screen; no rule stitched from pieces; no seam between backgrounds; no frame, and nothing black the paper does not show. A new paper that exports a PDF goes through `expectCleanPdf` (`e2e/support/paper.ts`) | docs/adr/0048, "Every exported PDF" |
 
 ## The cloud
 

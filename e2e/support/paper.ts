@@ -1,4 +1,5 @@
 import type { Browser } from '@e2e-dev/web';
+import { expect } from 'e2e';
 
 /**
  * The text on the papers on screen (a Sheet: a voucher, a statement, a payroll sheet, a payslip) set under 11px, the
@@ -194,9 +195,121 @@ export function pdfPages(pdf: Buffer) {
   return [...pdf.toString('latin1').matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map(([, w, h]) => ({ w: Number(w), h: Number(h) }));
 }
 
+type Box = { x0: number; y0: number; x1: number; y1: number };
+
+/**
+ * The colours the papers on screen paint their borders and backgrounds in, as `#rrggbb` as they show on white paper,
+ * read as kit's drawing reads them. A paper's own frame marks its edge on screen only, and is left out.
+ */
+export function paperInks(browser: Browser) {
+  return browser.evaluate(() => {
+    const pen = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+
+    const hexOf = (css: string) => {
+      if (!pen) return null;
+
+      pen.clearRect(0, 0, 1, 1);
+      pen.fillStyle = '#000';
+      pen.fillStyle = css;
+      pen.fillRect(0, 0, 1, 1);
+
+      const [r, g, b, a] = pen.getImageData(0, 0, 1, 1).data;
+      const over = (c: number) => Math.round(c * (a / 255) + 255 * (1 - a / 255));
+
+      return a === 0 ? null : `#${[over(r), over(g), over(b)].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+    };
+
+    const borders = new Set<string>();
+    const backgrounds = new Set<string>();
+
+    for (const paper of document.querySelectorAll<HTMLElement>('[data-ui="document"]')) {
+      for (const e of [paper, ...paper.querySelectorAll<HTMLElement>('*')]) {
+        const style = getComputedStyle(e);
+        const fill = hexOf(style.backgroundColor);
+
+        if (fill) backgrounds.add(fill);
+
+        for (const side of e === paper ? [] : ['top', 'right', 'bottom', 'left']) {
+          const color = hexOf(style.getPropertyValue(`border-${side}-color`));
+          const shown = parseFloat(style.getPropertyValue(`border-${side}-width`)) > 0 && !/none|hidden/.test(style.getPropertyValue(`border-${side}-style`));
+
+          if (color && shown) borders.add(color);
+        }
+      }
+    }
+
+    return { borders: [...borders], backgrounds: [...backgrounds] };
+  });
+}
+
+type Page = Awaited<ReturnType<typeof readPdf>>[number];
+
+type Line = Page['lines'][number];
+
+/** Whether a straight line runs down the page, not across it. */
+export const runsDown = (l: Line) => Math.abs(l.x1 - l.x0) < 0.01;
+
+/**
+ * An exported PDF as clean as the paper (docs/adr/0048, "Every exported PDF"), page by page:
+ *   - every line and every filled shape in a colour the paper paints there on screen: nothing black, no frame, unless
+ *     the paper has it;
+ *   - each edge drawn once: no two lines on one line overlap;
+ *   - each rule unbroken: no two lines that look the same meet, or nearly, on one line (one a row, stitched), unless a
+ *     line across it fills the gap between them, as a firm line across a light one does;
+ *   - no seam between two backgrounds that meet: one runs under the other, so the page cannot show through;
+ *   - no line down the paper's sides, where the screen's frame was.
+ */
+export function expectCleanPdf(pages: Page[], inks: { borders: string[]; backgrounds: string[] }) {
+  for (const page of pages) {
+    const { lines, fills, drawn } = page;
+    const along = (l: Line) => (runsDown(l) ? [l.y0, l.y1] : [l.x0, l.x1]);
+    const at = (l: Line) => (runsDown(l) ? l.x0 : l.y0);
+    const looksSame = (a: Line, b: Line) => a.color === b.color && Math.abs(a.width - b.width) < 0.01;
+
+    // A line across `l` that covers the gap along it from `g0` to `g1`.
+    const crossed = (l: Line, g0: number, g1: number) => lines.some((c) => {
+      const [c0, c1] = along(c);
+
+      return runsDown(c) !== runsDown(l) && c0 <= at(l) + 0.01 && c1 >= at(l) - 0.01 && at(c) - c.width / 2 <= g0 + 0.01 && at(c) + c.width / 2 >= g1 - 0.01;
+    });
+
+    const stitched = lines.flatMap((a, i) => lines.slice(i + 1).flatMap((b) => {
+      const [[a0, a1], [b0, b1]] = [along(a), along(b)];
+      const gap = Math.max(a0, b0) - Math.min(a1, b1);
+      const oneLine = runsDown(a) === runsDown(b) && Math.abs(at(a) - at(b)) < 0.01;
+
+      const broken = looksSame(a, b) && gap < 1 && !(gap > 0.01 && crossed(a, Math.min(a1, b1), Math.max(a0, b0)));
+
+      // Drawn twice where they overlap; or two pieces of one rule, meeting or a hair apart.
+      return oneLine && (gap < -0.01 || broken) ? [[a, b]] : [];
+    }));
+
+    const meet = (p: number, q: number) => Math.abs(p - q) < 0.01;
+    const overlap = (p0: number, p1: number, q0: number, q1: number) => Math.min(p1, q1) - Math.max(p0, q0) > 0.01;
+
+    const seams = fills.flatMap((a, i) => fills.slice(i + 1).flatMap((b) => {
+      const stacked = (meet(a.y1, b.y0) || meet(a.y0, b.y1)) && overlap(a.x0, a.x1, b.x0, b.x1);
+      const sideBySide = (meet(a.x1, b.x0) || meet(a.x0, b.x1)) && overlap(a.y0, a.y1, b.y0, b.y1);
+
+      return stacked || sideBySide ? [[a, b]] : [];
+    }));
+
+    expect([...page.strokes].filter((c) => !inks.borders.includes(c))).toEqual([]);
+    expect([...new Set(fills.map((f) => f.color))].filter((c) => !inks.backgrounds.includes(c))).toEqual([]);
+    expect(stitched).toEqual([]);
+    expect(seams).toEqual([]);
+    expect(lines.filter((l) => runsDown(l) && (Math.abs(l.x0 - drawn.x0) < 1 || Math.abs(l.x0 - drawn.x1) < 1))).toEqual([]);
+  }
+}
+
+/** A colour as a PDF reader reads it (pdf.js gives its red, green and blue, a grey's too), as `#rrggbb`. */
+const hex = (rgb: ArrayLike<number>) => `#${Array.from(rgb, (v) => v.toString(16).padStart(2, '0')).join('')}`;
+
 /**
  * A saved PDF as a PDF reader sees it (pdf.js): each page's size, its text as text, the box everything drawn on it
- * spans (its lines, boxes and bands; the page's clipping left out), and each image's size there, in points.
+ * spans (its lines, boxes and bands; the page's clipping left out), each image's size there, in points; each straight
+ * line stroked on it (where it runs, how thick, its colour), the colour of every other stroke, and each shape filled on
+ * it (the box it covers, its colour), in the order they are painted.
  */
 export async function readPdf(pdf: Buffer) {
   const { getDocument, OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -211,8 +324,12 @@ export async function readPdf(pdf: Buffer) {
     const { fnArray, argsArray } = await page.getOperatorList();
     const images: { w: number; h: number }[] = [];
     const drawn = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-    // The transform and the clip in force, kept per saved graphics state as a reader keeps them.
-    let state = { ctm: [1, 0, 0, 1, 0, 0], clip: { x0: -Infinity, y0: -Infinity, x1: Infinity, y1: Infinity } };
+    const lines: (Box & { width: number; color: string })[] = [];
+    const strokes = new Set<string>();
+    const fills: (Box & { color: string })[] = [];
+    // The transform, the clip, the pens' colours and the line's width in force, kept per saved graphics state as a
+    // reader keeps them.
+    let state = { ctm: [1, 0, 0, 1, 0, 0], clip: { x0: -Infinity, y0: -Infinity, x1: Infinity, y1: Infinity }, stroke: '#000000', fill: '#000000', width: 1 };
     const saved: (typeof state)[] = [];
 
     for (let i = 0; i < fnArray.length; i++) {
@@ -225,6 +342,12 @@ export async function readPdf(pdf: Buffer) {
         const [a, b, c, d, e, f] = args;
 
         state = { ...state, ctm: [m[0] * a + m[2] * b, m[1] * a + m[3] * b, m[0] * c + m[2] * d, m[1] * c + m[3] * d, m[0] * e + m[2] * f + m[4], m[1] * e + m[3] * f + m[5]] };
+      } else if (fn === OPS.setStrokeRGBColor) {
+        state = { ...state, stroke: hex(args) };
+      } else if (fn === OPS.setFillRGBColor) {
+        state = { ...state, fill: hex(args) };
+      } else if (fn === OPS.setLineWidth) {
+        state = { ...state, width: args[0] };
       } else if (fn === OPS.paintImageXObject) {
         images.push({ w: Math.abs(m[0]), h: Math.abs(m[3]) });
       } else if (fn === OPS.constructPath) {
@@ -239,8 +362,18 @@ export async function readPdf(pdf: Buffer) {
           y1: Math.min(clip.y1, Math.max(m[3] * y0, m[3] * y1) + m[5]),
         };
 
+        const next = fnArray[i + 1];
+
+        const straight = Math.abs(box.x1 - box.x0) < 0.01 || Math.abs(box.y1 - box.y0) < 0.01;
+
+        if (next === OPS.stroke) strokes.add(state.stroke);
+
+        if (next === OPS.stroke && straight && box.x1 >= box.x0 && box.y1 >= box.y0) lines.push({ ...box, width: state.width * Math.abs(m[0]), color: state.stroke });
+
+        if ((next === OPS.fill || next === OPS.eoFill) && box.x1 > box.x0 && box.y1 > box.y0) fills.push({ ...box, color: state.fill });
+
         // A path that sets the clip draws nothing itself: what follows is drawn inside it.
-        if (fnArray[i + 1] === OPS.clip || fnArray[i + 1] === OPS.eoClip) state = { ...state, clip: box };
+        if (next === OPS.clip || next === OPS.eoClip) state = { ...state, clip: box };
         else if (box.x1 > box.x0 && box.y1 > box.y0) {
           drawn.x0 = Math.min(drawn.x0, box.x0);
           drawn.x1 = Math.max(drawn.x1, box.x1);
@@ -250,7 +383,7 @@ export async function readPdf(pdf: Buffer) {
       }
     }
 
-    pages.push({ w, h, text, images, drawn });
+    pages.push({ w, h, text, images, drawn, lines, strokes, fills });
   }
 
   return pages;

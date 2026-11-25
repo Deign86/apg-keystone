@@ -5,7 +5,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
   "page": [],
   "paper": "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Fund Transfer Request</p>
 <div class="flex items-center justify-between gap-4">
@@ -91,7 +91,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 exports[`the fund transfer request on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" aria-label="Fund transfer request RF-2026-0007" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Fund Transfer Request</p>
 <div class="flex items-center justify-between gap-4">
@@ -176,7 +176,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 exports[`the fund transfer request on paper > lays out one still waiting, with no account and no expenses listed, the same way > waiting 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Fund transfer request RF-2026-0008" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" aria-label="Fund transfer request RF-2026-0008" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Fund Transfer Request</p>
 <div class="flex items-center justify-between gap-4">
