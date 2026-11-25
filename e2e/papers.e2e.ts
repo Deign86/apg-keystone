@@ -112,7 +112,7 @@ test('saves and prints a billing statement across an A4 page, with its text', as
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
 
-  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888-110226.pdf.');
+  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888110226.pdf.');
 
   expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
   expect(squeezed(pages)).toContain('BILLINGSTATEMENT');
@@ -139,7 +139,7 @@ test('saves a signature over its line as a picture, the rest of the statement as
   await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
   await screen.getByRole('form', 'New statement').getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
 
-  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888-110226.pdf.');
+  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888110226.pdf.');
 
   // The logo and the signature: two pictures, each a small part of the page; the name under the signature is text.
   expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
@@ -156,7 +156,7 @@ test('saves and prints the two-up check voucher across the whole sheet, with its
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
   // No margin: the dashed line between the copies runs from edge to edge.
-  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888-001.pdf.');
+  const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888001.pdf.');
 
   expect(pages).toHaveLength(1);
   expectFilled(pages, 'portrait', pages[0].drawn.x1 - pages[0].drawn.x0, 0);

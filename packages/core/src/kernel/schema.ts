@@ -87,7 +87,7 @@ export interface Voucher {
 }
 
 export interface Statement {
-  /** The invoice number: 888- and the statement's date as month, day and year, "888-112426" (older ones: "010100-2026"). */
+  /** The invoice number: 888 and the statement's date as month, day and year, "888112426" (older ones: "888-112426", "010100-2026"). */
   no: string;
   /** The statement's date ("Date:" at the top). */
   date: ISODate;

@@ -60,15 +60,15 @@ export function statementTotals(b: Pick<Statement, 'lines' | 'vat' | 'ewt' | 'ew
   return { subtotal, vat, ewt, due: subtotal + vat - ewt };
 }
 
-/** Invoice numbers start with 888-, then the statement's date as month, day and year: 888-112426. */
-const SERIES = '888-';
+/** Invoice numbers are 888 and the statement's date as month, day and year, with no dash: 888112426. */
+const SERIES = '888';
 
 /** A statement date as the invoice number writes it: "2026-11-24" → "112426". */
 const mmddyy = (date: ISODate) => `${date.slice(5, 7)}${date.slice(8, 10)}${date.slice(2, 4)}`;
 
 /**
- * The invoice number for a statement dated `date`: 888- and the date as month, day and year (888-112426). A second
- * statement that day is 888-112426-2, a third -3, and on. Older numbers (010100-2026) keep theirs.
+ * The invoice number for a statement dated `date`: 888 and the date as month, day and year (888112426). A second
+ * statement that day is 888112426-2, a third -3, and on. Older numbers (888-112426, 010100-2026) keep theirs.
  */
 export function nextStatementNo(s: TerminalState, date: ISODate): string {
   const first = `${SERIES}${mmddyy(date)}`;

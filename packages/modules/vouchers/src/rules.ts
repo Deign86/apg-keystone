@@ -33,15 +33,18 @@ export const vouchersNewestFirst = (s: TerminalState) => newestFirst(s.cv);
 /** A voucher saved before payees were typed names its payee by directory code; that record is kept. */
 export const refersTo: Reference = { tag: TAG, codes: (s) => s.cv.map((v) => v.payee) };
 
-/** Voucher numbers run 888-001, 888-002 and on, with no year. */
-const SERIES = '888-';
+/** Voucher numbers run 888001, 888002 and on, with no year and no dash. */
+const SERIES = '888';
+
+/** A number in the 888 series, written straight now (888006) or with the dash it once had (888-005), and its count. */
+const IN_SERIES = /^888-?(\d{3,})$/;
 
 /**
- * The next voucher number in the 888- series: one past the highest still in the register, so deleting the last
- * vouchers brings the count back down and their numbers are given out again. Older vouchers (CV-2026-0141, 8888-001)
- * keep theirs and do not count.
+ * The next voucher number in the 888 series: one past the highest still in the register, so deleting the last
+ * vouchers brings the count back down and their numbers are given out again. The count runs on from vouchers numbered
+ * with a dash (888-005), which keep theirs; older ones (CV-2026-0141, 8888-001) keep theirs too and do not count.
  */
-export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => (v.no.startsWith(SERIES) ? [v.no] : [])), SERIES, 3);
+export const nextVoucherNo = (s: TerminalState) => nextNumber(s.cv.flatMap((v) => IN_SERIES.exec(v.no)?.slice(1) ?? []), SERIES, 3);
 
 /**
  * The number a draft is saved under. A saved voucher keeps its own. A new one takes the number typed on it, or, until

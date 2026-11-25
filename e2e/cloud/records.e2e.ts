@@ -61,17 +61,17 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   // The CEO's own voucher needs nobody's approval: it is approved as it is saved.
   await form.getByRole('button', 'Save and approve').tap();
-  await expect(screen.getByRole('dialog', '888-001 saved and approved.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888001 saved and approved.')).toBeVisible();
 
   // The new voucher and its log entry reach the cloud; the other vouchers are not written again.
-  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ no: '888-001', status: 'Approved' });
+  await expect.poll(() => record('cv', '888001'), { timeout: 10_000 }).toMatchObject({ no: '888001', status: 'Approved' });
   await expect.poll(async () => (await documentIds('log')).length, { timeout: 10_000 }).toBe(8);
-  expect(await documentIds('cv')).toEqual(['888-001', 'CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
+  expect(await documentIds('cv')).toEqual(['888001', 'CV-2026-0139', 'CV-2026-0140', 'CV-2026-0141']);
 
   // Reopened on the same computer: still signed in, and the voucher is there.
   await app.restart();
   await app.open('/#vouchers');
-  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .* Approved/)).toBeVisible({ timeout: 15_000 });
+  await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888001 .* Approved/)).toBeVisible({ timeout: 15_000 });
 
   // Another computer: signed out, with no records of its own. A staff member signs in and sees the CEO's voucher.
   await app.clearState();
@@ -83,16 +83,16 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await app.open('/#vouchers');
   const register = screen.getByRole('table', 'Voucher register');
 
-  await expect(register.getByRole('row', /^888-001 .* ₱1,250\.50 Approved/)).toBeVisible();
+  await expect(register.getByRole('row', /^888001 .* ₱1,250\.50 Approved/)).toBeVisible();
 
   // The staff member's change reaches the cloud too (firestore.rules lets members write records): the check, written
   // after the CEO approved the voucher.
-  await register.getByRole('cell', '888-001').tap();
-  const approved = screen.getByRole('form', 'Editing 888-001');
+  await register.getByRole('cell', '888001').tap();
+  const approved = screen.getByRole('form', 'Editing 888001');
 
   await approved.getByRole('textbox', 'Check No.').fill('0004530');
   await approved.getByRole('button', 'Save changes').tap();
-  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved', check: '0004530' });
+  await expect.poll(() => record('cv', '888001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved', check: '0004530' });
 
   // A staff member's own voucher still waits for the CEO's approval.
   await screen.getByRole('button', 'New voucher').tap();
@@ -102,8 +102,8 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await mine.getByRole('textbox', 'Line 1 description').fill('Water bill');
   await mine.getByRole('textbox', 'Line 1 amount').fill('980');
   await mine.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('dialog', '888-002 saved and routed for approval.')).toBeVisible();
-  await expect.poll(() => record('cv', '888-002'), { timeout: 10_000 }).toMatchObject({ status: 'For Approval' });
+  await expect(screen.getByRole('dialog', '888002 saved and routed for approval.')).toBeVisible();
+  await expect.poll(() => record('cv', '888002'), { timeout: 10_000 }).toMatchObject({ status: 'For Approval' });
 });
 
 test('a computer with records of its own opens the cloud\'s, never copying its own over them', async ({ app, screen, browser }) => {
@@ -199,6 +199,6 @@ test('shows what another computer saves as it is saved, without reopening, and k
   await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
   await form.getByRole('textbox', 'Line 1 amount').fill('980');
   await form.getByRole('button', 'Save and approve').tap();
-  await expect.poll(() => documentIds('cv'), { timeout: 10_000 }).toEqual(['888-001', 'CV-2026-0139', 'CV-2026-0141']);
+  await expect.poll(() => documentIds('cv'), { timeout: 10_000 }).toEqual(['888001', 'CV-2026-0139', 'CV-2026-0141']);
   expect(await record('cv', 'CV-2026-0141')).toMatchObject({ status: 'Approved' });
 });

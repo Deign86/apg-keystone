@@ -30,24 +30,24 @@ describe('billing statements', () => {
 
   it('numbers invoices 888- and the date as month, day and year, then -2, -3 on the same day', () => {
     const s = state();
-    expect(nextStatementNo(s, '2026-10-30')).toBe('888-103026');
-    expect(nextStatementNo(s, '2027-01-05')).toBe('888-010527');
-    const one = { ...s, bs: [...s.bs, { ...s.bs[0], no: '888-103026' }] };
-    expect(nextStatementNo(one, '2026-10-30')).toBe('888-103026-2');
-    expect(nextStatementNo({ ...one, bs: [...one.bs, { ...s.bs[0], no: '888-103026-2' }] }, '2026-10-30')).toBe('888-103026-3');
+    expect(nextStatementNo(s, '2026-10-30')).toBe('888103026');
+    expect(nextStatementNo(s, '2027-01-05')).toBe('888010527');
+    const one = { ...s, bs: [...s.bs, { ...s.bs[0], no: '888103026' }] };
+    expect(nextStatementNo(one, '2026-10-30')).toBe('888103026-2');
+    expect(nextStatementNo({ ...one, bs: [...one.bs, { ...s.bs[0], no: '888103026-2' }] }, '2026-10-30')).toBe('888103026-3');
     // A new statement takes its date's number as its date changes; a number typed by hand stays.
     const d = newStatement(s, ctx);
-    expect(withStatementDate(s, d, '2026-11-02').no).toBe('888-110226');
+    expect(withStatementDate(s, d, '2026-11-02').no).toBe('888110226');
     expect(withStatementDate(s, { ...d, no: 'SPECIAL-1' }, '2026-11-02').no).toBe('SPECIAL-1');
   });
 
   it('keeps the invoice number typed on a new statement, and refuses one in use', () => {
     const s = state();
     const d = { ...billed(s), lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', amount: '2,299' })] };
-    expect(saveStatement(s, d, ctx).record.no).toBe('888-103026');
+    expect(saveStatement(s, d, ctx).record.no).toBe('888103026');
     expect(saveStatement(s, { ...d, no: '010150-2026' }, ctx).record.no).toBe('010150-2026');
-    expect(refusalOf(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx))).toEqual({ error: 'Invoice No. 010099-2026 is already used. The next free one is 888-103026.', fields: [] });
-    expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('888-102526'); // a copy takes the next number for its date
+    expect(refusalOf(() => saveStatement(s, { ...d, no: '010099-2026' }, ctx))).toEqual({ error: 'Invoice No. 010099-2026 is already used. The next free one is 888103026.', fields: [] });
+    expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('888102526'); // a copy takes the next number for its date
   });
 
   it('prices each charge by quantity, and adds VAT on the subtotal', () => {
@@ -135,7 +135,7 @@ describe('billing statements', () => {
 
     const saved = saveStatement(s, { ...racil, lines: [lineDraft({ desc: 'Commission', amount: '210,000' })] }, ctx);
     expect(saved.record.client).toBe('RACIL REALTY INC');
-    expect(saved.state.log[0].text).toBe('888-103026 sent to RACIL REALTY INC (₱235,200.00 due Nov 14, 2026).');
+    expect(saved.state.log[0].text).toBe('888103026 sent to RACIL REALTY INC (₱235,200.00 due Nov 14, 2026).');
     expect(refusalOf(() => saveStatement(s, { ...racil, client: '  ', lines: [lineDraft({ desc: 'Commission', amount: '1' })] }, ctx))).toEqual({ error: 'Enter who the statement is billed to.', fields: ['client'] });
     // A statement saved before Bill to was typed names its client by code, and comes back with the name.
     expect(statementDraftOf(s.bs[2], s).client).toBe('Harbor Point Logistics Corp.');
@@ -287,7 +287,7 @@ describe('a saved draft of a statement (docs/adr/0041)', () => {
     const s = state();
     const back = statementDraftFrom(s, ctx, [], { client: 'Springfield Properties Inc.', no: '010150-2026', lines: [{ id: 'line-1', desc: 'Rent', qty: '2', amount: '500' }] });
 
-    expect(back).toMatchObject({ client: 'Springfield Properties Inc.', no: '888-103026', ewtRate: EWT_RATE, notes: companyOf(s).paymentInstructions });
+    expect(back).toMatchObject({ client: 'Springfield Properties Inc.', no: '888103026', ewtRate: EWT_RATE, notes: companyOf(s).paymentInstructions });
     expect(back.lines.map((l) => [l.desc, l.qty, l.amount])).toEqual([['Rent', '2', '500']]);
     expect(statementDraftFrom(s, ctx, [], { ...statementDraftOf(s.bs[2], s) }).no).toBe(s.bs[2].no);
   });

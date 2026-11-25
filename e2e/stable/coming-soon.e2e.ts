@@ -77,7 +77,7 @@ test('saves a check voucher as before', async ({ app, screen }) => {
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
 
-  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();
 });
 
 test('issues a billing statement to a client the Directory keeps', async ({ app, screen }) => {
@@ -89,8 +89,8 @@ test('issues a billing statement to a client the Directory keeps', async ({ app,
   await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
-  await expect(screen.getByRole('dialog', '888-110226 saved and marked as sent.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
 
   await screen.getByRole('tab', /^Statements issued/).tap();
-  await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^888-110226 Novatek BPO Solutions Inc\. .* Sent/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^888110226 Novatek BPO Solutions Inc\. .* Sent/)).toBeVisible();
 });
