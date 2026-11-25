@@ -24,6 +24,8 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
 <dd class="m-0 font-medium">—</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
 </dl>
@@ -142,6 +144,8 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
 <dd class="m-0 font-medium">—</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
 </dl>
@@ -259,6 +263,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dd class="m-0 font-bold uppercase">Dela Cruz, Maria Teresa</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
 <dd class="m-0 font-medium">—</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
+<dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">—</dd>
 </dl>
@@ -367,6 +373,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Harbor Point Logistics Corp.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
 <dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Liza Tan</dd>
@@ -480,6 +488,8 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
+<dd class="m-0 font-medium">—</dd>
+<dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
 <dd class="m-0 font-medium">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
 <dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>

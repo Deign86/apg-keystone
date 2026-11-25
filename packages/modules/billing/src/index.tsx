@@ -160,11 +160,12 @@ function Billing() {
                       <Fills part="due"><Field name="due" label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field></Fills>
                     </FieldRow>
                     <Fills part="billTo">
-                      <Field name="client" label="Bill to" hint="As it prints. A client’s name from the directory brings its VAT, withholding and Attention.">
+                      <Field name="client" label="Bill to" hint="As it prints. A client’s name from the directory brings its TIN, VAT, withholding and Attention.">
                         <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                       </Field>
                     </Fills>
                     <Fills part="address"><Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field></Fills>
+                    <Fills part="tin"><Field label="TIN" hint="Bill to’s TIN, as it prints under the address. A client’s from the directory comes with its name."><TextInput placeholder="000-000-000-000" value={draft.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field></Fills>
                     <Fills part="attention"><Field label="Attention"><TextInput capitalize placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field></Fills>
                     <Fills part="lines"><LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
                     <Fills part="totals">

@@ -158,6 +158,25 @@ describe('billing statements', () => {
     expect(statementDraftOf(bare.record, bare.state).address).toBe('');
   });
 
+  it('keeps Bill to\'s TIN as typed, brings a directory client\'s, and keeps none when there is none', () => {
+    const s = state();
+
+    expect(newStatement(s, ctx).tin).toBe('');
+    // A directory client with a TIN brings it; one without, or a name not in the directory, leaves what was typed.
+    expect(billed(s).tin).toBe('008-771-402-000');
+    expect(withClient(s, { ...newStatement(s, ctx), tin: '123-456-789-000' }, 'Dela Cruz, Maria Teresa').tin).toBe('123-456-789-000');
+    expect(withClient(s, { ...newStatement(s, ctx), tin: '123-456-789-000' }, 'RACIL REALTY INC').tin).toBe('123-456-789-000');
+    const saved = saveStatement(s, { ...billed(s), tin: ' 008-771-402-000 ', lines: [lineDraft({ desc: 'Rent', amount: '1000' })] }, ctx);
+
+    expect(saved.record.tin).toBe('008-771-402-000');
+    expect(statementDraftOf(saved.record, saved.state).tin).toBe('008-771-402-000');
+    // None typed: none kept, as on a statement saved before Bill to had a TIN.
+    const bare = saveStatement(s, { ...billed(s), tin: '  ', lines: [lineDraft({ desc: 'Rent', amount: '1000' })] }, ctx);
+
+    expect(bare.record).not.toHaveProperty('tin');
+    expect(statementDraftOf(bare.record, bare.state).tin).toBe('');
+  });
+
   it('refuses a statement due before its invoice date', () => {
     const s = state();
     const d = { ...billed(s), due: '2026-10-01', lines: [lineDraft({ desc: 'Rent', amount: '100' })] };

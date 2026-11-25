@@ -98,7 +98,7 @@ export const overdue = (s: TerminalState) => s.bs.filter((b) => b.status === 'Ov
 export const outstandingTotal = (s: TerminalState) => sumCentavos(outstanding(s), (b) => statementTotals(b).due);
 
 export interface StatementDraft extends Editing {
-  no: string; date: string; invoiceDate: string; due: string; client: string; address: string; attention: string;
+  no: string; date: string; invoiceDate: string; due: string; client: string; address: string; tin: string; attention: string;
   lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string; penalty: string;
   prepared: string; checked: string; approved: string;
   preparedPos: string; checkedPos: string; approvedPos: string;
@@ -119,7 +119,7 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
 
   return {
     no: nextStatementNo(s, t), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: '',
-    address: '', attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
+    address: '', tin: '', attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
     notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote, penalty: d.billingTerms,
     prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
     preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
@@ -131,11 +131,11 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
  * Bill to was typed names its client by directory code, and comes back with that client's name.
  */
 /**
- * Nothing typed worth keeping as a draft (docs/adr/0041): a new statement with no one billed, no address or Attention,
+ * Nothing typed worth keeping as a draft (docs/adr/0041): a new statement with no one billed, no address, TIN or Attention,
  * and no charge. One editing a saved statement is never blank.
  */
 export const statementDraftBlank = (d: StatementDraft) =>
-  !d.editing && !d.client.trim() && !d.address.trim() && !d.attention.trim() && linesBlank(d.lines);
+  !d.editing && !d.client.trim() && !d.address.trim() && !d.tin.trim() && !d.attention.trim() && linesBlank(d.lines);
 
 /** What the Drafts list calls a saved statement draft: who it bills, and what it comes to so far. */
 export const statementDraftTitle = (d: StatementDraft) => `${d.client.trim() || 'No client yet'} · ${peso(statementTotals(statementOf(d)).due)}`;
@@ -153,7 +153,7 @@ export function statementDraftFrom(s: TerminalState, ctx: Ctx, accounts: BankAcc
 
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
   editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: nameOf(s, b.client),
-  address: b.address ?? '', attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
+  address: b.address ?? '', tin: b.tin ?? '', attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
   notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote, penalty: b.penalty ?? companyOf(s).billingTerms,
   prepared: b.prepared ?? '', checked: b.checked ?? '', approved: b.approved ?? '',
   preparedPos: b.preparedPos ?? '', checkedPos: b.checkedPos ?? '', approvedPos: b.approvedPos ?? '',
@@ -176,8 +176,11 @@ export function statementOf(d: StatementDraft, status: StatementStatus = 'Sent')
   }
 
   const address = d.address.trim();
+  const tin = d.tin.trim();
 
   if (address) b.address = address;
+
+  if (tin) b.tin = tin;
 
   return b;
 }
@@ -229,13 +232,13 @@ export const clientNamed = (s: TerminalState, typed: string) => {
 };
 
 /**
- * Bill to as typed. Typing a directory client's name sets VAT, EWT and who to address from its record; any other name
- * leaves them as they are, to be set by hand.
+ * Bill to as typed. Typing a directory client's name sets VAT, EWT and who to address from its record, and its TIN when
+ * the record has one; any other name leaves them as they are, to be set by hand.
  */
 export function withClient(s: TerminalState, d: StatementDraft, client: string): StatementDraft {
   const c = clientNamed(s, client);
 
-  return c ? { ...d, client, attention: c.attention ?? '', vat: c.vat ?? false, ewt: c.ewt ?? false } : { ...d, client };
+  return c ? { ...d, client, tin: c.tin.trim() || d.tin, attention: c.attention ?? '', vat: c.vat ?? false, ewt: c.ewt ?? false } : { ...d, client };
 }
 
 export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asNew = false): Change<Statement> {
