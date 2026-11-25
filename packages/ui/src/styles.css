@@ -244,8 +244,18 @@
   [data-sheet-scale] {
     transform: none !important;
   }
+  /* The page has no margin of its own: the browser prints its own header and footer (the page's title, its address,
+     the date, page numbers) in the page's margin, and leaves them out where there is none. The paper keeps the margin
+     instead: centred at the printable width, it leaves 12mm either side, and a clear 12mm band above and below repeats
+     on every page it runs onto. A two-up sheet is printed to the paper's edges and keeps none. */
+  [data-print-root]:not([data-print-fit='halves']) {
+    border-block: 12mm solid transparent;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    background-clip: padding-box;
+  }
   @page {
     size: A4;
-    margin: 12mm;
+    margin: 0;
   }
 }

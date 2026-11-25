@@ -1,5 +1,6 @@
 // The paper every document is laid out for, written once: an A4 page and the margin the print stylesheet leaves around
-// a document (packages/ui/src/styles.css › @page, which packages/kit/test/documents.test.tsx holds to these numbers).
+// a document (packages/ui/src/styles.css › [data-print-root], which packages/kit/test/documents.test.tsx holds to these
+// numbers). The page itself prints with no margin, so the browser has nowhere to print its own header and footer.
 // The preview's width, the print's printable area and the PDF's margin are all worked out from here.
 
 /** An A4 page, and the margin printed around a document, in millimetres. */
@@ -61,7 +62,7 @@ export interface PaperLayout {
   width: number;
   /** What the paper carries so Print and Export PDF find this layout again. */
   marks: { fit?: 'page' | 'halves'; orientation?: 'landscape' };
-  /** The @page rule for this print only, over the stylesheet's upright A4 with margins. None: the stylesheet's stands. */
+  /** The @page rule for this print only, over the stylesheet's upright A4. None: the stylesheet's stands. */
   page?: string;
   /** Fits the paper to the page just before it prints, and puts it back once the print is done. */
   fit?(paper: HTMLElement): void;
@@ -95,10 +96,16 @@ export const LANDSCAPE_PAGE: PaperLayout = {
     paper.style.width = width;
     const zoom = Math.min(1, page.h / height);
 
-    if (zoom < 1) paper.style.zoom = String(zoom);
+    if (zoom < 1) {
+      paper.style.zoom = String(zoom);
+      // The zoom shrinks the clear band the print stylesheet leaves above and below the paper too: widened to match,
+      // it prints at the full margin.
+      paper.style.borderBlockWidth = `${PAPER.margin / zoom}mm`;
+    }
   },
   unfit(paper) {
     paper.style.zoom = '';
+    paper.style.borderBlockWidth = '';
   },
   pdf: { orientation: 'landscape', margin: mmToPt(PAPER.margin) },
 };
