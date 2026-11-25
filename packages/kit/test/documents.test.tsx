@@ -15,10 +15,13 @@ const css = readFileSync(createRequire(import.meta.url).resolve('@keystone/ui/st
 
 describe('the paper', () => {
   it('is an A4 page with the margin the print stylesheet gives it, written once', () => {
-    const page = /@page\s*\{\s*size:\s*(\w+);\s*margin:\s*(\d+)mm;\s*\}/.exec(css);
+    const page = /@page\s*\{\s*size:\s*(\w+);\s*margin:\s*(\d+);\s*\}/.exec(css);
+    const band = /border-block:\s*(\d+)mm solid transparent;\s*box-decoration-break:\s*clone;/.exec(css);
 
-    // The stylesheet cannot read the constant, so this holds the two together.
-    expect(page?.slice(1)).toEqual(['A4', String(PAPER.margin)]);
+    // The page has no margin, so the browser prints no header or footer (title, address, date) in it: the paper keeps
+    // the margin as a clear band on every page. The stylesheet cannot read the constant, so this holds the two together.
+    expect(page?.slice(1)).toEqual(['A4', '0']);
+    expect(band?.[1]).toBe(String(PAPER.margin));
     // What is left inside those margins is what a paper is laid out to: 186 × 273 mm.
     expect(PRINTABLE).toEqual({ width: PAPER.width - 24, height: PAPER.height - 24 });
   });

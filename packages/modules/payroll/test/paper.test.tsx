@@ -74,9 +74,12 @@ describe('the payroll sheet on paper', () => {
 
     printElement(paper);
     expect({ zoom: paper.style.zoom, width: paper.style.width, page: pageRules() }).toMatchSnapshot('a long sheet at the printer');
+    // The page has no margin; the clear band above and below the paper is widened against the zoom, so it prints 12mm.
+    expect(Number.parseFloat(paper.style.borderBlockWidth) * Number(paper.style.zoom)).toBeCloseTo(12);
     window.dispatchEvent(new Event('afterprint'));
     print.mockRestore();
     expect(paper.style.zoom).toBe('');
+    expect(paper.style.borderBlockWidth).toBe('');
   });
 });
 

@@ -23,7 +23,7 @@ export async function savePdf(node: HTMLElement, name: string, files: Pick<Files
  */
 function preparePrint(node: HTMLElement) {
   const layout = layoutOf(node);
-  // A later @page rule wins over the print stylesheet's (upright A4 inside its margins), for this print only.
+  // A later @page rule wins over the print stylesheet's (an upright A4), for this print only.
   const page = document.createElement('style');
 
   node.setAttribute(MARKS.printRoot, '');
