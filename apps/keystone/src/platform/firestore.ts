@@ -1,5 +1,5 @@
 import {
-  COLLECTIONS, isOwner, jsonText, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, MEMBER_FIELD, ONLY_OWNER_REMOVES, onlyOwnerGrants, sentenceOf,
+  COLLECTIONS, isOwner, jsonText, LIVE_REREAD_MS, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, MEMBER_FIELD, ONLY_OWNER_REMOVES, onlyOwnerGrants, sentenceOf,
   type Accounts, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type MemberAccount, type MemberGrant,
   type StateDocument,
 } from '@keystone/core';
@@ -31,6 +31,9 @@ const COMPANY = 'apg';
 
 /** Firestore takes at most 500 writes in one batch. */
 const BATCH = 500;
+
+/** How long a listener that stopped waits before listening again: 5 seconds, then three times longer each time, up to the re-read's 2 minutes. */
+const relistenAfter = (tries: number) => Math.min(LIVE_REREAD_MS, 5000 * 3 ** (tries - 1));
 
 const NOT_A_MEMBER = 'This account may not open APG\'s records. Ask the CEO to add it in the Firebase console (keystone/apg/members).';
 const WRONG_CURRENT = 'That is not your current password.';
@@ -198,26 +201,60 @@ export function openFirebase(
     },
 
     /**
-     * Every collection watched at once. Once each has answered, every change to any of them (this computer's saves
-     * straight away, from its own copy; others' as the cloud sends them) hands over all the documents, a moment after the
-     * last of a burst, so one save across several lists arrives as one.
+     * Every collection the records are read from, watched on its own (docs/adr/0049), with the same filter its read has,
+     * so a member is sent only what firestore.rules let them read. Each change (this computer's saves straight away,
+     * from its own copy; others' as the cloud sends them) hands over the collections that changed, a moment after the
+     * last of a burst, so one save across several lists arrives as one. A collection whose listener stops (refused,
+     * or the client failing) is listened to again after a wait that grows, and at once on `retry`; meanwhile `live` hears
+     * false, and the platform reads the records again instead.
      */
-    watch(onChange) {
+    watch({ change, live }) {
       const lists = [...COLLECTIONS, ...Object.values(layout).map((l) => l.collection)];
-      const held = new Map<string, StateDocument[]>();
+      const stops = new Map<string, () => void>();
+      const down = new Map<string, { tries: number; timer: ReturnType<typeof setTimeout> }>();
+      let arrived = new Map<string, StateDocument[]>();
       let timer: ReturnType<typeof setTimeout> | undefined;
 
-      const stops = lists.map((c) => onSnapshot(listOf(c), (snap) => {
-        held.set(c, documentsOf(c, snap.docs));
+      const listen = (c: string) => {
+        stops.get(c)?.();
+        // With metadata changes, so the cloud's first answer is heard even when it matches this computer's copy: only it,
+        // not the copy, says a listener that stopped is back.
+        stops.set(c, onSnapshot(listOf(c), { includeMetadataChanges: true }, (snap) => {
+          if (!snap.metadata.fromCache && down.delete(c) && !down.size) live(true);
+          arrived.set(c, documentsOf(c, snap.docs));
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            const batch = arrived;
 
-        if (held.size < lists.length) return;
-        clearTimeout(timer);
-        timer = setTimeout(() => onChange([...held.values()].flat()), 50);
-      }, (cause) => console.warn(`Live updates stopped for ${c}.`, cause)));
+            arrived = new Map();
+            change(batch);
+          }, 50);
+        }, (cause) => {
+          console.warn(`Live updates stopped for ${c}; listening again shortly.`, cause);
+          stops.delete(c);
+          const tries = (down.get(c)?.tries ?? 0) + 1;
+          clearTimeout(down.get(c)?.timer);
 
-      return () => {
-        clearTimeout(timer);
-        stops.forEach((stop) => stop());
+          if (!down.size) live(false);
+          down.set(c, { tries, timer: setTimeout(() => listen(c), relistenAfter(tries)) });
+        }));
+      };
+
+      lists.forEach(listen);
+
+      return {
+        stop() {
+          clearTimeout(timer);
+          down.forEach((d) => clearTimeout(d.timer));
+          stops.forEach((stop) => stop());
+          stops.clear();
+        },
+        retry() {
+          for (const [c, d] of down) {
+            clearTimeout(d.timer);
+            listen(c);
+          }
+        },
       };
     },
 

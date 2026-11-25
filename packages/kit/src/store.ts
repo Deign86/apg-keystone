@@ -1,6 +1,6 @@
 import {
-  applyDocumentChanges, diffDocuments, emptyState, fromDocuments, KeystoneError, parseState, sentenceOf, toDocuments, type Change, type Ctx,
-  type TerminalState,
+  applyDocumentChanges, diffDocuments, emptyState, fromDocuments, KeystoneError, newEntries, parseState, sentenceOf, toDocuments, type Change,
+  type Ctx, type LogEntry, type TerminalState,
 } from '@keystone/core';
 import type { Platform } from './platform';
 
@@ -35,6 +35,18 @@ export class KeystoneStore {
   private base: TerminalState;
   /** Stops the live updates, where the platform has them. */
   private unwatch: (() => void) | undefined;
+  /**
+   * Where the state's last change came from: a rule run here, or someone else's save that arrived (receive). A form
+   * that holds a record reads it to tell its own saves from others' (useChangedElsewhere).
+   */
+  lastChange: 'here' | 'elsewhere' = 'here';
+  /**
+   * Whether others' saves arrive as they are made. False while the platform's live updates have stopped and it reads the
+   * records again from time to time instead (docs/adr/0049); the rail says so.
+   */
+  live = true;
+  /** Who hears the Activity Log lines of the changes that arrived from elsewhere (onArrival). */
+  private arrivalListeners = new Set<(entries: LogEntry[]) => void>();
 
   constructor(readonly platform: Platform, initial: TerminalState) {
     this.state = initial;
@@ -79,15 +91,16 @@ export class KeystoneStore {
 
     if (tidied !== state) store.commit(tidied);
     // Where others save to the same records (the cloud), their changes show here as they are made.
-    store.unwatch = platform.watchState?.((json) => store.receive(json));
+    store.unwatch = platform.watchState?.((json) => store.receive(json), (live) => store.setLive(live));
 
     return store;
   }
 
   /**
    * The saved state as it is now, after someone's save (live updates). Shown at once; a change made here and not saved
-   * yet is kept, put back on top (the last save of a record wins), and saved as usual. A state that does not read is
-   * passed over.
+   * yet is kept, put back on top (the last save of a record wins), and saved as usual. Nothing is saved because of it:
+   * what arrived is already saved, so it never goes back. The Activity Log lines it brings that this computer did not
+   * write are told to whoever listens (onArrival). A state that does not read is passed over.
    */
   receive(json: string) {
     let remote: TerminalState;
@@ -111,7 +124,27 @@ export class KeystoneStore {
     this.base = remote;
 
     if (JSON.stringify(next) === JSON.stringify(this.state)) return;
+    // Lines this computer has not got, its own unsaved ones included, came from someone else's save.
+    const arrived = newEntries(this.state.log, remote.log);
+
     this.state = next;
+    this.lastChange = 'elsewhere';
+    this.listeners.forEach((fn) => fn());
+
+    if (arrived.length) this.arrivalListeners.forEach((fn) => fn(arrived));
+  }
+
+  /** Hears the Activity Log lines of each change that arrives from elsewhere, oldest first. Returns the way to stop. */
+  onArrival = (fn: (entries: LogEntry[]) => void) => {
+    this.arrivalListeners.add(fn);
+
+    return () => { this.arrivalListeners.delete(fn); };
+  };
+
+  /** The platform says whether live updates are running. */
+  private setLive(live: boolean) {
+    if (live === this.live) return;
+    this.live = live;
     this.listeners.forEach((fn) => fn());
   }
 
@@ -131,6 +164,7 @@ export class KeystoneStore {
 
   commit(next: TerminalState) {
     this.state = next;
+    this.lastChange = 'here';
     this.listeners.forEach((fn) => fn());
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => void this.flush(), 250);

@@ -44,7 +44,7 @@ describe('company details', () => {
     expect(r.state.company).toEqual(r.record);
     expect(companyOf(r.state)).toEqual(r.record);
     expect(r.message).toBe('Company details saved.');
-    expect(r.state.log[0]).toEqual({ when: '2026-11-12 09:05', mod: 'CO', text: 'Company details for ALPHA PREMIER GROUP OF COMPANIES OPC saved.' });
+    expect(r.state.log[0]).toEqual({ when: '2026-11-12 09:05', mod: 'CO', text: 'Company details for ALPHA PREMIER GROUP OF COMPANIES OPC saved.', by: 'Mark Reyes' });
     // They survive a save and a reopen, the way state.json and a backup are read.
     expect(parseState(JSON.stringify(r.state)).company).toEqual(r.record);
   });

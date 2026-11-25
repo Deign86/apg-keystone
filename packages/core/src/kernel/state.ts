@@ -80,9 +80,12 @@ export function changeEach<K, T>(s: TerminalState, keys: readonly K[], one: (s: 
 
 export const thisYear = (ctx: Ctx) => ctx.now().getFullYear();
 
-/** Adds a line to the activity log. Domains, modules and connectors all log through this. */
+/**
+ * Adds a line to the activity log, naming who is signed in, if anyone, so others told of it live know who saved it
+ * (docs/adr/0049). Domains, modules and connectors all log through this.
+ */
 export function logged(s: TerminalState, mod: ModuleTag, text: string, ctx: Ctx): TerminalState {
-  return { ...s, log: [{ when: stamp(ctx.now()), mod, text }, ...s.log] };
+  return { ...s, log: [{ when: stamp(ctx.now()), mod, text, ...(ctx.who && { by: ctx.who.name }) }, ...s.log] };
 }
 
 /** The next number after the highest in use, under this prefix: "CV-2026-0142". */

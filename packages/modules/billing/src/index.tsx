@@ -134,6 +134,7 @@ function Billing() {
                 form={
                   <FormCard
                     id="bs-form"
+                    holds={editing && { label: editing.no, find: (s) => s.bs.find((b) => b.no === editing.no) }}
                     eyebrow="Statement entry"
                     title={editing ? `Editing ${editing.no}` : 'New statement'}
                     onSubmit={() => save()}

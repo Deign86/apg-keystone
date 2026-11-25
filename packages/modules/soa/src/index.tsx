@@ -77,6 +77,7 @@ function Statements() {
         form={
           <FormCard
             id="soa-form"
+            holds={draft.editing ? { label: draft.editing, find: (s) => statementsOf(s).find((a) => a.no === draft.editing) } : undefined}
             eyebrow="Statement entry"
             title={draft.editing ? `Editing ${draft.editing}` : 'New statement of account'}
             onSubmit={() => save()}

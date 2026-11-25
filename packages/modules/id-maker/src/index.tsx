@@ -106,6 +106,7 @@ function IDMaker() {
         form={
           <FormCard
             id="id-form"
+            holds={editing && { label: editing.no, find: (s) => s.ids.find((i) => i.no === editing.no) }}
             eyebrow="Card entry"
             title={editing ? `Editing ${editing.no}` : 'New ID'}
             onSubmit={() => save()}

@@ -194,6 +194,7 @@ function Vouchers() {
                 form={
                   <FormCard
                     id="cv-form"
+                    holds={editing && { label: editing.no, find: (s) => s.cv.find((v) => v.no === editing.no) }}
                     eyebrow="Voucher entry"
                     title={editing ? `${locked ? 'Viewing' : 'Editing'} ${editing.no}` : 'New voucher'}
                     onSubmit={() => save()}
