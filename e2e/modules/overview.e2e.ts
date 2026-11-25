@@ -74,7 +74,7 @@ test('starts a check voucher from its button, putting away what was open', async
   await screen.getByRole('button', 'New check voucher').tap();
 
   await expect(screen.getByRole('heading', { name: 'Check Vouchers', level: 1 })).toBeVisible();
-  await expect(screen.getByRole('form', 'New voucher').getByRole('textbox', 'CV No.')).toHaveValue('888-001');
+  await expect(screen.getByRole('form', 'New voucher').getByRole('textbox', 'CV No.')).toHaveValue('888001');
 
   // The ID Maker, which had a "New ID" button here, is no longer installed (docs/adr/0046).
   await app.open('/#overview');

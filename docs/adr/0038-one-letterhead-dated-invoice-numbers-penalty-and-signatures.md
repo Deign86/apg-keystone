@@ -23,6 +23,9 @@ Sir Mark marked up a printed billing statement (Nov 24, 2026) for e-billing:
   Exchange Road, Ortigas Center, Pasig City 1605".
 - **An invoice number is `888-MMDDYY`** from the statement's date (`888-112426`); a second that day is `888-112426-2`,
   then `-3`. A new statement's number follows its date; one typed over it is kept. Saved numbers never change.
+  *Amended 2026-11-25:* new numbers are written with no dash after 888, `888112426` (a second that day
+  `888112426-2`), and check vouchers run `888001`, `888002`, on from the highest saved as `888-001`. Saved numbers keep
+  their dash.
 - **A statement keeps its penalty** (`penalty`, optional), printed as **Penalty** under the payment instructions. A new
   one starts from Company Details' penalty (the field that was "Terms", `billingTerms`); an older statement without one
   prints Company Details'.

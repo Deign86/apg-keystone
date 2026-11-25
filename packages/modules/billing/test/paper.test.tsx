@@ -57,6 +57,19 @@ describe('the billing statement on paper', () => {
     expect(paper.hasAttribute('data-print-orientation')).toBe(false);
   });
 
+  it('prints the mode of payment in the invoice box, and Notes only when there are notes', () => {
+    const b = { ...s.bs[0], paymentMode: 'Bank transfer', note: undefined };
+    const { rerender } = render(<StatementPaper statement={b} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
+    const paper = screen.getByRole('article', { name: `Billing statement ${b.no}` });
+    const invoice = screen.getByRole('table', { name: 'Invoice' });
+
+    expect(invoice).toHaveTextContent('Mode of paymentBank transfer');
+    expect(paper).not.toHaveTextContent('Notes');
+    rerender(<StatementPaper statement={{ ...b, note: 'Thank you.' }} billTo={nameOf(s, b.client)} company={companyOf(s)} terms="" />);
+    expect(paper).toHaveTextContent('NotesThank you.');
+    cleanup();
+  });
+
   it('prints an EWT line only on a statement that withholds it', () => {
     const b = s.bs[0];
 

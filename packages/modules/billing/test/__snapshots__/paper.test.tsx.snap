@@ -43,6 +43,10 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -99,7 +103,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <p class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Penalty</p>
 <p class="m-0 mt-1 text-[11px] whitespace-pre-line">5% penalty charge will be applied to delayed monthly payments.</p>
 </section>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -163,6 +167,10 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -219,7 +227,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <p class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Penalty</p>
 <p class="m-0 mt-1 text-[11px] whitespace-pre-line">5% penalty charge will be applied to delayed monthly payments.</p>
 </section>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -282,6 +290,10 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 10, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -330,7 +342,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 </tbody>
 </table>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -393,6 +405,10 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">November 5, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -445,7 +461,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 </tbody>
 </table>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>
@@ -508,6 +524,10 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
 <td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
 </tr>
+<tr class="border-t border-paper-line ">
+<th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+</tr>
 </tbody>
 </table>
 <table class="my-2 w-full border-collapse border border-paper-ink">
@@ -547,7 +567,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 </tbody>
 </table>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">
 </p>

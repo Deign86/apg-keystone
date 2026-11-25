@@ -72,7 +72,7 @@ test('a computer with nothing saved still has the company, on Home, in the sideb
   // A new voucher's letterhead prints the built-in address beside the logo that names the company.
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
-  await expect(screen.getByRole('article', 'Check voucher 888-001').getByText(ADDRESS).first()).toBeVisible();
+  await expect(screen.getByRole('article', 'Check voucher 888001').getByText(ADDRESS).first()).toBeVisible();
 });
 
 test('keeps a signature drawn for a signatory, which every paper they sign prints above their name', async ({ app, screen, browser }) => {

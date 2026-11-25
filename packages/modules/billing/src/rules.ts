@@ -60,15 +60,15 @@ export function statementTotals(b: Pick<Statement, 'lines' | 'vat' | 'ewt' | 'ew
   return { subtotal, vat, ewt, due: subtotal + vat - ewt };
 }
 
-/** Invoice numbers start with 888-, then the statement's date as month, day and year: 888-112426. */
-const SERIES = '888-';
+/** Invoice numbers are 888 and the statement's date as month, day and year, with no dash: 888112426. */
+const SERIES = '888';
 
 /** A statement date as the invoice number writes it: "2026-11-24" → "112426". */
 const mmddyy = (date: ISODate) => `${date.slice(5, 7)}${date.slice(8, 10)}${date.slice(2, 4)}`;
 
 /**
- * The invoice number for a statement dated `date`: 888- and the date as month, day and year (888-112426). A second
- * statement that day is 888-112426-2, a third -3, and on. Older numbers (010100-2026) keep theirs.
+ * The invoice number for a statement dated `date`: 888 and the date as month, day and year (888112426). A second
+ * statement that day is 888112426-2, a third -3, and on. Older numbers (888-112426, 010100-2026) keep theirs.
  */
 export function nextStatementNo(s: TerminalState, date: ISODate): string {
   const first = `${SERIES}${mmddyy(date)}`;
@@ -98,14 +98,15 @@ export const overdue = (s: TerminalState) => s.bs.filter((b) => b.status === 'Ov
 export const outstandingTotal = (s: TerminalState) => sumCentavos(outstanding(s), (b) => statementTotals(b).due);
 
 export interface StatementDraft extends Editing {
-  no: string; date: string; invoiceDate: string; due: string; client: string; address: string; tin: string; attention: string;
+  no: string; date: string; invoiceDate: string; due: string; paymentMode: string; client: string; address: string; tin: string; attention: string;
   lines: LineDraft[]; vat: boolean; ewt: boolean; ewtRate: number; notes: string; note: string; penalty: string;
   prepared: string; checked: string; approved: string;
   preparedPos: string; checkedPos: string; approvedPos: string;
 }
 
 /**
- * A blank statement, from Company Details: its payment instructions, note and days to pay (no due date until set). It
+ * A blank statement, from Company Details: its payment instructions and days to pay (no due date until set), and no
+ * notes or mode of payment until they are typed. It
  * is prepared by whoever is signed in; the other signatories start as the last statement's (Company Details' names
  * before the first), and every signatory's position as the last statement's. With `accounts` (those Bank Accounts keeps), it pays into the account the last statement named,
  * as a new voucher is drawn on the last voucher's bank, or else the one Company Details' instructions name, or else
@@ -118,16 +119,17 @@ export function newStatement(s: TerminalState, ctx: Ctx, accounts: BankAccount[]
   const account = paidInto(last?.notes ?? '', accounts) ?? paidInto(d.paymentInstructions, accounts) ?? accounts[0];
 
   return {
-    no: nextStatementNo(s, t), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', client: '',
+    no: nextStatementNo(s, t), date: t, invoiceDate: t, due: d.dueInDays ? addDays(t, d.dueInDays) : '', paymentMode: '', client: '',
     address: '', tin: '', attention: '', lines: [lineDraft()], vat: false, ewt: false, ewtRate: EWT_RATE,
-    notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: d.billingNote, penalty: d.billingTerms,
+    notes: account ? payInto(d.paymentInstructions, account) : d.paymentInstructions, note: '', penalty: d.billingTerms,
     prepared: ctx.who?.name ?? last?.prepared ?? d.preparedBy, checked: last?.checked ?? d.checkedBy, approved: last?.approved ?? d.approvedBy,
     preparedPos: last?.preparedPos ?? '', checkedPos: last?.checkedPos ?? '', approvedPos: last?.approvedPos ?? '',
   };
 }
 
 /**
- * A saved statement back in the form. One saved before it kept its own notes takes Company Details'; one saved before
+ * A saved statement back in the form. One saved before it kept its own payment instructions takes Company Details'; its
+ * notes are its own, or none; one saved before
  * Bill to was typed names its client by directory code, and comes back with that client's name.
  */
 /**
@@ -152,9 +154,9 @@ export function statementDraftFrom(s: TerminalState, ctx: Ctx, accounts: BankAcc
 }
 
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
-  editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, client: nameOf(s, b.client),
+  editing: b.no, no: b.no, date: b.date, invoiceDate: b.invoiceDate ?? b.date, due: b.due, paymentMode: b.paymentMode ?? '', client: nameOf(s, b.client),
   address: b.address ?? '', tin: b.tin ?? '', attention: b.attention ?? '', lines: b.lines.map(lineDraftOf), vat: b.vat, ewt: b.ewt, ewtRate: ewtRateOf(b),
-  notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? companyOf(s).billingNote, penalty: b.penalty ?? companyOf(s).billingTerms,
+  notes: b.notes ?? companyOf(s).paymentInstructions, note: b.note ?? '', penalty: b.penalty ?? companyOf(s).billingTerms,
   prepared: b.prepared ?? '', checked: b.checked ?? '', approved: b.approved ?? '',
   preparedPos: b.preparedPos ?? '', checkedPos: b.checkedPos ?? '', approvedPos: b.approvedPos ?? '',
 });
@@ -165,7 +167,7 @@ const POSITIONS = ['preparedPos', 'checkedPos', 'approvedPos'] as const;
 export function statementOf(d: StatementDraft, status: StatementStatus = 'Sent'): Statement {
   const b: Statement = {
     no: d.no.trim(), date: d.date, invoiceDate: d.invoiceDate, due: d.due, client: d.client.trim(), attention: d.attention.trim(),
-    lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, note: d.note, penalty: d.penalty.trim(),
+    lines: lineItemsOf(d.lines, 'unit'), vat: d.vat, ewt: d.ewt, ewtRate: d.ewtRate, notes: d.notes, penalty: d.penalty.trim(),
     prepared: d.prepared.trim(), checked: d.checked.trim(), approved: d.approved.trim(), status,
   };
 
@@ -177,10 +179,17 @@ export function statementOf(d: StatementDraft, status: StatementStatus = 'Sent')
 
   const address = d.address.trim();
   const tin = d.tin.trim();
+  const paymentMode = d.paymentMode.trim();
+  const note = d.note.trim();
 
   if (address) b.address = address;
 
   if (tin) b.tin = tin;
+
+  if (paymentMode) b.paymentMode = paymentMode;
+
+  // Notes are optional: a statement with none typed keeps none, and its paper has no Notes.
+  if (note) b.note = note;
 
   return b;
 }

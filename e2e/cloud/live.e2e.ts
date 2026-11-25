@@ -42,14 +42,14 @@ test('a voucher one person saves appears on the other\'s Keystone as it is saved
   try {
     await anaOpens(anas.page, 'vouchers');
     await anaSavesVoucher(anas.page, 'Manila Water Company', '980');
-    await anas.page.getByRole('dialog', { name: '888-001 saved and routed for approval.' }).waitFor();
+    await anas.page.getByRole('dialog', { name: '888001 saved and routed for approval.' }).waitFor();
 
     // Mark, on Home, is told, and Check Vouchers is marked in the rail until he opens it.
-    await expect(screen.getByRole('dialog', 'From Ana Cruz: 888-001 for MANILA WATER COMPANY saved and routed for approval (₱980.00).')).toBeVisible({ timeout: 15_000 });
+    await expect(screen.getByRole('dialog', 'From Ana Cruz: 888001 for MANILA WATER COMPANY saved and routed for approval (₱980.00).')).toBeVisible({ timeout: 15_000 });
     const rail = screen.getByRole('navigation', 'Keystone');
 
     await rail.getByRole('button', 'Check Vouchers, changed by someone else').tap();
-    await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888-001 .*MANILA WATER COMPANY .*₱980\.00 For Approval/)).toBeVisible();
+    await expect(screen.getByRole('table', 'Voucher register').getByRole('row', /^888001 .*MANILA WATER COMPANY .*₱980\.00 For Approval/)).toBeVisible();
     await expect(rail.getByRole('button', 'Check Vouchers, changed by someone else')).toBeHidden();
 
     // And the other way: the CEO's voucher, approved as he saves it, appears in Ana's register as it is, never reopened.
@@ -60,15 +60,15 @@ test('a voucher one person saves appears on the other\'s Keystone as it is saved
     await form.getByRole('textbox', 'Line 1 description').fill('Electricity for November');
     await form.getByRole('textbox', 'Line 1 amount').fill('4200');
     await form.getByRole('button', 'Save and approve').tap();
-    await expect(screen.getByRole('dialog', '888-002 saved and approved.')).toBeVisible();
+    await expect(screen.getByRole('dialog', '888002 saved and approved.')).toBeVisible();
 
-    await anas.page.getByRole('dialog', { name: /^From Mark Reyes: 888-002 for MANILA ELECTRIC COMPANY saved and approved by Mark Reyes/ }).waitFor({ timeout: 15_000 });
+    await anas.page.getByRole('dialog', { name: /^From Mark Reyes: 888002 for MANILA ELECTRIC COMPANY saved and approved by Mark Reyes/ }).waitFor({ timeout: 15_000 });
     await anas.page.getByRole('tab', { name: /^Voucher register/ }).click();
-    await anas.page.getByRole('table', { name: 'Voucher register' }).getByRole('row', { name: /^888-002 .*MANILA ELECTRIC COMPANY .*Approved/ }).waitFor();
+    await anas.page.getByRole('table', { name: 'Voucher register' }).getByRole('row', { name: /^888002 .*MANILA ELECTRIC COMPANY .*Approved/ }).waitFor();
 
     // Nothing that arrived was written back: each voucher is in the cloud once, as its maker saved it.
-    expect(await record('cv', '888-001')).toMatchObject({ status: 'For Approval', payee: 'MANILA WATER COMPANY' });
-    expect(await record('cv', '888-002')).toMatchObject({ status: 'Approved', payee: 'MANILA ELECTRIC COMPANY' });
+    expect(await record('cv', '888001')).toMatchObject({ status: 'For Approval', payee: 'MANILA WATER COMPANY' });
+    expect(await record('cv', '888002')).toMatchObject({ status: 'Approved', payee: 'MANILA ELECTRIC COMPANY' });
   } finally {
     await anas.close();
   }
@@ -138,13 +138,13 @@ test('a computer that was offline shows what was saved meanwhile once it is back
     await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
     await form.getByRole('textbox', 'Line 1 amount').fill('980');
     await form.getByRole('button', 'Save and approve').tap();
-    await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });
-    expect(await register.getByRole('row', { name: /^888-001 / }).count()).toBe(0);
+    await expect.poll(() => record('cv', '888001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });
+    expect(await register.getByRole('row', { name: /^888001 / }).count()).toBe(0);
 
     // The network comes back: the voucher appears, and Ana is told who saved it.
     await anas.page.context().setOffline(false);
-    await register.getByRole('row', { name: /^888-001 .*MANILA WATER COMPANY .*Approved/ }).waitFor({ timeout: 30_000 });
-    await anas.page.getByRole('dialog', { name: /^From Mark Reyes: 888-001 for MANILA WATER COMPANY saved and approved/ }).waitFor();
+    await register.getByRole('row', { name: /^888001 .*MANILA WATER COMPANY .*Approved/ }).waitFor({ timeout: 30_000 });
+    await anas.page.getByRole('dialog', { name: /^From Mark Reyes: 888001 for MANILA WATER COMPANY saved and approved/ }).waitFor();
   } finally {
     await anas.close();
   }

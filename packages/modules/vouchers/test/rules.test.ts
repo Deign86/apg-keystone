@@ -21,24 +21,31 @@ describe('check vouchers', () => {
     expect(voucherTone('Cancelled')).toBe('neutral');
   });
 
-  it('numbers 888-001 and on, with no year, after the highest in that series', () => {
+  it('numbers 888001 and on, with no year, after the highest in that series', () => {
     const s = state();
-    expect(nextVoucherNo(s)).toBe('888-001');
-    s.cv.push({ ...s.cv[0], no: '888-001' }, { ...s.cv[0], no: '888-025' });
-    expect(nextVoucherNo(s)).toBe('888-026');
-    s.cv.push({ ...s.cv[0], no: '888-999' });
-    expect(nextVoucherNo(s)).toBe('888-1000');
+    expect(nextVoucherNo(s)).toBe('888001');
+    s.cv.push({ ...s.cv[0], no: '888001' }, { ...s.cv[0], no: '888025' });
+    expect(nextVoucherNo(s)).toBe('888026');
+    s.cv.push({ ...s.cv[0], no: '888999' });
+    expect(nextVoucherNo(s)).toBe('8881000');
+  });
+
+  it('runs on from vouchers saved with a dash in their number, which keep it', () => {
+    const s = state();
+    s.cv.push({ ...s.cv[0], no: '888-004' }, { ...s.cv[0], no: '888-005' });
+    expect(nextVoucherNo(s)).toBe('888006');
+    expect(freesNumber(s, '888-005')).toBe(false);
   });
 
   it('leaves vouchers numbered in the old 8888- series out of the count', () => {
     const s = state();
     s.cv.push({ ...s.cv[0], no: '8888-001' }, { ...s.cv[0], no: '8888-042' });
-    expect(nextVoucherNo(s)).toBe('888-001');
+    expect(nextVoucherNo(s)).toBe('888001');
   });
 
   it('starts a new voucher with the last voucher\'s signatories, or the reference defaults before the first', () => {
     const s = state();
-    s.cv.push({ ...s.cv[0], no: '888-001', prepared: 'Kristine Joy L. Villanueva', checked: 'Angelica S. Bautista', approved: 'Chief Executive Officer' });
+    s.cv.push({ ...s.cv[0], no: '888001', prepared: 'Kristine Joy L. Villanueva', checked: 'Angelica S. Bautista', approved: 'Chief Executive Officer' });
     // Names are kept and shown in capitals.
     expect(newVoucher(s, ctx)).toMatchObject({ prepared: 'KRISTINE JOY L. VILLANUEVA', checked: 'ANGELICA S. BAUTISTA', approved: 'CHIEF EXECUTIVE OFFICER' });
     const { preparedBy, checkedBy, approvedBy } = companyOf(sampleState());
@@ -48,9 +55,9 @@ describe('check vouchers', () => {
   it('saves a voucher, drops blank lines and logs it', () => {
     const d = { ...newVoucher(state(), ctx), ...water, lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' }), lineDraft()] };
     const r = saveVoucher(state(), d, ctx);
-    expect(r.record.no).toBe('888-001');
+    expect(r.record.no).toBe('888001');
     expect(r.record.lines).toHaveLength(1);
-    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'CV', text: '888-001 for MANILA WATER COMPANY saved and routed for approval (₱8,412.30).' });
+    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'CV', text: '888001 for MANILA WATER COMPANY saved and routed for approval (₱8,412.30).' });
   });
 
   it('offers the next CV No. on a new voucher, keeps one typed in instead, and refuses a number already used', () => {
@@ -58,31 +65,31 @@ describe('check vouchers', () => {
     const d = { ...newVoucher(s, ctx), ...water, lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' })] };
 
     // Typed, the number is kept, and numbering carries on after it when it is in the series.
-    const typed = saveVoucher(s, { ...d, no: ' 888-120 ', typedNo: true }, ctx);
-    expect(typed.record.no).toBe('888-120');
-    expect(nextVoucherNo(typed.state)).toBe('888-121');
+    const typed = saveVoucher(s, { ...d, no: ' 888120 ', typedNo: true }, ctx);
+    expect(typed.record.no).toBe('888120');
+    expect(nextVoucherNo(typed.state)).toBe('888121');
     // A number outside the series is kept too, and leaves the series' count alone.
     expect(saveVoucher(s, { ...d, no: 'CV-2027-0001', typedNo: true }, ctx).record.no).toBe('CV-2027-0001');
 
-    expect(refusalOf(() => saveVoucher(typed.state, { ...d, no: '888-120', typedNo: true }, ctx))).toEqual({ error: 'CV No. 888-120 is already used. The next free one is 888-121.', fields: [] });
-    expect(refusalOf(() => saveVoucher(s, { ...d, no: 'CV-2026-0141', typedNo: true }, ctx))).toEqual({ error: 'CV No. CV-2026-0141 is already used. The next free one is 888-001.', fields: [] });
+    expect(refusalOf(() => saveVoucher(typed.state, { ...d, no: '888120', typedNo: true }, ctx))).toEqual({ error: 'CV No. 888120 is already used. The next free one is 888121.', fields: [] });
+    expect(refusalOf(() => saveVoucher(s, { ...d, no: 'CV-2026-0141', typedNo: true }, ctx))).toEqual({ error: 'CV No. CV-2026-0141 is already used. The next free one is 888001.', fields: [] });
     // Cleared, it takes the next number.
-    expect(saveVoucher(s, { ...d, no: '  ', typedNo: true }, ctx).record.no).toBe('888-001');
+    expect(saveVoucher(s, { ...d, no: '  ', typedNo: true }, ctx).record.no).toBe('888001');
   });
 
   it('saves a number it only offered as the next one when it is saved, and a saved voucher under its own', () => {
     const s = state();
     const d = { ...newVoucher(s, ctx), ...water, lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' })] };
-    // Someone else saves 888-001 while this draft still shows it.
+    // Someone else saves 888001 while this draft still shows it.
     const meanwhile = saveVoucher(s, d, ctx).state;
 
-    expect(draftNo(meanwhile, d)).toBe('888-002');
-    expect(saveVoucher(meanwhile, d, ctx).record.no).toBe('888-002');
+    expect(draftNo(meanwhile, d)).toBe('888002');
+    expect(saveVoucher(meanwhile, d, ctx).record.no).toBe('888002');
 
     const pending = s.cv.find((v) => v.status === 'For Approval')!;
     expect(draftNo(s, voucherDraftOf(s, pending))).toBe(pending.no);
     // A copy saved from it takes the next number, whatever is in the field.
-    expect(saveVoucher(s, { ...voucherDraftOf(s, pending), no: '888-500', typedNo: true }, ctx, true).record.no).toBe('888-001');
+    expect(saveVoucher(s, { ...voucherDraftOf(s, pending), no: '888500', typedNo: true }, ctx, true).record.no).toBe('888001');
   });
 
   it('pays whoever is typed in, at the address typed in, and needs a payee', () => {
@@ -146,7 +153,7 @@ describe('check vouchers', () => {
     expect(edited.state.cv).toHaveLength(3);
     expect(edited.message).toBe(`${pending.no} updated.`);
     const approved = s.cv.find((v) => v.status === 'Approved')!;
-    expect(saveVoucher(s, voucherDraftOf(state(), approved), ctx, true).record.no).toBe('888-001');
+    expect(saveVoucher(s, voucherDraftOf(state(), approved), ctx, true).record.no).toBe('888001');
   });
 
   it('approves the CEO\'s voucher as it is saved, and routes anyone else\'s for approval', () => {
@@ -155,16 +162,16 @@ describe('check vouchers', () => {
     const d = { ...newVoucher(state(), ceo), ...water, lines: [lineDraft({ desc: 'Water – Head Office', amount: '8,412.30' })] };
 
     const mine = saveVoucher(state(), d, ceo);
-    expect(mine.record).toMatchObject({ no: '888-001', status: 'Approved', prepared: 'MARK REYES' });
-    expect(mine.message).toBe('888-001 saved and approved.');
-    expect(mine.state.log[0].text).toBe('888-001 for MANILA WATER COMPANY saved and approved by Mark Reyes (₱8,412.30).');
+    expect(mine.record).toMatchObject({ no: '888001', status: 'Approved', prepared: 'MARK REYES' });
+    expect(mine.message).toBe('888001 saved and approved.');
+    expect(mine.state.log[0].text).toBe('888001 for MANILA WATER COMPANY saved and approved by Mark Reyes (₱8,412.30).');
     expect(voucherWaiting(mine.state).map((w) => w.no)).toEqual(['CV-2026-0141']);
     // Save as new is a new voucher too.
     expect(saveVoucher(state(), { ...d, editing: 'CV-2026-0141' }, ceo, true).record.status).toBe('Approved');
 
     const theirs = saveVoucher(state(), d, staff);
     expect(theirs.record.status).toBe('For Approval');
-    expect(theirs.message).toBe('888-001 saved and routed for approval.');
+    expect(theirs.message).toBe('888001 saved and routed for approval.');
     // An edit approves nothing, even the CEO's: one waiting still waits.
     expect(saveVoucher(theirs.state, { ...voucherDraftOf(state(), theirs.record), check: '0004512' }, ceo).record.status).toBe('For Approval');
   });
@@ -220,10 +227,10 @@ describe('check vouchers', () => {
     expect(() => saveVoucher(s, voucherDraftOf(state(), byNo('CV-2026-0139')), ctx)).toThrow(voucherLock(byNo('CV-2026-0139'))!);
 
     const copy = copyVoucher(s, byNo('CV-2026-0140'), ctx);
-    expect(copy).toMatchObject({ no: '888-001', date: '2026-10-30', payee: 'JL SANTOS PRINTING SERVICES', address: 'Makati City', check: '', checkDate: '', prepared: 'D. LAZARO', checked: 'A. BAUTISTA', approved: 'CEO' });
+    expect(copy).toMatchObject({ no: '888001', date: '2026-10-30', payee: 'JL SANTOS PRINTING SERVICES', address: 'Makati City', check: '', checkDate: '', prepared: 'D. LAZARO', checked: 'A. BAUTISTA', approved: 'CEO' });
     expect(copy).not.toHaveProperty('editing');
     expect(copy.lines.map((l) => [l.desc, l.amount])).toEqual([['Printing of lease folders (500 pcs)', '12500'], ['Delivery', '650']]);
-    expect(saveVoucher(s, { ...copy, check: '0004520' }, ctx).record).toMatchObject({ no: '888-001', status: 'For Approval', check: '0004520' });
+    expect(saveVoucher(s, { ...copy, check: '0004520' }, ctx).record).toMatchObject({ no: '888001', status: 'For Approval', check: '0004520' });
     expect(s.cv).toHaveLength(3);
   });
 
@@ -239,10 +246,10 @@ describe('check vouchers', () => {
   it('drafts a voucher for spending approved elsewhere, For Approval with one particular and no check (vouchers.drafts)', () => {
     const s = state();
     const r = voucherDrafts.draft(s, { payee: 'V-002', amount: 48230.55, particulars: 'Christmas party venue (RF-2026-0001)' }, ctx);
-    expect(r.record).toMatchObject({ no: '888-001', payee: 'MANILA WATER COMPANY', address: water.address, status: 'For Approval', check: '', lines: [{ desc: 'Christmas party venue (RF-2026-0001)', amt: 48230.55 }] });
+    expect(r.record).toMatchObject({ no: '888001', payee: 'MANILA WATER COMPANY', address: water.address, status: 'For Approval', check: '', lines: [{ desc: 'Christmas party venue (RF-2026-0001)', amt: 48230.55 }] });
     expect(r.record).not.toHaveProperty('checkDate');
     expect(r.state.cv).toHaveLength(s.cv.length + 1);
-    expect(r.state.log[0].text).toBe('888-001 for MANILA WATER COMPANY saved and routed for approval (₱48,230.55).');
+    expect(r.state.log[0].text).toBe('888001 for MANILA WATER COMPANY saved and routed for approval (₱48,230.55).');
     expect(refusalOf(() => voucherDrafts.draft(s, { payee: 'V-999', amount: 100, particulars: 'Nothing' }, ctx))).toEqual({ error: 'Choose a payee from the directory.', fields: [] });
     expect(refusalOf(() => voucherDrafts.draft(s, { payee: 'V-002', amount: 0, particulars: 'Nothing' }, ctx))).toEqual({ error: 'Add at least one particular with an amount.', fields: ['lines.0.amount'] });
     // The CEO's decision drafts it, and accounting still completes it: it waits for approval like any other.
@@ -263,24 +270,24 @@ describe('check vouchers', () => {
     });
 
     it('deletes only a void voucher, and numbering closes up behind the last ones deleted', () => {
-      const s = { ...state(), cv: [...state().cv, { ...state().cv[0], no: '888-003', status: 'Void' }, { ...state().cv[0], no: '888-004', status: 'Void' }] };
+      const s = { ...state(), cv: [...state().cv, { ...state().cv[0], no: '888003', status: 'Void' }, { ...state().cv[0], no: '888004', status: 'Void' }] };
 
       expect(() => deleteVoucher(s, 'CV-2026-0141', ctx)).toThrow('Only a void voucher can be deleted. Void CV-2026-0141 first.');
-      expect(() => deleteVoucher(s, '888-009', ctx)).toThrow('888-009 is not in the register.');
-      expect(nextVoucherNo(s)).toBe('888-005');
-      expect([freesNumber(s, '888-004'), freesNumber(s, '888-003')]).toEqual([true, false]);
-      const r = deleteVoucher(s, '888-004', ctx);
+      expect(() => deleteVoucher(s, '888009', ctx)).toThrow('888009 is not in the register.');
+      expect(nextVoucherNo(s)).toBe('888005');
+      expect([freesNumber(s, '888004'), freesNumber(s, '888003')]).toEqual([true, false]);
+      const r = deleteVoucher(s, '888004', ctx);
 
-      expect(r.state.log[0].text).toBe('888-004 (void, ₱48,230.55) deleted from the register.');
-      expect(nextVoucherNo(r.state)).toBe('888-004');
+      expect(r.state.log[0].text).toBe('888004 (void, ₱48,230.55) deleted from the register.');
+      expect(nextVoucherNo(r.state)).toBe('888004');
       // Every 888- voucher gone: the series starts again.
-      expect(nextVoucherNo(deleteVouchers(s, ['888-003', '888-004'], ctx).state)).toBe('888-001');
+      expect(nextVoucherNo(deleteVouchers(s, ['888003', '888004'], ctx).state)).toBe('888001');
     });
 
     it('drops a number an earlier build held back, from what is already saved', () => {
-      const held = { ...state(), ext: { vouchers: { highest: '888-018' }, banks: { accounts: [] } } };
+      const held = { ...state(), ext: { vouchers: { highest: '888018' }, banks: { accounts: [] } } };
 
-      expect(nextVoucherNo(held)).toBe('888-001');
+      expect(nextVoucherNo(held)).toBe('888001');
       expect(clearVoided(held, ctx).ext).toEqual({ banks: { accounts: [] } });
       expect(clearVoided(state(), ctx)).toEqual(state());
     });
@@ -306,11 +313,11 @@ describe('check vouchers', () => {
       expect(voucherRegister(s, ctx)).toEqual({ current: [...s.cv].reverse(), earlier: [] });
       // In December the October voucher released before then folds into October. One dated October but released in
       // December, the approved and the waiting ones, and a void one stay on top.
-      const late = { ...s.cv[0], no: '888-001', released: '2026-12-01' };
-      const voided = { ...s.cv[0], no: '888-002', status: 'Void', voided: '2026-11-30' };
+      const late = { ...s.cv[0], no: '888001', released: '2026-12-01' };
+      const voided = { ...s.cv[0], no: '888002', status: 'Void', voided: '2026-11-30' };
       const later = voucherRegister({ ...s, cv: [...s.cv, late, voided] }, on('2026-12-02'));
 
-      expect(later.current.map((v) => v.no)).toEqual(['CV-2026-0141', 'CV-2026-0140', '888-002', '888-001']);
+      expect(later.current.map((v) => v.no)).toEqual(['CV-2026-0141', 'CV-2026-0140', '888002', '888001']);
       expect(later.earlier.map((m) => [m.label, m.vouchers.map((v) => v.no), m.total])).toEqual([['October 2026', ['CV-2026-0139'], voucherTotal(s.cv[0])]]);
     });
 

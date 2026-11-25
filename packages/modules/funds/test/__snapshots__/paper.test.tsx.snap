@@ -71,7 +71,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </tr>
 </tfoot>
 </table>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
@@ -157,7 +157,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </tr>
 </tfoot>
 </table>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
@@ -238,7 +238,7 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 </tr>
 </tfoot>
 </table>
-<div class="mt-14 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+<div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
 <p class="m-0 min-h-4 font-bold">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>

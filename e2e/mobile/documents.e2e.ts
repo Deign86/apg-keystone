@@ -46,16 +46,16 @@ test('writes a voucher by touch, saves a draft, keeps what is typed by itself, a
 
   await expect(opened.getByRole('textbox', 'Address')).toHaveValue('Ortigas Ave., Pasig City');
   await opened.getByRole('button', 'Save and route for approval').tap();
-  await expect(screen.getByRole('dialog', '888-001 saved and routed for approval.')).toBeVisible();
+  await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();
 
   // The register scrolls sideways in its own box on a phone, every value whole; the row's menu takes a tap.
   await screen.getByRole('tab', /^Voucher register/).tap();
   const register = screen.getByRole('table', 'Voucher register');
 
-  await expect(register.getByRole('row', /^888-001 Nov 2, 2026 MANILA ELECTRIC COMPANY \(MERALCO\).*₱1,500\.50 For Approval/)).toBeVisible();
-  await register.getByRole('button', 'Actions for 888-001').tap();
+  await expect(register.getByRole('row', /^888001 Nov 2, 2026 MANILA ELECTRIC COMPANY \(MERALCO\).*₱1,500\.50 For Approval/)).toBeVisible();
+  await register.getByRole('button', 'Actions for 888001').tap();
   await screen.getByRole('menuitem', 'Mark approved').tap();
-  await expect(register.getByRole('row', /^888-001 /).getByRole('cell', 'Approved')).toBeVisible();
+  await expect(register.getByRole('row', /^888001 /).getByRole('cell', 'Approved')).toBeVisible();
 });
 
 test('shows the paper under the form scaled to fit, and marks on it where the field being typed in prints', async ({ app, screen, browser }) => {
@@ -64,10 +64,10 @@ test('shows the paper under the form scaled to fit, and marks on it where the fi
   const form = screen.getByRole('form', 'New voucher');
 
   await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  const paper = screen.getByRole('article', 'Check voucher 888-001');
+  const paper = screen.getByRole('article', 'Check voucher 888001');
 
   await expect(paper).toBeVisible();
-  expect(await paperFit(browser, 'Check voucher 888-001')).toEqual({ inside: true, scaled: true });
+  expect(await paperFit(browser, 'Check voucher 888001')).toEqual({ inside: true, scaled: true });
   // Both copies mark the payee while its field has focus.
   await expect.poll(() => markedPaperParts(browser)).toEqual([
     'PAYEE MANILA ELECTRIC COMPANY (MERALCO) · solid 2px',
@@ -94,16 +94,16 @@ test('prints a statement and saves it as a PDF of A4 pages, from a phone or tabl
     };
   });
   await form.getByRole('button', 'Print').tap();
-  await expect(screen.getByText('Printed Billing statement 888-110226')).toBeVisible();
+  await expect(screen.getByText('Printed Billing statement 888110226')).toBeVisible();
 
   const file = await browser.waitForDownload(async () => {
     await form.getByRole('button', 'Export PDF').tap();
-    await expect(screen.getByRole('dialog', 'Saved 888-110226.pdf.')).toBeVisible({ timeout: 20_000 });
+    await expect(screen.getByRole('dialog', 'Saved 888110226.pdf.')).toBeVisible({ timeout: 20_000 });
   });
 
   const pdf = await readFile(file.absolutePath);
 
-  expect(file.suggestedFilename).toBe('888-110226.pdf');
+  expect(file.suggestedFilename).toBe('888110226.pdf');
   expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
   const pages = pdfPages(pdf);
 

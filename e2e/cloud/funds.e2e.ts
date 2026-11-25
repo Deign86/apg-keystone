@@ -99,7 +99,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await expect(party).toContainText('Ana Cruz on Nov 2, 2026');
   await party.getByRole('button', 'Approve').tap();
   await screen.getByRole('alertdialog', 'Approve RF-2026-0001?').getByRole('button', 'Approve').tap();
-  await expect(screen.getByRole('dialog', 'RF-2026-0001 approved. 888-001 is drafted for accounting.')).toBeVisible();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 approved. 888001 is drafted for accounting.')).toBeVisible();
 
   const charger = screen.getByRole('article', 'RF-2026-0002');
 
@@ -112,7 +112,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
 
   // The decisions and the voucher reach the cloud: accounting finds the voucher For Approval, naming the request.
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
-  await expect.poll(() => record('cv', '888-001'), { timeout: 10_000 }).toMatchObject({
+  await expect.poll(() => record('cv', '888001'), { timeout: 10_000 }).toMatchObject({
     payee: 'MANILA WATER COMPANY', address: 'MWSS Compound, Quezon City', status: 'For Approval', check: '', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }],
   });
   await expect.poll(() => field('rf', 'RF-2026-0002', 'status'), { timeout: 10_000 }).toBe('Declined');
@@ -123,7 +123,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
 
   // Each requester sees their own answer the next time Keystone opens, and nothing of theirs still waits.
   await signInElsewhere(app, screen, hr);
-  await expect(screen.getByText('RF-2026-0001 was approved; 888-001 is drafted.')).toBeVisible();
+  await expect(screen.getByText('RF-2026-0001 was approved; 888001 is drafted.')).toBeVisible();
   await expect(fundsTile(screen, 0)).toBeVisible();
 
   await signInElsewhere(app, screen, it);
@@ -206,7 +206,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   expect(read).toContain('Pantry groceries');
   expect(read).toContain('₱3,250.75');
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
-  expect(await record('cv', '888-001')).toBeNull();
+  expect(await record('cv', '888001')).toBeNull();
   await app.open('/');
   await expect(fundsTile(screen, 0)).toBeVisible();
 
