@@ -5,15 +5,16 @@
   beside the statement it prints; the tab names the statement open in it, or New). Opening a statement, New statement,
   and Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts (`billing.view`). The
   register (Mark paid, sent or overdue; void asks first), the form, editing in place while Sent, Print, and Export PDF.
-  **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and Attention, and any other
-  name leaves them to be set by hand. Its **Address** is typed too (never from the directory), kept only when typed and
-  printed as **Address** under Bill to (a dash when none is typed). **Prepared by** starts as whoever is signed in,
+  **Bill to** is typed as it prints; typing a directory client's name brings its VAT, EWT and Attention, and its TIN
+  when the record has one, and any other name leaves them to be set by hand. Its **Address** is typed too (never from the
+  directory), kept only when typed and printed as **Address** under Bill to (a dash when none is typed); its **TIN** is
+  kept only when there is one, and printed as **TIN** under the address. **Prepared by** starts as whoever is signed in,
   **Checked by** and **Approved by** as the last statement's (Company Details' before the first). Each signatory has a
   position under their name (**Preparer's position**, **Checker's position**, **Approver's position**), kept only when
   typed, printed under the name, and started from the last statement's.
 - `src/StatementPaper.tsx`: the printed statement, laid out as the company's Billing Statement under every paper's
   letterhead (kit's `Letterhead`: the title across the top, the Group of Companies logo with the address beside it, the
-  number and date): Bill to, Address and Attention (a dash for one not filled in), the invoice box (number, invoice and
+  number and date): Bill to, Address, TIN and Attention (a dash for one not filled in), the invoice box (number, invoice and
   due dates), Qty · Description · Unit price · Amount, then the totals box: Subtotal, VAT (12%), Less: EWT (2% or 5%)
   and the total amount due; VAT shows a dash where it does not apply, and the EWT line shows only when EWT is withheld
   (docs/adr/0045). Then payment instructions, the
@@ -61,7 +62,7 @@ earliest due first, and settling one with a reported payment (a short payment is
 matching uses it.
 
 ## Needs
-Clients in the directory (data), for their VAT, EWT and Attention when their name is typed. Uses `banks.bank-accounts` (`SERVICES.bankAccounts`) when it is installed, for Pay
+Clients in the directory (data), for their TIN, VAT, EWT and Attention when their name is typed. Uses `banks.bank-accounts` (`SERVICES.bankAccounts`) when it is installed, for Pay
 into; without it there is no Pay into, and the payment instructions are typed.
 
 ## Removing it

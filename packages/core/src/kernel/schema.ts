@@ -101,6 +101,8 @@ export interface Statement {
   client: string;
   /** Bill to's address, printed under its name, typed on the statement. A statement with none typed keeps none. */
   address?: string;
+  /** Bill to's TIN, printed under its address, typed on the statement or brought from its directory record. A statement with none keeps none. */
+  tin?: string;
   /** Who the statement is addressed to at the client. */
   attention?: string;
   /** Older statements: the billing period. No longer entered. */

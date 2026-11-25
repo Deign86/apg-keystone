@@ -50,6 +50,8 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
         <dd {...mark('billTo')} className="m-0 font-bold uppercase">{orDash(billTo)}</dd>
         <dt className={paperLabel}>Address</dt>
         <dd {...mark('address')} className="m-0 font-medium">{orDash(b.address)}</dd>
+        <dt className={paperLabel}>TIN</dt>
+        <dd {...mark('tin')} className="m-0 font-medium">{orDash(b.tin)}</dd>
         <dt className={paperLabel}>Attention</dt>
         <dd {...mark('attention')} className="m-0 font-medium whitespace-pre-line">{orDash(b.attention)}</dd>
       </dl>
