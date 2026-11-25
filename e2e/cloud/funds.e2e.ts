@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
 import { asMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
-import { PDF_MOST_BYTES_A_PAGE, readPdf } from '../support/paper';
+import { expectCleanPdf, PDF_MOST_BYTES_A_PAGE, paperInks, readPdf } from '../support/paper';
 
 // Requests for funds in the cloud (docs/adr/0011, 0021): staff ask, each on their own computer and seeing only their
 // own requests; the CEO decides them from a phone. Approving a check drafts the check voucher through Check Vouchers;
@@ -183,6 +183,8 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // The form and the paper fit the phone's width: the paper scales down, and nothing scrolls sideways.
   expect(await browser.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
 
+  const inks = await paperInks(browser);
+
   const pdf = await browser.waitForDownload(async () => {
     await viewing.getByRole('button', 'Export PDF').tap();
     await expect(screen.getByRole('dialog', 'Saved RF-2026-0001 fund transfer request.pdf.')).toBeVisible({ timeout: 20_000 });
@@ -195,7 +197,11 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // Drawn as text and shapes: a few hundred kilobytes a page, not the tens of megabytes of raw pixels.
   expect(bytes.length).toBeLessThan(PDF_MOST_BYTES_A_PAGE);
   // Its expense and amount are text a PDF reader finds (docs/adr/0048), not a picture of the page.
-  const read = (await readPdf(bytes)).map((p) => p.text).join(' ');
+  const pages = await readPdf(bytes);
+  const read = pages.map((p) => p.text).join(' ');
+
+  // As clean as the paper: each border once, in its colour, no seam, no frame (docs/adr/0048, "Every exported PDF").
+  expectCleanPdf(pages, inks);
 
   expect(read).toContain('Pantry groceries');
   expect(read).toContain('₱3,250.75');

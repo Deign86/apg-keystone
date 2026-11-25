@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test, type Browser } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { paperAsPrinted, readPdf } from './support/paper';
+import { expectCleanPdf, paperAsPrinted, paperInks, readPdf, runsDown } from './support/paper';
 import { pickSignatory } from './support/signatory';
 
 // Every paper Keystone prints or saves as a PDF (packages/kit/src/paper.ts, output.ts, paper-pdf.ts), on every
@@ -9,7 +9,9 @@ import { pickSignatory } from './support/signatory';
 //   - the PDF as this browser saves it, read as a PDF reader reads it (pdf.js): each page A4; the paper drawn across the
 //     printable width (186 mm upright, 273 mm on its side, the whole sheet for the two-up voucher), centred; its words
 //     and peso amounts there as text, which can be selected, searched and edited; and its only images real pictures
-//     (the logo), never a picture of the page;
+//     (the logo), never a picture of the page; and as clean as the paper (docs/adr/0048, "Every exported PDF"): its
+//     borders as lines, each in its colour on screen and drawn once, no rule stitched from pieces, no seam between two
+//     backgrounds, and no frame;
 //   - the paper as Print lays it out, which is what the Windows app's PDF is: nothing else on the screen takes room
 //     (a wide table beside it made the browser shrink the whole print, the paper narrower than A4 and off to one side),
 //     and the paper starts at the page's edge at its full width.
@@ -17,14 +19,21 @@ import { pickSignatory } from './support/signatory';
 const MARGIN = (12 / 25.4) * 72;
 const A4 = { w: 595.28, h: 841.89 };
 
-/** Exports the paper on screen with `button`, waits for `saved` to be said, and reads the PDF. */
+/** Exports the paper on screen with `button`, waits for `saved` to be said, reads the PDF, and checks it is clean. */
 async function exportPdf(browser: Browser, screen: Screen, button: string, saved: string) {
+  const inks = await paperInks(browser);
+
   const file = await browser.waitForDownload(async () => {
     await screen.getByRole('button', button).tap();
     await expect(screen.getByRole('dialog', saved)).toBeVisible({ timeout: 30_000 });
   });
 
-  return readPdf(await readFile(file.absolutePath));
+  const pages = await readPdf(await readFile(file.absolutePath));
+
+  expect(pages.every((p) => p.lines.length > 0)).toBe(true);
+  expectCleanPdf(pages, inks);
+
+  return pages;
 }
 
 /** The text of every page, with letter-spaced words (headings set wide) closed up, as a search would match them. */
@@ -54,35 +63,6 @@ function expectFilled(pages: Awaited<ReturnType<typeof readPdf>>, way: 'portrait
     expect(page.text.trim().length).toBeGreaterThan(0);
 
     for (const image of page.images) expect(image.w * image.h).toBeLessThan((page.w * page.h) / 10);
-  }
-
-  expectRuledOnce(pages);
-}
-
-type Line = Awaited<ReturnType<typeof readPdf>>[number]['lines'][number];
-
-const runsDown = (l: Line) => Math.abs(l.x1 - l.x0) < 0.01;
-
-/**
- * The paper's borders as lines, each drawn once, as the page shows them: no two lines on one line overlap (a shared
- * edge drawn by both cells came out heavier, and a rule in pieces uneven), and no frame runs down the paper's sides (it
- * marks the paper's edge on screen only).
- */
-function expectRuledOnce(pages: Awaited<ReturnType<typeof readPdf>>) {
-  for (const page of pages) {
-    const { lines, drawn } = page;
-    const along = (l: Line) => (runsDown(l) ? [l.y0, l.y1] : [l.x0, l.x1]);
-    const at = (l: Line) => (runsDown(l) ? l.x0 : l.y0);
-
-    const twice = lines.flatMap((a, i) => lines.slice(i + 1).flatMap((b) => {
-      const [[a0, a1], [b0, b1]] = [along(a), along(b)];
-
-      return runsDown(a) === runsDown(b) && Math.abs(at(a) - at(b)) < 0.01 && Math.min(a1, b1) - Math.max(a0, b0) > 0.01 ? [[a, b]] : [];
-    }));
-
-    expect(lines.length).toBeGreaterThan(0);
-    expect(twice).toEqual([]);
-    expect(lines.filter((l) => runsDown(l) && (Math.abs(l.x0 - drawn.x0) < 1 || Math.abs(l.x0 - drawn.x1) < 1))).toEqual([]);
   }
 }
 

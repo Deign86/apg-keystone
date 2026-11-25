@@ -29,13 +29,16 @@ interface TextLine {
 }
 
 type Part =
-  | ({ kind: 'fill'; color: Rgb; radius: number } & Box)
+  | Fill
   | ({ kind: 'border'; radius: number; side: Side } & Box)
   | Rule
   | ({ kind: 'image'; source: HTMLImageElement | SVGSVGElement; fit: string; position: string } & Box)
   | TextLine;
 
 type Side = { at: 'top' | 'right' | 'bottom' | 'left'; width: number; color: Rgb; style: string };
+
+/** A background: its box, filled. */
+type Fill = { kind: 'fill'; color: Rgb; radius: number } & Box;
 
 /** A straight border line: the band it covers on the paper, running down it or across it. */
 type Rule = { kind: 'rule'; down: boolean; color: Rgb; style: string } & Box;
@@ -269,10 +272,31 @@ function partsOf(node: HTMLElement): Part[] {
   const layer = (p: Part) => ({ fill: 0, border: 1, rule: 1, image: 2, text: 3 })[p.kind];
   const weight = (p: Part) => (p.kind === 'border' ? p.side.width : p.kind === 'rule' ? thickness(p) : 0);
   const painted = parts.map((p, i) => ({ p, i })).sort((a, b) => layer(a.p) - layer(b.p) || weight(a.p) - weight(b.p) || a.i - b.i).map(({ p }) => p);
+  const fills = painted.filter((p): p is Fill => p.kind === 'fill');
+  const rounded = painted.filter((p) => p.kind === 'border');
   const rules = painted.filter((p): p is Rule => p.kind === 'rule');
-  const behind = painted.filter((p) => layer(p) < 2 && p.kind !== 'rule');
 
-  return [...behind, ...drawnOnce(rules), ...painted.slice(behind.length + rules.length)];
+  return [...seamless(fills), ...rounded, ...drawnOnce(rules), ...painted.filter((p) => layer(p) > 1)];
+}
+
+/**
+ * Backgrounds that meet with no seam between them. A reader smooths each shape's edges on its own, so where two only
+ * meet, edge to edge, the page shows through between them: a pale line between two rows' bands. Each runs half a px
+ * under a square one painted over it where they meet, which hides that half.
+ */
+function seamless(fills: Fill[]): Fill[] {
+  const under = 0.5;
+
+  return fills.map((f, i) => {
+    const over = fills.slice(i + 1).filter((g) => !g.radius);
+    const across = (g: Fill) => g.x < f.x + f.w && g.x + g.w > f.x;
+    const down = (g: Fill) => g.y < f.y + f.h && g.y + g.h > f.y;
+    const [top, bottom] = [over.some((g) => across(g) && g.y + g.h === f.y), over.some((g) => across(g) && g.y === f.y + f.h)];
+    const [left, right] = [over.some((g) => down(g) && g.x + g.w === f.x), over.some((g) => down(g) && g.x === f.x + f.w)];
+    const [x, y] = [f.x - (left ? under : 0), f.y - (top ? under : 0)];
+
+    return { ...f, x, y, w: f.x + f.w + (right ? under : 0) - x, h: f.y + f.h + (bottom ? under : 0) - y };
+  });
 }
 
 /** A box with its edges on whole px, as the browser paints backgrounds and borders on the screen's pixels. */
