@@ -28,13 +28,13 @@ describe('billing statements', () => {
     expect(due['010099-2026']).toBe(toCentavos(586627.5));
   });
 
-  it('numbers invoices 888- and the date as month, day and year, then -2, -3 on the same day', () => {
+  it('numbers invoices 888 and the date as month, day and year, then 2, 3 on the same day, with no dash', () => {
     const s = state();
     expect(nextStatementNo(s, '2026-10-30')).toBe('888103026');
     expect(nextStatementNo(s, '2027-01-05')).toBe('888010527');
     const one = { ...s, bs: [...s.bs, { ...s.bs[0], no: '888103026' }] };
-    expect(nextStatementNo(one, '2026-10-30')).toBe('888103026-2');
-    expect(nextStatementNo({ ...one, bs: [...one.bs, { ...s.bs[0], no: '888103026-2' }] }, '2026-10-30')).toBe('888103026-3');
+    expect(nextStatementNo(one, '2026-10-30')).toBe('8881030262');
+    expect(nextStatementNo({ ...one, bs: [...one.bs, { ...s.bs[0], no: '8881030262' }] }, '2026-10-30')).toBe('8881030263');
     // A new statement takes its date's number as its date changes; a number typed by hand stays.
     const d = newStatement(s, ctx);
     expect(withStatementDate(s, d, '2026-11-02').no).toBe('888110226');

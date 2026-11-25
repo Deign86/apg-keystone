@@ -51,7 +51,7 @@ test('issues a statement with VAT and withholding from the client', async ({ app
 
   await form.getByRole('button', 'Save and mark as sent').tap();
   // The form is blank again, numbered from the register.
-  await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('888110226-2');
+  await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('8881102262');
 
   await screen.getByRole('tab', /^Statements issued/).tap();
   const register = screen.getByRole('table', 'Statements issued');
