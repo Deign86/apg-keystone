@@ -17,7 +17,7 @@
   stays void.
 - **The register does not grow without end.** A void voucher is cleared from it 7 days after it was voided
   (`VOID_KEPT_DAYS`, on open, one log line), and **Delete voucher…** in its row menu clears it now, after asking. Only a
-  void voucher can be deleted. Numbering follows the register: the next voucher is one past the highest 888- number left, so deleting the last
+  void voucher can be deleted. Numbering follows the register: the next voucher is one past the highest 888 number left (888001, with no dash; one saved as 888-005 counts as 005), so deleting the last
   vouchers brings the count back down and their numbers are given out again. (An earlier build held deleted numbers
   back under `state.ext.vouchers`; opening the app drops that.) Several vouchers can be ticked and approved, released,
   voided or deleted together. A voucher released before this month folds into a dropdown for the month it is dated, newest
