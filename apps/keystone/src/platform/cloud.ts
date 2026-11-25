@@ -1,5 +1,5 @@
 import {
-  diffDocuments, emptyState, fromDocuments, isOwner, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
+  diffDocuments, emptyState, fromDocuments, isOwner, LIVE_REREAD_MS, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
   type StateDocument, type TerminalState,
 } from '@keystone/core';
 import type { Platform } from '@keystone/kit';
@@ -19,11 +19,50 @@ export interface RemoteDocs {
    */
   write(change: DocumentChanges): Promise<void>;
   /**
-   * Calls `onChange` with every document each time any of them changes, by anyone, this computer's saves included (once
-   * every list has been read); returns the way to stop. Absent where the documents cannot be watched.
+   * Listens to every collection the records are read from (docs/adr/0049). Absent where the documents cannot be
+   * watched.
    */
-  watch?(onChange: (docs: StateDocument[]) => void): () => void;
+  watch?(listener: RemoteListener): RemoteWatch;
 }
+
+export interface RemoteListener {
+  /**
+   * Some collections changed, by anyone, this computer's saves included: each one named holds these documents now,
+   * and the others are as they were.
+   */
+  change(lists: ReadonlyMap<string, StateDocument[]>): void;
+  /** False when a collection's listener stopped (it is listened to again shortly), true again when all are back. */
+  live(on: boolean): void;
+}
+
+export interface RemoteWatch {
+  stop(): void;
+  /** Listens again now to every collection whose listener stopped, instead of waiting. */
+  retry(): void;
+}
+
+/**
+ * Calls `fn` each time the person may be back after a while away: Keystone's window regains focus, its page shows again
+ * or the network comes back. Returns the way to stop.
+ */
+export type Wake = (fn: () => void) => () => void;
+
+export const browserWake: Wake = (fn) => {
+  const shown = () => { if (document.visibilityState === 'visible') fn(); };
+
+  addEventListener('focus', fn);
+  addEventListener('online', fn);
+  document.addEventListener('visibilitychange', shown);
+
+  return () => {
+    removeEventListener('focus', fn);
+    removeEventListener('online', fn);
+    document.removeEventListener('visibilitychange', shown);
+  };
+};
+
+/** The least time between two re-reads asked for by the person coming back, so switching windows does not read the records each time. */
+const WAKE_REREAD_MS = 15_000;
 
 export const NOT_STARTED = 'APG\'s records are not set up in the cloud yet. The CEO signs in first, and Keystone starts them, empty.';
 export const NOT_READ = 'Keystone has not read the records from the cloud, so it did not save over them. Reopen Keystone.';
@@ -33,14 +72,17 @@ export const NOT_READ = 'Keystone has not read the records from the cloud, so it
  * read, copied in or written beside it. Photos, files and the system stay with the local platform. `layout` names the
  * lists modules keep as documents of their own (docs/adr/0011); `who` is the member signed in, which the rules see as
  * `ctx.who`. `kept` is where this computer notes the member's saves the cloud has not confirmed yet (docs/adr/0013).
+ * `wake` says when the person may be back, for live updates that have stopped (docs/adr/0049).
  */
 export function cloudPlatform(
   local: Platform, remote: RemoteDocs, layout: DocumentLayout = {}, who?: Member,
-  kept: StoredText = webStorage(`keystone-pending-saves${who ? `:${who.uid}` : ''}`),
+  kept: StoredText = webStorage(`keystone-pending-saves${who ? `:${who.uid}` : ''}`), wake: Wake = browserWake,
 ): Platform {
   // What the cloud holds, as far as this computer knows: the documents read or last written. Null until a read
   // succeeds, and every save is refused until then, so a failed read can never be followed by a save over the records.
   let synced: StateDocument[] | null = null;
+  // Saves handed over so far, so a re-read that a save overtook is not taken as what the cloud holds.
+  let saves = 0;
   const pending = pendingSaves(kept);
 
   const opened = (state: TerminalState) => {
@@ -77,6 +119,7 @@ export function cloudPlatform(
 
     // Worked out and handed over at once, in the order the saves were made; the next save builds on this one.
     synced = next;
+    saves += 1;
 
     if (!change.set.length && !change.remove.length) return Promise.resolve();
     // Noted on this computer before the cloud gets it, so a page that closes first leaves it for the next start.
@@ -94,14 +137,69 @@ export function cloudPlatform(
   }
 
   /**
-   * Live updates: each time the cloud's documents change, they are what the next save is measured from, and the store
-   * gets them as the saved state. Only once the records have been read, so nothing is saved over them before.
+   * Live updates (docs/adr/0049): each time some of the cloud's collections change, they replace what this computer
+   * knew of them, are what the next save is measured from, and the store gets the whole state. Only once the records
+   * have been read, so nothing is saved over them before. Nothing here writes: what arrives is already saved.
+   *
+   * While a listener has stopped, the records are read again instead: at once, every LIVE_REREAD_MS, and when the person
+   * comes back to Keystone (wake), which also listens again at once.
    */
-  const watchState = remote.watch && ((onChange: (json: string) => void) => remote.watch!((docs) => {
-    if (!synced) return;
-    synced = docs;
-    onChange(JSON.stringify(fromDocuments(docs, layout)));
-  }));
+  const watchState = remote.watch && ((onChange: (json: string) => void, onLive?: (live: boolean) => void) => {
+    let stopped = false;
+    let live = true;
+    let poll: ReturnType<typeof setInterval> | undefined;
+    let lastReread = 0;
+    const hand = (docs: StateDocument[]) => onChange(JSON.stringify(fromDocuments(docs, layout)));
+
+    async function reread() {
+      const before = saves;
+
+      lastReread = Date.now();
+
+      try {
+        const docs = await remote.readAll();
+
+        // A save made meanwhile is not in what was read; the next read, or the listeners, bring both.
+        if (stopped || !docs || !synced || saves !== before) return;
+        synced = docs;
+        hand(docs);
+      } catch (cause) {
+        console.warn('Keystone could not read the records again; it tries again shortly.', cause);
+      }
+    }
+
+    const watching = remote.watch!({
+      change: (lists) => {
+        if (!synced) return;
+        synced = [...synced.filter((d) => !lists.has(d.collection)), ...[...lists.values()].flat()];
+        hand(synced);
+      },
+      live: (on) => {
+        if (stopped || on === live) return;
+        live = on;
+        onLive?.(on);
+        clearInterval(poll);
+        poll = undefined;
+
+        if (on) return;
+        poll = setInterval(() => void reread(), LIVE_REREAD_MS);
+        void reread();
+      },
+    });
+
+    const stopWake = wake(() => {
+      if (live || Date.now() - lastReread < WAKE_REREAD_MS) return;
+      watching.retry();
+      void reread();
+    });
+
+    return () => {
+      stopped = true;
+      clearInterval(poll);
+      stopWake();
+      watching.stop();
+    };
+  });
 
   return { ...local, loadState, saveState, ...(watchState && { watchState }), ...(who && { who }) };
 }

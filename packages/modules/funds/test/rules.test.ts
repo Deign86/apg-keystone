@@ -77,7 +77,7 @@ describe('filing a request', () => {
       pay: 'check', payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
     });
     expect(r.message).toBe('RF-2026-0001 sent to the CEO for approval.');
-    expect(r.state.log[0]).toEqual({ when: '2026-11-02 10:00', mod: 'RF', text: 'RF-2026-0001 filed by Ana Cruz.' });
+    expect(r.state.log[0]).toEqual({ when: '2026-11-02 10:00', mod: 'RF', text: 'RF-2026-0001 filed by Ana Cruz.', by: 'Ana Cruz' });
   });
 
   it('takes the name typed when nobody is signed in, and keeps no uid', () => {

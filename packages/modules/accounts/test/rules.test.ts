@@ -95,7 +95,7 @@ describe('making an account', () => {
 
     expect(r.record).toBe(made);
     expect(r.message).toBe('Liza Bautista can now sign in as liza.bautista@alphapremiergroup.com.');
-    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Account made for Liza Bautista (liza.bautista@alphapremiergroup.com), staff.' });
+    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Account made for Liza Bautista (liza.bautista@alphapremiergroup.com), staff.', by: 'Mark Reyes' });
     expect(r.state.log.slice(1)).toEqual(s.log);
     expect(JSON.stringify(r.state)).not.toContain('correct horse');
   });
@@ -133,7 +133,7 @@ describe('removing an account', () => {
     expect(r.record).toBe(ana);
     expect(r.message).toBe('Ana Cruz can no longer open APG\'s records.');
     expect(r.state.log[0]).toEqual({
-      when: '2026-10-30 09:05', mod: 'ACCT', text: 'Account removed for Ana Cruz (ana.cruz@alphapremiergroup.com); they can no longer open APG\'s records.',
+      when: '2026-10-30 09:05', mod: 'ACCT', text: 'Account removed for Ana Cruz (ana.cruz@alphapremiergroup.com); they can no longer open APG\'s records.', by: 'Mark Reyes',
     });
     expect(r.state.log.slice(1)).toEqual(s.log);
     expect(accountRemoved(s, paolo, asOwner).state.log[0].text).toBe('Account removed for Paolo Santos; they can no longer open APG\'s records.');
@@ -163,7 +163,7 @@ describe('changing your own password', () => {
 
     expect(r.record).toBe(hr);
     expect(r.message).toBe('Your password is changed. Sign in with the new one from now on.');
-    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz changed their password.' });
+    expect(r.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz changed their password.', by: 'Ana Cruz' });
     expect(r.state.log.slice(1)).toEqual(s.log);
     expect(() => passwordChanged(s, local)).toThrow(NO_SIGN_IN);
   });
@@ -188,7 +188,7 @@ describe('who opens the attendance tracker\'s admin screens', () => {
 
     expect(made.record).toEqual({ ...ana, grants: ['attendanceAdmin'] });
     expect(made.message).toBe('Ana Cruz can now open the attendance tracker\'s admin screens.');
-    expect(made.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.' });
+    expect(made.state.log[0]).toEqual({ when: '2026-10-30 09:05', mod: 'ACCT', text: 'Ana Cruz (ana.cruz@alphapremiergroup.com) made an attendance admin.', by: 'Mark Reyes' });
     expect(made.state.log.slice(1)).toEqual(s.log);
     expect(roleLine(made.record, [admin])).toBe('Staff · Attendance admin');
     // Without the connected system installed, nothing is said of it.

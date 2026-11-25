@@ -164,6 +164,7 @@ function Funds() {
   const form = (
     <FormCard
       id="rf-form"
+      holds={editing && { label: editing.no, find: (s) => requestOf(s, editing.no) }}
       eyebrow="Request for funds"
       title={editing ? `${locked ? 'Viewing' : 'Editing'} ${editing.no}` : 'New request'}
       onSubmit={save}

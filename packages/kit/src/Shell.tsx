@@ -1,8 +1,8 @@
-import { roleLabel } from '@keystone/core';
+import { arrivalNotices, LIVE_PAUSED, roleLabel } from '@keystone/core';
 import { Button, KeyBadge, Sheet, cn } from '@keystone/ui';
 import { Menu } from 'lucide-react';
 import keystoneMark from '@keystone/ui/keystone-mark.png';
-import { Component, useEffect, useState, useSyncExternalStore, type ErrorInfo, type ReactNode } from 'react';
+import { Component, useEffect, useRef, useState, useSyncExternalStore, type ErrorInfo, type ReactNode } from 'react';
 import { useKeystone, useRuntime } from './context';
 import type { ModuleDef } from './registry';
 import { InstallNotice } from './InstallNotice';
@@ -64,6 +64,8 @@ function RailFoot() {
   // Read as the store changes them: a save fails, or the first save replaces damaged records, a moment after any render.
   const saveError = useSyncExternalStore(store.subscribe, () => store.saveError);
   const loadError = useSyncExternalStore(store.subscribe, () => store.loadError);
+  // Whether others' saves arrive as they are made, where the records are shared (docs/adr/0049).
+  const live = useSyncExternalStore(store.subscribe, () => store.live);
   const mod = shortcutKey();
   // As the rules see them: under a name changed since signing in, too.
   const who = ctx.who;
@@ -73,10 +75,11 @@ function RailFoot() {
       <UpdateNotice />
       <InstallNotice />
       <p className="m-0 flex items-center gap-1.5 font-semibold text-ink">
-        <span aria-hidden="true" className="size-[7px] rounded-full bg-good" />
+        <span aria-hidden="true" className={cn('size-[7px] rounded-full', live ? 'bg-good' : 'bg-warn')} />
         {who ? `${who.name} · ${roleLabel(who)}` : 'Administrator access'}
       </p>
       <p className="m-0">{who ? 'Saved in APG\'s records in the cloud' : kind === 'desktop' ? 'Saved on this computer' : 'Browser preview · saved in this browser'}</p>
+      {!live && <p role="status" className="m-0 text-pretty text-warn">{LIVE_PAUSED}</p>}
       <SignOutButton />
       {loadError && <p role="alert" className="m-0 text-pretty text-bad">{loadError}</p>}
       {saveError && <p role="alert" className="m-0 text-bad">{saveError}</p>}
@@ -86,8 +89,48 @@ function RailFoot() {
   );
 }
 
-/** The screens in rail order, with their shortcut badges. `onGo` runs after one is picked: the phone's menu closes. */
-function Screens({ onGo }: { onGo?: () => void }) {
+/**
+ * What arrives from others' saves (docs/adr/0049): each change told quietly as it arrives, in its Activity Log line, and
+ * the screens it changed (by their log tags) marked in the rail until they are opened. Returns those screens' ids.
+ */
+function useArrivals(): ReadonlySet<string> {
+  const { registry, route, notify } = useKeystone();
+  const { store } = useRuntime();
+  const [fresh, setFresh] = useState<ReadonlySet<string>>(() => new Set());
+  // The screen open when something arrives, read then: it is not marked, the person is looking at it.
+  const open = useRef(route);
+  open.current = route;
+
+  useEffect(() => store.onArrival((entries) => {
+    for (const sentence of arrivalNotices(entries, store.ctx.who)) notify(sentence, 'info');
+
+    const touched = registry.modules
+      .filter((m) => m.id !== open.current && entries.some((e) => m.logTags && Object.hasOwn(m.logTags, e.mod)))
+      .map((m) => m.id);
+
+    if (touched.length) setFresh((f) => new Set([...f, ...touched]));
+  }), [store, registry, notify]);
+
+  // Opening a marked screen is seeing what arrived on it.
+  useEffect(() => {
+    setFresh((f) => {
+      if (!f.has(route)) return f;
+      const left = new Set(f);
+
+      left.delete(route);
+
+      return left;
+    });
+  }, [route]);
+
+  return fresh;
+}
+
+/**
+ * The screens in rail order, with their shortcut badges, and a mark on those others changed since they were last open
+ * (`fresh`). `onGo` runs after one is picked: the phone's menu closes.
+ */
+function Screens({ fresh, onGo }: { fresh: ReadonlySet<string>; onGo?: () => void }) {
   const { registry, route, go } = useKeystone();
   const mod = shortcutKey();
 
@@ -95,6 +138,7 @@ function Screens({ onGo }: { onGo?: () => void }) {
     <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
       {registry.modules.map((m, i) => {
         const active = route === m.id;
+        const changed = fresh.has(m.id);
 
         return (
           <li key={m.id}>
@@ -102,7 +146,7 @@ function Screens({ onGo }: { onGo?: () => void }) {
               type="button"
               onClick={() => { go(m.id); onGo?.(); }}
               aria-current={active ? 'page' : undefined}
-              aria-label={m.soon ? `${m.title}, coming soon` : undefined}
+              aria-label={m.soon ? `${m.title}, coming soon` : changed ? `${m.title}, changed by someone else` : undefined}
               title={i < 10 ? `${m.title} (${mod}${i})` : m.title}
               className={cn(
                 'relative flex h-[38px] w-full items-center gap-2.5 rounded-control px-2.5 text-left text-[13px] font-semibold',
@@ -112,6 +156,7 @@ function Screens({ onGo }: { onGo?: () => void }) {
               <KeyBadge n={i} active={active} />
               <span className="truncate">{m.title}</span>
               {m.soon && <span aria-hidden="true" className="ml-auto shrink-0 rounded-pill border border-line px-1.5 text-[10px] leading-4 font-semibold text-ink-3">Soon</span>}
+              {changed && !m.soon && <span aria-hidden="true" className="ml-auto size-[7px] shrink-0 rounded-full bg-gold-bright" />}
               {/* The one selection mark: a 1px gold line on the rail's edge. */}
               <span aria-hidden="true" className={cn('absolute top-1.5 -right-3.5 bottom-1.5 w-px bg-gold transition-opacity duration-150', active ? 'opacity-100' : 'opacity-0')} />
             </button>
@@ -123,18 +168,18 @@ function Screens({ onGo }: { onGo?: () => void }) {
 }
 
 /** The rail, from 768px wide: the brand, the screens and the foot. */
-function Rail() {
+function Rail({ fresh }: { fresh: ReadonlySet<string> }) {
   return (
     <nav aria-label="Keystone" className="hidden h-dvh w-[var(--size-rail)] shrink-0 flex-col gap-6 border-r border-line bg-bg py-5 pr-3.5 pl-4 md:flex">
       <Brand />
-      <Screens />
+      <Screens fresh={fresh} />
       <RailFoot />
     </nav>
   );
 }
 
 /** Narrower than 768px (a phone): a bar with the brand, and the rail behind a menu button. */
-function TopBar() {
+function TopBar({ fresh }: { fresh: ReadonlySet<string> }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -147,7 +192,7 @@ function TopBar() {
       </Button>
       <Sheet open={open} onOpenChange={setOpen} title="Keystone">
         <nav aria-label="Keystone" className="flex flex-col gap-5">
-          <Screens onGo={close} />
+          <Screens fresh={fresh} onGo={close} />
           <RailFoot />
         </nav>
       </Sheet>
@@ -158,6 +203,7 @@ function TopBar() {
 export function Shell() {
   const { registry, route, go } = useKeystone();
   const active = registry.modules.find((m) => m.id === route) ?? registry.modules[0];
+  const fresh = useArrivals();
 
   // ⌘/Ctrl + number opens the module at that rail position.
   useEffect(() => {
@@ -182,8 +228,8 @@ export function Shell() {
   return (
     // Installed on a phone or tablet, Keystone runs under the status bar and round the notch: it keeps clear of them.
     <div className="flex h-dvh flex-col overflow-hidden pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] md:flex-row">
-      <TopBar />
-      <Rail />
+      <TopBar fresh={fresh} />
+      <Rail fresh={fresh} />
       <main id="main" className="min-w-0 flex-1 overflow-y-auto">
         {active ? (
           <div key={active.id} className="mx-auto max-w-[var(--size-content)] px-4 pt-5 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-7 motion-safe:animate-[fade-in_180ms_ease-out]">
