@@ -60,9 +60,10 @@ function useShrinkToFit(box: RefObject<HTMLElement>, content: RefObject<HTMLElem
 /**
  * The paper itself, always laid out at its layout's width, in the frame that scales its preview. Where the column is
  * narrower, the preview is scaled down to fit (a transform on a wrapper, so the paper, which Print and Export PDF
- * take, stays at full size). The paper carries its layout's marks, so the two find the layout again.
+ * take, stays at full size). The paper carries its layout's marks, so the two find the layout again. Its frame marks
+ * the paper's edge on screen only: it never prints, nor is it drawn in a PDF.
  */
-const Paper = forwardRef<HTMLElement, { children: ReactNode; label: string; layout: PaperLayout; className: string }>(function Paper({ children, label, layout, className }, ref) {
+const Paper = forwardRef<HTMLElement, { children: ReactNode; label: string; layout: PaperLayout; className?: string }>(function Paper({ children, label, layout, className = '' }, ref) {
   const frame = useRef<HTMLDivElement>(null);
   // Holds only the paper, so its size is the paper's; a transform leaves that size unscaled.
   const scaler = useRef<HTMLDivElement>(null);
@@ -78,7 +79,7 @@ const Paper = forwardRef<HTMLElement, { children: ReactNode; label: string; layo
           aria-label={label}
           // As tall as what it holds: a short paper (a statement with no charges yet) leaves no blank band at its foot.
           style={{ width: layout.width }}
-          className={`border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink ${className}`}
+          className={`border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink ${className}`}
         >
           {children}
         </article>
@@ -105,11 +106,11 @@ export const LandscapePage = forwardRef<HTMLElement, { children: ReactNode; labe
 
 /**
  * A document twice on one A4 sheet, a copy on each half, to be cut apart along the dashed line across the middle
- * (`TWO_UP`). Its frame only marks the paper's edge on screen; it never prints.
+ * (`TWO_UP`).
  */
 export const TwoUp = forwardRef<HTMLElement, { children: ReactNode; label: string }>(function TwoUp({ children, label }, ref) {
   return (
-    <Paper ref={ref} label={label} layout={TWO_UP} className="print:border-0">
+    <Paper ref={ref} label={label} layout={TWO_UP}>
       <Copy>{children}</Copy>
       <Copy second>{children}</Copy>
     </Paper>

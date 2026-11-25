@@ -7,7 +7,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
   ],
   "paper": "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0" data-print-root="">
+<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink " data-print-root="">
 <div data-sheet-copy="" style="min-height: 561px; padding: 6mm; height: 561px;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
@@ -259,7 +259,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 exports[`the check voucher on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink ">
 <div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>
@@ -510,7 +510,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 exports[`the check voucher on paper > prints a voucher with nothing filled in yet the same way > blank 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink print:border-0">
+<article data-ui="document" data-print-fit="halves" aria-label="Check voucher CV-2026-0139" style="width: 793px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink ">
 <div data-sheet-copy="" style="min-height: 561px; padding: 6mm;" class="flex flex-col ">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Check Voucher</p>

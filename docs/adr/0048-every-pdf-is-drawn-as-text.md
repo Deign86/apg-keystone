@@ -27,8 +27,8 @@ Status: Accepted · Date: 2026-11-25
   - **text as text:** each line where the browser set it, in the font the page uses for it, embedded as only the
     glyphs used, with its Unicode, so it can be selected, searched and edited. Each line is spaced so it is exactly
     as wide as on screen, and each character takes the first font of its stack that has it, as the browser picks.
-  - **backgrounds and borders as shapes:** the backgrounds first, then the borders, the heaviest last, as a table's
-    collapsed borders let the heavier win where two meet.
+  - **backgrounds as shapes, borders as lines:** the backgrounds first, then the borders, each line drawn once (see
+    below).
   - **only real pictures as images:** the logo and signatures, at 300 dpi for the size they take, fitted and placed
     as the page fits them (`object-fit`, `object-position`).
 - **Pages and placement follow docs/adr/0043:** an upright paper runs onto as many A4 pages as it needs at full width,
@@ -52,3 +52,24 @@ Status: Accepted · Date: 2026-11-25
   in Print but not in a PDF drawn this way. The e2e checks and a look at the PDF will show it.
 - Orbitron is a variable font and embeds at its lightest weight; a heavier title is drawn with an outline as thick as
   the difference.
+
+## Changed 2026-11-25: every line once, and no frame
+
+The owner, of a statement's check schedule saved as a PDF: "lines are not clean and there should be no black borders
+around the pdf".
+
+- **Each border was a filled band of its own box,** at the fraction of a pixel the browser laid it at. A reader drew
+  some of those bands across one pixel and others across two, so rules of one kind came out in two weights, and a
+  column's rule was in pieces, one a row.
+- **Now each border is a line, drawn once, as the browser paints it** (`ruleOf`, `drawnOnce`):
+  - a band just inside its box, or, where a table's borders collapse, centred on the edge two cells share;
+  - on whole px of the paper and at least one thick, as the browser puts borders on the screen's pixels;
+  - where two borders fall on one line (two cells' shared edge, a row's and its table's), the one painted last wins
+    where they overlap, as a table's collapsed borders resolve; pieces that look the same and touch are joined, so a
+    column's rule runs down its table as one line;
+  - stroked in its exact colour: jsPDF rounds a colour given as numbers to two places, #111111 to #121212.
+- **The paper's own frame is not drawn, nor printed** (`print:border-0` on every paper). It marks the paper's edge on
+  screen only; the two-up voucher already left it out. A table's own outline, in the paper's ink, stays as on screen.
+- `e2e/papers.e2e.ts` reads every line of every paper's PDF: no two on one line overlap, and none runs down the paper's
+  sides. On the statement of account, the check schedule's rules are in exactly the paper's three colours, each ¾ pt
+  (1 px), and each column's rule one line down the page.

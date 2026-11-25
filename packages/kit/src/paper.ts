@@ -68,10 +68,9 @@ export interface PaperLayout {
   unfit?(paper: HTMLElement): void;
   /**
    * The PDF page: which way up, and its margin in points. A paper that flows runs onto as many pages as it needs, at the
-   * page's width, as it prints; any other is fitted to one page. A frameless one leaves out the frame that marks its
-   * edge on screen.
+   * page's width, as it prints; any other is fitted to one page.
    */
-  pdf: { orientation: 'portrait' | 'landscape'; margin: number; flow?: boolean; frameless?: boolean };
+  pdf: { orientation: 'portrait' | 'landscape'; margin: number; flow?: boolean };
 }
 
 /** An upright A4 page inside the print margins: the paper as tall as what it holds, on as many pages as that takes. */
@@ -133,9 +132,7 @@ export const TWO_UP: PaperLayout = {
       copy.style.height = '';
     }
   },
-  // The frame marks the paper's edge on screen only: drawn, it would be two lines down the page's edges, and a box
-  // around a sheet that is cut in half.
-  pdf: { orientation: 'portrait', margin: 0, frameless: true },
+  pdf: { orientation: 'portrait', margin: 0 },
 };
 
 const LAYOUTS = [TWO_UP, LANDSCAPE_PAGE, UPRIGHT];

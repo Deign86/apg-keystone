@@ -55,6 +55,35 @@ function expectFilled(pages: Awaited<ReturnType<typeof readPdf>>, way: 'portrait
 
     for (const image of page.images) expect(image.w * image.h).toBeLessThan((page.w * page.h) / 10);
   }
+
+  expectRuledOnce(pages);
+}
+
+type Line = Awaited<ReturnType<typeof readPdf>>[number]['lines'][number];
+
+const runsDown = (l: Line) => Math.abs(l.x1 - l.x0) < 0.01;
+
+/**
+ * The paper's borders as lines, each drawn once, as the page shows them: no two lines on one line overlap (a shared
+ * edge drawn by both cells came out heavier, and a rule in pieces uneven), and no frame runs down the paper's sides (it
+ * marks the paper's edge on screen only).
+ */
+function expectRuledOnce(pages: Awaited<ReturnType<typeof readPdf>>) {
+  for (const page of pages) {
+    const { lines, drawn } = page;
+    const along = (l: Line) => (runsDown(l) ? [l.y0, l.y1] : [l.x0, l.x1]);
+    const at = (l: Line) => (runsDown(l) ? l.x0 : l.y0);
+
+    const twice = lines.flatMap((a, i) => lines.slice(i + 1).flatMap((b) => {
+      const [[a0, a1], [b0, b1]] = [along(a), along(b)];
+
+      return runsDown(a) === runsDown(b) && Math.abs(at(a) - at(b)) < 0.01 && Math.min(a1, b1) - Math.max(a0, b0) > 0.01 ? [[a, b]] : [];
+    }));
+
+    expect(lines.length).toBeGreaterThan(0);
+    expect(twice).toEqual([]);
+    expect(lines.filter((l) => runsDown(l) && (Math.abs(l.x0 - drawn.x0) < 1 || Math.abs(l.x0 - drawn.x1) < 1))).toEqual([]);
+  }
 }
 
 /** Laid out as Print lays it out: alone on the page, centred with nothing around it pushing it aside, at its full width. */
@@ -83,6 +112,15 @@ test('saves and prints a long statement of account across every A4 page it runs 
   expect(words(pages)).toContain('₱212,640.00');
   // The second page's checks are text too: the last one's number, after the cut.
   expect(pages[1].text).toContain('6000325772');
+  // Its ruled table as the page rules it: the paper's ink round it, its light grey between columns, its pale grey between
+  // rows, each 1 px (¾ pt), in exactly those colours; each column's rule one line down the page, not a piece a row.
+  const rules = pages[1].lines;
+  const columns = rules.filter((l) => runsDown(l) && l.color === '#9a9a9a');
+
+  expect([...new Set(rules.map((l) => l.color))].sort()).toEqual(['#111111', '#9a9a9a', '#e3e3e3']);
+  expect(new Set(rules.map((l) => l.width.toFixed(2)))).toEqual(new Set(['0.75']));
+  expect(columns).toHaveLength(5);
+  expect(new Set(columns.map((l) => `${l.y0.toFixed(1)} ${l.y1.toFixed(1)}`)).size).toBe(1);
   await expectPrintedAlone(browser, 'Statement of account');
 });
 

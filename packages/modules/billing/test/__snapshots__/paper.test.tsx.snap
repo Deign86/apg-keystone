@@ -5,7 +5,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
   "page": [],
   "paper": "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010097-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
+<article data-ui="document" aria-label="Billing statement 010097-2026" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7" data-print-root="">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Billing Statement</p>
 <div class="flex items-center justify-between gap-4">
@@ -123,7 +123,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 exports[`the billing statement on paper > is laid out, and prints, exactly as it has > on screen 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010097-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" aria-label="Billing statement 010097-2026" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Billing Statement</p>
 <div class="flex items-center justify-between gap-4">
@@ -240,7 +240,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 exports[`the billing statement on paper > lays out every statement in the sample the same way, with and without tax, and one with no charges > 010098-2026 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010098-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" aria-label="Billing statement 010098-2026" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Billing Statement</p>
 <div class="flex items-center justify-between gap-4">
@@ -349,7 +349,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 exports[`the billing statement on paper > lays out every statement in the sample the same way, with and without tax, and one with no charges > 010099-2026 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement 010099-2026" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" aria-label="Billing statement 010099-2026" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Billing Statement</p>
 <div class="flex items-center justify-between gap-4">
@@ -462,7 +462,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 exports[`the billing statement on paper > lays out every statement in the sample the same way, with and without tax, and one with no charges > blank 1`] = `
 "<div data-sheet-frame="" class="overflow-hidden">
 <div data-sheet-scale="" class="mx-auto w-fit origin-top-left">
-<article data-ui="document" aria-label="Billing statement blank" style="width: 703px;" class="border border-line bg-paper font-body text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
+<article data-ui="document" aria-label="Billing statement blank" style="width: 703px;" class="border border-line bg-paper font-body print:border-0 text-[12.5px] leading-snug text-paper-ink px-[30px] py-7">
 <header class="mb-3.5 border-b-2 border-paper-gold pb-2.5">
 <p class="m-0 mb-2 text-center font-display text-[17px] font-semibold tracking-[0.16em] text-paper-gold uppercase">Billing Statement</p>
 <div class="flex items-center justify-between gap-4">

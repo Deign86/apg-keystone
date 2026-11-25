@@ -194,9 +194,13 @@ export function pdfPages(pdf: Buffer) {
   return [...pdf.toString('latin1').matchAll(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/g)].map(([, w, h]) => ({ w: Number(w), h: Number(h) }));
 }
 
+/** A colour as a PDF reader reads it (pdf.js gives its red, green and blue, a grey's too), as `#rrggbb`. */
+const hex = (rgb: ArrayLike<number>) => `#${Array.from(rgb, (v) => v.toString(16).padStart(2, '0')).join('')}`;
+
 /**
  * A saved PDF as a PDF reader sees it (pdf.js): each page's size, its text as text, the box everything drawn on it
- * spans (its lines, boxes and bands; the page's clipping left out), and each image's size there, in points.
+ * spans (its lines, boxes and bands; the page's clipping left out), each image's size there, in points; each straight
+ * line stroked on it (where it runs, how thick, its colour), and the colours of the shapes filled on it.
  */
 export async function readPdf(pdf: Buffer) {
   const { getDocument, OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -211,8 +215,11 @@ export async function readPdf(pdf: Buffer) {
     const { fnArray, argsArray } = await page.getOperatorList();
     const images: { w: number; h: number }[] = [];
     const drawn = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-    // The transform and the clip in force, kept per saved graphics state as a reader keeps them.
-    let state = { ctm: [1, 0, 0, 1, 0, 0], clip: { x0: -Infinity, y0: -Infinity, x1: Infinity, y1: Infinity } };
+    const lines: { x0: number; y0: number; x1: number; y1: number; width: number; color: string }[] = [];
+    const fills = new Set<string>();
+    // The transform, the clip, the pens' colours and the line's width in force, kept per saved graphics state as a
+    // reader keeps them.
+    let state = { ctm: [1, 0, 0, 1, 0, 0], clip: { x0: -Infinity, y0: -Infinity, x1: Infinity, y1: Infinity }, stroke: '#000000', fill: '#000000', width: 1 };
     const saved: (typeof state)[] = [];
 
     for (let i = 0; i < fnArray.length; i++) {
@@ -225,6 +232,12 @@ export async function readPdf(pdf: Buffer) {
         const [a, b, c, d, e, f] = args;
 
         state = { ...state, ctm: [m[0] * a + m[2] * b, m[1] * a + m[3] * b, m[0] * c + m[2] * d, m[1] * c + m[3] * d, m[0] * e + m[2] * f + m[4], m[1] * e + m[3] * f + m[5]] };
+      } else if (fn === OPS.setStrokeRGBColor) {
+        state = { ...state, stroke: hex(args) };
+      } else if (fn === OPS.setFillRGBColor) {
+        state = { ...state, fill: hex(args) };
+      } else if (fn === OPS.setLineWidth) {
+        state = { ...state, width: args[0] };
       } else if (fn === OPS.paintImageXObject) {
         images.push({ w: Math.abs(m[0]), h: Math.abs(m[3]) });
       } else if (fn === OPS.constructPath) {
@@ -239,8 +252,14 @@ export async function readPdf(pdf: Buffer) {
           y1: Math.min(clip.y1, Math.max(m[3] * y0, m[3] * y1) + m[5]),
         };
 
+        const next = fnArray[i + 1];
+
+        if (next === OPS.stroke && box.x1 >= box.x0 && box.y1 >= box.y0) lines.push({ ...box, width: state.width * Math.abs(m[0]), color: state.stroke });
+
+        if (next === OPS.fill || next === OPS.eoFill) fills.add(state.fill);
+
         // A path that sets the clip draws nothing itself: what follows is drawn inside it.
-        if (fnArray[i + 1] === OPS.clip || fnArray[i + 1] === OPS.eoClip) state = { ...state, clip: box };
+        if (next === OPS.clip || next === OPS.eoClip) state = { ...state, clip: box };
         else if (box.x1 > box.x0 && box.y1 > box.y0) {
           drawn.x0 = Math.min(drawn.x0, box.x0);
           drawn.x1 = Math.max(drawn.x1, box.x1);
@@ -250,7 +269,7 @@ export async function readPdf(pdf: Buffer) {
       }
     }
 
-    pages.push({ w, h, text, images, drawn });
+    pages.push({ w, h, text, images, drawn, lines, fills });
   }
 
   return pages;
