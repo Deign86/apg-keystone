@@ -68,7 +68,8 @@ const mmddyy = (date: ISODate) => `${date.slice(5, 7)}${date.slice(8, 10)}${date
 
 /**
  * The invoice number for a statement dated `date`: 888 and the date as month, day and year (888112426). A second
- * statement that day is 888112426-2, a third -3, and on. Older numbers (888-112426, 010100-2026) keep theirs.
+ * statement that day is 8881124262, a third 8881124263, and on, the count straight after the date with no dash: always
+ * longer than a date's number, so never one. Older numbers (888-112426, 010100-2026) keep theirs.
  */
 export function nextStatementNo(s: TerminalState, date: ISODate): string {
   const first = `${SERIES}${mmddyy(date)}`;
@@ -77,9 +78,9 @@ export function nextStatementNo(s: TerminalState, date: ISODate): string {
   if (!used.has(first)) return first;
   let n = 2;
 
-  while (used.has(`${first}-${n}`)) n++;
+  while (used.has(`${first}${n}`)) n++;
 
-  return `${first}-${n}`;
+  return `${first}${n}`;
 }
 
 /**
