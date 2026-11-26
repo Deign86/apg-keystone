@@ -11,6 +11,7 @@ import { homeModule } from '@keystone/module-home';
 import { overviewModule } from '@keystone/module-overview';
 import { payrollModule } from '@keystone/module-payroll';
 import { profileModule } from '@keystone/module-profile';
+import { receiptsModule } from '@keystone/module-receipts';
 import { soaModule } from '@keystone/module-soa';
 import { timekeepingModule } from '@keystone/module-timekeeping';
 import { vouchersModule } from '@keystone/module-vouchers';
@@ -21,7 +22,7 @@ import { vouchersModule } from '@keystone/module-vouchers';
  * tile, Overview figure, finding, waiting items, log filter and services go with it.
  */
 export const builtInModules: ModuleDef[] = [
-  homeModule, overviewModule, vouchersModule, fundsModule, billingModule, soaModule, directoryModule, activityModule, timekeepingModule,
+  homeModule, overviewModule, vouchersModule, fundsModule, billingModule, soaModule, receiptsModule, directoryModule, activityModule, timekeepingModule,
   payrollModule, profileModule, accountsModule, dataModule, banksModule, companyModule,
 ];
 
@@ -34,7 +35,7 @@ export const builtInModules: ModuleDef[] = [
  * built in (docs/adr/0018). The others show behind "Coming soon" except in a beta build (docs/adr/0017, 0019). To release
  * one, add its id here.
  */
-export const RELEASED = ['home', 'vouchers', 'funds', 'billing', 'soa', 'directory', 'profile', 'accounts', 'banks', 'company'];
+export const RELEASED = ['home', 'vouchers', 'funds', 'billing', 'soa', 'receipts', 'directory', 'profile', 'accounts', 'banks', 'company'];
 
 /** The installed screens as this build shows them: every one in a beta build, otherwise the unreleased coming soon. */
 export function shippedModules(beta: boolean): ModuleDef[] {

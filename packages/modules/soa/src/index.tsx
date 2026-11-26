@@ -1,10 +1,10 @@
-import { Button, CellInput, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column, type Refusal } from '@keystone/ui';
-import { useCallback, useRef, useState } from 'react';
+import { EarlierPicks, Button, CellInput, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, TextArea, TextInput, useConfirm, type Column, type Refusal } from '@keystone/ui';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { companyOf, count, peso, shortDate } from '@keystone/core';
 import { Fills, FormCard, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
   dueOnSigning, EWT_RATE, ID, monthlyRent, monthName, newSoa, pdcStart, pdcTotal, removeSoa, saveSoa, soaDraftBlank, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf,
-  statementsNewestFirst, statementsOf, TAG, VAT_RATE, withCheckNumber, type Soa, type SoaDetail, type SoaDraft,
+  statementsNewestFirst, statementsOf, TAG, VAT_RATE, withCheckNumber, type Soa, type SoaDetail, type SoaDraft, earlierSoaEntries, withSoaClient,
 } from './rules';
 import { SoaPaper } from './SoaPaper';
 
@@ -20,6 +20,8 @@ function Statements() {
   const live = soaOf(draft);
   const rent = monthlyRent(live);
   const set = (patch: Partial<SoaDraft>) => setDraft({ ...draft, ...patch });
+  // Repeated details (docs/adr/0053): what the statements saved before offer the form.
+  const offered = useMemo(() => earlierSoaEntries(state), [state]);
   const start = pdcStart({ ...live, pdcFirst: '' });
   const detail = (i: number, patch: Partial<SoaDetail>) => set({ details: draft.details.map((d, j) => (j === i ? { ...d, ...patch } : d)) });
 
@@ -98,12 +100,12 @@ function Statements() {
               </Fills>
               <Fills part="date"><Field label="Prepared as of"><TextInput type="date" value={draft.date} onChange={(date) => set({ date })} /></Field></Fills>
             </FieldRow>
-            <Fills part="client"><Field name="client" label="Client"><TextInput capitalize placeholder="The lessee, as it prints" value={draft.client} onChange={(client) => set({ client })} /></Field></Fills>
-            <Fills part="property"><Field name="property" label="Property address"><TextInput value={draft.property} onChange={(property) => set({ property })} /></Field></Fills>
+            <Fills part="client"><Field name="client" label="Client"><TextInput capitalize placeholder="The lessee, as it prints" suggestions={offered.clients} value={draft.client} onChange={(client) => setDraft(withSoaClient(state, draft, client))} /></Field></Fills>
+            <Fills part="property"><Field name="property" label="Property address" hint="A client with a statement before brings its property, payee, lease terms, bank and rates."><TextInput suggestions={offered.properties} value={draft.property} onChange={(property) => set({ property })} /></Field></Fills>
             <Fills part="payee">
               <FieldRow>
-                <Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize value={draft.payee} onChange={(payee) => set({ payee })} /></Field>
-                <Field label="Payee’s title" hint="As it prints, e.g. Lessor."><TextInput placeholder="Payee" value={draft.payeeLabel} onChange={(payeeLabel) => set({ payeeLabel })} /></Field>
+                <Field label="Payee" hint="Who the checks are made out to."><TextInput capitalize suggestions={offered.payees} value={draft.payee} onChange={(payee) => set({ payee })} /></Field>
+                <Field label="Payee’s title" hint="As it prints, e.g. Lessor."><TextInput placeholder="Payee" suggestions={offered.payeeLabels} value={draft.payeeLabel} onChange={(payeeLabel) => set({ payeeLabel })} /></Field>
               </FieldRow>
             </Fills>
             <div className="flex flex-col gap-2">
@@ -180,11 +182,14 @@ function Statements() {
                 <Field name="pdcDay" label="Checks dated on" hint="Day of the rent month it pays."><TextInput figures align="right" value={draft.pdcDay} onChange={(pdcDay) => set({ pdcDay })} /></Field>
               </FieldRow>
               <FieldRow>
-                <Field label="Bank"><TextInput value={draft.bank} onChange={(bank) => set({ bank })} /></Field>
+                <Field label="Bank"><TextInput suggestions={offered.banks} value={draft.bank} onChange={(bank) => set({ bank })} /></Field>
                 <Field label="First check number" hint="The rest follow it. Click a check number in the preview to change it."><TextInput figures value={draft.firstCheck} onChange={(firstCheck) => set({ firstCheck })} /></Field>
               </FieldRow>
             </Fills>
-            <Fills part="notes"><Field label="Notes"><TextArea rows={4} value={draft.notes} onChange={(notes) => set({ notes })} /></Field></Fills>
+            <Fills part="notes">
+              <Field label="Notes"><TextArea rows={4} value={draft.notes} onChange={(notes) => set({ notes })} /></Field>
+              <EarlierPicks values={offered.notes} value={draft.notes} onPick={(notes) => set({ notes })} />
+            </Fills>
           </FormCard>
         }
         preview={<SoaPaper ref={paper} soa={{ ...live, no: draft.editing ?? live.no }} company={companyOf(state)} onCheckNumber={(no, check) => setDraft(withCheckNumber(draft, no, check))} />}

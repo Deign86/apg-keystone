@@ -3,7 +3,7 @@ import { refusalOf } from '@keystone/kit/testing';
 import { CLOUD_LAYOUT, lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
   dataOf, decideRefusal, decideRequest, decisionLine, deleteRefusal, deleteRequest, deleteRequests, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
-  nextRequestNo, paidLine, paymentStatus, payRequest, RECEIPTS_MOST, receiptsLock, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transactionState, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
+  nextRequestNo, earlierPurposes, rememberedExpenses, paidLine, paymentStatus, payRequest, RECEIPTS_MOST, receiptsLock, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transactionState, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -74,7 +74,7 @@ describe('filing a request', () => {
     const r = fileRequest(state(), { ...ask(), requester: 'Someone else' }, at(hr));
     expect(r.record).toEqual({
       no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Christmas party: venue deposit', lines: [{ desc: 'Venue deposit', amt: 48000 }], amount: 48000,
-      pay: 'check', payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
+      pay: 'check', payee: 'V-002', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval', checked: 'Accounting',
     });
     expect(r.message).toBe('RF-2026-0001 sent to the CEO for approval.');
     expect(r.state.log[0]).toEqual({ when: '2026-11-02 10:00', mod: 'RF', text: 'RF-2026-0001 filed by Ana Cruz.', by: 'Ana Cruz' });
@@ -126,7 +126,7 @@ describe('a request paid by transfer', () => {
     expect(r.record).toEqual({
       no: 'RF-2026-0001', date: '2026-11-02', purpose: 'Revolving fund, Nov 1 to 15',
       lines: [{ desc: 'Pantry groceries', amt: 3250.75 }, { desc: 'Courier for payroll documents', amt: 480 }], amount: 3730.75,
-      pay: 'transfer', account: fund, payee: '', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval',
+      pay: 'transfer', account: fund, payee: '', settle: 'ASAP', requester: 'Ana Cruz', uid: 'hr-1', status: 'For Approval', checked: 'Accounting',
     });
     // The log, which everyone reads, still names only the request and who filed it.
     expect(r.state.log[0].text).toBe('RF-2026-0001 filed by Ana Cruz.');
@@ -281,6 +281,28 @@ describe('the transaction state and the payment status', () => {
     expect(REQUEST_STATUSES).toEqual(['For Approval', 'Approved', 'Paid', 'Declined', 'Withdrawn']);
     expect(REQUEST_STATUSES.map(transactionState)).toEqual(['Pending', 'Processing', 'Processing', 'Declined', 'Withdrawn']);
     expect(REQUEST_STATUSES.map((s) => paymentStatus(s)?.label ?? null)).toEqual(['Pending', 'Pending', 'Paid', null, null]);
+  });
+});
+
+describe('repeated details on a request (docs/adr/0053)', () => {
+  it('offers each person their own earlier purposes and expenses, with their amounts', () => {
+    const s = filed();
+    expect(earlierPurposes(s, at(hr))).toEqual(['Christmas party: venue deposit']);
+    expect(rememberedExpenses(s, at(hr))).toEqual([{ desc: 'Venue deposit', qty: '1', amount: '48000' }]);
+    // IT sees only its own.
+    expect(earlierPurposes(s, at(it2))).toEqual(['Replacement laptop charger']);
+  });
+});
+
+describe('who checks a request', () => {
+  it('is picked on the form, kept, and starts each next request as that person\'s last, or Company Details\' checker', () => {
+    expect(newRequest(state(), at(hr)).checked).toBe('Accounting');
+    const r = fileRequest(state(), { ...ask(), checked: '  Liza Ramos ' }, at(hr));
+    expect(r.record.checked).toBe('Liza Ramos');
+    expect(requestDraftOf(r.record).checked).toBe('Liza Ramos');
+    expect(newRequest(r.state, at(hr)).checked).toBe('Liza Ramos');
+    // Left blank, the request keeps none.
+    expect(fileRequest(state(), { ...ask(), checked: ' ' }, at(hr)).record).not.toHaveProperty('checked');
   });
 });
 

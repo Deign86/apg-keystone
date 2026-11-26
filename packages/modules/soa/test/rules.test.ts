@@ -4,7 +4,7 @@ import { emptyState, moduleData, percent, toCentavos, withModuleData, type Ctx }
 import {
   addMonths, baseRentInYear, depositLines, dueOnSigning, leaseSchedule, leaseTermsOf, leaseYearOf, monthlyRent, monthName, newSoa,
   pdcSchedule, pdcStart, pdcTotal, removeSoa, rentOn, saveSoa, soaDraftFrom, soaDraftOf, soaDraftTitle, soaLine, soaOf, statementsNewestFirst, statementsOf,
-  topDetails, withCheckNumber, type SoaDraft,
+  topDetails, withCheckNumber, type SoaDraft, earlierSoaEntries, withSoaClient,
 } from '../src/rules';
 import { soaModule } from '../src';
 
@@ -372,5 +372,17 @@ describe('a saved draft of a statement of account (docs/adr/0041)', () => {
   it('never carries which saved draft it came from into the statement saved', () => {
     expect(soaOf({ ...draft(), savedDraft: 'ana-1-soa-1' })).not.toHaveProperty('savedDraft');
     expect(saveSoa(emptyState(), { ...draft(), savedDraft: 'ana-1-soa-1' }, ctx).record).not.toHaveProperty('savedDraft');
+  });
+});
+
+describe('repeated details on a statement of account (docs/adr/0053)', () => {
+  it('brings a client\'s last statement into what is still blank, and offers what was typed before', () => {
+    const s = saveSoa(emptyState(), draft({ bank: 'BPI', payeeLabel: 'Lessor', notes: 'Checks payable to Juan Dela Cruz.' }), ctx).state;
+    const next = withSoaClient(s, newSoa(s, ctx), 'northwind  retail corp.');
+    expect(next).toMatchObject({ client: 'northwind  retail corp.', property: 'Unit 5, Ortigas Avenue, Pasig', payee: 'Juan Dela Cruz', payeeLabel: 'Lessor', bank: 'BPI' });
+    expect(next.sqm).toBe(draft().sqm);
+    expect(withSoaClient(s, { ...newSoa(s, ctx), property: 'Typed' }, 'Northwind Retail Corp.').property).toBe('Typed');
+    expect(withSoaClient(s, newSoa(s, ctx), 'Someone New')).toMatchObject({ property: '', payee: '', bank: '' });
+    expect(earlierSoaEntries(s)).toMatchObject({ clients: ['Northwind Retail Corp.'], banks: ['BPI'], notes: ['Checks payable to Juan Dela Cruz.'] });
   });
 });

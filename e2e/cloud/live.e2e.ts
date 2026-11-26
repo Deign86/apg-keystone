@@ -19,8 +19,8 @@ async function anaSavesVoucher(page: Page, payee: string, amount: string) {
   await page.getByRole('tab', { name: /^Voucher entry/ }).click();
   const form = page.getByRole('form', { name: 'New voucher' });
 
-  await form.getByRole('textbox', { name: 'Payee' }).fill(payee);
-  await form.getByRole('textbox', { name: 'Line 1 description' }).fill('Water bill');
+  await form.getByRole('combobox', { name: 'Payee' }).fill(payee);
+  await form.getByRole('combobox', { name: 'Line 1 description' }).fill('Water bill');
   await form.getByRole('textbox', { name: 'Line 1 amount' }).fill(amount);
   await form.getByRole('button', { name: 'Save and route for approval' }).click();
 }
@@ -56,8 +56,8 @@ test('a voucher one person saves appears on the other\'s Keystone as it is saved
     await screen.getByRole('button', 'New voucher').tap();
     const form = screen.getByRole('form', 'New voucher');
 
-    await form.getByRole('textbox', 'Payee').fill('Manila Electric Company');
-    await form.getByRole('textbox', 'Line 1 description').fill('Electricity for November');
+    await form.getByRole('combobox', 'Payee').fill('Manila Electric Company');
+    await form.getByRole('combobox', 'Line 1 description').fill('Electricity for November');
     await form.getByRole('textbox', 'Line 1 amount').fill('4200');
     await form.getByRole('button', 'Save and approve').tap();
     await expect(screen.getByRole('dialog', '888002 saved and approved.')).toBeVisible();
@@ -88,7 +88,7 @@ test('a voucher open in a form that someone else changes stays as typed, and the
   await screen.getByRole('table', 'Voucher register').getByRole('cell', 'CV-2026-0141').tap();
   const form = screen.getByRole('form', 'Editing CV-2026-0141');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Retainer for November, revised');
+  await form.getByRole('combobox', 'Line 1 description').fill('Retainer for November, revised');
 
   const anas = await anotherComputer(browser, ana);
 
@@ -104,7 +104,7 @@ test('a voucher open in a form that someone else changes stays as typed, and the
 
     // Mark's form says so, and still holds what he typed.
     await expect(form.getByText(/^Someone else saved a change to CV-2026-0141 while it was open here\./)).toBeVisible({ timeout: 15_000 });
-    await expect(form.getByRole('textbox', 'Line 1 description')).toHaveValue('Retainer for November, revised');
+    await expect(form.getByRole('combobox', 'Line 1 description')).toHaveValue('Retainer for November, revised');
     await expect(form.getByRole('textbox', 'Check No.')).not.toHaveValue('0001190');
   } finally {
     await anas.close();
@@ -134,8 +134,8 @@ test('a computer that was offline shows what was saved meanwhile once it is back
     await screen.getByRole('tab', /^Voucher entry/).tap();
     const form = screen.getByRole('form', 'New voucher');
 
-    await form.getByRole('textbox', 'Payee').fill('Manila Water Company');
-    await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+    await form.getByRole('combobox', 'Payee').fill('Manila Water Company');
+    await form.getByRole('combobox', 'Line 1 description').fill('Water bill');
     await form.getByRole('textbox', 'Line 1 amount').fill('980');
     await form.getByRole('button', 'Save and approve').tap();
     await expect.poll(() => record('cv', '888001'), { timeout: 10_000 }).toMatchObject({ status: 'Approved' });

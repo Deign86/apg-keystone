@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { DASH, amountInWords, companyOf, count, peso, SERVICES, shortDate, sumCentavos, type Voucher } from '@keystone/core';
 import {
   approvesOnSave, awaitingApproval, payeeFoldLabel, payeeKey, canMoveTo, caps, clearsOn, clearVoided, copyVoucher, deleteVoucher, deleteVouchers, draftNo, freesNumber, newVoucher, payeeOf, returnsForApproval, saveVoucher, setVoucherStatus, setVouchersStatus, voucherDraftBlank, voucherDraftFrom, voucherDraftOf, voucherDrafts, voucherDraftTitle,
-  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo,
+  voucherFigure, voucherFinding, voucherLine, voucherLock, voucherOf, voucherRegister, VOID_KEPT_DAYS, VOUCHER_STATUSES, voucherTone, voucherTotal, voucherWaiting, type VoucherStatus, ID, TAG, refersTo, knownPayees, rememberedParticulars, withPayee,
 } from './rules';
 import { BankAccountPicker, Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { VoucherPaper } from './VoucherPaper';
@@ -43,6 +43,9 @@ function Vouchers() {
 
   // A voucher released or void shows, prints and exports exactly as it was saved.
   const shown = useMemo(() => (locked && editing ? voucherDraftOf(state, editing) : draft), [locked, editing, draft, state]);
+  // Repeated details (docs/adr/0053): payees paid before, and particulars saved before.
+  const payeeNames = useMemo(() => knownPayees(state).map((p) => p.name), [state]);
+  const particulars = useMemo(() => rememberedParticulars(state), [state]);
   const live = locked && editing ? editing : voucherOf(draft);
   // Saving a change to an approved voucher, beyond its check, sends it back for approval unless the CEO saves it.
   const reapproves = returnsForApproval(state, draft, ctx);
@@ -221,7 +224,7 @@ function Vouchers() {
                         </Fills>
                         <Fills part="date"><Field label="Date"><TextInput type="date" value={shown.date} onChange={(date) => setDraft({ ...draft, date })} /></Field></Fills>
                       </FieldRow>
-                      <Fills part="payee"><Field name="payee" label="Payee"><TextInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee: caps(payee) })} /></Field></Fills>
+                      <Fills part="payee"><Field name="payee" label="Payee" hint="A payee paid before brings their address and TIN."><TextInput value={shown.payee} suggestions={payeeNames} onChange={(payee) => setDraft(withPayee(state, draft, payee))} /></Field></Fills>
                       <Fills part="address"><Field label="Address"><TextInput value={shown.address} onChange={(address) => setDraft({ ...draft, address })} /></Field></Fills>
                       <Fills part="tin"><Field label="TIN" hint="Optional. The voucher prints a TIN only when one is typed here."><TextInput figures placeholder="000-000-000-000" value={shown.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field></Fills>
                       <Fills part="issuer"><Field label="Issuer" hint="Who issues the check, printed beside the bank."><TextInput value={shown.issuer} onChange={(issuer) => setDraft({ ...draft, issuer: caps(issuer) })} /></Field></Fills>
@@ -244,7 +247,7 @@ function Vouchers() {
                       </FieldRow>
                     </fieldset>
                     <fieldset disabled={!!locked} className={FIELDS}>
-                      <Fills part="lines"><LineEditor title="Particulars" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
+                      <Fills part="lines"><LineEditor title="Particulars" lines={shown.lines} remembered={particulars} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
                       <div className="text-right" aria-live="polite">
                         <p className="m-0 font-display text-lg font-semibold text-gold-bright tabular-nums">{peso(total)}</p>
                         <p className="m-0 text-[13px] text-ink-2">{amountInWords(total)}</p>

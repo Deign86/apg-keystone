@@ -36,7 +36,7 @@ test('a request\'s draft stays with its author on any computer, and a voucher\'s
   const request = screen.getByRole('form', 'New request');
 
   await request.getByRole('textbox', 'What it is for').fill('Pantry, November');
-  await request.getByRole('textbox', 'Line 1 description').fill('Coffee and sugar');
+  await request.getByRole('combobox', 'Line 1 description').fill('Coffee and sugar');
   await request.getByRole('textbox', 'Line 1 amount').fill('1550.50');
   await request.getByRole('button', 'Save draft').tap();
   await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
@@ -45,8 +45,8 @@ test('a request\'s draft stays with its author on any computer, and a voucher\'s
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const voucher = screen.getByRole('form', 'New voucher');
 
-  await voucher.getByRole('textbox', 'Payee').fill('Manila Water Company');
-  await voucher.getByRole('textbox', 'Line 1 description').fill('Water, October');
+  await voucher.getByRole('combobox', 'Payee').fill('Manila Water Company');
+  await voucher.getByRole('combobox', 'Line 1 description').fill('Water, October');
   await voucher.getByRole('textbox', 'Line 1 amount').fill('2400');
   // The request's "Draft saved" may still show; the voucher's draft is checked in the cloud below.
   await voucher.getByRole('button', 'Save draft').tap();
@@ -133,7 +133,7 @@ test('a draft typed steadily, with Keystone killed straight after, comes back fr
   await deafToLeaving(browser);
   await app.open('/#vouchers');
   await screen.getByRole('tab', /^Voucher entry/).tap();
-  await screen.getByRole('form', 'New voucher').getByRole('textbox', 'Payee').pressSequentially('Manila Water Company', { delay: 110 });
+  await screen.getByRole('form', 'New voucher').getByRole('combobox', 'Payee').pressSequentially('Manila Water Company', { delay: 110 });
   await browser.evaluate(() => { location.reload(); });
 
   await expect(screen.getByRole('list', 'Drafts').getByRole('listitem', /^MANILA WATER/)).toContainText('by Ana Cruz');

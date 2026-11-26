@@ -80,7 +80,8 @@ test('saves and prints a long statement of account across every A4 page it runs 
   const form = screen.getByRole('form', 'New statement of account');
 
   for (const [label, value] of [['Client', 'Northwind Retail Corp.'], ['Payee', 'Juan Dela Cruz'], ['Floor area (sqm)', '354.4'], ['Rate per sqm', '600'], ['Contract commencement', '2027-01-01'], ['Term (months)', '24'], ['Number of checks', '24'], ['Bank', 'BPI'], ['First check number', '6000325749']]) {
-    await form.getByRole('textbox', label).fill(value);
+    // Client, Payee and Bank offer earlier entries (docs/adr/0053), so they are comboboxes.
+    await form.getByRole(['Client', 'Payee', 'Bank'].includes(label) ? 'combobox' : 'textbox', label).fill(value);
   }
 
   const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved SOA-2026-001.pdf.');
@@ -109,7 +110,7 @@ test('saves and prints a billing statement across an A4 page, with its text', as
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
 
   const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888110226.pdf.');
@@ -137,7 +138,7 @@ test('saves a signature over its line as a picture, the rest of the statement as
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   await expect(screen.getByRole('article', /^Billing statement /).getByRole('img', 'Signature of D. Lazaro')).toBeVisible();
-  await screen.getByRole('form', 'New statement').getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await screen.getByRole('form', 'New statement').getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
 
   const pages = await exportPdf(browser, screen, 'Export PDF', 'Saved 888110226.pdf.');
 
@@ -152,7 +153,7 @@ test('saves and prints the two-up check voucher across the whole sheet, with its
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
   // No margin: the dashed line between the copies runs from edge to edge.
@@ -204,7 +205,7 @@ test('prints a fund transfer request alone on its A4 page', async ({ app, screen
   await screen.getByRole('tab', /^Request entry/).tap();
   const form = screen.getByRole('form', 'New request');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Pantry groceries');
+  await form.getByRole('combobox', 'Line 1 description').fill('Pantry groceries');
   await form.getByRole('textbox', 'Line 1 amount').fill('3,250.75');
   await expect(screen.getByRole('article', /^Fund transfer request/)).toBeVisible();
 

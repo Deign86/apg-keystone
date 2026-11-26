@@ -1,0 +1,19 @@
+{
+  "name": "@keystone/module-receipts",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Acknowledgement Receipts: the company's receipt for a payment received, on the company form.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "react": "^18.3.1"
+  }
+}

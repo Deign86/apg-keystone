@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, changeEach, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, signatoryNames, signedNames, shortDate,
-  fieldsOf, KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge, grantProblem, payoutAccountOf,
+  fieldsOf, KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge, grantProblem, payoutAccountOf, earlier, rememberedLines, withLineDesc,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -404,5 +404,28 @@ describe('a member\'s own bank account (docs/adr/0052)', () => {
 
   it('is the member\'s own field, which no connected system may give', () => {
     expect(grantProblem({ field: 'bank', label: 'Bank', as: 'a bank', opens: 'nothing', asks: { give: () => '', take: () => '' } })).toBe('the field "bank" is the member\'s own');
+  });
+});
+
+describe('repeated details (docs/adr/0053)', () => {
+  it('offers earlier entries each once, whatever their capitals and spaces, the newest first, without blanks', () => {
+    expect(earlier(['Meralco', '  ', 'MERALCO', 'Manila  Water', undefined, 'manila water', 'PLDT'])).toEqual(['Meralco', 'Manila  Water', 'PLDT']);
+    expect(earlier(['a', 'b', 'c'], 2)).toEqual(['a', 'b']);
+  });
+
+  it('remembers each line by its description as last saved, and fills a line typed again only while it has no amount', () => {
+    const remembered = rememberedLines([
+      { desc: 'Virtual office ', qty: 1, price: 2299, amt: 2299 },
+      { desc: 'VIRTUAL OFFICE', qty: 2, price: 2000, amt: 4000 },
+      { desc: 'Electricity', amt: 1850.5 },
+      { desc: '', amt: 10 },
+    ]);
+
+    expect(remembered).toEqual([{ desc: 'Virtual office', qty: '1', amount: '2299' }, { desc: 'Electricity', qty: '1', amount: '1850.50' }]);
+
+    const blank = lineDraft();
+    expect(withLineDesc(blank, 'virtual  office', remembered)).toMatchObject({ desc: 'virtual  office', qty: '1', amount: '2299' });
+    expect(withLineDesc({ ...blank, amount: '500' }, 'Electricity', remembered)).toMatchObject({ desc: 'Electricity', amount: '500' });
+    expect(withLineDesc(blank, 'Electric', remembered)).toMatchObject({ desc: 'Electric', amount: '' });
   });
 });

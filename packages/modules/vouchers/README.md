@@ -38,7 +38,8 @@
   particulars' headings and the total sit on pale gold bands, in the paper's gold. The voucher prints twice on one A4
   sheet, a copy on each half, cut apart along the dashed line across the middle; Export PDF makes the same page.
 - The payee and their address are typed on the voucher, not picked from the directory, and a new voucher starts with
-  neither. A voucher saved before then holds a directory code, and prints and loads that record's name and address
+  neither. Typing a payee paid before brings their address and TIN from their last voucher into the fields still blank, and
+  the payee and particulars offer what was typed before; a particular typed again brings its amount (docs/adr/0053). A voucher saved before then holds a directory code, and prints and loads that record's name and address
   (`payeeOf`). The TIN prints only when it is typed on the voucher. The issuer and the positions start as the last
   voucher's, like the signatories.
 - One line divides the form's right-hand column, the dates and the amounts, from top to total: each part draws it on

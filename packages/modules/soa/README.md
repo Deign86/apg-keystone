@@ -1,6 +1,9 @@
 # Statements of Account
 
 ## Owns
+- **Repeated details** (docs/adr/0053): typing a client with a statement before brings its property, payee and title,
+  lease terms, bank, floor area and rate from their last one into the fields still blank; Client, Property address,
+  Payee, Payee’s title and Bank offer what was typed before, and Notes shows earlier notes.
 - `src/index.tsx`: the register of saved statements (open one into the form, Remove… asks first), the form, Print, and
   Export PDF.
 - `src/SoaPaper.tsx`: the printed Statement of Account, the company's form set upright on one A4 page (the form itself

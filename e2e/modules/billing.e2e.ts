@@ -10,20 +10,53 @@ import { typeSignatory } from '../support/signatory';
 // its setup. Novatek (C-001) is a VAT client that withholds EWT, 2% on a new statement (the sample's, saved before
 // statements kept their rate, withheld 5%); Dela Cruz (C-002) is non-VAT.
 
+test('a client billed before brings their details, notes and charges onto the next statement', async ({ app, screen }) => {
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const form = screen.getByRole('form', 'New statement');
+
+  // A client not in the directory, billed once by hand.
+  await form.getByRole('combobox', 'Bill to').fill('Sunrise Bakeshop Co.');
+  await form.getByRole('textbox', 'Address').fill('12 Kalayaan Ave., Makati City');
+  await form.getByRole('textbox', 'TIN').fill('123-456-789-000');
+  await form.getByRole('combobox', 'Attention').fill('Rosa Lim');
+  await form.getByRole('combobox', 'Mode of payment').fill('Bank transfer');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November 2026');
+  await form.getByRole('textbox', 'Line 1 quantity').fill('1');
+  await form.getByRole('textbox', 'Line 1 unit price').fill('2299');
+  await form.getByRole('textbox', 'Notes').fill('Thank you for your business.');
+  await form.getByRole('button', 'Save and mark as sent').tap();
+  await expect(screen.getByRole('dialog', /saved and marked as sent\.$/)).toBeVisible();
+
+  // The next statement to them fills itself (docs/adr/0053).
+  const next = screen.getByRole('form', 'New statement');
+
+  await expect(next.getByRole('group', 'Earlier entries')).toContainText('Thank you for your business.');
+  await next.getByRole('combobox', 'Bill to').fill('Sunrise Bakeshop Co.');
+  await expect(next.getByRole('textbox', 'Address')).toHaveValue('12 Kalayaan Ave., Makati City');
+  await expect(next.getByRole('textbox', 'TIN')).toHaveValue('123-456-789-000');
+  await expect(next.getByRole('combobox', 'Attention')).toHaveValue('Rosa Lim');
+  await expect(next.getByRole('combobox', 'Mode of payment')).toHaveValue('Bank transfer');
+  await next.getByRole('combobox', 'Line 1 description').fill('Virtual office, November 2026');
+  await expect(next.getByRole('textbox', 'Line 1 unit price')).toHaveValue('2299');
+  await next.getByRole('button', 'Use earlier: Thank you for your business.').tap();
+  await expect(next.getByRole('textbox', 'Notes')).toHaveValue('Thank you for your business.');
+});
+
 test('issues a statement with VAT and withholding from the client', async ({ app, screen }) => {
   await app.open('/#billing');
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('888110226');
-  await expect(form.getByRole('textbox', 'Bill to')).toHaveValue('');
+  await expect(form.getByRole('combobox', 'Bill to')).toHaveValue('');
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).not.toBeChecked();
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await expect(form.getByRole('textbox', 'Attention')).toHaveValue('Carlo Mendiola');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await expect(form.getByRole('combobox', 'Attention')).toHaveValue('Carlo Mendiola');
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).toBeChecked();
   await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).toBeChecked();
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 quantity').fill('2');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
 
@@ -64,12 +97,12 @@ test('a non-VAT client gets no VAT and no withholding', async ({ app, screen }) 
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Dela Cruz, Maria Teresa');
+  await form.getByRole('combobox', 'Bill to').fill('Dela Cruz, Maria Teresa');
 
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).not.toBeChecked();
   await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).not.toBeChecked();
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Unit rental, November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Unit rental, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('45500');
 
   // No VAT or withholding on the form; the printed statement's totals box dashes VAT and has no EWT line at all.
@@ -88,8 +121,8 @@ test('refuses an invoice number already in use and offers the next free one', as
   const form = screen.getByRole('form', 'New statement');
 
   await form.getByRole('textbox', 'Invoice No.').fill('010099-2026');
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
 
@@ -194,8 +227,8 @@ test('pays into the account picked under Pay into, and the saved statement keeps
   ].join('\n'));
   await expect(screen.getByRole('article', 'Billing statement 888110226').getByText('Account Number: 0000 0712 3456', { exact: false }).first()).toBeVisible();
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
@@ -216,7 +249,7 @@ test('prints Bill to\'s address under the name, as typed, and keeps it with the 
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 888110226');
 
-  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('combobox', 'Bill to').fill('Springfield Properties Inc.');
   await expect(form.getByRole('textbox', 'Address')).toHaveValue('');
   await form.getByRole('textbox', 'Address').fill('12 Evergreen Terrace, Springfield, Pasig City');
 
@@ -225,7 +258,7 @@ test('prints Bill to\'s address under the name, as typed, and keeps it with the 
   await expect(paper.getByRole('term').filter({ hasText: 'Address' })).toBeVisible();
   await expect(paper.getByText('12 Evergreen Terrace, Springfield, Pasig City', { exact: true })).toBeVisible();
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Property management, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
@@ -246,7 +279,7 @@ test('prints Bill to\'s TIN under the address, a directory client\'s brought wit
   const paper = screen.getByRole('article', 'Billing statement 888110226');
 
   await expect(form.getByRole('textbox', 'TIN')).toHaveValue('');
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
   await expect(form.getByRole('textbox', 'TIN')).toHaveValue('008-771-402-000');
   // Labelled TIN, on its own line under Address.
   await expect(paper.getByRole('term').filter({ hasText: 'TIN' })).toBeVisible();
@@ -254,7 +287,7 @@ test('prints Bill to\'s TIN under the address, a directory client\'s brought wit
   await form.getByRole('textbox', 'TIN').fill('008-771-402-001');
   await expect(paper.getByText('008-771-402-001', { exact: true })).toBeVisible();
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Property management, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
@@ -275,27 +308,27 @@ test('prints the mode of payment in the invoice box, and Notes only once somethi
   const invoice = paper.getByRole('table', 'Invoice');
 
   // A new statement starts with neither: a dash in the invoice box, and no Notes on the paper.
-  await expect(form.getByRole('textbox', 'Mode of payment')).toHaveValue('');
+  await expect(form.getByRole('combobox', 'Mode of payment')).toHaveValue('');
   await expect(form.getByRole('textbox', 'Notes')).toHaveValue('');
   await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('—');
   await expect(paper.getByText('Notes', { exact: true })).toBeHidden();
 
-  await form.getByRole('textbox', 'Mode of payment').fill('Bank transfer');
+  await form.getByRole('combobox', 'Mode of payment').fill('Bank transfer');
   await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
   await form.getByRole('textbox', 'Notes').fill('Thank you.');
   await expect(paper.getByText('Notes', { exact: true })).toBeVisible();
   await form.getByRole('textbox', 'Notes').fill('');
   await expect(paper.getByText('Notes', { exact: true })).toBeHidden();
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Property management, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
 
   await screen.getByRole('tab', /^Statements issued/).tap();
   await screen.getByRole('table', 'Statements issued').getByRole('cell', '888110226').tap();
-  await expect(screen.getByRole('form', 'Editing 888110226').getByRole('textbox', 'Mode of payment')).toHaveValue('Bank transfer');
+  await expect(screen.getByRole('form', 'Editing 888110226').getByRole('combobox', 'Mode of payment')).toHaveValue('Bank transfer');
   await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
 });
 
@@ -329,7 +362,7 @@ test('opens a sent statement from the register and saves changes to it', async (
   const form = screen.getByRole('form', 'Editing 010099-2026');
 
   await expect(form.getByRole('textbox', 'Invoice No.')).toHaveValue('010099-2026');
-  await expect(form.getByRole('textbox', 'Bill to')).toHaveValue('Harbor Point Logistics Corp.');
+  await expect(form.getByRole('combobox', 'Bill to')).toHaveValue('Harbor Point Logistics Corp.');
   await form.getByRole('textbox', 'Due date').fill('2026-11-10');
   await form.getByRole('button', 'Save changes').tap();
 
@@ -394,8 +427,8 @@ test('refuses a charge with no quantity, and a due date before the invoice date'
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 quantity').fill('0');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
@@ -451,8 +484,8 @@ test('unticking VAT or withholding by hand changes the totals', async ({ app, sc
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 888110226');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await expect(form.getByText('Subtotal ₱10,000.00 · VAT ₱1,200.00 · EWT (₱200.00)')).toBeVisible();
   await expect(form.getByText('₱11,000.00')).toBeVisible();
@@ -480,8 +513,8 @@ test('a statement past its due date turns overdue the next time Keystone opens',
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, October');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, October');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('textbox', 'Invoice date').fill('2026-10-01');
   await form.getByRole('textbox', 'Due date').fill('2026-10-20');
@@ -532,7 +565,7 @@ test('exports the statement as a PDF named after its number', async ({ app, scre
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
 
   // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
@@ -557,7 +590,7 @@ test('exports a statement with many charges onto as many A4 pages as it takes', 
 
   for (let i = 1; i <= 30; i++) {
     if (i > 1) await form.getByRole('button', 'Add line').tap();
-    await form.getByRole('textbox', `Line ${i} description`).fill(`Virtual office service, unit ${i}, November`);
+    await form.getByRole('combobox', `Line ${i} description`).fill(`Virtual office service, unit ${i}, November`);
     await form.getByRole('textbox', `Line ${i} unit price`).fill(String(1000 + i * 37.5));
   }
 
@@ -581,8 +614,8 @@ test('logs each statement sent, paid and voided, under the Billing filter', asyn
   const form = screen.getByRole('form', 'New statement');
   const register = screen.getByRole('table', 'Statements issued');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 quantity').fill('2');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
@@ -620,10 +653,10 @@ test('bills someone not in the directory, typed as the statement prints it', asy
   const form = screen.getByRole('form', 'New statement');
   const paper = screen.getByRole('article', 'Billing statement 888110226');
 
-  await form.getByRole('textbox', 'Bill to').fill('RACIL REALTY INC');
-  await form.getByRole('textbox', 'Attention').fill('Angela Marie B. Pagulayan');
+  await form.getByRole('combobox', 'Bill to').fill('RACIL REALTY INC');
+  await form.getByRole('combobox', 'Attention').fill('Angela Marie B. Pagulayan');
   await form.getByRole('checkbox', 'Add 12% VAT').tap();
-  await form.getByRole('textbox', 'Line 1 description').fill('Commercial rental commission');
+  await form.getByRole('combobox', 'Line 1 description').fill('Commercial rental commission');
   await form.getByRole('textbox', 'Line 1 unit price').fill('210000');
 
   // ₱210,000 with 12% VAT; no withholding until it is ticked.
@@ -637,14 +670,14 @@ test('bills someone not in the directory, typed as the statement prints it', asy
 
   // A statement needs someone to bill.
   await screen.getByRole('tab', /^Statement entry/).tap();
-  await form.getByRole('textbox', 'Line 1 description').fill('Commercial rental commission');
+  await form.getByRole('combobox', 'Line 1 description').fill('Commercial rental commission');
   await form.getByRole('textbox', 'Line 1 unit price').fill('210000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter who the statement is billed to.');
-  await expect(form.getByRole('textbox', 'Bill to')).toHaveAttribute('aria-invalid', 'true');
-  await expect(form.getByRole('textbox', 'Bill to')).toBeFocused();
-  await form.getByRole('textbox', 'Bill to').fill('RACIL REALTY INC');
-  await expect(form.getByRole('textbox', 'Bill to')).not.toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('combobox', 'Bill to')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('combobox', 'Bill to')).toBeFocused();
+  await form.getByRole('combobox', 'Bill to').fill('RACIL REALTY INC');
+  await expect(form.getByRole('combobox', 'Bill to')).not.toHaveAttribute('aria-invalid', 'true');
 });
 
 test('prints who prepared, checked and approved the statement', async ({ app, screen }) => {
@@ -667,8 +700,8 @@ test('prints who prepared, checked and approved the statement', async ({ app, sc
   await expect(paper).toContainText(/Mark Anthony Santos\s*Finance Manager\s*Checked by/i);
   await expect(paper).toContainText(/Brian Sy\s*Chief Executive Officer\s*Approved by/i);
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();
@@ -731,15 +764,15 @@ test('saves a draft, lists it under Drafts, opens it again, and takes it away on
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save draft').tap();
   await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
 
   // A fresh form, then the draft from the register's tab: ₱10,000 with 12% VAT and 2% EWT is ₱11,000.
   await screen.getByRole('button', 'New statement').tap();
-  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Bill to')).toHaveValue('');
+  await expect(screen.getByRole('form', 'New statement').getByRole('combobox', 'Bill to')).toHaveValue('');
   await screen.getByRole('tab', /^Statements issued/).tap();
   await expect(screen.getByRole('tab', /^Statements issued/)).toHaveText(/3/);
   const draft = screen.getByRole('list', 'Drafts').getByRole('listitem', 'Novatek BPO Solutions Inc. · ₱11,000.00');
@@ -751,8 +784,8 @@ test('saves a draft, lists it under Drafts, opens it again, and takes it away on
 
   const opened = screen.getByRole('form', 'New statement');
 
-  await expect(opened.getByRole('textbox', 'Bill to')).toHaveValue('Novatek BPO Solutions Inc.');
-  await expect(opened.getByRole('textbox', 'Line 1 description')).toHaveValue('Virtual office, November');
+  await expect(opened.getByRole('combobox', 'Bill to')).toHaveValue('Novatek BPO Solutions Inc.');
+  await expect(opened.getByRole('combobox', 'Line 1 description')).toHaveValue('Virtual office, November');
   await expect(opened.getByRole('textbox', 'Invoice No.')).toHaveValue('888110226');
 
   // Sent for real, the draft is finished and leaves the list.
@@ -768,9 +801,9 @@ test('saves a draft again over itself, and deletes one only once asked', async (
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('combobox', 'Bill to').fill('Springfield Properties Inc.');
   await form.getByRole('button', 'Save draft').tap();
-  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc. (Unit 5)');
+  await form.getByRole('combobox', 'Bill to').fill('Springfield Properties Inc. (Unit 5)');
   await form.getByRole('button', 'Save draft').tap();
 
   await screen.getByRole('tab', /^Statements issued/).tap();
@@ -793,7 +826,7 @@ test('marks on the statement where the field being typed in prints, and brings i
   const form = screen.getByRole('form', 'New statement');
   const scrolled = () => browser.evaluate(() => document.querySelector('section[aria-label="Document preview"]')?.scrollTop ?? 0);
 
-  await form.getByRole('textbox', 'Bill to').fill('Dela Cruz Trading');
+  await form.getByRole('combobox', 'Bill to').fill('Dela Cruz Trading');
   expect(await markedPaperParts(browser)).toEqual(['DELA CRUZ TRADING · solid 2px']);
   // The number prints twice: on the letterhead and in the invoice box.
   await form.getByRole('textbox', 'Invoice No.').tap();
@@ -814,7 +847,7 @@ test('marks on the statement where the field being typed in prints, and brings i
 
   expect(foot).toBeGreaterThan(0);
   expect(await markedPartInView(browser, 'Document preview')).toBe(true);
-  await form.getByRole('textbox', 'Bill to').tap();
+  await form.getByRole('combobox', 'Bill to').tap();
   expect(await scrolled()).toBeLessThan(foot);
   expect(await markedPartInView(browser, 'Document preview')).toBe(true);
 
@@ -829,8 +862,8 @@ test('keeps what is typed as a draft by itself, even when Keystone is closed str
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('combobox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Property management, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
   // Typing rests: the form says its draft is saved, without a word in a notice.
   await expect(form.getByText(/^Draft saved \d\d:\d\d$/)).toBeVisible();
@@ -858,11 +891,11 @@ test('keeps what is typed when Keystone is killed mid-typing, with no warning to
   const form = screen.getByRole('form', 'New statement');
 
   // Typed steadily for about three seconds, never resting, and killed straight after the last key.
-  await form.getByRole('textbox', 'Bill to').pressSequentially('Springfield Properties Inc.', { delay: 110 });
+  await form.getByRole('combobox', 'Bill to').pressSequentially('Springfield Properties Inc.', { delay: 110 });
   await browser.evaluate(() => { location.reload(); });
 
   // All but the last second or so of it is there.
   await screen.getByRole('tab', /^Statements issued/).tap();
   await screen.getByRole('list', 'Drafts').getByRole('listitem', /^Springfield Prop/).getByRole('button', 'Open').tap();
-  await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Bill to')).toHaveValue(/^Springfield Prop/);
+  await expect(screen.getByRole('form', 'New statement').getByRole('combobox', 'Bill to')).toHaveValue(/^Springfield Prop/);
 });

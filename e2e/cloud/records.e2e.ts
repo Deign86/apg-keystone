@@ -56,8 +56,8 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   // The CEO's own voucher needs nobody's approval: it is approved as it is saved.
   await form.getByRole('button', 'Save and approve').tap();
@@ -98,8 +98,8 @@ test('writes each change to the cloud, stays signed in when reopened, and anothe
   await screen.getByRole('button', 'New voucher').tap();
   const mine = screen.getByRole('form', 'New voucher');
 
-  await mine.getByRole('textbox', 'Payee').fill('Manila Water Company');
-  await mine.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await mine.getByRole('combobox', 'Payee').fill('Manila Water Company');
+  await mine.getByRole('combobox', 'Line 1 description').fill('Water bill');
   await mine.getByRole('textbox', 'Line 1 amount').fill('980');
   await mine.getByRole('button', 'Save and route for approval').tap();
   await expect(screen.getByRole('dialog', '888002 saved and routed for approval.')).toBeVisible();
@@ -195,8 +195,8 @@ test('shows what another computer saves as it is saved, without reopening, and k
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Water Company');
-  await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await form.getByRole('combobox', 'Payee').fill('Manila Water Company');
+  await form.getByRole('combobox', 'Line 1 description').fill('Water bill');
   await form.getByRole('textbox', 'Line 1 amount').fill('980');
   await form.getByRole('button', 'Save and approve').tap();
   await expect.poll(() => documentIds('cv'), { timeout: 10_000 }).toEqual(['888001', 'CV-2026-0139', 'CV-2026-0141']);

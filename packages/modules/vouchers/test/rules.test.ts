@@ -3,7 +3,7 @@ import { refusalOf } from '@keystone/kit/testing';
 import { companyOf, lineDraft, type Ctx } from '@keystone/core';
 import {
   canMoveTo, clearVoided, copyVoucher, draftNo, freesNumber, returnsForApproval, deleteVoucher, deleteVouchers, setVouchersStatus, newVoucher, nextVoucherNo, payeeFoldLabel, payeeKey, payeeOf, saveVoucher, setVoucherStatus, voucherDraftFrom, voucherDraftOf, voucherDrafts, voucherDraftTitle, voucherFigure, voucherFinding,
-  voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES,
+  voucherLine, voucherLock, voucherRegister, voucherTone, voucherTotal, voucherWaiting, VOUCHER_STATUSES, knownPayees, rememberedParticulars, withPayee,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -378,5 +378,34 @@ describe('a saved draft of a voucher (docs/adr/0041)', () => {
     const editing = voucherDraftOf(s, s.cv[0]);
 
     expect(voucherDraftFrom(s, ctx, '', { ...editing }).no).toBe(s.cv[0].no);
+  });
+});
+
+describe('repeated details on a voucher (docs/adr/0053)', () => {
+  /** The sample, then a voucher to Manila Water with its TIN and a line, saved last. */
+  function paidWater() {
+    const s = state();
+    const d = { ...newVoucher(s, ctx), ...water, tin: '000-111-222-000', lines: [lineDraft({ desc: 'Water bill, October', amount: '1,250' })] };
+
+    return saveVoucher(s, d, ctx).state;
+  }
+
+  it('knows each payee paid before once, as their last voucher printed them, the last paid first', () => {
+    const payees = knownPayees(paidWater());
+    expect(payees[0]).toEqual({ name: 'MANILA WATER COMPANY', address: 'MWSS Compound, Quezon City', tin: '000-111-222-000' });
+    expect(new Set(payees.map((p) => p.name)).size).toBe(payees.length);
+  });
+
+  it('brings a known payee\'s address and TIN into the fields still blank, whatever the capitals and dots typed', () => {
+    const s = paidWater();
+    const blank = newVoucher(s, ctx);
+    expect(withPayee(s, blank, 'manila water company.')).toMatchObject({ payee: 'MANILA WATER COMPANY.', address: 'MWSS Compound, Quezon City', tin: '000-111-222-000' });
+    // What is already typed stays; a payee never paid fills nothing.
+    expect(withPayee(s, { ...blank, address: 'Typed address' }, 'Manila Water Company')).toMatchObject({ address: 'Typed address', tin: '000-111-222-000' });
+    expect(withPayee(s, blank, 'Someone New')).toMatchObject({ payee: 'SOMEONE NEW', address: '', tin: '' });
+  });
+
+  it('remembers the particulars saved before, each once, with their amounts', () => {
+    expect(rememberedParticulars(paidWater())[0]).toEqual({ desc: 'Water bill, October', qty: '1', amount: '1250' });
   });
 });

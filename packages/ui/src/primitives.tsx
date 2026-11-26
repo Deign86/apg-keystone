@@ -63,7 +63,7 @@ export function ScreenHeader({ eyebrow, title, line, actions }: { eyebrow: strin
     <header className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
       <div className="min-w-0 max-w-[68ch]">
         <Eyebrow>{eyebrow}</Eyebrow>
-        <h1 className="mt-1.5 font-body text-[34px] leading-tight font-bold text-ink">{title}</h1>
+        <h1 className="mt-1.5 font-body text-[34px] leading-tight font-bold break-words hyphens-auto text-ink">{title}</h1>
         <p className="mt-1.5 text-sm text-ink-2" aria-live="polite">{line}</p>
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

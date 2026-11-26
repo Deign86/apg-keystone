@@ -1,7 +1,7 @@
 import {
   addDays, count, isJsonObject, jsonNumber, jsonObjects, jsonText, KeystoneError, logged, longDate, moduleData, nextNumber, percent, peso,
   sumCentavos, thisYear, toCentavos, today, withModuleData,
-  type Centavos, type Change, type Ctx, type Editing, type ISODate, type JsonObject, type JsonValue, type TerminalState,
+  type Centavos, type Change, type Ctx, type Editing, type ISODate, type JsonObject, type JsonValue, type TerminalState, earlier,
 } from '@keystone/core';
 
 // Statements of account for a lease: what a lessee pays, worked out from the floor area and the rate per square metre.
@@ -360,6 +360,45 @@ export const soaDraftOf = (a: Soa): SoaDraft => ({
   ...a, editing: a.no, sqm: typed(a.sqm), rate: typed(a.rate), reservation: typed(a.reservation), depositMonths: String(a.depositMonths),
   advanceMonths: String(a.advanceMonths), termMonths: typed(a.termMonths), escalation: String(a.escalation), pdcCount: typed(a.pdcCount), pdcDay: typed(a.pdcDay),
 });
+
+// ---------- repeated details (docs/adr/0053) ----------
+
+/** The statements as saved, the last saved first. */
+const lastSavedFirst = (s: TerminalState) => [...statementsOf(s)].reverse();
+
+/** A name as statements are matched by it: capitals and spaces aside. */
+const nameKey = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
+
+/**
+ * The client typed. A client with a statement before brings, into what is still blank, their last statement's property,
+ * payee and title, lease terms, bank, floor area and rate: a renewal or the next statement starts from the last one.
+ */
+export function withSoaClient(s: TerminalState, d: SoaDraft, client: string): SoaDraft {
+  const key = nameKey(client);
+  const last = key ? lastSavedFirst(s).find((a) => nameKey(a.client) === key) : undefined;
+
+  if (!last) return { ...d, client };
+  const blank = (typed: string, kept: string | number) => (typed.trim() ? typed : kept ? String(kept) : '');
+
+  return {
+    ...d, client, property: blank(d.property, last.property), payee: blank(d.payee, last.payee), payeeLabel: blank(d.payeeLabel, last.payeeLabel),
+    leaseTerms: blank(d.leaseTerms, last.leaseTerms), bank: blank(d.bank, last.bank), sqm: blank(d.sqm, last.sqm), rate: blank(d.rate, last.rate),
+  };
+}
+
+/** What the form's fields offer as they are typed, from the statements saved before. */
+export function earlierSoaEntries(s: TerminalState) {
+  const saved = lastSavedFirst(s);
+
+  return {
+    clients: earlier(saved.map((a) => a.client)),
+    properties: earlier(saved.map((a) => a.property)),
+    payees: earlier(saved.map((a) => a.payee)),
+    payeeLabels: earlier(saved.map((a) => a.payeeLabel)),
+    banks: earlier(saved.map((a) => a.bank)),
+    notes: earlier(saved.map((a) => a.notes)),
+  };
+}
 
 /** A typed number: "1,250.50" is 1250.5; anything that is not a number is 0. */
 const numberOf = (x: string) => {

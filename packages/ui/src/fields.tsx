@@ -2,7 +2,7 @@ import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox';
 import { Field as BaseField } from '@base-ui/react/field';
 import { Select } from '@base-ui/react/select';
 import { Check, ChevronDown } from 'lucide-react';
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { cn } from './primitives';
 
 // Labelled controls. Base UI's Field wires the label, description and error to the
@@ -115,6 +115,11 @@ type InputProps = {
   autoComplete?: string;
   /** A name: each word starts with a capital as it is typed (`capitalizeWords`). */
   capitalize?: boolean;
+  /**
+   * Earlier entries the field offers as it is typed, the browser's own list under it; picking one types it in. A field
+   * given it is a combobox to assistive technology, with or without entries yet, so it is always found the same way.
+   */
+  suggestions?: readonly string[];
 };
 
 /** Words that join a name and stay in small letters inside it: "Alpha Premier Group of Companies". */
@@ -141,9 +146,11 @@ export function capitalizeWords(text: string): string {
   });
 }
 
-export function TextInput({ value, onChange, placeholder, readOnly, figures, align = 'left', type = 'text', className, capitalize, ...rest }: InputProps) {
+export function TextInput({ value, onChange, placeholder, readOnly, figures, align = 'left', type = 'text', className, capitalize, suggestions, ...rest }: InputProps) {
   const input = useRef<HTMLInputElement>(null);
   const edited = useEdited();
+  const listId = useId();
+  const offered = !readOnly && suggestions ? suggestions : null;
 
   const change = (typed: string) => {
     const next = capitalize ? capitalizeWords(typed) : typed;
@@ -162,17 +169,49 @@ export function TextInput({ value, onChange, placeholder, readOnly, figures, ali
   };
 
   return (
-    <BaseField.Control
-      ref={input}
-      type={type}
-      value={value}
-      readOnly={readOnly}
-      placeholder={placeholder}
-      onValueChange={(v) => change(String(v))}
-      autoCapitalize={capitalize ? 'words' : undefined}
-      className={cn('input-chrome', (figures || readOnly) && 'text-gold-bright', readOnly && 'font-medium', align === 'right' && 'text-right', className)}
-      {...rest}
-    />
+    <>
+      <BaseField.Control
+        ref={input}
+        type={type}
+        value={value}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        onValueChange={(v) => change(String(v))}
+        autoCapitalize={capitalize ? 'words' : undefined}
+        list={offered ? listId : undefined}
+        className={cn('input-chrome', (figures || readOnly) && 'text-gold-bright', readOnly && 'font-medium', align === 'right' && 'text-right', className)}
+        {...rest}
+      />
+      {offered && <datalist id={listId}>{offered.map((v) => <option key={v} value={v} />)}</datalist>}
+    </>
+  );
+}
+
+/**
+ * Earlier entries of a longer text (notes, a purpose), a few at most, to put one back in with a tap. Shown only while
+ * the field is blank, so it never covers what is being written; nothing shows when there are none.
+ */
+export function EarlierPicks({ values, value, onPick, most = 3 }: { values: readonly string[]; value: string; onPick: (v: string) => void; most?: number }) {
+  const picks = value.trim() ? [] : values.slice(0, most);
+
+  if (!picks.length) return null;
+
+  return (
+    <div role="group" aria-label="Earlier entries" className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-ink-2">
+      <span>Earlier:</span>
+      {picks.map((v) => (
+        <button
+          key={v}
+          type="button"
+          title={v}
+          aria-label={`Use earlier: ${v}`}
+          onClick={() => onPick(v)}
+          className="min-h-7 max-w-full truncate rounded-control border border-line px-2 py-0.5 text-left text-ink hover:border-line-bright"
+        >
+          {v.split('\n')[0]}
+        </button>
+      ))}
+    </div>
   );
 }
 

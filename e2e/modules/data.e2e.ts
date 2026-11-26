@@ -14,8 +14,8 @@ async function saveVoucher(screen: Screen) {
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
   await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();

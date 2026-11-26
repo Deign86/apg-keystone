@@ -1,5 +1,5 @@
 import {
-  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesBlank, linesFromDraft, logged, nameOf, newestFirst, nextNumber,
+  addDays, changeEach, companyOf, count, isOwner, KeystoneError, lineDraft, lineDraftOf, lineItemsOf, linesBlank, linesFromDraft, logged, nameOf, newestFirst, nextNumber, rememberedLines,
   peso, recordOf, shortDate, sumCentavos, toCentavos, today, type Centavos, type Change, type Ctx,
   type Editing, type Figure, type Finding, type LineDraft, type Reference, type TerminalState, type Tone, type Voucher, type VoucherDrafts,
   type WaitingItem
@@ -408,7 +408,51 @@ const monthLabel = (month: string) => `${MONTHS[Number(month.slice(5, 7)) - 1]} 
  * Which payee a voucher is to, for folding the register: the name in capitals with only its letters and digits, so
  * "Meralco", "MERALCO" and "Meralco." are one payee.
  */
-export const payeeKey = (s: TerminalState, v: Pick<Voucher, 'payee' | 'address'>) => caps(payeeOf(s, v).name).replace(/[^\p{L}\p{N}]+/gu, '');
+export const payeeKey = (s: TerminalState, v: Pick<Voucher, 'payee' | 'address'>) => nameKey(payeeOf(s, v).name);
+
+/** A payee's name as vouchers are matched by it: capitals, letters and digits only ("Meralco" and "MERALCO." are one). */
+const nameKey = (name: string) => caps(name).replace(/[^\p{L}\p{N}]+/gu, '');
+
+// ---------- repeated details (docs/adr/0053) ----------
+
+/** A payee paid before, as their last voucher printed them. */
+export interface KnownPayee { name: string; address: string; tin: string }
+
+/** The vouchers as saved, the last saved first: the register keeps them in the order they were saved. */
+const lastSavedFirst = (s: TerminalState) => [...s.cv].reverse();
+
+/** Every payee paid before, each once, as their last voucher printed them, the last paid first. */
+export function knownPayees(s: TerminalState): KnownPayee[] {
+  const seen = new Set<string>();
+
+  return lastSavedFirst(s).flatMap((v) => {
+    const p = payeeOf(s, v);
+    const key = nameKey(p.name);
+
+    if (!key || seen.has(key)) return [];
+    seen.add(key);
+
+    // A voucher saved before payees were typed names a directory record, which holds the TIN.
+    return [{ name: caps(p.name.trim()), address: p.address.trim(), tin: (v.tin || recordOf(s, v.payee)?.tin || '').trim() }];
+  });
+}
+
+/**
+ * The payee typed, in capitals. A payee paid before brings their address and TIN from their last voucher into the
+ * fields still blank; one already typed stays as it is.
+ */
+export function withPayee(s: TerminalState, d: VoucherDraft, typed: string): VoucherDraft {
+  const payee = caps(typed);
+  const key = nameKey(payee);
+  const known = key ? knownPayees(s).find((p) => nameKey(p.name) === key) : undefined;
+
+  if (!known) return { ...d, payee };
+
+  return { ...d, payee, address: d.address.trim() ? d.address : known.address, tin: d.tin.trim() ? d.tin : known.tin };
+}
+
+/** The particulars saved before, each once, as last saved: a voucher's line typed again brings its amount. */
+export const rememberedParticulars = (s: TerminalState) => rememberedLines(lastSavedFirst(s).flatMap((v) => v.lines));
 
 /** A fold of vouchers to one payee, as the register names it: "MERALCO, 3 vouchers". */
 export const payeeFoldLabel = (s: TerminalState, vs: readonly Voucher[]) => `${caps(payeeOf(s, vs[0]).name)}, ${count(vs.length, 'voucher')}`;

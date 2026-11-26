@@ -12,7 +12,8 @@ test('opens Home with every tile, those coming soon marked, and the connected sy
   const tiles = screen.getByRole('main').getByRole('list').first();
 
   // One per screen on Home: 10 less the ID Maker's, which is no longer installed (docs/adr/0046).
-  await expect(tiles.getByRole('listitem')).toHaveCount(9);
+  await expect(tiles.getByRole('listitem')).toHaveCount(10);
+  await expect(tiles.getByRole('button', /^Acknowledgement Receipts .* Issued 0$/)).not.toContainText('Coming soon');
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding/)).not.toContainText('Coming soon');
@@ -37,11 +38,11 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 
-test('opens Requests for Funds, Billing Statements, Statements of Account, the Directory, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
+test('opens Requests for Funds, Billing Statements, Statements of Account, Acknowledgement Receipts, the Directory, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  for (const title of ['Requests for Funds', 'Billing Statements', 'Statements of Account', 'Directory', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
+  for (const title of ['Requests for Funds', 'Billing Statements', 'Statements of Account', 'Acknowledgement Receipts', 'Directory', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
     await rail.getByRole('button', new RegExp(`${title}$`)).tap();
 
     await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
@@ -55,7 +56,7 @@ test('asks for funds, listing the expenses to be paid back by transfer', async (
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');
-  await form.getByRole('textbox', 'Line 1 description').fill('Pantry groceries');
+  await form.getByRole('combobox', 'Line 1 description').fill('Pantry groceries');
   await form.getByRole('textbox', 'Line 1 amount').fill('3250.75');
   await form.getByRole('textbox', 'Bank').fill('BDO');
   await form.getByRole('textbox', 'Account name').fill('Liza Ramos');
@@ -72,8 +73,8 @@ test('saves a check voucher as before', async ({ app, screen }) => {
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
 
@@ -85,8 +86,8 @@ test('issues a billing statement to a client the Directory keeps', async ({ app,
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();

@@ -63,7 +63,7 @@ export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPap
         part="lines"
       />
 
-      <Signatures signed={eSigned ? (who) => signatureOf(company, who) : undefined} names={[[r.requester, 'Requested by', '', 'requester'], [r.status === 'Approved' || r.status === 'Paid' ? r.decision?.by ?? '' : '', 'Approved by']]} />
+      <Signatures signed={eSigned ? (who) => signatureOf(company, who) : undefined} names={[[r.requester, 'Requested by', '', 'requester'], [r.checked ?? '', 'Checked by', '', 'checked'], [r.status === 'Approved' || r.status === 'Paid' ? r.decision?.by ?? '' : '', 'Approved by']]} />
       <p className="m-0 mt-3 text-[11px] font-medium text-pretty">{standing(r)}</p>
     </Sheet>
   );

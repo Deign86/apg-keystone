@@ -7,7 +7,7 @@ import { expect } from 'e2e';
 
 // Every screen on the rail opens in a real browser, shows its title and does not hit the
 // error panel. The rail button's name also carries its shortcut badge, hence the pattern.
-const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'Statements of Account', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
+const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'Statements of Account', 'Acknowledgement Receipts', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
 
 test('opens on Home with the rail', async ({ app, screen }) => {
   await app.open('/');
@@ -142,8 +142,8 @@ test('Try again brings a screen back once what broke it is gone', async ({ app, 
   await expect(screen.getByRole('region', 'Entries').getByRole('listitem')).toHaveCount(7);
 });
 
-// Only the first nine screens after Home have a key; the ones after them (Data, Bank Accounts) open from the rail. With
-// the ID Maker no longer installed (docs/adr/0046), Payroll is the ninth.
+// Only the first nine screens after Home have a key; the ones after them (Payroll, Data, Bank Accounts) open from the
+// rail. With Acknowledgement Receipts after Statements of Account (docs/adr/0054), Timekeeping is the ninth.
 test('Ctrl+1 to Ctrl+9 open the screens in rail order, and Ctrl+0 goes home', async ({ app, screen, browser }) => {
   await app.open('/');
 
@@ -190,8 +190,8 @@ test('keeps a save made just before the page reloads', async ({ app, screen, bro
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
   // Save and reload in the same instant, as someone closing the window right after saving: well inside the 250 ms.
@@ -211,8 +211,8 @@ test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
   await screen.getByRole('tab', /^Voucher register/).tap();
