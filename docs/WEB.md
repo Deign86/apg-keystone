@@ -51,6 +51,12 @@ records, whatever the pull request changes. A variable changed later takes effec
 
 Nothing else changes in Firebase: the rules and the accounts are the same as the desktop app's.
 
+## Production deploys by itself
+
+Vercel is the only place the web app is served (not Firebase Hosting, which `firebase.json` no longer configures). With
+the repository linked, every merge to `main` deploys production by itself; there is nothing to run by hand. Keep
+**Settings › Git › Production Branch** set to `main`.
+
 ## 4. Deploy previews of pull requests
 
 Once the repository is linked, Vercel builds every pull request and comments its preview address on it, by itself
