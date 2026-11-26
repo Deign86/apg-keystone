@@ -1,89 +1,109 @@
-import { test } from '@e2e-dev/web';
-import { expect, type Screen } from 'e2e';
+import { test, type Browser, type WebApp } from '@e2e-dev/web';
+import { expect } from 'e2e';
 
-// Interns (packages/modules/interns, docs/adr/0056): HR's spreadsheet of OJT interns brought in, then kept here. The
-// sample records have no interns. packages/modules/interns/test/fixtures/sample-interns.xlsx is a made-up workbook laid
-// out as HR's is: three batch tabs, whose columns grew over time, rows coloured by status with a legend under batch 3,
-// dates typed as text and one that is not a date at all, the cleaning schedule, and a tab that is neither.
+// Interns (packages/modules/interns, docs/adr/0056, 0057): HR's register of OJT interns. The sample records have none,
+// so a test that needs some puts these made-up ones where the browser keeps the records, beside the sample records,
+// as HR's batches were brought over from the spreadsheet: Gio's record keeps its spreadsheet row, and a medical
+// certificate date it wrote that is not a date.
 
-const WORKBOOK = 'packages/modules/interns/test/fixtures/sample-interns.xlsx';
+const base = { start: '', end: '', schedule: 'Mon-Fri', endorsement: '', medical: '', police: '', moa: '', proof: '', volunteer: false, remarks: '' };
 
-/** Imports the sample workbook, as Ma'am Jean would her spreadsheet. */
-async function importSample(screen: Screen) {
-  await screen.getByRole('button', 'Import from spreadsheet…').setInputFiles(WORKBOOK);
-  const confirm = screen.getByRole('alertdialog', 'Import sample-interns.xlsx?');
+const INTERNS = {
+  interns: [
+    { ...base, no: 'IN-0001', name: 'Carla Diaz', school: 'Sample Tech', batch: 2, start: '2025-10-15', end: '2026-02-18', hours: 500, idNo: 'APG-2026-010', endorsement: '2026-01-27', medical: '2026-02-19', police: 'N/A', moa: '2026-01-27', proof: 'Certificate', status: 'Completed', volunteer: true, remarks: 'Complete/Volunteer' },
+    { ...base, no: 'IN-0002', name: 'Dan Uy', school: 'Sample Tech', batch: 2, start: '2025-11-03', end: '2026-02-20', hours: 500, idNo: 'APG-2026-011', endorsement: '2025-11-03', medical: '2025-11-03', moa: '2026-01-27', proof: 'Certificate', status: 'Incomplete requirements', remarks: 'inc' },
+    { ...base, no: 'IN-0003', name: 'Fe Lim', school: 'Sample University', batch: 3, start: '2026-08-04', end: '2026-10-16', hours: 300, idNo: 'APG-2026-014', endorsement: '2026-09-09', medical: '2026-09-29', police: '2026-10-05', moa: '2026-09-09', status: 'Completed' },
+    {
+      ...base, no: 'IN-0004', name: 'Gio Sy', school: 'Sample University', batch: 3, start: '2026-10-26', hours: 486, idNo: 'APG-2026-015', endorsement: '2026-10-27', medical: '70-03-2026', moa: '2026-10-27', status: 'Ongoing',
+      source: { file: 'INTERNS SAMPLE.xlsx', sheet: 'BATCH 3', row: 3, fill: '', cells: [{ column: 'NAME', text: 'Gio Sy' }, { column: 'Med Cert', text: '70-03-2026' }] },
+    },
+    { ...base, no: 'IN-0005', name: 'Hana Go', school: 'Psychology/HR', batch: 3, start: '2026-09-10', hours: 300, idNo: 'APG-2026-016', endorsement: '2026-09-10', medical: '2026-09-16', police: '2026-09-11', moa: '2026-09-14', status: 'Ongoing' },
+  ],
+  roster: [{ day: 'Monday', names: ['Gio Sy', 'Hana Go'] }, { day: 'Friday', names: ['Dan Uy'] }],
+};
 
-  await expect(confirm.getByText(
-    'sample-interns.xlsx has 8 interns in batches 1 to 3 and the cleaning schedule. 8 interns are new and will be added, every cell of their row kept as written.'
-    + ' The cleaning schedule will be brought in. Not brought in: Notes, which is neither a batch nor the cleaning schedule.',
-  )).toBeVisible();
-  await confirm.getByRole('button', 'Import').tap();
-  await expect(screen.getByRole('dialog', 'Imported 8 interns in batches 1 to 3 and the cleaning schedule.')).toBeVisible();
+/** Opens Interns with the made-up interns saved beside the sample records. */
+async function withInterns(app: WebApp, browser: Browser) {
+  await app.open('/#interns');
+  await browser.evaluate((interns: string) => {
+    const state = JSON.parse(localStorage.getItem('keystone-state') ?? '{}');
+
+    localStorage.setItem('keystone-state', JSON.stringify({ ...state, ext: { ...state.ext, interns: JSON.parse(interns) } }));
+  }, JSON.stringify(INTERNS));
+  await browser.reload();
 }
 
-test('brings HR’s spreadsheet in, every batch and the cleaning schedule, and a second import adds nothing', async ({ app, screen, browser }) => {
+test('starts empty, with nothing to import, and adds the first intern with the first ID number', async ({ app, screen }) => {
   await app.open('/#interns');
 
   await expect(screen.getByRole('heading', { name: 'Interns', level: 1 })).toBeVisible();
-  await expect(screen.getByText('No interns yet. Import HR’s spreadsheet to bring every batch in, or add an intern.')).toBeVisible();
-  await importSample(screen);
+  await expect(screen.getByText('No interns yet. Add each one as their OJT starts: their school, dates, requirements and ID number.')).toBeVisible();
+  await expect(screen.getByRole('button', /Import/)).toBeHidden();
 
-  await expect(screen.getByText('8 interns in 3 batches; 2 on OJT now, 2 still owing requirements.')).toBeVisible();
+  await screen.getByRole('button', 'Add intern').tap();
+  const form = screen.getByRole('dialog', 'Add intern').getByRole('form', 'New intern');
+
+  await expect(form.getByRole('textbox', 'Batch')).toHaveValue('1');
+  await expect(form.getByRole('textbox', 'ID number')).toHaveValue('APG-2026-001');
+  await form.getByRole('button', 'Add intern').tap();
+  await expect(form.getByRole('alert')).toHaveText('Enter the intern’s name.');
+
+  await form.getByRole('textbox', 'Name').fill('maria santos');
+  await form.getByRole('combobox', 'School').fill('Sample College');
+  await form.getByRole('textbox', 'OJT hours').fill('486');
+  await form.getByRole('button', 'Add intern').tap();
+  await expect(screen.getByRole('dialog', 'Maria Santos added to Batch 1.')).toBeVisible();
+  await expect(screen.getByRole('table', 'Interns').getByRole('row', /^APG-2026-001 Maria Santos Sample College 1 From Nov 2, 2026 486 hours 0 of 4 Ongoing Actions/)).toBeVisible();
+  await expect(screen.getByText('1 intern in 1 batch; 1 on OJT now, 1 still owing requirements.')).toBeVisible();
+
+  // Kept, and in the Activity Log.
+  await app.open('/#activity');
+  await screen.getByRole('group', 'Module').getByRole('button', 'Interns').tap();
+  await expect(screen.getByText('Intern Maria Santos (Batch 1) added.')).toBeVisible();
+});
+
+test('lists the interns by batch, filtered by status and batch, and adds the next with the next ID number', async ({ app, screen, browser }) => {
+  await withInterns(app, browser);
+
+  await expect(screen.getByText('5 interns in 2 batches; 2 on OJT now, 2 still owing requirements.')).toBeVisible();
   const register = screen.getByRole('table', 'Interns');
 
-  // Newest batch first. Each status is read from the remarks, or from the row's colour against the legend.
-  await expect(register.getByRole('row', /^APG-2026-015 Gio Sy Sample University 3 From Oct 26, 2026 486 hours 3 of 4 Ongoing Check dates/)).toBeVisible();
+  await expect(register.getByRole('row', /^APG-2026-015 Gio Sy Sample University 3 From Oct 26, 2026 486 hours 3 of 4 Ongoing Check dates Actions/)).toBeVisible();
   await expect(register.getByRole('row', /^APG-2026-014 Fe Lim Sample University 3 Aug 4, 2026 – Oct 16, 2026 300 hours 4 of 4 Completed Actions/)).toBeVisible();
   await expect(register.getByRole('row', /^APG-2026-010 Carla Diaz Sample Tech 2 Oct 15, 2025 – Feb 18, 2026 500 hours 4 of 4 Completed Volunteer Actions/)).toBeVisible();
   await expect(register.getByRole('row', /^APG-2026-011 Dan Uy Sample Tech 2 .* Incomplete Actions/)).toBeVisible();
-  await expect(register.getByRole('row', /^APG - 0888 009 Ella Tan Sample Tech 2 .* Terminated Actions/)).toBeVisible();
 
-  // Filtered by status and by batch.
   const show = screen.getByRole('group', 'Show');
 
-  await show.getByRole('button', /^Terminated/).tap();
+  await show.getByRole('button', /^Completed/).tap();
   await expect(register.getByRole('row')).toHaveCount(3);
   await show.getByRole('button', /^All/).tap();
   await screen.getByRole('combobox', 'Batch').tap();
-  await screen.getByRole('option', 'Batch 1').tap();
-  await expect(register.getByRole('row', /Ana Reyes Sample State University 1 Jun 2, 2025 – Jul 18, 2025 240 hours — Completed Actions/)).toBeVisible();
+  await screen.getByRole('option', 'Batch 2').tap();
   await expect(register.getByRole('row')).toHaveCount(3);
 
-  // The cleaning schedule, each name under its day.
-  await screen.getByRole('tab', /^Cleaning schedule/).tap();
-  await expect(screen.getByRole('list', 'Cleaning on Monday').getByRole('listitem')).toHaveText(['Gio Sy Remove', 'Hana Go Remove']);
-  await expect(screen.getByRole('list', 'Cleaning on Friday').getByRole('listitem')).toHaveText(['Dan Uy Remove']);
+  await screen.getByRole('button', 'Add intern').tap();
+  const form = screen.getByRole('dialog', 'Add intern').getByRole('form', 'New intern');
 
-  // A second import of the same file finds everything already here.
-  await screen.getByRole('button', 'Import from spreadsheet…').setInputFiles(WORKBOOK);
-  await expect(screen.getByRole('dialog', 'Everything in sample-interns.xlsx is already in Keystone.')).toBeVisible();
+  await expect(form.getByRole('textbox', 'Batch')).toHaveValue('3');
+  await expect(form.getByRole('textbox', 'ID number')).toHaveValue('APG-2026-017');
 
-  // Imported records are kept: they are there after a reload, and the import is in the Activity Log.
-  await browser.reload();
-  await expect(screen.getByText('8 interns in 3 batches; 2 on OJT now, 2 still owing requirements.')).toBeVisible();
-  await app.open('/#activity');
-  await screen.getByRole('group', 'Module').getByRole('button', 'Interns').tap();
-  await expect(screen.getByText('Imported 8 interns in batches 1 to 3 and the cleaning schedule from sample-interns.xlsx.')).toBeVisible();
+  await app.open('/#overview');
+  await expect(screen.getByText(/Interns on OJT\s*2\s*2 owing requirements · 1 certificate to issue/)).toBeVisible();
+  await expect(screen.getByRole('button', 'Add an intern')).toBeVisible();
+  await app.open('/');
+  await expect(screen.getByRole('main').getByRole('list').first().getByRole('button', /^Interns .* On OJT 2$/)).toBeVisible();
 });
 
-test('refuses a file that is not a workbook, saying how to get one', async ({ app, screen }) => {
-  await app.open('/#interns');
-  await screen.getByRole('button', 'Import from spreadsheet…').setInputFiles('e2e/support/fixtures/not-a-keystone-backup.json');
-
-  await expect(screen.getByRole('dialog', 'That file is not an Excel workbook (.xlsx). In Google Sheets, use File › Download › Microsoft Excel (.xlsx).')).toBeVisible();
-  await expect(screen.getByText('No interns yet. Import HR’s spreadsheet to bring every batch in, or add an intern.')).toBeVisible();
-});
-
-test('shows a row as the spreadsheet had it, and a date it wrote that is not a date until one is typed over it', async ({ app, screen }) => {
-  await app.open('/#interns');
-  await importSample(screen);
+test('shows the spreadsheet row a record came from, and keeps a date it wrote until one is typed over it', async ({ app, screen, browser }) => {
+  await withInterns(app, browser);
   await screen.getByRole('group', 'Show').getByRole('button', /^Dates to check/).tap();
   await screen.getByRole('table', 'Interns').getByRole('row', /Gio Sy/).tap();
   const sheet = screen.getByRole('dialog', 'Gio Sy');
   const form = sheet.getByRole('form', 'Edit Gio Sy');
 
   await expect(form.getByText('The spreadsheet says “70-03-2026”; enter the date to replace it.')).toBeVisible();
-  await expect(sheet.getByText('sample-interns.xlsx, tab “BATCH 3”, row 3. Each cell as it was written:')).toBeVisible();
+  await expect(sheet.getByText('INTERNS SAMPLE.xlsx, tab “BATCH 3”, row 3. Each cell as it was written:')).toBeVisible();
   await expect(sheet.getByRole('definition').filter({ hasText: '70-03-2026' })).toBeVisible();
 
   await form.getByRole('textbox', 'Medical certificate').fill('2026-10-28');
@@ -91,16 +111,14 @@ test('shows a row as the spreadsheet had it, and a date it wrote that is not a d
   await form.getByRole('button', 'Save changes').tap();
   await expect(screen.getByRole('dialog', 'Gio Sy updated.')).toBeVisible();
 
-  // Nothing is left to check, and Gio owes nothing; the row the spreadsheet wrote is still kept as it was.
+  // Nothing is left to check, and the filter that showed it gives way to everyone.
   await expect(screen.getByRole('group', 'Show').getByRole('button', /^Dates to check/)).toBeHidden();
-  await expect(screen.getByText('8 interns in 3 batches; 2 on OJT now, 1 still owing requirements.')).toBeVisible();
-  await screen.getByRole('table', 'Interns').getByRole('row', /Gio Sy/).tap();
-  await expect(screen.getByRole('dialog', 'Gio Sy').getByRole('definition').filter({ hasText: '70-03-2026' })).toBeVisible();
+  await expect(screen.getByRole('table', 'Interns').getByRole('row')).toHaveCount(6);
+  await expect(screen.getByText('5 interns in 2 batches; 2 on OJT now, 1 still owing requirements.')).toBeVisible();
 });
 
-test('marks a requirement handed in, and keeps the cleaning schedule', async ({ app, screen }) => {
-  await app.open('/#interns');
-  await importSample(screen);
+test('marks a requirement handed in, and keeps the cleaning schedule', async ({ app, screen, browser }) => {
+  await withInterns(app, browser);
   await screen.getByRole('tab', /^Requirements/).tap();
   const owed = screen.getByRole('table', 'Requirements owed');
 
@@ -109,13 +127,12 @@ test('marks a requirement handed in, and keeps the cleaning schedule', async ({ 
   await owed.getByRole('button', 'Actions for Gio Sy').tap();
   await screen.getByRole('menuitem', 'Police clearance handed in today').tap();
   await expect(screen.getByRole('dialog', 'Gio Sy’s police clearance marked handed in today.')).toBeVisible();
-  // Gio owes nothing now, so only Dan is left; the register shows the date Gio's came in.
+  // Gio owes nothing now, so only Dan is left.
   await expect(owed.getByRole('row', /Gio Sy/)).toBeHidden();
   await expect(owed.getByRole('row')).toHaveCount(2);
-  await screen.getByRole('tab', /^Register/).tap();
-  await expect(screen.getByRole('table', 'Interns').getByRole('row', /^APG-2026-015 Gio Sy .* 4 of 4 Ongoing Check dates/)).toBeVisible();
 
   await screen.getByRole('tab', /^Cleaning schedule/).tap();
+  await expect(screen.getByRole('list', 'Cleaning on Monday').getByRole('listitem')).toHaveText(['Gio Sy Remove', 'Hana Go Remove']);
   const wednesday = screen.getByRole('form', 'Add to Wednesday');
 
   await wednesday.getByRole('combobox', 'Who cleans on Wednesday').fill('Hana Go');
@@ -129,29 +146,4 @@ test('marks a requirement handed in, and keeps the cleaning schedule', async ({ 
   await wednesday.getByRole('combobox', 'Who cleans on Wednesday').fill('hana go');
   await wednesday.getByRole('button', 'Add').tap();
   await expect(screen.getByRole('region', 'Wednesday').getByRole('alert')).toHaveText('Hana Go already cleans on Wednesday.');
-});
-
-test('adds an intern with the next ID number, and Overview and Home count them', async ({ app, screen }) => {
-  await app.open('/#interns');
-  await importSample(screen);
-  await screen.getByRole('button', 'Add intern').tap();
-  const form = screen.getByRole('dialog', 'Add intern').getByRole('form', 'New intern');
-
-  await expect(form.getByRole('textbox', 'Batch')).toHaveValue('3');
-  await expect(form.getByRole('textbox', 'ID number')).toHaveValue('APG-2026-017');
-  await form.getByRole('button', 'Add intern').tap();
-  await expect(form.getByRole('alert')).toHaveText('Enter the intern’s name.');
-
-  await form.getByRole('textbox', 'Name').fill('maria santos');
-  await form.getByRole('combobox', 'School').fill('Sample College');
-  await form.getByRole('textbox', 'OJT hours').fill('486');
-  await form.getByRole('button', 'Add intern').tap();
-  await expect(screen.getByRole('dialog', 'Maria Santos added to Batch 3.')).toBeVisible();
-  await expect(screen.getByRole('table', 'Interns').getByRole('row', /^APG-2026-017 Maria Santos Sample College 3 From Nov 2, 2026 486 hours 0 of 4 Ongoing Actions/)).toBeVisible();
-
-  await app.open('/#overview');
-  await expect(screen.getByText(/Interns on OJT\s*3\s*3 owing requirements · 1 certificate to issue/)).toBeVisible();
-  await expect(screen.getByRole('button', 'Add an intern')).toBeVisible();
-  await app.open('/');
-  await expect(screen.getByRole('main').getByRole('list').first().getByRole('button', /^Interns .* On OJT 3$/)).toBeVisible();
 });

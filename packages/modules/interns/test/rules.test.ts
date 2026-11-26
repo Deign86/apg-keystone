@@ -22,7 +22,7 @@ const draft = (patch: Partial<InternDraft> = {}): InternDraft => ({ ...newIntern
 describe('the register', () => {
   it('starts empty, and reads what was saved leniently', () => {
     expect(internsOf(emptyState())).toEqual([]);
-    expect(internsLine(emptyState())).toBe('No interns yet. Import HR’s spreadsheet to bring every batch in, or add an intern.');
+    expect(internsLine(emptyState())).toBe('No interns yet. Add each one as their OJT starts: their school, dates, requirements and ID number.');
     const odd = withModuleData(emptyState(), 'interns', { interns: [{ no: 'IN-0001', name: 'Ana', status: 'Retired', batch: '3' }, { name: 'No key' }, 7], roster: [{ day: 'Funday', names: ['X'] }] });
 
     expect(internsOf(odd)).toEqual([intern({ no: 'IN-0001', name: 'Ana', school: '', batch: 0, start: '', schedule: '', hours: 0, idNo: '', endorsement: '', medical: '', police: '', moa: '' })]);

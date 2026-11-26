@@ -1,6 +1,6 @@
 # 0056. Interns, brought over from HR's spreadsheet
 
-Status: Accepted · Date: 2026-11-26
+Status: Accepted, its importer superseded by 0057 · Date: 2026-11-26
 
 ## Context
 
