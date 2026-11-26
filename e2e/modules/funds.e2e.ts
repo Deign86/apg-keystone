@@ -25,9 +25,9 @@ async function ask(screen: Screen, request: { purpose: string; expense: string; 
   await screen.getByRole('option', request.payee).tap();
 
   if (request.by) {
-    await form.getByRole('combobox', 'Settle').tap();
+    await form.getByRole('combobox', 'Deadline').tap();
     await screen.getByRole('option', 'By a date').tap();
-    await form.getByRole('textbox', 'Settle by').fill(request.by);
+    await form.getByRole('textbox', 'Deadline date').fill(request.by);
   }
 
   await form.getByRole('textbox', 'Requested by').fill(request.name);
@@ -49,7 +49,7 @@ test('asks for funds, and the request waits for the CEO, who decides it signed i
   await screen.getByRole('tab', /^(Your requests|Requests)/).tap();
   const register = screen.getByRole('table', 'Requests for funds');
 
-  await expect(register.getByRole('row', /^RF-2026-0001 Nov 2, 2026 Christmas party: venue deposit Check Ana Cruz ₱48,000\.00 ASAP For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^RF-2026-0001 Nov 2, 2026 Christmas party: venue deposit Check Ana Cruz ₱48,000\.00 ASAP Pending Pending/)).toBeVisible();
   await expect(screen.getByText('Ana Cruz asks for ₱48,000.00 ASAP; it waits for the CEO\'s decision.')).toBeVisible();
 
   // Nobody here can decide it: there is nothing to approve or decline.
@@ -104,15 +104,15 @@ test('refuses a request it cannot act on, and says why', async ({ app, screen })
 
   await form.getByRole('textbox', 'Account number').fill('4011 0258 68');
   await expect(form.getByRole('textbox', 'Account number')).not.toHaveAttribute('aria-invalid', 'true');
-  await form.getByRole('combobox', 'Settle').tap();
+  await form.getByRole('combobox', 'Deadline').tap();
   await screen.getByRole('option', 'By a date').tap();
-  await form.getByRole('textbox', 'Settle by').fill('2026-10-30');
+  await form.getByRole('textbox', 'Deadline date').fill('2026-10-30');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Oct 30, 2026 has passed. Choose a later date, or ASAP.');
-  await expect(form.getByRole('textbox', 'Settle by')).toHaveAttribute('aria-invalid', 'true');
-  await expect(form.getByRole('textbox', 'Settle by')).toBeFocused();
+  await expect(form.getByRole('textbox', 'Deadline date')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('textbox', 'Deadline date')).toBeFocused();
 
-  await form.getByRole('textbox', 'Settle by').fill('2026-11-20');
+  await form.getByRole('textbox', 'Deadline date').fill('2026-11-20');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter your name, so the CEO knows who is asking.');
   await expect(form.getByRole('textbox', 'Requested by')).toHaveAttribute('aria-invalid', 'true');
@@ -122,7 +122,7 @@ test('refuses a request it cannot act on, and says why', async ({ app, screen })
   await expect(form.getByRole('textbox', 'Requested by')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Send for approval').tap();
   await screen.getByRole('tab', /^(Your requests|Requests)/).tap();
-  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Bank transfer Paolo Santos ₱2,450\.50 Nov 20, 2026 For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Bank transfer Paolo Santos ₱2,450\.50 Nov 20, 2026 Pending/)).toBeVisible();
 });
 
 test('lists the expenses to be paid back by transfer, and previews the fund transfer request the CEO\'s approval makes', async ({ app, screen, browser }) => {
@@ -154,13 +154,20 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
   await expect(paper).toContainText('Three Thousand Seven Hundred Thirty Pesos and 75/100 Only');
   await expect(paper).toContainText('Not approved yet: this request waits for the CEO\'s decision.');
   await expect(form.getByRole('button', 'Export PDF')).toBeHidden();
+  // Money is signed for by hand: e-signatures print only when ticked, and the choice is kept (docs/adr/0051).
+  const eSign = form.getByRole('checkbox', 'Show e-signatures on the fund transfer request (leave unticked to sign by hand)');
+
+  await expect(eSign).not.toBeChecked();
+  await eSign.tap();
+  await expect(eSign).toBeChecked();
+  await eSign.tap();
   expect(await tinyPaperText(browser)).toEqual([]);
   expect(await faintPaperText(browser)).toEqual([]);
 
   await form.getByRole('button', 'Send for approval').tap();
   await expect(screen.getByRole('dialog', 'RF-2026-0001 sent to the CEO for approval.')).toBeVisible();
   await screen.getByRole('tab', /^(Your requests|Requests)/).tap();
-  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Revolving fund, Nov 1 to 15 Bank transfer Ana Cruz ₱3,730\.75 ASAP For Approval/)).toBeVisible();
+  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Revolving fund, Nov 1 to 15 Bank transfer Ana Cruz ₱3,730\.75 ASAP Pending/)).toBeVisible();
 
   // The next request starts with the same account: the fund is topped up into it each time.
   await screen.getByRole('tab', /^Request entry/).tap();
@@ -187,7 +194,7 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
   await form.getByRole('button', 'Save changes').tap();
   await expect(screen.getByRole('dialog', 'RF-2026-0001 updated.')).toBeVisible();
   await screen.getByRole('tab', /^(Your requests|Requests)/).tap();
-  await expect(register.getByRole('row', /^RF-2026-0001 .* ₱45,000\.00 ASAP For Approval/)).toBeVisible();
+  await expect(register.getByRole('row', /^RF-2026-0001 .* ₱45,000\.00 ASAP Pending/)).toBeVisible();
 
   await register.getByRole('button', 'Actions for RF-2026-0001').tap();
   await screen.getByRole('menuitem', 'Withdraw…').tap();
@@ -195,6 +202,8 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
   await screen.getByRole('alertdialog', 'Withdraw RF-2026-0001?').getByRole('button', 'Withdraw').tap();
 
   await expect(register.getByRole('row', /^RF-2026-0001 /).getByRole('cell', 'Withdrawn')).toBeVisible();
+  // Withdrawn, it will never be paid: its payment status is a dash.
+  await expect(register.getByRole('row', /^RF-2026-0001 .* Withdrawn —/)).toBeVisible();
   await expect(screen.getByText('No request is waiting. Ask for funds here, and the CEO approves or declines.')).toBeVisible();
 
   // A withdrawn request opens read-only.
@@ -213,6 +222,42 @@ test('changes a request while it waits, then withdraws it, and it stays on recor
   await expect(screen.getByRole('main').getByRole('list').first().getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
 });
 
+test('deletes a request, or several ticked together, and never gives a deleted number out again', async ({ app, screen }) => {
+  await app.open('/#funds');
+  await ask(screen, party);
+  await ask(screen, { ...party, purpose: 'Christmas party: sound system', expense: 'Sound system', amount: '12000' });
+  await ask(screen, { ...party, purpose: 'Christmas party: catering', expense: 'Catering', amount: '30000' });
+  await screen.getByRole('tab', /^Requests/).tap();
+  const register = screen.getByRole('table', 'Requests for funds');
+
+  // One from its row's menu, asked first.
+  await register.getByRole('button', 'Actions for RF-2026-0002').tap();
+  await screen.getByRole('menuitem', 'Delete…').tap();
+  const one = screen.getByRole('alertdialog', 'Delete RF-2026-0002?');
+
+  await expect(one).toContainText('removed from the register for everyone, with any receipts');
+  await one.getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await one.getByRole('button', 'Delete').tap();
+  await expect(screen.getByRole('dialog', 'RF-2026-0002 deleted.')).toBeVisible();
+  await expect(register.getByRole('row', /^RF-2026-0002 /)).toHaveCount(0);
+
+  // The others, ticked together.
+  await register.getByRole('checkbox', 'Select RF-2026-0001').tap();
+  await register.getByRole('checkbox', 'Select RF-2026-0003').tap();
+  await screen.getByRole('toolbar', 'Requests for funds: selected').getByRole('button', 'Delete (2)…').tap();
+  const both = screen.getByRole('alertdialog', 'Delete 2 requests?');
+
+  await both.getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await both.getByRole('button', 'Delete').tap();
+  await expect(screen.getByText('No requests yet.')).toBeVisible();
+
+  // The next request takes a new number, and the log says who deleted them.
+  await ask(screen, party);
+  await expect(screen.getByRole('dialog', 'RF-2026-0004 sent to the CEO for approval.')).toBeVisible();
+  await app.open('/#activity');
+  await expect(screen.getByText('RF-2026-0002 deleted by someone on this computer.')).toBeVisible();
+});
+
 test('shows a waiting request on Home and Overview, opens it from there, and logs it', async ({ app, screen }) => {
   await app.open('/#funds');
   await ask(screen, { ...party, purpose: 'Replacement laptop charger', expense: 'Laptop charger', amount: '2450.50', name: 'Paolo Santos', by: '2026-11-20' });
@@ -225,7 +270,7 @@ test('shows a waiting request on Home and Overview, opens it from there, and log
   await expect(screen.getByRole('definition').filter({ hasText: '₱2,450.50 waiting for a decision' })).toBeVisible();
   const waiting = screen.getByRole('region', 'Waiting on you');
 
-  await waiting.getByRole('button', 'RF-2026-0001 Paolo Santos · by Nov 20, 2026 ₱2,450.50 For Approval').tap();
+  await waiting.getByRole('button', 'RF-2026-0001 Paolo Santos · by Nov 20, 2026 ₱2,450.50 Pending').tap();
   await expect(screen.getByRole('heading', { name: 'Requests for Funds', level: 1 })).toBeVisible();
   await expect(screen.getByRole('form', 'Editing RF-2026-0001')).toBeVisible();
 

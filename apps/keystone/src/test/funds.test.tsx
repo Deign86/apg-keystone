@@ -74,7 +74,7 @@ describe('a request for funds, as shipped', () => {
     const voucher = store.state.cv.at(-1);
     expect(voucher).toMatchObject({ no: '888001', payee: 'MANILA WATER COMPANY', address: 'MWSS Compound, Quezon City', status: 'For Approval', lines: [{ desc: 'Christmas party: venue deposit (RF-2026-0001)', amt: 48000 }] });
     expect(store.state.ext?.funds).toMatchObject({ requests: [{ no: 'RF-2026-0001', status: 'Approved', voucher: '888001', decision: { by: 'Mark Reyes', uid: 'owner-1' } }] });
-    expect(screen.getByRole('table', { name: 'Requests for funds' })).toHaveTextContent('Approved');
+    expect(screen.getByRole('table', { name: 'Requests for funds' })).toHaveTextContent('Processing');
   });
 
   it('without Check Vouchers, the approval stands and no voucher is drafted', async () => {

@@ -211,7 +211,9 @@ describe('the records in the cloud', () => {
     const who: Member = { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' };
     const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, remote, layout, who));
 
-    expect(layout).toEqual({ ...DRAFT_DOCUMENTS, funds: expect.objectContaining({ collection: 'rf', readBy: 'uid' }) });
+    expect(layout).toEqual({ ...DRAFT_DOCUMENTS, funds: expect.objectContaining({ collection: 'rf' }) });
+    // Every member reads every request (docs/adr/0051): nobody's reads of them are narrowed to their own.
+    expect(layout.funds).not.toHaveProperty('readBy');
     expect(store.ctx.who).toEqual(who);
     expect(store.state).toEqual(filed);
 

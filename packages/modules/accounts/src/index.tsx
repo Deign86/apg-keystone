@@ -208,7 +208,7 @@ function Members({ accounts }: { accounts: Accounts }) {
         open={making}
         onOpenChange={(o) => !o && setMaking(false)}
         title="Make account"
-        description="A staff account opens APG's records, and files and reads its own requests for funds. Only the CEO decides them."
+        description="A staff account opens APG's records, files requests for funds and reads everyone's. Only the CEO decides them."
       >
         {making && members && (
           <AccountForm

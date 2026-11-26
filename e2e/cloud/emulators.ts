@@ -148,11 +148,15 @@ export async function idToken(account: Account): Promise<string> {
 
 /**
  * What firestore.rules answer a member who goes past Keystone: the HTTP status of reading a document under
- * keystone/apg, or of writing it whole as the first record of its list with these string fields beside `pos`, signed
+ * keystone/apg, or of writing it whole as the first record of its list with these string fields, and `maps` of strings, beside `pos`, signed
  * in with `token` (200 allowed, 403 refused).
  */
-export async function asMember(token: string, path: string, write?: Record<string, string>): Promise<number> {
-  const fields = write && { pos: { integerValue: '0' }, ...Object.fromEntries(Object.entries(write).map(([k, v]) => [k, { stringValue: v }])) };
+export async function asMember(token: string, path: string, write?: Record<string, string>, maps: Record<string, Record<string, string>> = {}): Promise<number> {
+  const strings = (o: Record<string, string>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { stringValue: v }]));
+
+  const fields = write && {
+    pos: { integerValue: '0' }, ...strings(write), ...Object.fromEntries(Object.entries(maps).map(([k, m]) => [k, { mapValue: { fields: strings(m) } }])),
+  };
 
   const res = await fetch(`${DATABASE}/documents/keystone/apg${path}`, {
     method: fields ? 'PATCH' : 'GET',
