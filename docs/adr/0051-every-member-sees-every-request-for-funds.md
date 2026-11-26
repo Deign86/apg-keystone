@@ -12,7 +12,9 @@ Status: Accepted · Date: 2026-11-26
   - a request can be deleted from the register, whatever its status;
   - the register's "Status" becomes **Transaction state**, which is only Pending or Processing. A new **Payment
     status** column shows Paid, or Pending if not yet;
-  - "Settle" becomes **Deadline**, and "Asked by" becomes **Requested by**.
+  - "Settle" becomes **Deadline**, and "Asked by" becomes **Requested by**;
+  - money needs wet signatures, so the fund transfer request shows the saved e-signatures only when asked, with a
+    checkmark.
 
 ## Decision
 
@@ -44,6 +46,10 @@ Status: Accepted · Date: 2026-11-26
 - **Words:** the form's "Settle" and "Settle by" are now "Deadline" and "Deadline date". The register's "Settle" is now
   "Deadline", and the fund transfer request's "Settle by" is now "Deadline". "Asked by" is now "Requested by" on the
   register and on the approval card.
+- **E-signatures are optional on the fund transfer request.** Below the form there is a checkbox, "Show e-signatures on
+  the fund transfer request (leave unticked to sign by hand)". It is unticked by default, and then the paper prints
+  blank lines to sign by hand. Ticked, the paper prints the signatures that Company Details keeps (0045). The choice is
+  kept with the drafts (`funds.esign`), so it stays the same when you come back. Other papers are unchanged.
 
 ## Consequences
 

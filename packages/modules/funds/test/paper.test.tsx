@@ -52,6 +52,16 @@ describe('the fund transfer request on paper', () => {
     expect(pageRules()).toEqual([]);
   });
 
+  it('leaves the lines blank to sign by hand, and prints the e-signatures only when asked (docs/adr/0051)', () => {
+    const signed = { ...company, signatures: { 'ANA CRUZ': 'data:image/png;base64,iVBORw0KGgo=', 'MARK REYES': 'data:image/png;base64,iVBORw0KGgo=' } };
+    const { unmount } = render(<TransferPaper request={request} company={signed} />);
+
+    expect(screen.queryAllByAltText(/^Signature of /)).toHaveLength(0);
+    unmount();
+    render(<TransferPaper request={request} company={signed} eSigned />);
+    expect(screen.queryAllByAltText(/^Signature of /)).toHaveLength(2);
+  });
+
   it('lays out one still waiting, with no account and no expenses listed, the same way', () => {
     render(<TransferPaper request={{ ...request, no: 'RF-2026-0008', status: 'For Approval', decision: undefined, account: undefined, lines: [], settle: 'ASAP' }} company={company} />);
 

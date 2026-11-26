@@ -154,6 +154,13 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
   await expect(paper).toContainText('Three Thousand Seven Hundred Thirty Pesos and 75/100 Only');
   await expect(paper).toContainText('Not approved yet: this request waits for the CEO\'s decision.');
   await expect(form.getByRole('button', 'Export PDF')).toBeHidden();
+  // Money is signed for by hand: e-signatures print only when ticked, and the choice is kept (docs/adr/0051).
+  const eSign = form.getByRole('checkbox', 'Show e-signatures on the fund transfer request (leave unticked to sign by hand)');
+
+  await expect(eSign).not.toBeChecked();
+  await eSign.tap();
+  await expect(eSign).toBeChecked();
+  await eSign.tap();
   expect(await tinyPaperText(browser)).toEqual([]);
   expect(await faintPaperText(browser)).toEqual([]);
 

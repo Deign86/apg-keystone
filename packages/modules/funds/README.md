@@ -20,7 +20,8 @@
   a PDF as it is.
 - `src/TransferPaper.tsx`: the fund transfer request (docs/adr/0021), one A4 page from the kit's document blocks: the
   letterhead, who asked and when, the account to transfer to, the amount in figures and words, the expenses, and who
-  asked and who approved, with when.
+  asked and who approved, with when. Its signature lines are blank, to sign by hand, unless the form's "Show
+  e-signatures" checkbox is ticked (`funds.esign`, docs/adr/0051).
 - `src/rules.ts`: its rules, tested in `test/rules.test.ts`:
   - numbering `RF-2026-0001` and on, from the last number given out, so a deleted request's number is never given
     out again;

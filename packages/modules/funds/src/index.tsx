@@ -1,4 +1,4 @@
-import { Button, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
+import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
 import { Fills, FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
@@ -103,6 +103,8 @@ function Funds() {
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft(DRAFT, () => newRequest(state, ctx));
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
+  // Money is signed for by hand: the fund transfer request prints blank lines unless e-signatures are asked for.
+  const [eSigned, setESigned] = useDraft(`${ID}.esign`, () => false);
 
   // A request is read only by its requester and the CEO, so its drafts are kept to whoever wrote them (docs/adr/0041).
   const drafts = useSavedDrafts(draft, setDraft, {
@@ -250,6 +252,10 @@ function Funds() {
           </Field>
         </Fills>
       </fieldset>
+      {/* Outside the fieldset, so it still works once the request can no longer change: that is when it is printed. */}
+      {shown.pay === 'transfer' && (
+        <Checkbox checked={eSigned} onChange={setESigned}>Show e-signatures on the fund transfer request (leave unticked to sign by hand)</Checkbox>
+      )}
     </FormCard>
   );
 
@@ -338,7 +344,7 @@ function Funds() {
             note: editing ? editing.no : 'New',
             // Paid by check, there is nothing to print here: the approval drafts a check voucher instead.
             panel: shown.pay === 'transfer'
-              ? <Workspace form={entry} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
+              ? <Workspace form={entry} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} eSigned={eSigned} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
               : <div className="max-w-[720px]">{entry}</div>,
           },
         ]}

@@ -7,7 +7,15 @@ import { expensesOf, requestTotal, settleText, type FundsRequest } from './rules
 // for its total to be sent to the account it names, for the expenses it lists. One A4 page: who asked and when, the
 // account in its own ruled box, the amount in figures and in words, the expenses, and who asked and who approved.
 
-type Props = { request: FundsRequest; company: Company & Pick<CompanyDetails, 'signatures'> };
+type Props = {
+  request: FundsRequest;
+  company: Company & Pick<CompanyDetails, 'signatures'>;
+  /**
+   * Whether the signatures Company Details keeps print above the lines (docs/adr/0051). Money is signed for by hand, so
+   * by default the lines are left blank for wet signatures.
+   */
+  eSigned?: boolean;
+};
 
 /** "Nov 15, 2026 at 14:02", from a decision's "2026-11-15 14:02". */
 const when = (at: string) => `${longDate(at.slice(0, 10))} at ${at.slice(11, 16)}`;
@@ -24,7 +32,7 @@ function standing(r: FundsRequest): string {
   return `This request was ${r.status.toLowerCase()} and is not to be paid.`;
 }
 
-export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPaper({ request: r, company }, ref) {
+export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPaper({ request: r, company, eSigned = false }, ref) {
   const total = requestTotal(r);
   const a = r.account;
   const mark = usePaperPart();
@@ -55,7 +63,7 @@ export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPap
         part="lines"
       />
 
-      <Signatures signed={(who) => signatureOf(company, who)} names={[[r.requester, 'Requested by', '', 'requester'], [r.status === 'Approved' || r.status === 'Paid' ? r.decision?.by ?? '' : '', 'Approved by']]} />
+      <Signatures signed={eSigned ? (who) => signatureOf(company, who) : undefined} names={[[r.requester, 'Requested by', '', 'requester'], [r.status === 'Approved' || r.status === 'Paid' ? r.decision?.by ?? '' : '', 'Approved by']]} />
       <p className="m-0 mt-3 text-[11px] font-medium text-pretty">{standing(r)}</p>
     </Sheet>
   );
