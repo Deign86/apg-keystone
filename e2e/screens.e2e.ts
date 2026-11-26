@@ -7,7 +7,7 @@ import { expect } from 'e2e';
 
 // Every screen on the rail opens in a real browser, shows its title and does not hit the
 // error panel. The rail button's name also carries its shortcut badge, hence the pattern.
-const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'Statements of Account', 'Acknowledgement Receipts', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Data'];
+const SCREENS = ['Overview', 'Check Vouchers', 'Requests for Funds', 'Billing Statements', 'Statements of Account', 'Acknowledgement Receipts', 'Directory', 'Activity Log', 'Timekeeping', 'Payroll', 'Interns', 'Data'];
 
 test('opens on Home with the rail', async ({ app, screen }) => {
   await app.open('/');

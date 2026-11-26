@@ -1,0 +1,20 @@
+{
+  "name": "@keystone/module-interns",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Interns: each batch of OJT interns, their requirements and certificates, and the weekly cleaning schedule, brought in from HR's spreadsheet.",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@keystone/core": "*",
+    "@keystone/kit": "*",
+    "@keystone/ui": "*",
+    "fflate": "^0.8.2",
+    "react": "^18.3.1"
+  }
+}

@@ -5,7 +5,7 @@ import type { Screen } from 'e2e';
 
 /** Every screen the rail lists, by its address, in rail order. */
 export const SCREENS = [
-  'home', 'overview', 'vouchers', 'funds', 'billing', 'soa', 'receipts', 'directory', 'activity', 'timekeeping', 'payroll',
+  'home', 'overview', 'vouchers', 'funds', 'billing', 'soa', 'receipts', 'directory', 'activity', 'timekeeping', 'payroll', 'interns',
   'profile', 'accounts', 'data', 'banks', 'company',
 ] as const;
 
