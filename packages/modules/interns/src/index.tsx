@@ -3,15 +3,13 @@ import {
   TextInput, useConfirm, type Column, type Refusal, type RowAction,
 } from '@keystone/ui';
 import { useId, useMemo, useState } from 'react';
-import { count, DASH, isISODate, sentenceOf } from '@keystone/core';
+import { count, DASH, isISODate } from '@keystone/core';
 import { useDraft, useKeystone, type ModuleDef } from '@keystone/kit';
 import {
   addToRoster, batchesOf, batchLabel, dateText, datesToCheck, hoursText, ID, internDraftOf, internsFigure, internsFinding, internsLine, internsOf, isActive, NOT_NEEDED,
   newIntern, owed, owing, receiveRequirement, removeFromRoster, removeIntern, REQUIREMENTS, requirementText, rosterOf, rosterSuggestions, saveIntern, STATUS_TONE,
   STATUSES, TAG, unreadDate, type Intern, type InternDraft, type RequirementKey, type Weekday,
 } from './rules';
-import { importInterns, importPlan, importSummary } from './import';
-import { readWorkbook } from './xlsx';
 
 const DRAFT = `${ID}.draft`;
 
@@ -243,7 +241,7 @@ function InternRegister({ onOpen }: { onOpen: (i: Intern) => void }) {
           onOpen={onOpen}
           actions={actions}
           pageSize={PAGE_SIZE}
-          empty={<EmptyState text={all.length ? 'No intern matches.' : 'No interns yet. Import HR’s spreadsheet to bring every batch in.'} action={q || show !== 'All' || batch !== 'All' ? <Button size="sm" onClick={() => { setQuery(''); setShow('All'); setBatch('All'); }}>Show all</Button> : undefined} />}
+          empty={<EmptyState text={all.length ? 'No intern matches.' : 'No interns yet. Add the first one.'} action={q || show !== 'All' || batch !== 'All' ? <Button size="sm" onClick={() => { setQuery(''); setShow('All'); setBatch('All'); }}>Show all</Button> : undefined} />}
         />
       </Panel>
     </>
@@ -336,35 +334,11 @@ function Cleaning() {
 }
 
 function Interns() {
-  const { state, ctx, run, files, notify } = useKeystone();
-  const confirm = useConfirm();
+  const { state, ctx } = useKeystone();
   const [editing, setEditing] = useDraft<InternDraft | null>(DRAFT, () => null);
   const [view, setView] = useDraft<View>(VIEW, () => 'register');
   const all = internsOf(state);
   const open = (i: Intern) => setEditing(internDraftOf(i));
-
-  // HR's spreadsheet, read here and brought in once it is confirmed (docs/adr/0056). It is read again against the
-  // records as they are when confirmed, so nothing saved meanwhile is counted twice.
-  const importSheet = async () => {
-    const file = await files.open([{ name: 'Excel workbook', extensions: ['xlsx'] }]);
-
-    if (!file) return;
-
-    try {
-      const book = readWorkbook(file.bytes);
-      const plan = importPlan(state, book, file.name);
-
-      if (!plan.added.length && !plan.rosterTaken) {
-        notify(`Everything in ${file.name} is already in Keystone.`);
-
-        return;
-      }
-
-      confirm({ title: `Import ${file.name}?`, body: importSummary(plan), confirm: 'Import', onConfirm: () => run((s, c) => importInterns(s, importPlan(s, book, file.name), c)) });
-    } catch (e) {
-      notify(sentenceOf(e), 'error');
-    }
-  };
 
   return (
     <>
@@ -372,10 +346,7 @@ function Interns() {
         eyebrow="People"
         title="Interns"
         line={internsLine(state)}
-        actions={<>
-          <Button onClick={() => void importSheet()}>Import from spreadsheet…</Button>
-          <Button kind="primary" onClick={() => setEditing(newIntern(state, ctx))}>Add intern</Button>
-        </>}
+        actions={<Button kind="primary" onClick={() => setEditing(newIntern(state, ctx))}>Add intern</Button>}
       />
       <Tabs<View>
         label="Interns"

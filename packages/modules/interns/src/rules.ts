@@ -3,10 +3,12 @@ import {
   withModuleData, type Change, type Ctx, type Editing, type Figure, type Finding, type JsonObject, type TerminalState, type Tone,
 } from '@keystone/core';
 
-// Interns (docs/adr/0056): HR's register of OJT interns, batch by batch, as Ma'am Jean kept it in the spreadsheet
+// Interns (docs/adr/0056, 0057): HR's register of OJT interns, batch by batch, as Ma'am Jean kept it in the spreadsheet
 // "INTERNS ALPHA PREMIER GROUP": who they are and their school, when they start and end, their schedule and hours, the
 // four requirements they hand in, the ID number they are given, the proof of completion issued, and how their OJT
-// ended. And the weekly cleaning schedule the spreadsheet keeps beside them. Kept under state.ext.interns.
+// ended. And the weekly cleaning schedule the spreadsheet kept beside them. Kept under state.ext.interns. The batches
+// in the spreadsheet were brought over once, each record keeping the row it came from (`source`); HR keeps them here
+// from now on.
 
 /** This module's id, written once: its route, its ModuleDef.id, its key under state.ext and its draft key. */
 export const ID = 'interns';
@@ -44,7 +46,7 @@ export interface SourceCell {
   text: string;
 }
 
-/** Where an imported intern came from: the file, the sheet's tab, the row, its colour and every cell as written. */
+/** Where a record brought over from the spreadsheet came from: the file, the tab, the row, its colour and every cell as written. */
 export interface Source {
   file: string;
   sheet: string;
@@ -82,7 +84,7 @@ export interface Intern {
   /** Served as a volunteer rather than for school credit. */
   volunteer: boolean;
   remarks: string;
-  /** Brought in from the spreadsheet: where from, and what the row said. Absent for one added in Keystone. */
+  /** Brought over from HR's spreadsheet: where from, and what the row said. Absent for one added in Keystone. */
   source?: Source;
 }
 
@@ -231,9 +233,6 @@ export function internDraftOf(i: Intern): InternDraft {
 
 const nameKey = (name: string) => name.trim().replace(/\s+/g, ' ').replace(/[.,]+$/, '').toLowerCase();
 
-/** The same person in the same batch: how an import knows a row is already here. */
-export const sameIntern = (a: Pick<Intern, 'name' | 'batch'>, b: Pick<Intern, 'name' | 'batch'>) => a.batch === b.batch && nameKey(a.name) === nameKey(b.name);
-
 /**
  * Saves an intern, or the changes to one. It needs a name and a batch; the hours must be a number, the dates dates (or
  * what the spreadsheet wrote, left as it was), the end no earlier than the start, and the ID number not someone else's.
@@ -367,7 +366,7 @@ export const certificateDue = (i: Intern) => i.status === 'Completed' && !i.proo
 export function internsLine(s: TerminalState): string {
   const all = internsOf(s);
 
-  if (!all.length) return 'No interns yet. Import HR’s spreadsheet to bring every batch in, or add an intern.';
+  if (!all.length) return 'No interns yet. Add each one as their OJT starts: their school, dates, requirements and ID number.';
   const active = all.filter(isActive).length;
   const papers = all.filter(owing).length;
   const batches = batchesOf(s).filter((b) => b > 0);

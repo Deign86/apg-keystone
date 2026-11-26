@@ -66,7 +66,8 @@ Consequences**.
 | [0053](0053-repeated-details-fill-themselves.md) | Repeated details fill themselves, and fields offer what was typed before | Accepted |
 | [0054](0054-acknowledgement-receipts.md) | Acknowledgement Receipts, on the company's form | Accepted |
 | [0055](0055-filled-in-values-print-in-capitals-and-bold.md) | What someone fills in prints in capitals and bold, and a row's boxes line up | Accepted |
-| [0056](0056-interns.md) | Interns, brought over from HR's spreadsheet | Accepted |
+| [0056](0056-interns.md) | Interns, brought over from HR's spreadsheet | Accepted; importer superseded by 0057 |
+| [0057](0057-interns-without-the-importer.md) | HR keeps the interns in Keystone, with no importer | Accepted |
 
 Template:
 

@@ -1,7 +1,8 @@
 # Interns
 
-HR's register of OJT interns, batch by batch, and the weekly cleaning schedule, brought over from the spreadsheet
-Ma'am Jean kept ("INTERNS ALPHA PREMIER GROUP", one tab per batch and one for the cleaners). See docs/adr/0056.
+HR's register of OJT interns, batch by batch, and the weekly cleaning schedule, which Ma'am Jean kept in a spreadsheet
+("INTERNS ALPHA PREMIER GROUP", one tab per batch and one for the cleaners) and keeps here now. The batches in the
+spreadsheet were brought over once, each record with the row it came from; there is no importer (docs/adr/0056, 0057).
 
 ## Owns
 - `src/index.tsx`: the screen, in three tabs.
@@ -12,11 +13,10 @@ Ma'am Jean kept ("INTERNS ALPHA PREMIER GROUP", one tab per batch and one for th
     or "Not yet".
   - **Cleaning schedule:** who cleans on each day of the week, with a field to add someone (it offers the interns on
     OJT) and Remove beside each name.
-  - **Import from spreadsheet…** reads the .xlsx, says what it found and what it will add, and adds it once confirmed.
   - **Add intern** opens the form: name, school, batch, ID number (the next one), dates, schedule, OJT hours, the four
-    requirements (a date, or not needed), status, proof of completion, volunteer, and notes. An imported intern's form
-    also shows the spreadsheet row it came from, every cell as written, and a date the sheet wrote that is not a date
-    is kept, and said, until a date is typed over it.
+    requirements (a date, or not needed), status, proof of completion, volunteer, and notes. A record brought over from
+    the spreadsheet also shows the row it came from, every cell as written, and a date the sheet wrote that is not a
+    date is kept, and said, until a date is typed over it.
 - `src/rules.ts`: the records and their rules, tested in `test/rules.test.ts`:
   - `IN-0001` and on is Keystone's own key; the intern's ID number (`APG-2026-127`) is the next after the highest
     given, in whatever way it was written;
@@ -25,18 +25,6 @@ Ma'am Jean kept ("INTERNS ALPHA PREMIER GROUP", one tab per batch and one for th
   - which requirements are owed, which dates to check (not a date, or a requirement dated after today);
   - the cleaning schedule;
   - the sentence under the title, the finding and the Overview figure.
-- `src/import.ts`: reading the spreadsheet, tested in `test/import.test.ts` against `test/fixtures/sample-interns.xlsx`
-  (made-up interns, laid out as HR's spreadsheet is):
-  - each `BATCH n` tab is a batch; its columns are found by their headers, which changed over the batches;
-  - a row's status is its Notes/Remarks, or else its colour read against the legend under the rows (and the reds and
-    yellow the sheets use without one);
-  - dates as cells, or typed as `10/15/2025`, `002/19/2026`, `Sept. 9 2026`; anything else is kept as written;
-  - a tab with the days of the week across it is the cleaning schedule;
-  - every cell of every row is kept on the record with its tab, row and colour;
-  - importing again adds only who is not here yet (the same name in the same batch), and leaves what was changed in
-    Keystone alone; the cleaning schedule comes in only while Keystone has none.
-- `src/xlsx.ts`: reading an .xlsx into cells (text, number, fill colour), tested in `test/xlsx.test.ts`. It uses
-  `fflate` to open the zip and the browser's `DOMParser` for its XML.
 
 ## Contributes
 - **Home:** a tile, with the number on OJT.
