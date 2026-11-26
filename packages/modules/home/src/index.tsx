@@ -1,7 +1,7 @@
 import { KeyBadge, SectionLabel } from '@keystone/ui';
 import logo from '@keystone/ui/logo.png';
 import { useEffect, useState } from 'react';
-import { clockTime, greeting, topFinding, weekdayLong } from '@keystone/core';
+import { clockTime, greeting, weekdayLong } from '@keystone/core';
 import { ConnectorShortcut, useKeystone, type ModuleDef } from '@keystone/kit';
 
 function useNow() {
@@ -36,7 +36,6 @@ function Home() {
           <img src={logo} alt="Alpha Premier phoenix" className="size-16 object-contain" />
         </div>
         <h1 className="m-0 font-display text-[clamp(34px,5vw,58px)] leading-tight font-semibold">{greeting(now)}</h1>
-        <p className="mx-auto mt-3 mb-0 max-w-[60ch] font-semibold text-gold">{topFinding(registry.modules.map((m) => m.finding?.(state, ctx)))}</p>
       </div>
 
       <h2 className="sr-only">Systems</h2>
