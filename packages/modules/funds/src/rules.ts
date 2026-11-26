@@ -9,17 +9,18 @@ import {
 // Requests for funds (docs/adr/0011, 0021): staff list the expenses they need money for, the CEO approves or
 // declines, and an approval either makes the fund transfer request, for a transfer to the account the request names,
 // or drafts the check voucher through Check Vouchers' service. Only the CEO, signed in to the records in the cloud,
-// decides; firestore.rules holds the same line, and lets staff read only their own requests.
+// decides; firestore.rules holds the same line, and lets staff read only their own requests. Once approved, the
+// requester uploads the receipts or other proof of what the money paid for, and that marks the request paid (0050).
 
 /** This module's id, written once: its route, its ModuleDef.id, its key under state.ext and its draft key. */
 export const ID = 'funds';
 export const TAG = 'RF';
 
-export const REQUEST_STATUSES = ['For Approval', 'Approved', 'Declined', 'Withdrawn'] as const;
+export const REQUEST_STATUSES = ['For Approval', 'Approved', 'Paid', 'Declined', 'Withdrawn'] as const;
 
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
-const TONES: Record<RequestStatus, Tone> = { 'For Approval': 'warn', Approved: 'good', Declined: 'bad', Withdrawn: 'neutral' };
+const TONES: Record<RequestStatus, Tone> = { 'For Approval': 'warn', Approved: 'good', Paid: 'good', Declined: 'bad', Withdrawn: 'neutral' };
 
 export const requestTone = (s: RequestStatus): Tone => TONES[s];
 
@@ -55,6 +56,18 @@ export type TransferAccount = {
   number: string;
 }
 
+/** A receipt, or other proof of what an approved request paid for: the file's name, and the file as a data URL. */
+export type Receipt = { name: string; data: string };
+
+/**
+ * The most the receipts of one request may come to, in characters of their data URLs. A request is one document in the
+ * cloud, its body under 900,000 characters, and the rest of it is a few thousand (docs/adr/0050).
+ */
+export const RECEIPTS_MOST = 700_000;
+
+/** The kinds of file a receipt may be: a photo, or a PDF. */
+export const RECEIPT_TYPES = ['data:image/jpeg;', 'data:image/png;', 'data:image/webp;', 'data:application/pdf;'] as const;
+
 export type FundsRequest = {
   no: string;
   /** The day it was filed. */
@@ -81,6 +94,10 @@ export type FundsRequest = {
   decision?: Decision;
   /** Checks: the voucher drafted when it was approved. */
   voucher?: string;
+  /** Paid: the receipts or other proof its requester uploaded. */
+  receipts?: Receipt[];
+  /** Paid: when its requester uploaded them, local time, "yyyy-MM-dd HH:mm". */
+  paid?: string;
 }
 
 export type FundsData = {
@@ -140,6 +157,11 @@ export function dataOf(s: TerminalState): FundsData {
     if (decision) request.decision = decision;
 
     if (jsonText(r.voucher)) request.voucher = jsonText(r.voucher);
+    const receipts = jsonObjects(r.receipts).map((x) => ({ name: jsonText(x.name), data: jsonText(x.data) })).filter((x) => x.data);
+
+    if (receipts.length) request.receipts = receipts;
+
+    if (jsonText(r.paid)) request.paid = jsonText(r.paid);
 
     return request;
   });
@@ -148,7 +170,10 @@ export function dataOf(s: TerminalState): FundsData {
 }
 
 const saved = (s: TerminalState, data: FundsData) => withModuleData(s, ID, {
-  requests: data.requests.map((r) => ({ ...r, lines: r.lines.map((l) => ({ ...l })), ...(r.account && { account: { ...r.account } }) })), last: data.last,
+  requests: data.requests.map((r) => ({
+    ...r, lines: r.lines.map((l) => ({ ...l })), ...(r.account && { account: { ...r.account } }), ...(r.receipts && { receipts: r.receipts.map((x) => ({ ...x })) }),
+  })),
+  last: data.last,
 });
 
 export const requestsNewestFirst = (s: TerminalState) => newestFirst(dataOf(s).requests);
@@ -168,7 +193,7 @@ export const expensesOf = (r: Pick<FundsRequest, 'lines' | 'purpose' | 'amount'>
 export const accountLabel = (a: TransferAccount) => [a.bank, a.name, a.number].join(' · ');
 
 /** Whether the request's fund transfer request can be printed and saved: a transfer, once the CEO approved it. */
-export const transferReady = (r: FundsRequest) => r.pay === 'transfer' && r.status === 'Approved';
+export const transferReady = (r: FundsRequest) => r.pay === 'transfer' && (r.status === 'Approved' || r.status === 'Paid');
 
 /** The next number after the highest given out: RF-2026-0003. */
 export function nextRequestNo(s: TerminalState, ctx: Ctx): string {
@@ -458,7 +483,67 @@ const noteEnd = (note?: string) => (note ? `: ${note}${/[.!?]$/.test(note) ? '' 
 export function decisionLine(r: FundsRequest): string | null {
   if (!r.decision) return null;
 
-  return `${r.status} by ${r.decision.by} on ${shortDate(r.decision.at.slice(0, 10))}${noteEnd(r.decision.note)}`;
+  // A paid request was approved first: the decision is the approval.
+  return `${r.status === 'Paid' ? 'Approved' : r.status} by ${r.decision.by} on ${shortDate(r.decision.at.slice(0, 10))}${noteEnd(r.decision.note)}`;
+}
+
+// ---------- receipts ----------
+
+/** A file's size as a person reads it, from the characters of its base64: "312 KB". */
+const kb = (chars: number) => `${Math.max(1, Math.round((chars * 3) / 4 / 1024))} KB`;
+
+/** A receipt's size as a person reads it, from its data URL: "312 KB". */
+export const receiptSize = (data: string) => kb(data.length - data.indexOf(',') - 1);
+
+/** Why this person cannot upload the receipts of a request, or null when they can: its requester, once it is approved. */
+export function receiptsLock(r: FundsRequest, ctx: Ctx): string | null {
+  if (r.status === 'Paid') return `${r.no} is paid; its receipts are kept with it.`;
+
+  if (r.status !== 'Approved') return `The receipts for ${r.no} are uploaded once it is approved.`;
+
+  if (!filedBy(r, ctx)) return `${r.no} is paid once ${r.requester || 'the person who asked for it'} uploads its receipts.`;
+
+  return null;
+}
+
+/**
+ * Marks an approved request paid, by its requester, with the receipts or other proof of what the money paid for: at
+ * least one, each a photo or a PDF, all of them small enough to be kept with the request. The log names the request
+ * and who paid it, never what for or how much.
+ */
+export function payRequest(s: TerminalState, no: string, receipts: Receipt[], ctx: Ctx): Change<FundsRequest> {
+  const data = dataOf(s);
+  const r = data.requests.find((x) => x.no === no);
+
+  if (!r) throw new KeystoneError(`${no} is not among the requests.`);
+  const lock = receiptsLock(r, ctx);
+
+  if (lock) throw new KeystoneError(lock);
+
+  if (!receipts.length) throw new KeystoneError(`Upload the receipt, or other proof of what ${no} paid for.`, 'receipts');
+  const odd = receipts.find((x) => !RECEIPT_TYPES.some((t) => x.data.startsWith(t)));
+
+  if (odd) throw new KeystoneError(`${odd.name || 'A receipt'} is not a photo or a PDF.`, 'receipts');
+  const size = receipts.reduce((n, x) => n + x.data.length, 0);
+
+  if (size > RECEIPTS_MOST) {
+    throw new KeystoneError(`The receipts come to ${kb(size)}; ${no} keeps up to ${kb(RECEIPTS_MOST)}. Remove one, or upload a smaller photo or PDF.`, 'receipts');
+  }
+
+  const who = ctx.who?.name ?? r.requester;
+  const updated: FundsRequest = { ...r, status: 'Paid', receipts: receipts.map((x) => ({ name: x.name.trim() || 'Receipt', data: x.data })), paid: stamp(ctx.now()) };
+
+  return {
+    state: logged(saved(s, { ...data, requests: data.requests.map((x) => (x.no === no ? updated : x)) }), TAG, `${no} paid; receipts uploaded by ${who}.`, ctx),
+    record: updated, message: `${no} is paid. ${count(receipts.length, 'receipt')} kept with it.`,
+  };
+}
+
+/** "Paid on Nov 5, 2026, with 2 receipts from Ana Cruz." */
+export function paidLine(r: FundsRequest): string | null {
+  if (r.status !== 'Paid') return null;
+
+  return `Paid${r.paid ? ` on ${shortDate(r.paid.slice(0, 10))}` : ''}, with ${count(r.receipts?.length ?? 0, 'receipt')} from ${r.requester || 'its requester'}.`;
 }
 
 // ---------- what the funds domain tells Overview and Home ----------
@@ -478,10 +563,13 @@ function answered(s: TerminalState, ctx: Ctx): FundsRequest[] {
 function answerText(r: FundsRequest): string {
   if (r.status === 'Declined') return `${r.no} was declined${noteEnd(r.decision?.note)}`;
 
-  if (r.pay === 'transfer') return `${r.no} was approved; open it to print or save its fund transfer request.`;
+  if (r.pay === 'transfer') return `${r.no} was approved; open it to print or save its fund transfer request, and upload its receipts once the money is spent.`;
 
-  return `${r.no} was approved${r.voucher ? `; ${r.voucher} is drafted.` : '.'}`;
+  return `${r.no} was approved${r.voucher ? `; ${r.voucher} is drafted` : ''}. Upload its receipts once the money is spent.`;
 }
+
+/** The requester's approved requests still waiting for their receipts. */
+const unpaid = (s: TerminalState, ctx: Ctx) => newestFirst(dataOf(s).requests).filter((r) => r.status === 'Approved' && filedBy(r, ctx));
 
 export function fundsFinding(s: TerminalState, ctx: Ctx): Finding | null {
   // A staff member's own answer comes first: it is what they are waiting for.
@@ -489,6 +577,11 @@ export function fundsFinding(s: TerminalState, ctx: Ctx): Finding | null {
     const news = answered(s, ctx)[0];
 
     if (news) return { priority: 40, text: answerText(news) };
+    const owed = unpaid(s, ctx);
+
+    if (owed.length === 1) return { priority: 20, text: `${owed[0].no} waits for your receipts; upload them to mark it paid.` };
+
+    if (owed.length) return { priority: 20, text: `${count(owed.length, 'approved request')} wait for your receipts; upload them to mark each paid.` };
     const mine = waitingRequests(s).filter((r) => filedBy(r, ctx));
 
     if (!mine.length) return null;

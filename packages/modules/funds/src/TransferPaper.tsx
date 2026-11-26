@@ -16,6 +16,9 @@ const when = (at: string) => `${longDate(at.slice(0, 10))} at ${at.slice(11, 16)
 function standing(r: FundsRequest): string {
   if (r.status === 'Approved' && r.decision) return `Approved in Keystone by ${r.decision.by} on ${when(r.decision.at)}.`;
 
+  // Paid, its receipts were uploaded after the approval, which the paper still carries (docs/adr/0050).
+  if (r.status === 'Paid' && r.decision) return `Approved in Keystone by ${r.decision.by} on ${when(r.decision.at)}. Paid${r.paid ? ` on ${when(r.paid)}` : ''}.`;
+
   if (r.status === 'For Approval') return 'Not approved yet: this request waits for the CEO\'s decision.';
 
   return `This request was ${r.status.toLowerCase()} and is not to be paid.`;
@@ -52,7 +55,7 @@ export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPap
         part="lines"
       />
 
-      <Signatures signed={(who) => signatureOf(company, who)} names={[[r.requester, 'Requested by', '', 'requester'], [r.status === 'Approved' ? r.decision?.by ?? '' : '', 'Approved by']]} />
+      <Signatures signed={(who) => signatureOf(company, who)} names={[[r.requester, 'Requested by', '', 'requester'], [r.status === 'Approved' || r.status === 'Paid' ? r.decision?.by ?? '' : '', 'Approved by']]} />
       <p className="m-0 mt-3 text-[11px] font-medium text-pretty">{standing(r)}</p>
     </Sheet>
   );

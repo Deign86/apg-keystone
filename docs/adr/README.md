@@ -60,6 +60,7 @@ Consequences**.
 | [0047](0047-keystone-is-also-a-web-app-for-phones-and-tablets.md) | Keystone is also a web app, installable on phones and tablets, served from Vercel | Accepted |
 | [0048](0048-every-pdf-is-drawn-as-text.md) | Every PDF is text, on every platform: Keystone draws the paper as text, shapes and its real pictures | Accepted |
 | [0049](0049-live-updates-that-recover-and-say-what-arrived.md) | Live updates recover by themselves, and say what arrived and who saved it | Accepted |
+| [0050](0050-an-approved-request-is-paid-with-its-receipts.md) | An approved request is paid once its requester uploads the receipts | Accepted |
 
 Template:
 

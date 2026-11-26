@@ -4,7 +4,7 @@
   "lists": ["dir", "cv", "bs", "ids", "log", "ext"],
   "company": { "collection": "company", "id": "details" },
   "own": {
-    "rf": { "fields": ["status", "uid", "decision"], "statuses": ["For Approval", "Approved", "Declined", "Withdrawn"] },
+    "rf": { "fields": ["status", "uid", "decision"], "statuses": ["For Approval", "Approved", "Paid", "Declined", "Withdrawn"] },
     "drafts": { "fields": [] },
     "mydrafts": { "fields": ["uid"] }
   },

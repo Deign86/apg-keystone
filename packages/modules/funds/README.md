@@ -12,6 +12,11 @@
   waiting opens for its requester to edit or withdraw; any other opens read-only, with the CEO's answer and the
   voucher it drafted. A transfer shows its fund transfer request beside the form as it will print; once approved, the
   form has Print and Export PDF, for the CEO (it opens on approval) and for the requester.
+- `src/Receipts.tsx`: under an approved request, its receipts (docs/adr/0050). Its requester adds the receipts or other
+  proof of what the money paid for, a photo or a PDF each, and **Mark paid…** sends them, which marks it Paid. A paid
+  request lists them, each with **Save…**, for the requester and the CEO.
+- `src/receipt-file.ts`: a picked file as a receipt: a photo drawn again as a JPEG small enough to keep in the request,
+  a PDF as it is.
 - `src/TransferPaper.tsx`: the fund transfer request (docs/adr/0021), one A4 page from the kit's document blocks: the
   letterhead, who asked and when, the account to transfer to, the amount in figures and words, the expenses, and who
   asked and who approved, with when.
@@ -24,23 +29,29 @@
     with the account their last transfer went to;
   - deciding, by the CEO signed in to the cloud only (`ctx.who.role === 'owner'`); a decision is final. Approving a
     transfer makes its fund transfer request; approving a check drafts its voucher;
-  - the log lines, which name a request's number and who filed or decided it, never its purpose, amount or account;
+  - paying, by the requester only, once it is approved: at least one receipt, each a photo or a PDF, up to
+    `RECEIPTS_MOST` in all; the request becomes Paid and keeps them (docs/adr/0050);
+  - the log lines, which name a request's number and who filed, decided or paid it, never its purpose, amount,
+    account or receipts;
   - a refused request names the fields it is about (`purpose`, `lines.1.desc`, `account.number`, `by`…), which the
     form marks and focuses (docs/adr/0044).
-- The order: For Approval, then Approved, Declined or Withdrawn.
+- The order: For Approval, then Approved, Declined or Withdrawn; an approved request becomes Paid once its requester
+  uploads the receipts.
 
 ## Contributes
 - **Overview:** the "Requests for funds" figure, each request waiting in the waiting list (ASAP ones first), and the
   "New request for funds" button.
 - **Finding:** for the CEO, the requests waiting for a decision (priority 35 when one is ASAP, else 25); for a
   requester, the answer to their request for seven days (40: an approved transfer says to open it for its fund
-  transfer request), then their requests still waiting (5); with nobody signed in, the requests waiting for the CEO
+  transfer request, and an approval says to upload the receipts), then their approved requests still waiting for
+  receipts (20), then their requests still waiting (5); with nobody signed in, the requests waiting for the CEO
   (15).
 - **Home:** a tile.
 - **Activity:** log tag `RF`.
 - **Cloud documents:** `documents` keeps each request in `keystone/apg/rf/{no}`, with `status`, `uid` and `decision`
   beside its body for `firestore.rules`, which let only the CEO decide and staff read only their own
-  (docs/adr/0011). The expenses, the way it is paid and the account are in the body (docs/adr/0021). The rest of its
+  (docs/adr/0011), and let a requester move only their own approved request to Paid (docs/adr/0050). Its receipts
+  are in the body. The expenses, the way it is paid and the account are in the body (docs/adr/0021). The rest of its
   data (the last number) stays in `ext/funds`.
 - **Draft key:** `funds.draft`.
 - **Save draft:** a request's work kept to whoever wrote it (`private`) as it is typed, and when the form or Keystone is

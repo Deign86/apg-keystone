@@ -123,7 +123,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
 
   // Each requester sees their own answer the next time Keystone opens, and nothing of theirs still waits.
   await signInElsewhere(app, screen, hr);
-  await expect(screen.getByText('RF-2026-0001 was approved; 888001 is drafted.')).toBeVisible();
+  await expect(screen.getByText('RF-2026-0001 was approved; 888001 is drafted. Upload its receipts once the money is spent.')).toBeVisible();
   await expect(fundsTile(screen, 0)).toBeVisible();
 
   await signInElsewhere(app, screen, it);
@@ -213,11 +213,45 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // HR is told, opens it, and can save the same paper.
   await browser.setViewport({ width: 1280, height: 800 });
   await signInElsewhere(app, screen, hr);
-  await expect(screen.getByText('RF-2026-0001 was approved; open it to print or save its fund transfer request.')).toBeVisible();
+  await expect(screen.getByText('RF-2026-0001 was approved; open it to print or save its fund transfer request, and upload its receipts once the money is spent.')).toBeVisible();
   await app.open('/#funds');
   await screen.getByRole('table', 'Requests for funds').getByRole('cell', 'RF-2026-0001').tap();
   await expect(screen.getByRole('form', 'Viewing RF-2026-0001').getByRole('button', 'Export PDF')).toBeVisible();
   await expect(screen.getByRole('article', 'Fund transfer request RF-2026-0001')).toContainText('ACCOUNT NO. 0012 3456 7890');
+
+  // Once the money is spent, HR uploads the receipt, and that marks the request paid (docs/adr/0050).
+  const receipts = screen.getByRole('region', 'Receipts');
+
+  await expect(receipts).toContainText('Once the money is spent, upload the receipt or other proof of each expense, a photo or a PDF.');
+  await expect(receipts.getByRole('button', 'Mark paid…')).toBeDisabled();
+  await receipts.getByRole('button', 'Add receipt…').setInputFiles('shared/logo.png');
+  await expect(receipts.getByRole('list', 'Receipts for RF-2026-0001')).toContainText('logo.jpg');
+  await receipts.getByRole('button', 'Mark paid…').tap();
+  await screen.getByRole('alertdialog', 'Mark RF-2026-0001 paid?').getByRole('button', 'Mark paid').tap();
+  await expect(screen.getByRole('dialog', 'RF-2026-0001 is paid. 1 receipt kept with it.')).toBeVisible();
+  await expect(receipts).toContainText('Paid on Nov 2, 2026, with 1 receipt from Ana Cruz.');
+  await expect(receipts.getByRole('button', 'Add receipt…')).toBeHidden();
+  await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Paid');
+  await expect.poll(async () => (await record('rf', 'RF-2026-0001'))?.receipts, { timeout: 10_000 }).toEqual([{ name: 'logo.jpg', data: expect.stringMatching(/^data:image\/jpeg;base64,/) }]);
+  // The paper still carries the approval, and says when it was paid.
+  await expect(screen.getByRole('article', 'Fund transfer request RF-2026-0001')).toContainText('Approved in Keystone by Mark Reyes on November 2, 2026 at 10:00. Paid on November 2, 2026 at 10:00.');
+  await screen.getByRole('tab', /^Your requests/).tap();
+  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Paid/)).toBeVisible();
+
+  // The CEO sees it paid, and saves the receipt.
+  await signInElsewhere(app, screen, owner);
+  await app.open('/#funds');
+  await screen.getByRole('table', 'Requests for funds').getByRole('cell', 'RF-2026-0001').tap();
+  const kept = screen.getByRole('region', 'Receipts');
+
+  await expect(kept).toContainText('Paid on Nov 2, 2026, with 1 receipt from Ana Cruz.');
+
+  const saved = await browser.waitForDownload(async () => {
+    await kept.getByRole('button', 'Save logo.jpg').tap();
+  });
+
+  expect(saved.suggestedFilename).toBe('logo.jpg');
+  expect((await readFile(saved.absolutePath)).subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
 });
 
 test('firestore.rules let only the CEO decide a request, and staff read only their own', async () => {
@@ -247,4 +281,20 @@ test('firestore.rules let only the CEO decide a request, and staff read only the
   expect(await asMember(hrToken, path, request('For Approval', hr.uid))).toBe(403);
   expect(await asMember(hrToken, path, request('Withdrawn', hr.uid))).toBe(403);
   expect(await field('rf', 'RF-2026-0001', 'status')).toBe('Approved');
+
+  // Approved, only HR marks it paid (docs/adr/0050), changing nothing beside the body but its status: not the requester,
+  // not the decision. IT may not mark HR's paid.
+  const decided = { decision: { by: 'Mark Reyes', uid: owner.uid, at: '2026-11-02 10:00' } };
+
+  expect(await asMember(ownerToken, path, request('Approved', hr.uid), decided)).toBe(200);
+  expect(await asMember(itToken, path, request('Paid', hr.uid), decided)).toBe(403);
+  expect(await asMember(hrToken, path, request('Paid', it.uid), decided)).toBe(403);
+  expect(await asMember(hrToken, path, request('Paid', hr.uid), { decision: { ...decided.decision, by: 'Ana Cruz' } })).toBe(403);
+  expect(await asMember(hrToken, path, request('Paid', hr.uid))).toBe(403);
+  expect(await asMember(hrToken, path, request('Paid', hr.uid), decided)).toBe(200);
+  expect(await field('rf', 'RF-2026-0001', 'status')).toBe('Paid');
+
+  // Paid, it stays paid for HR.
+  expect(await asMember(hrToken, path, request('Approved', hr.uid), decided)).toBe(403);
+  expect(await asMember(hrToken, path, request('For Approval', hr.uid))).toBe(403);
 });

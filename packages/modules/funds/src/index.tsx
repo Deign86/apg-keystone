@@ -8,6 +8,7 @@ import {
   requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
   type Verdict, ID, TAG, refersTo,
 } from './rules';
+import { Receipts } from './Receipts';
 import { TransferPaper } from './TransferPaper';
 
 /** The form's draft key; Overview's actions set it through ModuleApp.setDraft. */
@@ -231,6 +232,11 @@ function Funds() {
     </FormCard>
   );
 
+  // Under the form, an approved request's receipts: its requester's to upload, which marks it paid (docs/adr/0050).
+  const entry = editing && (editing.status === 'Approved' || editing.status === 'Paid')
+    ? <div className="flex min-w-0 flex-col gap-4">{form}<Receipts key={editing.no} request={editing} /></div>
+    : form;
+
   return (
     <>
       <ScreenHeader
@@ -308,8 +314,8 @@ function Funds() {
             note: editing ? editing.no : 'New',
             // Paid by check, there is nothing to print here: the approval drafts a check voucher instead.
             panel: shown.pay === 'transfer'
-              ? <Workspace form={form} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
-              : <div className="max-w-[720px]">{form}</div>,
+              ? <Workspace form={entry} preview={<TransferPaper ref={paper} request={live} company={companyOf(state)} />} previewTitle="Fund transfer request" previewNote={ready ? 'As approved' : locked ? 'As saved' : 'Updates as you type'} />
+              : <div className="max-w-[720px]">{entry}</div>,
           },
         ]}
       />

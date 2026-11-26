@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { refusalOf } from '@keystone/kit/testing';
 import { CLOUD_LAYOUT, lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
-  dataOf, decideRefusal, decideRequest, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
-  nextRequestNo, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
+  dataOf, decideRefusal, decideRequest, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
+  nextRequestNo, paidLine, payRequest, RECEIPTS_MOST, receiptsLock, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -169,7 +169,7 @@ describe('a request paid by transfer', () => {
     expect(transferReady(dataOf(s).requests[0])).toBe(false);
     expect(r.message).toBe('RF-2026-0001 approved. Its fund transfer request is ready to print or save as a PDF.');
     expect(r.state.log[0].text).toBe('RF-2026-0001 approved by Mark Reyes.');
-    expect(fundsFinding(r.state, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; open it to print or save its fund transfer request.' });
+    expect(fundsFinding(r.state, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; open it to print or save its fund transfer request, and upload its receipts once the money is spent.' });
 
     const declined = decideRequest(s, 'RF-2026-0001', 'Declined', '', at(owner), vouchers).record;
     expect(transferReady(declined)).toBe(false);
@@ -223,6 +223,50 @@ describe('deciding a request', () => {
   });
 });
 
+/** A receipt as the screen keeps a picked photo: a small JPEG as a data URL. */
+const photo = { name: 'venue-deposit.jpg', data: 'data:image/jpeg;base64,/9j/4AAQSkZJRg==' };
+const pdf = { name: 'courier.pdf', data: 'data:application/pdf;base64,JVBERi0xLjQ=' };
+
+describe('marking a request paid (docs/adr/0050)', () => {
+  const approved = () => decideRequest(filed(), 'RF-2026-0001', 'Approved', '', at(owner), vouchers).state;
+
+  it('is its requester\'s, once it is approved, with its receipts kept and the log naming no amount', () => {
+    const r = payRequest(approved(), 'RF-2026-0001', [photo, pdf], at(hr, 5));
+    expect(r.record).toMatchObject({ status: 'Paid', receipts: [photo, pdf], paid: '2026-11-05 10:00', voucher: '888-001', decision: { by: 'Mark Reyes' } });
+    expect(r.message).toBe('RF-2026-0001 is paid. 2 receipts kept with it.');
+    expect(r.state.log[0]).toMatchObject({ mod: 'RF', text: 'RF-2026-0001 paid; receipts uploaded by Ana Cruz.' });
+    expect(dataOf(r.state).requests[0]).toEqual(r.record);
+    expect(paidLine(r.record)).toBe('Paid on Nov 5, 2026, with 2 receipts from Ana Cruz.');
+    // The CEO's decision still reads as the approval it was, and the request can no longer change.
+    expect(decisionLine(r.record)).toBe('Approved by Mark Reyes on Nov 2, 2026.');
+    expect(requestLock(r.record, at(hr))).toBe('RF-2026-0001 is paid and can no longer be changed.');
+    expect(() => payRequest(r.state, 'RF-2026-0001', [photo], at(hr))).toThrow('RF-2026-0001 is paid; its receipts are kept with it.');
+  });
+
+  it('keeps the fund transfer request printable once paid', () => {
+    const s = decideRequest(fileRequest(state(), topUp(), at(hr)).state, 'RF-2026-0001', 'Approved', '', at(owner)).state;
+    expect(transferReady(payRequest(s, 'RF-2026-0001', [photo], at(hr)).record)).toBe(true);
+  });
+
+  it('refuses before the approval, for anyone but the requester, and with no receipt, an odd file or too much', () => {
+    const s = approved();
+    expect(() => payRequest(filed(), 'RF-2026-0001', [photo], at(hr))).toThrow('The receipts for RF-2026-0001 are uploaded once it is approved.');
+    expect(() => payRequest(s, 'RF-2026-0001', [photo], at(it2))).toThrow('RF-2026-0001 is paid once Ana Cruz uploads its receipts.');
+    expect(() => payRequest(s, 'RF-2026-0001', [photo], at(owner))).toThrow('RF-2026-0001 is paid once Ana Cruz uploads its receipts.');
+    expect(receiptsLock(dataOf(s).requests[0], at(hr))).toBeNull();
+    expect(refusalOf(() => payRequest(s, 'RF-2026-0001', [], at(hr)))).toEqual({ error: 'Upload the receipt, or other proof of what RF-2026-0001 paid for.', fields: ['receipts'] });
+    expect(() => payRequest(s, 'RF-2026-0001', [{ name: 'notes.html', data: 'data:text/html;base64,PGI+' }], at(hr))).toThrow('notes.html is not a photo or a PDF.');
+    const big = { name: 'scan.pdf', data: `data:application/pdf;base64,${'A'.repeat(RECEIPTS_MOST)}` };
+    expect(() => payRequest(s, 'RF-2026-0001', [big], at(hr))).toThrow(/^The receipts come to 513 KB; RF-2026-0001 keeps up to 513 KB\. Remove one/);
+  });
+
+  it('on a computer where nobody signs in, takes the receipts from whoever is there', () => {
+    // Nobody decides on such a computer; a request approved in the cloud and restored here is paid from it.
+    const s = approved();
+    expect(payRequest(s, 'RF-2026-0001', [photo], local).state.log[0].text).toBe('RF-2026-0001 paid; receipts uploaded by Ana Cruz.');
+  });
+});
+
 describe('what it tells Home and Overview', () => {
   it('shows the CEO what waits for a decision, ASAP first', () => {
     const s = filed();
@@ -245,9 +289,11 @@ describe('what it tells Home and Overview', () => {
 
   it('tells a requester the answer for a week, then only what still waits', () => {
     const approved = decideRequest(filed(), 'RF-2026-0001', 'Approved', '', at(owner), vouchers).state;
-    expect(fundsFinding(approved, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted.' });
-    expect(fundsFinding(approved, at(hr, 9))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted.' });
-    expect(fundsFinding(approved, at(hr, 10))).toBeNull();
+    expect(fundsFinding(approved, at(hr))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted. Upload its receipts once the money is spent.' });
+    expect(fundsFinding(approved, at(hr, 9))).toEqual({ priority: 40, text: 'RF-2026-0001 was approved; 888-001 is drafted. Upload its receipts once the money is spent.' });
+    // After the week, it is still owed its receipts; once they are uploaded, nothing is left to say.
+    expect(fundsFinding(approved, at(hr, 10))).toEqual({ priority: 20, text: 'RF-2026-0001 waits for your receipts; upload them to mark it paid.' });
+    expect(fundsFinding(payRequest(approved, 'RF-2026-0001', [photo], at(hr, 10)).state, at(hr, 10))).toBeNull();
     // IT's own request still waits; HR's answer is not theirs.
     expect(fundsFinding(approved, at(it2))).toEqual({ priority: 5, text: '1 request for funds waits for the CEO\'s decision.' });
 
@@ -258,7 +304,7 @@ describe('what it tells Home and Overview', () => {
 
 describe('the saved data', () => {
   it('reads damaged or older data as what it can', () => {
-    const s = withModuleData(state(), 'funds', { requests: [{ no: 'RF-2026-0007', amount: 'lots', status: 'Paid', decision: 'yes' }, 'junk'], last: 3 });
+    const s = withModuleData(state(), 'funds', { requests: [{ no: 'RF-2026-0007', amount: 'lots', status: 'Reimbursed', decision: 'yes' }, 'junk'], last: 3 });
     expect(dataOf(s)).toEqual({
       requests: [{ no: 'RF-2026-0007', date: '', purpose: '', lines: [], amount: 0, pay: 'check', payee: '', settle: 'ASAP', requester: '', status: 'For Approval' }],
       last: '',
