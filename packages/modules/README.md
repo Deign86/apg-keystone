@@ -16,6 +16,7 @@ modules is `apps/keystone/src/modules.ts`, the only place modules are named toge
 | `activity/` | 7 | The audit trail | Nothing; its filters come from every module's `logTags` | |
 | `timekeeping/` | 8 | Employees' time-ins and time-outs, the weekly grace, holidays | figure, finding, stat, log tag `DTR` | `timekeeping.employee-attendance` |
 | `payroll/` | 9 | Each employee's pay setup, the cut-off, the payroll sheet and payslips | figure, finding, stat, log tag `PAY` | |
+| `interns/` | 10, after Payroll | HR's OJT interns by batch, their requirements and certificates, the cleaning schedule, and importing HR's spreadsheet | figure, finding, create, stat, log tag `INT` | |
 | `profile/` | Settings, first | The name of whoever is signed in, as Keystone shows it | log tag `PROF` | |
 | `accounts/` | Settings, after Profile | Who can open the records in the cloud, the CEO making and removing staff accounts, and what an installed connected system lets the CEO give a member | log tag `ACCT` | |
 | `data/` | Settings, after User Accounts | Backup and restore, and the parts left out | Nothing | |

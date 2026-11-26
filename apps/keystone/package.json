@@ -29,6 +29,7 @@
     "@keystone/module-directory": "*",
     "@keystone/module-funds": "*",
     "@keystone/module-home": "*",
+    "@keystone/module-interns": "*",
     "@keystone/module-overview": "*",
     "@keystone/module-payroll": "*",
     "@keystone/module-timekeeping": "*",
