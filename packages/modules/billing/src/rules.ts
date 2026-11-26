@@ -3,7 +3,7 @@ import {
   percent, peso, recordsOf, shortDate, sumCentavos, toCentavos, today,
   type BankAccount, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding, type LineDraft,
   type ISODate, type Payment, type Statement, type StatementPayments,
-  type Reference, type TerminalState, type Tone, type WaitingItem
+  type Reference, type TerminalState, type Tone, type WaitingItem, earlier, rememberedLines,
 } from '@keystone/core';
 
 // Billing statements: receivables from clients, printed as the company's Billing
@@ -94,6 +94,12 @@ export function withStatementDate(s: TerminalState, d: StatementDraft, date: str
 }
 
 export const statementsNewestFirst = (s: TerminalState) => newestFirst(s.bs);
+
+/** The statements as saved, the last saved first: the register keeps them in the order they were saved. */
+const lastSavedFirst = (s: TerminalState) => [...s.bs].reverse();
+
+/** Repeated details (docs/adr/0053): the charges billed before, each once, at the quantity and unit price last billed. */
+export const rememberedCharges = (s: TerminalState) => rememberedLines(lastSavedFirst(s).flatMap((b) => b.lines));
 export const outstanding = (s: TerminalState) => s.bs.filter((b) => b.status === 'Sent' || b.status === 'Overdue');
 export const overdue = (s: TerminalState) => s.bs.filter((b) => b.status === 'Overdue');
 export const outstandingTotal = (s: TerminalState) => sumCentavos(outstanding(s), (b) => statementTotals(b).due);
@@ -248,8 +254,37 @@ export const clientNamed = (s: TerminalState, typed: string) => {
  */
 export function withClient(s: TerminalState, d: StatementDraft, client: string): StatementDraft {
   const c = clientNamed(s, client);
+  const named = c ? { ...d, client, tin: c.tin.trim() || d.tin, attention: c.attention ?? '', vat: c.vat ?? false, ewt: c.ewt ?? false } : { ...d, client };
+  const last = lastStatementTo(s, client);
 
-  return c ? { ...d, client, tin: c.tin.trim() || d.tin, attention: c.attention ?? '', vat: c.vat ?? false, ewt: c.ewt ?? false } : { ...d, client };
+  if (!last) return named;
+  // A client billed before (docs/adr/0053): their last statement fills what is still blank, and, for one not in the
+  // directory, its VAT and withholding.
+  const blank = (typed: string, kept: string | undefined) => (typed.trim() ? typed : kept ?? '');
+
+  return {
+    ...named, address: blank(named.address, last.address), tin: blank(named.tin, last.tin), attention: blank(named.attention, last.attention),
+    paymentMode: blank(named.paymentMode, last.paymentMode), ...(!c && { vat: last.vat, ewt: last.ewt, ewtRate: last.ewtRate }),
+  };
+}
+
+/** The last statement billed to this name, whatever its capitals and spaces, if any. */
+export function lastStatementTo(s: TerminalState, typed: string): Statement | undefined {
+  const key = typed.trim().replace(/\s+/g, ' ').toLowerCase();
+
+  return key ? lastSavedFirst(s).find((b) => nameOf(s, b.client).trim().replace(/\s+/g, ' ').toLowerCase() === key) : undefined;
+}
+
+/** Repeated details (docs/adr/0053): what the form's fields offer as they are typed, from the statements saved before. */
+export function earlierStatementEntries(s: TerminalState) {
+  const saved = lastSavedFirst(s);
+
+  return {
+    clients: earlier([...saved.map((b) => nameOf(s, b.client)), ...recordsOf(s, 'Client').map((c) => c.name)]),
+    attention: earlier(saved.map((b) => b.attention)),
+    paymentModes: earlier(saved.map((b) => b.paymentMode)),
+    notes: earlier(saved.map((b) => b.note)),
+  };
 }
 
 export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asNew = false): Change<Statement> {

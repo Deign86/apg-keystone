@@ -17,7 +17,7 @@ async function ask(screen: Screen, request: { purpose: string; expense: string; 
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill(request.purpose);
-  await form.getByRole('textbox', 'Line 1 description').fill(request.expense);
+  await form.getByRole('combobox', 'Line 1 description').fill(request.expense);
   await form.getByRole('textbox', 'Line 1 amount').fill(request.amount);
   await form.getByRole('combobox', 'Paid by').tap();
   await screen.getByRole('option', 'Check').tap();
@@ -77,11 +77,11 @@ test('refuses a request it cannot act on, and says why', async ({ app, screen })
   await expect(purpose).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('List the expenses, each with its amount.');
-  await expect(form.getByRole('textbox', 'Line 1 description')).toHaveAttribute('aria-invalid', 'true');
-  await expect(form.getByRole('textbox', 'Line 1 description')).toBeFocused();
+  await expect(form.getByRole('combobox', 'Line 1 description')).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByRole('combobox', 'Line 1 description')).toBeFocused();
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Laptop charger');
-  await expect(form.getByRole('textbox', 'Line 1 description')).not.toHaveAttribute('aria-invalid', 'true');
+  await form.getByRole('combobox', 'Line 1 description').fill('Laptop charger');
+  await expect(form.getByRole('combobox', 'Line 1 description')).not.toHaveAttribute('aria-invalid', 'true');
   await form.getByRole('button', 'Send for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the amount for line 1, Laptop charger.');
   await expect(form.getByRole('textbox', 'Line 1 amount')).toHaveAttribute('aria-invalid', 'true');
@@ -131,10 +131,10 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');
-  await form.getByRole('textbox', 'Line 1 description').fill('Pantry groceries');
+  await form.getByRole('combobox', 'Line 1 description').fill('Pantry groceries');
   await form.getByRole('textbox', 'Line 1 amount').fill('3,250.75');
   await form.getByRole('button', 'Add line').tap();
-  await form.getByRole('textbox', 'Line 2 description').fill('Courier for payroll documents');
+  await form.getByRole('combobox', 'Line 2 description').fill('Courier for payroll documents');
   await form.getByRole('textbox', 'Line 2 amount').fill('480');
   await expect(form.getByText('Total ₱3,730.75')).toBeVisible();
 
@@ -153,6 +153,8 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
   await expect(paper).toContainText('Courier for payroll documents ₱480.00');
   await expect(paper).toContainText('Three Thousand Seven Hundred Thirty Pesos and 75/100 Only');
   await expect(paper).toContainText('Not approved yet: this request waits for the CEO\'s decision.');
+  // Three sign it: who asked, who checks (Company Details' checker until another is picked), and the CEO.
+  await expect(paper).toContainText(/Ana Cruz\s*Requested by\s*Accounting\s*Checked by\s*Approved by/i);
   await expect(form.getByRole('button', 'Export PDF')).toBeHidden();
   // Money is signed for by hand: e-signatures print only when ticked, and the choice is kept (docs/adr/0051).
   const eSign = form.getByRole('checkbox', 'Show e-signatures on the fund transfer request (leave unticked to sign by hand)');
@@ -175,7 +177,7 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
 
   await expect(next.getByRole('textbox', 'Account number')).toHaveValue('0012 3456 7890');
   await expect(next.getByRole('textbox', 'Account name')).toHaveValue('Liza Ramos');
-  await expect(next.getByRole('textbox', 'Line 1 description')).toHaveValue('');
+  await expect(next.getByRole('combobox', 'Line 1 description')).toHaveValue('');
 });
 
 test('changes a request while it waits, then withdraws it, and it stays on record', async ({ app, screen }) => {
@@ -295,7 +297,7 @@ test('saves a draft of a request, opens it again, and takes it away once it is s
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Pantry, November');
-  await form.getByRole('textbox', 'Line 1 description').fill('Coffee and sugar');
+  await form.getByRole('combobox', 'Line 1 description').fill('Coffee and sugar');
   await form.getByRole('textbox', 'Line 1 amount').fill('1550.50');
   await form.getByRole('button', 'Save draft').tap();
   await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
@@ -333,7 +335,7 @@ test('marks on the fund transfer request where the field being typed in prints, 
   expect(layout.marked).toEqual(layout.unmarked);
 
   // The expenses fill the amount box and the list under it.
-  await form.getByRole('textbox', 'Line 1 description').fill('Venue deposit');
+  await form.getByRole('combobox', 'Line 1 description').fill('Venue deposit');
   await form.getByRole('textbox', 'Line 1 amount').fill('48000');
   expect(await markedPaperParts(browser)).toEqual([
     'AMOUNT ₱48,000.00 Forty-Eight Thousand Pesos Only · solid 2px',

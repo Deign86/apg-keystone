@@ -190,8 +190,8 @@ test('keeps a save made just before the page reloads', async ({ app, screen, bro
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
   // Save and reload in the same instant, as someone closing the window right after saving: well inside the 250 ms.
@@ -211,8 +211,8 @@ test('keeps saved work after a reload', async ({ app, screen, browser }) => {
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
   await screen.getByRole('tab', /^Voucher register/).tap();

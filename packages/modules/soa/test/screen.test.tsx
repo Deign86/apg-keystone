@@ -194,7 +194,7 @@ describe('drafts that save themselves', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New statement' }));
     await act(async () => {});
     expect(draftsOf(store)).toEqual(['Northwind Retail Corp.']);
-    expect(form().getByRole('textbox', { name: 'Client' })).toHaveValue('');
+    expect(form().getByRole('combobox', { name: 'Client' })).toHaveValue('');
     await rest();
     expect(draftsOf(store)).toEqual(['Northwind Retail Corp.']);
   }, PAUSES);

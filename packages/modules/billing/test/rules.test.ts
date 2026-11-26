@@ -3,7 +3,7 @@ import { refusalOf } from '@keystone/kit/testing';
 import { companyOf, lineDraft, SERVICES, toCentavos, type BankAccount, type Ctx } from '@keystone/core';
 import {
   billingFigure, billingFinding, billingWaiting, EWT_RATE, EWT_RATES, ewtRateOf, markOverdue, newStatement, nextStatementNo, paidInto, withStatementDate, payInto,
-  recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftFrom, statementDraftOf, statementDraftTitle, statementPayments, statementTone, statementTotals, withClient,
+  recordPayment, saveStatement, STATEMENT_STATUSES, statementDraftFrom, statementDraftOf, statementDraftTitle, statementPayments, statementTone, statementTotals, withClient, earlierStatementEntries, lastStatementTo, rememberedCharges,
 } from '../src/rules';
 import { billingModule } from '../src';
 import { sampleState } from '@keystone/core/sample';
@@ -335,5 +335,45 @@ describe('a saved draft of a statement (docs/adr/0041)', () => {
     expect(back).toMatchObject({ client: 'Springfield Properties Inc.', no: '888103026', ewtRate: EWT_RATE, notes: companyOf(s).paymentInstructions });
     expect(back.lines.map((l) => [l.desc, l.qty, l.amount])).toEqual([['Rent', '2', '500']]);
     expect(statementDraftFrom(s, ctx, [], { ...statementDraftOf(s.bs[2], s) }).no).toBe(s.bs[2].no);
+  });
+});
+
+describe('repeated details on a statement (docs/adr/0053)', () => {
+  /** The sample, then a statement to a client not in the directory, typed by hand. */
+  function billedSunrise() {
+    const s = state();
+
+    const d = {
+      ...withClient(s, newStatement(s, ctx), 'Sunrise Bakeshop Co.'), address: '12 Kalayaan Ave., Makati City', tin: '123-456-789-000', attention: 'Rosa Lim',
+      paymentMode: 'Bank transfer', vat: true, ewt: false, note: 'Thank you.', lines: [lineDraft({ desc: 'Virtual office, November 2026', qty: '1', amount: '2299' })],
+    };
+
+    return saveStatement(s, d, ctx).state;
+  }
+
+  it('brings a client billed before their details and VAT from their last statement, into what is still blank', () => {
+    const s = billedSunrise();
+    expect(lastStatementTo(s, '  sunrise   BAKESHOP co. ')?.attention).toBe('Rosa Lim');
+    const next = withClient(s, newStatement(s, ctx), 'Sunrise Bakeshop Co.');
+    expect(next).toMatchObject({ address: '12 Kalayaan Ave., Makati City', tin: '123-456-789-000', attention: 'Rosa Lim', paymentMode: 'Bank transfer', vat: true, ewt: false });
+    // What is typed stays; a name never billed fills nothing.
+    expect(withClient(s, { ...newStatement(s, ctx), address: 'Typed' }, 'Sunrise Bakeshop Co.').address).toBe('Typed');
+    expect(withClient(s, newStatement(s, ctx), 'Someone New')).toMatchObject({ address: '', tin: '', paymentMode: '' });
+  });
+
+  it('keeps a directory client\'s VAT and withholding from its record, and still fills the address it was billed at', () => {
+    const s = state();
+    const d = { ...billed(s), address: 'Ortigas', lines: [lineDraft({ desc: 'Rent', qty: '1', amount: '100' })] };
+    const saved = saveStatement(s, d, ctx).state;
+    expect(withClient(saved, newStatement(saved, ctx), 'Novatek BPO Solutions Inc.')).toMatchObject({ address: 'Ortigas', vat: true, ewt: true });
+  });
+
+  it('offers the clients, contacts, modes of payment and notes used before, and remembers each charge', () => {
+    const s = billedSunrise();
+    const offered = earlierStatementEntries(s);
+    expect(offered.clients[0]).toBe('Sunrise Bakeshop Co.');
+    expect(offered.clients).toContain('Novatek BPO Solutions Inc.');
+    expect(offered).toMatchObject({ attention: expect.arrayContaining(['Rosa Lim']), paymentModes: ['Bank transfer'], notes: ['Thank you.'] });
+    expect(rememberedCharges(s)[0]).toEqual({ desc: 'Virtual office, November 2026', qty: '1', amount: '2299' });
   });
 });

@@ -75,9 +75,9 @@ test('adds a client with the VAT setup Billing Statements then follows', async (
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Bayside Realty Corp.');
+  await form.getByRole('combobox', 'Bill to').fill('Bayside Realty Corp.');
 
-  await expect(form.getByRole('textbox', 'Attention')).toHaveValue('Nina Ocampo');
+  await expect(form.getByRole('combobox', 'Attention')).toHaveValue('Nina Ocampo');
   await expect(form.getByRole('checkbox', 'Add 12% VAT')).toBeChecked();
   await expect(form.getByRole('checkbox', 'Less 2% expanded withholding tax')).not.toBeChecked();
 });
@@ -135,10 +135,10 @@ test('starts each word of a name with a capital as it is typed, here and on the 
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('springfield properties inc.');
-  await form.getByRole('textbox', 'Attention').fill('ned flanders');
-  await expect(form.getByRole('textbox', 'Bill to')).toHaveValue('Springfield Properties Inc.');
-  await expect(form.getByRole('textbox', 'Attention')).toHaveValue('Ned Flanders');
+  await form.getByRole('combobox', 'Bill to').fill('springfield properties inc.');
+  await form.getByRole('combobox', 'Attention').fill('ned flanders');
+  await expect(form.getByRole('combobox', 'Bill to')).toHaveValue('Springfield Properties Inc.');
+  await expect(form.getByRole('combobox', 'Attention')).toHaveValue('Ned Flanders');
 });
 
 test('needs a name for a new record', async ({ app, screen }) => {

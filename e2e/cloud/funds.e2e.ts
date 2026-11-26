@@ -46,7 +46,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await expect(form.getByRole('textbox', 'Requested by')).toHaveValue('Ana Cruz');
   await expect(screen.getByText('Only the CEO approves or declines requests. The answer shows here once it is given.')).toBeVisible();
   await form.getByRole('textbox', 'What it is for').fill('Christmas party: venue deposit');
-  await form.getByRole('textbox', 'Line 1 description').fill('Venue deposit');
+  await form.getByRole('combobox', 'Line 1 description').fill('Venue deposit');
   await form.getByRole('textbox', 'Line 1 amount').fill('48000');
   await form.getByRole('combobox', 'Paid by').tap();
   await screen.getByRole('option', 'Check').tap();
@@ -73,7 +73,7 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   const mine = screen.getByRole('form', 'New request');
 
   await mine.getByRole('textbox', 'What it is for').fill('Replacement laptop charger');
-  await mine.getByRole('textbox', 'Line 1 description').fill('Laptop charger');
+  await mine.getByRole('combobox', 'Line 1 description').fill('Laptop charger');
   await mine.getByRole('textbox', 'Line 1 amount').fill('2450.50');
   await mine.getByRole('combobox', 'Paid by').tap();
   await screen.getByRole('option', 'Check').tap();
@@ -166,10 +166,10 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');
-  await form.getByRole('textbox', 'Line 1 description').fill('Pantry groceries');
+  await form.getByRole('combobox', 'Line 1 description').fill('Pantry groceries');
   await form.getByRole('textbox', 'Line 1 amount').fill('3250.75');
   await form.getByRole('button', 'Add line').tap();
-  await form.getByRole('textbox', 'Line 2 description').fill('Courier for payroll documents');
+  await form.getByRole('combobox', 'Line 2 description').fill('Courier for payroll documents');
   await form.getByRole('textbox', 'Line 2 amount').fill('480');
   await form.getByRole('textbox', 'Bank').fill('BDO');
   await form.getByRole('textbox', 'Account name').fill('Liza Ramos');

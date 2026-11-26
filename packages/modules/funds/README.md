@@ -19,14 +19,17 @@
 - `src/receipt-file.ts`: a picked file as a receipt: a photo drawn again as a JPEG small enough to keep in the request,
   a PDF as it is.
 - `src/TransferPaper.tsx`: the fund transfer request (docs/adr/0021), one A4 page from the kit's document blocks: the
-  letterhead, who asked and when, the account to transfer to, the amount in figures and words, the expenses, and who
-  asked and who approved, with when. Its signature lines are blank, to sign by hand, unless the form's "Show
+  letterhead, who asked and when, the account to transfer to, the amount in figures and words, the expenses, and three
+  signatures: Requested by, Checked by (picked on the form, optional; a new request starts with the person's last
+  checker, or Company Details' before their first) and Approved by, with when. Its signature lines are blank, to sign by hand, unless the form's "Show
   e-signatures" checkbox is ticked (`funds.esign`, docs/adr/0051).
 - `src/rules.ts`: its rules, tested in `test/rules.test.ts`:
   - numbering `RF-2026-0001` and on, from the last number given out, so a deleted request's number is never given
     out again;
   - filing, editing and withdrawing, by the requester only, while the request waits: the expenses (blank lines
     dropped, a half-filled line refused, naming it), and the account for a transfer or the payee for a check;
+  - the person's own earlier purposes and expenses, offered on the form, an expense typed again bringing its amount
+    (docs/adr/0053);
   - a blank request, paid as the person's last one was (a transfer when they have filed none), and a transfer starting
     with the bank account they keep on Profile (`ctx.who.bank`, docs/adr/0052), or else the account their last
     transfer went to;

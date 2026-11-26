@@ -1,9 +1,9 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
+import { Button, Checkbox, EarlierPicks, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
-import { Fills, FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
+import { Fills, FormCard, SignatoryPicker, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
-  accountLabel, ASAP, decideRefusal, decideRequest, decides, deleteRefusal, deleteRequest, deleteRequests, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
+  accountLabel, ASAP, decideRefusal, decideRequest, decides, deleteRefusal, earlierPurposes, rememberedExpenses, deleteRequest, deleteRequests, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
   fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftBlank, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestOf, requestPreview, requestsNewestFirst,
   requestTone, requestTotal, paymentStatus, settleText, transactionState, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
   type Verdict, ID, TAG, refersTo,
@@ -114,6 +114,11 @@ function Funds() {
   const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLElement>(null);
   const editing = draft.editing ? requestOf(state, draft.editing) : undefined;
+  // Repeated details (docs/adr/0053): the expenses and purposes this person gave before.
+  const remembered = useMemo(() => rememberedExpenses(state, ctx), [state, ctx]);
+  const purposes = useMemo(() => earlierPurposes(state, ctx), [state, ctx]);
+  // Whoever has checked a request before, offered with the company's signatories.
+  const checkers = useMemo(() => requestsNewestFirst(state).flatMap((r) => (r.checked ? [r.checked] : [])), [state]);
   const locked = editing ? requestLock(editing, ctx) : null;
   // A request that can no longer be changed shows as it was saved.
   const shown = useMemo(() => (locked && editing ? requestDraftOf(editing) : draft), [locked, editing, draft]);
@@ -216,8 +221,9 @@ function Funds() {
           <Field name="purpose" label="What it is for" hint="In a line: the fund, event or purchase the expenses below are for.">
             <TextArea value={shown.purpose} onChange={(purpose) => setDraft({ ...draft, purpose })} />
           </Field>
+          {!locked && <EarlierPicks values={purposes} value={draft.purpose} onPick={(purpose) => setDraft({ ...draft, purpose })} />}
         </Fills>
-        <Fills part="lines"><LineEditor title="Expenses" lines={shown.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
+        <Fills part="lines"><LineEditor title="Expenses" lines={shown.lines} remembered={remembered} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
         <p className="m-0 text-right font-display text-lg font-semibold text-gold-bright tabular-nums" aria-live="polite">
           <span className="sr-only">Total </span>{peso(requestTotal(live))}
         </p>
@@ -257,6 +263,10 @@ function Funds() {
           <Field name="requester" label="Requested by" hint={ctx.who ? 'The name on your Keystone account.' : 'Nobody signs in on this computer, so type your name.'}>
             <TextInput capitalize readOnly={!!ctx.who} value={ctx.who && !editing ? ctx.who.name : shown.requester} onChange={(requester) => setDraft({ ...draft, requester })} />
           </Field>
+        </Fills>
+        {/* The fund transfer request is signed by three: who asked, who checked, and the CEO who approved. */}
+        <Fills part="checked">
+          <SignatoryPicker name="checked" label="Checked by" hint="Optional. Signs the fund transfer request between you and the CEO." names={checkers} value={shown.checked} onChange={(checked) => setDraft({ ...draft, checked })} />
         </Fills>
       </fieldset>
       {/* Outside the fieldset, so it still works once the request can no longer change: that is when it is printed. */}

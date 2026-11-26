@@ -24,11 +24,11 @@ test('writes a voucher by touch, saves a draft, keeps what is typed by itself, a
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Add line').tap();
-  await form.getByRole('textbox', 'Line 2 description').fill('Courier');
+  await form.getByRole('combobox', 'Line 2 description').fill('Courier');
   await form.getByRole('textbox', 'Line 2 amount').fill('250');
   await expect(form.getByText('₱1,500.50')).toBeVisible();
 
@@ -63,7 +63,7 @@ test('shows the paper under the form scaled to fit, and marks on it where the fi
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
   const paper = screen.getByRole('article', 'Check voucher 888001');
 
   await expect(paper).toBeVisible();
@@ -80,8 +80,8 @@ test('prints a statement and saves it as a PDF of A4 pages, from a phone or tabl
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Springfield Properties Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Property management, November');
+  await form.getByRole('combobox', 'Bill to').fill('Springfield Properties Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Property management, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('25000');
 
   // Print hands the browser the paper alone: the page marks it as what prints while the print dialog is open.

@@ -20,11 +20,11 @@ test('writes a voucher and routes it for approval', async ({ app, screen }) => {
   await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('888001');
   await expect(form.getByRole('textbox', 'Date')).toHaveValue('2026-11-02');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Add line').tap();
-  await form.getByRole('textbox', 'Line 2 description').fill('Courier');
+  await form.getByRole('combobox', 'Line 2 description').fill('Courier');
   await form.getByRole('textbox', 'Line 2 amount').fill('250');
 
   // The total, its amount in words and the printed voucher follow the form as you type.
@@ -86,6 +86,28 @@ test('keeps the register and the form on tabs of their own, and pins the preview
   expect((await preview.boundingBox())?.y).toBeGreaterThanOrEqual(0);
 });
 
+test('fills a payee paid before with their address and TIN, and a particular saved before with its amount', async ({ app, screen }) => {
+  await app.open('/#vouchers');
+  await screen.getByRole('tab', ENTRY).tap();
+  const form = screen.getByRole('form', 'New voucher');
+
+  // Meralco was paid on an earlier voucher: typing its name brings the address and TIN (docs/adr/0053).
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await expect(form.getByRole('textbox', 'Address')).toHaveValue('Ortigas Ave., Pasig City');
+  await expect(form.getByRole('textbox', 'TIN')).toHaveValue('000-101-528-000');
+  // An address typed over it stays when the payee is typed again.
+  await form.getByRole('textbox', 'Address').fill('Meralco Center, Pasig City');
+  await form.getByRole('combobox', 'Payee').fill('MANILA ELECTRIC COMPANY (MERALCO)');
+  await expect(form.getByRole('textbox', 'Address')).toHaveValue('Meralco Center, Pasig City');
+
+  // A particular saved before brings its amount onto a line with none.
+  await form.getByRole('combobox', 'Line 1 description').fill('Electricity – Head Office, Sept 2026');
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toHaveValue('48230.55');
+  await form.getByRole('textbox', 'Line 1 amount').fill('51000');
+  await form.getByRole('combobox', 'Line 1 description').fill('Electricity – Head Office, Oct 2026');
+  await expect(form.getByRole('textbox', 'Line 1 amount')).toHaveValue('51000');
+});
+
 test('refuses a voucher with no particulars', async ({ app, screen }) => {
   await app.open('/#vouchers');
   await screen.getByRole('tab', ENTRY).tap();
@@ -105,7 +127,7 @@ test('refuses a voucher with no particulars', async ({ app, screen }) => {
   // With an amount, the payee is what is missing, and it is the field marked.
   await form.getByRole('button', 'Save and route for approval').tap();
   await expect(form.getByRole('alert')).toHaveText('Enter the payee.');
-  const payee = form.getByRole('textbox', 'Payee');
+  const payee = form.getByRole('combobox', 'Payee');
 
   await expect(payee).toHaveAttribute('aria-invalid', 'true');
   await expect(payee).toBeFocused();
@@ -136,8 +158,8 @@ test('releases a voucher only once it is approved and has its check number', asy
   await screen.getByRole('tab', ENTRY).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Water bill');
   await form.getByRole('textbox', 'Line 1 amount').fill('980');
   await form.getByRole('button', 'Save and route for approval').tap();
   await screen.getByRole('tab', REGISTER).tap();
@@ -303,7 +325,7 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
 
   await form.getByRole('textbox', 'Check No.').fill('0004512');
   await form.getByRole('textbox', 'Date of check').fill('2026-11-05');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   const paper = screen.getByRole('article', 'Check voucher 888001');
 
@@ -322,15 +344,17 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   const box = (text: string) => paper.getByRole('definition').filter({ hasText: text });
 
   // The payee and their address are typed, not picked: a new voucher starts with nobody.
-  await expect(form.getByRole('textbox', 'Payee')).toHaveValue('');
+  await expect(form.getByRole('combobox', 'Payee')).toHaveValue('');
   await expect(form.getByRole('textbox', 'Address')).toHaveValue('');
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
   await form.getByRole('textbox', 'Address').fill('Ortigas Ave., Pasig City');
   // Names print in capitals, however they are typed.
   await expect(box('MANILA ELECTRIC COMPANY (MERALCO)')).toBeVisible();
   await expect(box('Ortigas Ave., Pasig City')).toBeVisible();
 
-  // The payee's TIN prints only once someone types it.
+  // The payee's TIN prints only when the field has it: Meralco was paid before, so it came with the name (docs/adr/0053).
+  await expect(form.getByRole('textbox', 'TIN')).toHaveValue('000-101-528-000');
+  await form.getByRole('textbox', 'TIN').fill('');
   await expect(paper.getByText('000-101-528-000')).toBeHidden();
   await form.getByRole('textbox', 'TIN').fill('000-101-528-000');
   await expect(box('000-101-528-000')).toBeVisible();
@@ -385,8 +409,8 @@ test('draws the check on an account kept in Bank Accounts, and the next voucher 
   await expect(form.getByRole('combobox', 'Bank')).toHaveText('BPI · 4011 0258 68');
   await form.getByRole('combobox', 'Bank').tap();
   await screen.getByRole('option', 'BDO · 0012 3456 7890').tap();
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
   await expect(screen.getByRole('article', 'Check voucher 888001').getByRole('definition').filter({ hasText: 'BDO · 0012 3456 7890' })).toBeVisible();
@@ -424,8 +448,8 @@ test('adds an account not listed under Others, keeps it for the next voucher, an
   await expect(added.getByRole('alert')).toHaveText('Account number 0000-1111 is already saved as B-002 (Security Bank, ALPHA PREMIER GROUP OF COMPANIES OPC).');
   await added.getByRole('button', 'Cancel').tap();
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
   await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();
@@ -459,8 +483,8 @@ test('starts each voucher with the signatories the last one was saved with', asy
 
   // Whoever prepares vouchers types their own full name; the next voucher starts with it.
   await typeSignatory(screen, form, 'Prepared by', 'Kristine Joy L. Villanueva');
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Water bill');
   await form.getByRole('textbox', 'Line 1 amount').fill('980');
   await form.getByRole('button', 'Save and route for approval').tap();
   await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();
@@ -476,8 +500,8 @@ test('a saved voucher shows in the activity log', async ({ app, screen }) => {
   await screen.getByRole('tab', ENTRY).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
   await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();
@@ -500,7 +524,7 @@ test('New voucher puts away the voucher open in the form and starts a blank one'
   const form = screen.getByRole('form', 'New voucher');
 
   await expect(form.getByRole('textbox', 'CV No.')).toHaveValue('888001');
-  await expect(form.getByRole('textbox', 'Line 1 description')).toHaveValue('');
+  await expect(form.getByRole('combobox', 'Line 1 description')).toHaveValue('');
   await expect(form.getByRole('textbox', 'Check No.')).toHaveValue('');
   await expect(form.getByRole('button', 'Save as new')).toBeHidden();
 });
@@ -532,7 +556,7 @@ test('exports the voucher as a PDF named after its number', async ({ app, screen
   await screen.getByRole('tab', ENTRY).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
 
   // The toast shows for 3.2 s and the download can finish later, so it is read while the download is awaited. Drawing
@@ -555,8 +579,8 @@ test('Ctrl+S saves the voucher being written', async ({ app, screen }) => {
   await screen.getByRole('tab', ENTRY).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Water bill');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Water bill');
   await form.getByRole('textbox', 'Line 1 amount').fill('980');
   await form.getByRole('textbox', 'Line 1 amount').press('Control+s');
 
@@ -572,18 +596,18 @@ test('adds and removes particulars, and always keeps one line', async ({ app, sc
   const form = screen.getByRole('form', 'New voucher');
 
   await expect(form.getByRole('button', 'Remove line 1')).toBeDisabled();
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1000');
   await form.getByRole('button', 'Add line').tap();
-  await form.getByRole('textbox', 'Line 2 description').fill('Courier');
+  await form.getByRole('combobox', 'Line 2 description').fill('Courier');
   await form.getByRole('textbox', 'Line 2 amount').fill('500');
   await expect(form.getByText('₱1,500.00')).toBeVisible();
   await expect(form.getByRole('button', 'Remove line 1')).toBeEnabled();
 
   await form.getByRole('button', 'Remove line 2').tap();
 
-  await expect(form.getByRole('textbox', 'Line 2 description')).toBeHidden();
+  await expect(form.getByRole('combobox', 'Line 2 description')).toBeHidden();
   await expect(form.getByText('₱1,000.00')).toBeVisible();
   await expect(form.getByRole('button', 'Remove line 1')).toBeDisabled();
 
@@ -600,7 +624,7 @@ test('logs each edit, approval, release and void, under the Vouchers filter', as
   await register.getByRole('cell', 'CV-2026-0141').tap();
   const form = screen.getByRole('form', 'Editing CV-2026-0141');
 
-  await form.getByRole('textbox', 'Line 1 description').fill('Retainer – October 2026, with court filings');
+  await form.getByRole('combobox', 'Line 1 description').fill('Retainer – October 2026, with court filings');
   await form.getByRole('button', 'Save changes').tap();
   await expect(screen.getByRole('dialog', 'CV-2026-0141 updated.')).toBeVisible();
   await screen.getByRole('tab', REGISTER).tap();
@@ -673,8 +697,8 @@ test('offers the next CV No., keeps one typed in, and refuses one already used',
   const no = form.getByRole('textbox', 'CV No.');
 
   await expect(no).toHaveValue('888001');
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Power bill');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Power bill');
   await form.getByRole('textbox', 'Line 1 amount').fill('4200');
 
   await no.fill('CV-2026-0141');
@@ -824,8 +848,8 @@ test('folds vouchers to the same payee into one row that opens to show them', as
 
   // Two more to Meralco, typed two ways: one payee.
   for (const [no, payee, amount] of [['888001', 'Meralco', '500'], ['888002', 'MERALCO.', '700']]) {
-    await form.getByRole('textbox', 'Payee').fill(payee);
-    await form.getByRole('textbox', 'Line 1 description').fill('Power');
+    await form.getByRole('combobox', 'Payee').fill(payee);
+    await form.getByRole('combobox', 'Line 1 description').fill('Power');
     await form.getByRole('textbox', 'Line 1 amount').fill(amount);
     await form.getByRole('button', 'Save and route for approval').tap();
     await expect(screen.getByRole('dialog', `${no} saved and routed for approval.`)).toBeVisible();
@@ -853,18 +877,18 @@ test('Enter on a filled-in line of particulars adds the next line and moves to i
   const form = screen.getByRole('form', 'New voucher');
 
   // A line not filled in yet: Enter goes to its empty box.
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
-  await form.getByRole('textbox', 'Line 1 description').press('Enter');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Line 1 description').press('Enter');
   await expect(form.getByRole('textbox', 'Line 1 amount')).toBeFocused();
 
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('textbox', 'Line 1 amount').press('Enter');
-  await expect(form.getByRole('textbox', 'Line 2 description')).toBeFocused();
+  await expect(form.getByRole('combobox', 'Line 2 description')).toBeFocused();
 
-  await form.getByRole('textbox', 'Line 2 description').fill('Courier');
+  await form.getByRole('combobox', 'Line 2 description').fill('Courier');
   await form.getByRole('textbox', 'Line 2 amount').fill('250');
   await form.getByRole('textbox', 'Line 2 amount').press('Enter');
-  await expect(form.getByRole('textbox', 'Line 3 description')).toBeFocused();
+  await expect(form.getByRole('combobox', 'Line 3 description')).toBeFocused();
 
   // Still the same, unsaved voucher.
   await expect(screen.getByRole('form', 'New voucher')).toBeVisible();
@@ -878,8 +902,8 @@ test('saves a draft, opens it again from Drafts, and takes it away once the vouc
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save draft').tap();
   await expect(screen.getByRole('dialog', 'Draft saved. Open it again from Drafts.')).toBeVisible();
@@ -893,7 +917,7 @@ test('saves a draft, opens it again from Drafts, and takes it away once the vouc
   await expect(screen.getByRole('tab', /^Voucher entry/)).toHaveAttribute('aria-selected', 'true');
   const opened = screen.getByRole('form', 'New voucher');
 
-  await expect(opened.getByRole('textbox', 'Payee')).toHaveValue('MANILA ELECTRIC COMPANY (MERALCO)');
+  await expect(opened.getByRole('combobox', 'Payee')).toHaveValue('MANILA ELECTRIC COMPANY (MERALCO)');
   await expect(opened.getByRole('textbox', 'Line 1 amount')).toHaveValue('1250.50');
   await opened.getByRole('button', 'Save and route for approval').tap();
   await expect(screen.getByRole('dialog', '888001 saved and routed for approval.')).toBeVisible();
@@ -909,7 +933,7 @@ test('marks on both copies where the field being typed in prints, on screen only
   expect(await markedPaperParts(browser)).toEqual([]);
 
   // A ring around the payee's box, on each copy, as the payee is typed.
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PAYEE MANILA ELECTRIC COMPANY (MERALCO) · solid 2px'));
   // An outline takes no room: the paper is laid out as it was.
   const layout = await paperLayoutWithAndWithoutMark(browser);
@@ -919,7 +943,7 @@ test('marks on both copies where the field being typed in prints, on screen only
   // The next field moves the ring to its own box.
   await form.getByRole('textbox', 'Check No.').fill('0004512');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('CHECK NO. 0004512 · solid 2px'));
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies');
   expect((await markedPaperParts(browser))[0]).toMatch(/^PARTICULARS AMOUNT Office supplies ₱0\.00 TOTAL ₱0\.00 · solid 2px$/);
   await form.getByRole('textbox', "Preparer's position").fill('Accounting Staff');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));

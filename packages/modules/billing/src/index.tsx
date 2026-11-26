@@ -1,7 +1,7 @@
-import { Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
-import { useCallback, useRef, useState } from 'react';
+import { EarlierPicks, Button, Checkbox, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SelectInput, StatusPill, Tabs, TextArea, TextInput, useConfirm, type Column, type Refusal, type RowAction } from '@keystone/ui';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { companyOf, count, nameOf, peso, shortDate, type Statement, SERVICES } from '@keystone/core';
-import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, statementDraftBlank, statementDraftFrom, statementDraftTitle, paidInto, payInto, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
+import { billingFigure, billingFinding, billingWaiting, EWT_RATES, markOverdue, newStatement, outstanding, outstandingTotal, overdue, statementDraftBlank, statementDraftFrom, statementDraftTitle, paidInto, payInto, earlierStatementEntries, rememberedCharges, saveStatement, setStatementStatus, setStatementsStatus, STATEMENT_STATUSES, statementDraftOf, statementTone, statementOf, statementsNewestFirst, statementTotals, withClient, withStatementDate, statementPayments, type StatementDraft, type StatementStatus, ID, TAG, refersTo } from './rules';
 import { BankAccountPicker, Fills, SaveDraftButton, SavedDrafts, SignatoryPicker, useDraft, useSavedDrafts, useKeystone, useModuleApp, type ModuleApp, type ModuleDef, printElement, savePdf, FormCard, LineEditor, Workspace } from '@keystone/kit';
 import { StatementPaper } from './StatementPaper';
 
@@ -53,6 +53,9 @@ function Billing() {
   const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLDivElement>(null);
   const editing = draft.editing ? state.bs.find((b) => b.no === draft.editing) : undefined;
+  // Repeated details (docs/adr/0053): the charges billed before.
+  const charges = useMemo(() => rememberedCharges(state), [state]);
+  const offered = useMemo(() => earlierStatementEntries(state), [state]);
   const live = statementOf(draft);
   const t = statementTotals(live);
   const open = outstanding(state);
@@ -159,16 +162,16 @@ function Billing() {
                       <Fills part="invoiceDate"><Field label="Invoice date"><TextInput type="date" value={draft.invoiceDate} onChange={(invoiceDate) => setDraft({ ...draft, invoiceDate })} /></Field></Fills>
                       <Fills part="due"><Field name="due" label="Due date"><TextInput type="date" value={draft.due} onChange={(due) => setDraft({ ...draft, due })} /></Field></Fills>
                     </FieldRow>
-                    <Fills part="paymentMode"><Field label="Mode of payment" hint="How Bill to pays, as it prints in the invoice box under the due date."><TextInput placeholder="Check, bank transfer, cash" value={draft.paymentMode} onChange={(paymentMode) => setDraft({ ...draft, paymentMode })} /></Field></Fills>
+                    <Fills part="paymentMode"><Field label="Mode of payment" hint="How Bill to pays, as it prints in the invoice box under the due date."><TextInput placeholder="Check, bank transfer, cash" suggestions={offered.paymentModes} value={draft.paymentMode} onChange={(paymentMode) => setDraft({ ...draft, paymentMode })} /></Field></Fills>
                     <Fills part="billTo">
-                      <Field name="client" label="Bill to" hint="As it prints. A client’s name from the directory brings its TIN, VAT, withholding and Attention.">
-                        <TextInput capitalize placeholder="Client name" value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
+                      <Field name="client" label="Bill to" hint="As it prints. A client’s name from the directory, or one billed before, brings its TIN, VAT, withholding and Attention, and their address and mode of payment from their last statement.">
+                        <TextInput capitalize placeholder="Client name" suggestions={offered.clients} value={draft.client} onChange={(client) => setDraft(withClient(state, draft, client))} />
                       </Field>
                     </Fills>
                     <Fills part="address"><Field label="Address" hint="Bill to’s address, as it prints under the name."><TextInput placeholder="Street, city" value={draft.address} onChange={(address) => setDraft({ ...draft, address })} /></Field></Fills>
                     <Fills part="tin"><Field label="TIN" hint="Bill to’s TIN, as it prints under the address. A client’s from the directory comes with its name."><TextInput placeholder="000-000-000-000" value={draft.tin} onChange={(tin) => setDraft({ ...draft, tin })} /></Field></Fills>
-                    <Fills part="attention"><Field label="Attention"><TextInput capitalize placeholder="Contact person" value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field></Fills>
-                    <Fills part="lines"><LineEditor title="Charges" pricing="unit" lines={draft.lines} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
+                    <Fills part="attention"><Field label="Attention"><TextInput capitalize placeholder="Contact person" suggestions={offered.attention} value={draft.attention} onChange={(attention) => setDraft({ ...draft, attention })} /></Field></Fills>
+                    <Fills part="lines"><LineEditor title="Charges" pricing="unit" lines={draft.lines} remembered={charges} onChange={(lines) => setDraft({ ...draft, lines })} /></Fills>
                     <Fills part="totals">
                       <div className="flex flex-wrap gap-x-5 gap-y-2">
                         <Checkbox checked={draft.vat} onChange={(vat) => setDraft({ ...draft, vat })}>Add 12% VAT</Checkbox>
@@ -195,7 +198,10 @@ function Billing() {
                       <Field label="Payment instructions"><TextArea rows={7} value={draft.notes} onChange={(notes) => setDraft({ ...draft, notes })} /></Field>
                     </Fills>
                     <Fills part="penalty"><Field label="Penalty" hint="The late-payment penalty, printed under the payment instructions."><TextArea rows={2} value={draft.penalty} onChange={(penalty) => setDraft({ ...draft, penalty })} /></Field></Fills>
-                    <Fills part="note"><Field label="Notes" hint="Optional. The statement prints Notes only when something is typed here."><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field></Fills>
+                    <Fills part="note">
+                      <Field label="Notes" hint="Optional. The statement prints Notes only when something is typed here."><TextArea rows={4} value={draft.note} onChange={(note) => setDraft({ ...draft, note })} /></Field>
+                      <EarlierPicks values={offered.notes} value={draft.note} onPick={(note) => setDraft({ ...draft, note })} />
+                    </Fills>
                     {/* Each signatory's name over their position, as the statement prints them. */}
                     <FieldRow min={120}>
                       <Fills part="prepared">

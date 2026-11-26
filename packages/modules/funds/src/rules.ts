@@ -1,5 +1,5 @@
 import {
-  addDays, changeEach, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesBlank, linesFromDraft, logged,
+  addDays, changeEach, companyOf, count, earlier, rememberedLines, type RememberedLine, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesBlank, linesFromDraft, logged,
   moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
   toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
   type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type Reference, type TerminalState, type Tone,
@@ -106,6 +106,8 @@ export type FundsRequest = {
   settle: string;
   /** Who asked, by name. */
   requester: string;
+  /** Who checks it before the CEO decides, by name, signing the fund transfer request between the two. Optional. */
+  checked?: string;
   /** Who asked, when they were signed in to the cloud: only they and the CEO may read it there. */
   uid?: string;
   status: RequestStatus;
@@ -182,6 +184,8 @@ export function dataOf(s: TerminalState): FundsData {
 
     if (jsonText(r.paid)) request.paid = jsonText(r.paid);
 
+    if (jsonText(r.checked)) request.checked = jsonText(r.checked);
+
     return request;
   });
 
@@ -201,6 +205,16 @@ export const requestOf = (s: TerminalState, no: string) => dataOf(s).requests.fi
 /** A request paid by check names its payee by directory code; that record is kept. Every member reads every request. */
 export const refersTo: Reference = { tag: TAG, codes: (s) => dataOf(s).requests.map((r) => r.payee) };
 export const requestTotal = (r: Pick<FundsRequest, 'amount'>): Centavos => toCentavos(r.amount);
+
+/**
+ * Repeated details (docs/adr/0053): the expenses this person listed before, each once, with their amounts, and the
+ * purposes they gave, the last filed first. Their own, since what one person spends on is not another's.
+ */
+export function rememberedExpenses(s: TerminalState, ctx: Ctx): RememberedLine[] {
+  return rememberedLines(newestFirst(dataOf(s).requests).filter((r) => filedBy(r, ctx)).flatMap((r) => r.lines.map((l) => ({ desc: l.desc, amt: l.amt }))));
+}
+
+export const earlierPurposes = (s: TerminalState, ctx: Ctx) => earlier(newestFirst(dataOf(s).requests).filter((r) => filedBy(r, ctx)).map((r) => r.purpose));
 
 /** The expenses a request lists; one filed before it listed them is its purpose for its amount. */
 export const expensesOf = (r: Pick<FundsRequest, 'lines' | 'purpose' | 'amount'>): Expense[] => (r.lines.length ? r.lines : [{ desc: r.purpose, amt: r.amount }]);
@@ -267,6 +281,8 @@ export interface RequestDraft extends Editing {
   by: string;
   /** Who is asking, typed in when nobody is signed in. */
   requester: string;
+  /** Who checks it, picked as a voucher's signatories are. */
+  checked: string;
 }
 
 const NO_ACCOUNT: TransferAccount = { bank: '', branch: '', name: '', number: '' };
@@ -285,6 +301,8 @@ export function newRequest(s: TerminalState, ctx: Ctx): RequestDraft {
     purpose: '', lines: [lineDraft()], pay: mine[0]?.pay ?? 'transfer',
     payee: mine.find((r) => r.pay === 'check' && recordOf(s, r.payee))?.payee ?? payees(s)[0]?.code ?? '',
     account: account ? { ...account } : { ...NO_ACCOUNT }, when: ASAP, by: '', requester: ctx.who?.name ?? '',
+    // Checked by whoever checked this person's last request, or Company Details' checker before their first.
+    checked: mine.find((r) => r.checked)?.checked ?? companyOf(s).checkedBy ?? '',
   };
 }
 
@@ -312,7 +330,7 @@ export function requestDraftFrom(s: TerminalState, ctx: Ctx, saved: Partial<Requ
 export const requestDraftOf = (r: FundsRequest): RequestDraft => ({
   editing: r.no, purpose: r.purpose, lines: expensesOf(r).map(lineDraftOf), pay: r.pay, payee: r.payee,
   account: r.account ? { ...r.account } : { ...NO_ACCOUNT }, when: r.settle === ASAP ? ASAP : 'date', by: r.settle === ASAP ? '' : r.settle,
-  requester: r.requester,
+  requester: r.requester, checked: r.checked ?? '',
 });
 
 /**
@@ -368,6 +386,7 @@ export function requestPreview(s: TerminalState, d: RequestDraft, ctx: Ctx): Fun
     no: saved?.no ?? nextRequestNo(s, ctx), date: saved?.date ?? today(ctx), purpose: d.purpose.trim(), lines,
     amount: toPesos(sumCentavos(lines, (l) => toCentavos(l.amt))), pay: d.pay, account: { ...d.account }, payee: d.payee,
     settle: d.when === 'date' ? d.by : ASAP, requester: ctx.who?.name ?? d.requester.trim(), status: saved?.status ?? 'For Approval',
+    ...(d.checked.trim() && { checked: d.checked.trim() }),
   };
 }
 
@@ -395,14 +414,15 @@ export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change
   const data = dataOf(s);
   const amount = toPesos(sumCentavos(lines, (l) => toCentavos(l.amt)));
   // A transfer names no payee and a check no account, so a request switched from one to the other keeps neither.
-  const fields = { purpose, lines, amount, pay: d.pay, payee: account ? '' : d.payee, settle: d.when === ASAP ? ASAP : d.by, ...(account && { account }) };
+  const checked = d.checked.trim();
+  const fields = { purpose, lines, amount, pay: d.pay, payee: account ? '' : d.payee, settle: d.when === ASAP ? ASAP : d.by, ...(account && { account }), ...(checked && { checked }) };
   const original = d.editing ? data.requests.find((r) => r.no === d.editing) : undefined;
 
   if (original) {
     const lock = requestLock(original, ctx);
 
     if (lock) throw new KeystoneError(lock);
-    const { account: _before, ...kept } = original;
+    const { account: _before, checked: _was, ...kept } = original;
     // Signed in, the requester stays the member who filed it; on a computer with no sign-in, the name typed is theirs.
     const updated: FundsRequest = { ...kept, ...fields, ...(!ctx.who && { requester }) };
 

@@ -11,9 +11,9 @@ import { markedPaperParts, paperLayoutWithAndWithoutMark, PDF_MOST_BYTES_A_PAGE,
 async function fillLease(screen: Screen) {
   const form = screen.getByRole('form', 'New statement of account');
 
-  await form.getByRole('textbox', 'Client').fill('Northwind Retail Corp.');
-  await form.getByRole('textbox', 'Property address').fill('Unit 5, Ortigas Avenue, Pasig');
-  await form.getByRole('textbox', 'Payee').fill('Juan Dela Cruz');
+  await form.getByRole('combobox', 'Client').fill('Northwind Retail Corp.');
+  await form.getByRole('combobox', 'Property address').fill('Unit 5, Ortigas Avenue, Pasig');
+  await form.getByRole('combobox', 'Payee').fill('Juan Dela Cruz');
   await form.getByRole('textbox', 'Floor area (sqm)').fill('354.4');
   await form.getByRole('textbox', 'Rate per sqm').fill('600');
   await form.getByRole('textbox', 'Reservation paid').fill('212640');
@@ -23,11 +23,32 @@ async function fillLease(screen: Screen) {
   await form.getByRole('textbox', 'Escalation a year (%)').fill('5');
   await form.getByRole('textbox', 'First month paid by check').fill('2027-02');
   await form.getByRole('textbox', 'Number of checks').fill('12');
-  await form.getByRole('textbox', 'Bank').fill('BPI');
+  await form.getByRole('combobox', 'Bank').fill('BPI');
   await form.getByRole('textbox', 'First check number').fill('6000325749');
 
   return form;
 }
+
+test('a client with a statement before brings its property, payee, bank and rates onto the next one', async ({ app, screen }) => {
+  await app.open('/#soa');
+  const form = await fillLease(screen);
+
+  await form.getByRole('textbox', 'Notes').fill('Checks payable to Juan Dela Cruz.');
+  await form.getByRole('button', 'Save statement').tap();
+  await expect(screen.getByRole('dialog', /^SOA-2026-001 /)).toBeVisible();
+
+  // The next statement for Northwind starts from the last one (docs/adr/0053).
+  const next = screen.getByRole('form', 'New statement of account');
+
+  await next.getByRole('combobox', 'Client').fill('Northwind Retail Corp.');
+  await expect(next.getByRole('combobox', 'Property address')).toHaveValue('Unit 5, Ortigas Avenue, Pasig');
+  await expect(next.getByRole('combobox', 'Payee')).toHaveValue('Juan Dela Cruz');
+  await expect(next.getByRole('combobox', 'Bank')).toHaveValue('BPI');
+  await expect(next.getByRole('textbox', 'Floor area (sqm)')).toHaveValue('354.4');
+  await expect(next.getByRole('textbox', 'Rate per sqm')).toHaveValue('600');
+  await next.getByRole('button', 'Use earlier: Checks payable to Juan Dela Cruz.').tap();
+  await expect(next.getByRole('textbox', 'Notes')).toHaveValue('Checks payable to Juan Dela Cruz.');
+});
 
 test('works out the rent, the deposit, each lease year and the checks, on the printed statement', async ({ app, screen }) => {
   await app.open('/#soa');
@@ -160,7 +181,7 @@ test('prints the payee under its own title, such as Lessor', async ({ app, scree
   await app.open('/#soa');
   const form = await fillLease(screen);
 
-  await form.getByRole('textbox', 'Payee’s title').fill('Lessor');
+  await form.getByRole('combobox', 'Payee’s title').fill('Lessor');
   await expect(screen.getByRole('article', 'Statement of account SOA-2026-001').getByText('Lessor', { exact: true })).toBeVisible();
 });
 
@@ -175,7 +196,7 @@ test('saves a draft, opens it again from Drafts, and takes it away once the stat
   await expect(screen.getByText('No statements of account yet.', { exact: true })).toBeVisible();
 
   await screen.getByRole('button', 'New statement').tap();
-  await expect(screen.getByRole('form', 'New statement of account').getByRole('textbox', 'Client')).toHaveValue('');
+  await expect(screen.getByRole('form', 'New statement of account').getByRole('combobox', 'Client')).toHaveValue('');
   await screen.getByRole('list', 'Drafts').getByRole('listitem', 'Northwind Retail Corp. · Unit 5, Ortigas Avenue, Pasig').getByRole('button', 'Open').tap();
   const opened = screen.getByRole('form', 'New statement of account');
 
@@ -190,7 +211,7 @@ test('marks on the statement where the field being typed in prints, part by part
   await app.open('/#soa');
   const form = screen.getByRole('form', 'New statement of account');
 
-  await form.getByRole('textbox', 'Client').fill('Northwind Retail Corp.');
+  await form.getByRole('combobox', 'Client').fill('Northwind Retail Corp.');
   expect(await markedPaperParts(browser)).toEqual(['NORTHWIND RETAIL CORP. · solid 2px']);
   const layout = await paperLayoutWithAndWithoutMark(browser);
 

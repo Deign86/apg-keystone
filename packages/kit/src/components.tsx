@@ -1,7 +1,7 @@
 import { Button, CellInput, EmptyState, Field, FieldMarks, FieldRow, Panel, SectionLabel, SelectInput, Tag, TextInput, cn, useConfirm, type Refusal } from '@keystone/ui';
 import { Pin, X } from 'lucide-react';
-import { useEffect, useId, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
-import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry } from '@keystone/core';
+import { useEffect, useId, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent as KeyEvent, type ReactNode } from 'react';
+import { companyOf, lineDraft, SERVICES, shortDate, signatoryNames, signedNames, withLineDesc, type BankAccount, type Connector, type LineDraft, type LinePricing, type LogEntry, type RememberedLine } from '@keystone/core';
 import { useChangedElsewhere, useConnectorUpdate, useDraft, useKeystone, useModuleApp, useOpenConnector, type HeldRecord } from './context';
 import { MARKS } from './paper';
 import { ActivePart, FILLS } from './parts';
@@ -15,8 +15,17 @@ import { ActivePart, FILLS } from './parts';
  * next line, adding one after the last; in a line that is not, it moves to its empty box. Either way it never submits
  * the form around it.
  */
-export function LineEditor({ title, lines, onChange, pricing = 'amount', name = 'lines' }: { title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; pricing?: LinePricing; name?: string }) {
+export function LineEditor({ title, lines, onChange, pricing = 'amount', name = 'lines', remembered }: {
+  title: string; lines: LineDraft[]; onChange: (l: LineDraft[]) => void; pricing?: LinePricing; name?: string;
+  /**
+   * Lines saved before (core's `rememberedLines`, docs/adr/0053): their descriptions are offered as one is typed, and
+   * one typed again brings its quantity and amount onto a line that has none yet.
+   */
+  remembered?: readonly RememberedLine[];
+}) {
   const set = (id: string, patch: Partial<LineDraft>) => onChange(lines.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  const described = (l: LineDraft, desc: string) => onChange(lines.map((x) => (x.id === l.id ? withLineDesc(x, desc, remembered ?? []) : x)));
+  const offered = useMemo(() => remembered?.map((r) => r.desc), [remembered]);
   const unit = pricing === 'unit';
   const box = useRef<HTMLFieldSetElement>(null);
   // The line whose description takes the caret once it is drawn (counted from 1), after Enter moved on.
@@ -64,7 +73,7 @@ export function LineEditor({ title, lines, onChange, pricing = 'amount', name = 
               : 'grid-cols-[minmax(0,1fr)_112px_auto] @max-sm:grid-cols-[minmax(0,1fr)_auto] @max-sm:[&>:first-child]:col-span-full',
           )}
         >
-          <CellInput name={`${name}.${i}.desc`} label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} onChange={(v) => set(l.id, { desc: v })} />
+          <CellInput name={`${name}.${i}.desc`} label={`Line ${i + 1} description`} placeholder="Description" value={l.desc} suggestions={offered} onChange={(v) => described(l, v)} />
           {unit && <CellInput name={`${name}.${i}.qty`} label={`Line ${i + 1} quantity`} placeholder="Qty" align="right" value={l.qty} onChange={(v) => set(l.id, { qty: v })} />}
           <CellInput name={`${name}.${i}.amount`} label={unit ? `Line ${i + 1} unit price` : `Line ${i + 1} amount`} placeholder={unit ? 'Unit price' : '0.00'} align="right" value={l.amount} onChange={(v) => set(l.id, { amount: v })} />
           <button

@@ -55,7 +55,7 @@ test('asks for funds, listing the expenses to be paid back by transfer', async (
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Revolving fund, Nov 1 to 15');
-  await form.getByRole('textbox', 'Line 1 description').fill('Pantry groceries');
+  await form.getByRole('combobox', 'Line 1 description').fill('Pantry groceries');
   await form.getByRole('textbox', 'Line 1 amount').fill('3250.75');
   await form.getByRole('textbox', 'Bank').fill('BDO');
   await form.getByRole('textbox', 'Account name').fill('Liza Ramos');
@@ -72,8 +72,8 @@ test('saves a check voucher as before', async ({ app, screen }) => {
   await screen.getByRole('tab', /^Voucher entry/).tap();
   const form = screen.getByRole('form', 'New voucher');
 
-  await form.getByRole('textbox', 'Payee').fill('Manila Electric Company (Meralco)');
-  await form.getByRole('textbox', 'Line 1 description').fill('Office supplies for November');
+  await form.getByRole('combobox', 'Payee').fill('Manila Electric Company (Meralco)');
+  await form.getByRole('combobox', 'Line 1 description').fill('Office supplies for November');
   await form.getByRole('textbox', 'Line 1 amount').fill('1250.50');
   await form.getByRole('button', 'Save and route for approval').tap();
 
@@ -85,8 +85,8 @@ test('issues a billing statement to a client the Directory keeps', async ({ app,
   await screen.getByRole('tab', /^Statement entry/).tap();
   const form = screen.getByRole('form', 'New statement');
 
-  await form.getByRole('textbox', 'Bill to').fill('Novatek BPO Solutions Inc.');
-  await form.getByRole('textbox', 'Line 1 description').fill('Virtual office, November');
+  await form.getByRole('combobox', 'Bill to').fill('Novatek BPO Solutions Inc.');
+  await form.getByRole('combobox', 'Line 1 description').fill('Virtual office, November');
   await form.getByRole('textbox', 'Line 1 unit price').fill('10000');
   await form.getByRole('button', 'Save and mark as sent').tap();
   await expect(screen.getByRole('dialog', '888110226 saved and marked as sent.')).toBeVisible();

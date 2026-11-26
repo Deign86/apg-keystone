@@ -1,6 +1,10 @@
 # Billing Statements
 
 ## Owns
+- **Repeated details** (docs/adr/0053): typing a client billed before, in the directory or not, brings their address, TIN,
+  Attention and mode of payment from their last statement into the fields still blank (and its VAT and EWT for one not
+  in the directory); Bill to, Attention, Mode of payment and the charges offer what was typed before, a charge typed
+  again brings its quantity and unit price, and Notes shows earlier notes to put back with a tap.
 - `src/index.tsx`: two tabs, **Statements issued** (shown first, with the count) and **Statement entry** (the form
   beside the statement it prints; the tab names the statement open in it, or New). Opening a statement, New statement,
   and Overview's and Home's actions show the entry tab; which tab is shown is kept with the drafts (`billing.view`). The
