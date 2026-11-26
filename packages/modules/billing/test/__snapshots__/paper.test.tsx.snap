@@ -23,11 +23,11 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
-<dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
+<dd class="m-0 whitespace-pre-line font-bold uppercase">Carlo Mendiola</dd>
 </dl>
 <table aria-label="Invoice" class="mb-3 w-full border-collapse border border-paper-ink">
 <tbody>
@@ -37,15 +37,15 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Invoice date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 1, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 1, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 15, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">—</td>
 </tr>
 </tbody>
 </table>
@@ -60,20 +60,20 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Monthly rent – 18/F, 420 sqm (October 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱357,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱357,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Association dues (October 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱42,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱42,000.00</td>
 </tr>
 </tbody>
 <tfoot>
@@ -101,21 +101,21 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </table>
 <section class="mt-4">
 <p class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Penalty</p>
-<p class="m-0 mt-1 text-[11px] whitespace-pre-line">5% penalty charge will be applied to delayed monthly payments.</p>
+<p class="m-0 mt-1 text-[11px] whitespace-pre-line font-bold uppercase">5% penalty charge will be applied to delayed monthly payments.</p>
 </section>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -147,11 +147,11 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
-<dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
+<dd class="m-0 whitespace-pre-line font-bold uppercase">Carlo Mendiola</dd>
 </dl>
 <table aria-label="Invoice" class="mb-3 w-full border-collapse border border-paper-ink">
 <tbody>
@@ -161,15 +161,15 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Invoice date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 1, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 1, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 15, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">—</td>
 </tr>
 </tbody>
 </table>
@@ -184,20 +184,20 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Monthly rent – 18/F, 420 sqm (October 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱357,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱357,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Association dues (October 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱42,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱42,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱42,000.00</td>
 </tr>
 </tbody>
 <tfoot>
@@ -225,21 +225,21 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </table>
 <section class="mt-4">
 <p class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Penalty</p>
-<p class="m-0 mt-1 text-[11px] whitespace-pre-line">5% penalty charge will be applied to delayed monthly payments.</p>
+<p class="m-0 mt-1 text-[11px] whitespace-pre-line font-bold uppercase">5% penalty charge will be applied to delayed monthly payments.</p>
 </section>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -270,11 +270,11 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Dela Cruz, Maria Teresa</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
-<dd class="m-0 font-medium whitespace-pre-line">—</dd>
+<dd class="m-0 whitespace-pre-line font-bold uppercase">—</dd>
 </dl>
 <table aria-label="Invoice" class="mb-3 w-full border-collapse border border-paper-ink">
 <tbody>
@@ -284,15 +284,15 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Invoice date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 1, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 1, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 10, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 10, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">—</td>
 </tr>
 </tbody>
 </table>
@@ -307,20 +307,20 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Monthly rent – Unit 12B (October 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱85,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱85,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱85,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱85,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Parking slot P-214 (October 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱6,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱6,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱6,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱6,000.00</td>
 </tr>
 </tbody>
 <tfoot>
@@ -344,17 +344,17 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </table>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -385,11 +385,11 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Harbor Point Logistics Corp.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
-<dd class="m-0 font-medium whitespace-pre-line">Liza Tan</dd>
+<dd class="m-0 whitespace-pre-line font-bold uppercase">Liza Tan</dd>
 </dl>
 <table aria-label="Invoice" class="mb-3 w-full border-collapse border border-paper-ink">
 <tbody>
@@ -399,15 +399,15 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Invoice date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 25, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 25, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">November 5, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">November 5, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">—</td>
 </tr>
 </tbody>
 </table>
@@ -422,20 +422,20 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">Warehouse lease – Bldg 4 (November 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱510,000.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱510,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱510,000.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱510,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line ">
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-bold uppercase">1</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line  font-bold uppercase">
 <span class="whitespace-pre-line">CUSA charges (November 2026)</span>
 </td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱38,250.00</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱38,250.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱38,250.00</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱38,250.00</td>
 </tr>
 </tbody>
 <tfoot>
@@ -463,17 +463,17 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </table>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -504,11 +504,11 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bill to</dt>
 <dd class="m-0 font-bold uppercase">Novatek BPO Solutions Inc.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 font-medium">—</dd>
+<dd class="m-0 font-bold uppercase">—</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Attention</dt>
-<dd class="m-0 font-medium whitespace-pre-line">Carlo Mendiola</dd>
+<dd class="m-0 whitespace-pre-line font-bold uppercase">Carlo Mendiola</dd>
 </dl>
 <table aria-label="Invoice" class="mb-3 w-full border-collapse border border-paper-ink">
 <tbody>
@@ -518,15 +518,15 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Invoice date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 1, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 1, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Due date</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">October 15, 2026</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">October 15, 2026</td>
 </tr>
 <tr class="border-t border-paper-line ">
 <th scope="row" class="px-2.5 py-1.5 text-left font-semibold text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Mode of payment</th>
-<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-semibold">—</td>
+<td class="px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums font-bold uppercase">—</td>
 </tr>
 </tbody>
 </table>
@@ -569,17 +569,17 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </table>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>

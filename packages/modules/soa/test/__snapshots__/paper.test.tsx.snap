@@ -23,13 +23,13 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Client</dt>
 <dd class="m-0 font-bold uppercase">Northwind Retail Corp.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Property address</dt>
-<dd class="m-0 font-medium">Unit 5, Ortigas Avenue, Pasig</dd>
+<dd class="m-0 font-bold uppercase">Unit 5, Ortigas Avenue, Pasig</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Lease terms</dt>
-<dd class="m-0 font-medium">2 years, 5% escalation a year from the second year</dd>
+<dd class="m-0 font-bold uppercase">2 years, 5% escalation a year from the second year</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 font-medium">Juan Dela Cruz</dd>
+<dd class="m-0 font-bold uppercase">Juan Dela Cruz</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Contract commencement</dt>
-<dd class="m-0 font-medium tabular-nums">January 1, 2027</dd>
+<dd class="m-0 font-bold uppercase tabular-nums">January 1, 2027</dd>
 </dl>
 <section class="mt-4">
 <h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">1. Breakdown of the monthly rent</h2>
@@ -97,24 +97,36 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
 <td class="px-2 py-1 border-l border-paper-line text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱212,640.00)</td>
-<td class="px-2 py-1 border-l border-paper-line ">1 month deductible to advance rental</td>
-<td class="px-2 py-1 border-l border-paper-line ">CASH DEPOSIT</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">1 month deductible to advance rental</span>
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">CASH DEPOSIT</span>
+</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  ">Security deposit (2 months base rent)</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
 <td class="px-2 py-1 border-l border-paper-line text-center whitespace-nowrap tabular-nums">2</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱425,280.00</td>
-<td class="px-2 py-1 border-l border-paper-line ">Remaining 1 month</td>
-<td class="px-2 py-1 border-l border-paper-line ">—</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">Remaining 1 month</span>
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">—</span>
+</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  ">Advance rental (2 months)</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line text-center whitespace-nowrap tabular-nums">2</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱455,049.60</td>
-<td class="px-2 py-1 border-l border-paper-line ">Jan – Feb 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">—</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">Jan – Feb 2027</span>
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">—</span>
+</td>
 </tr>
 </tbody>
 </table>
@@ -176,7 +188,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">1</td>
 <td class="px-2 py-1 border-l border-paper-line ">February 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325749</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">February 2027 Rent</td>
@@ -184,7 +198,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">2</td>
 <td class="px-2 py-1 border-l border-paper-line ">March 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325750</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">March 2027 Rent</td>
@@ -192,7 +208,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">3</td>
 <td class="px-2 py-1 border-l border-paper-line ">April 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325751</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">April 2027 Rent</td>
@@ -200,7 +218,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">4</td>
 <td class="px-2 py-1 border-l border-paper-line ">May 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325752</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">May 2027 Rent</td>
@@ -208,7 +228,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">5</td>
 <td class="px-2 py-1 border-l border-paper-line ">June 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325753</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">June 2027 Rent</td>
@@ -216,7 +238,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">6</td>
 <td class="px-2 py-1 border-l border-paper-line ">July 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325754</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">July 2027 Rent</td>
@@ -224,7 +248,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">7</td>
 <td class="px-2 py-1 border-l border-paper-line ">August 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325755</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">August 2027 Rent</td>
@@ -232,7 +258,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">8</td>
 <td class="px-2 py-1 border-l border-paper-line ">September 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325756</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">September 2027 Rent</td>
@@ -240,7 +268,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">9</td>
 <td class="px-2 py-1 border-l border-paper-line ">October 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325757</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">October 2027 Rent</td>
@@ -248,7 +278,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">10</td>
 <td class="px-2 py-1 border-l border-paper-line ">November 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325758</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">November 2027 Rent</td>
@@ -256,7 +288,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">11</td>
 <td class="px-2 py-1 border-l border-paper-line ">December 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325759</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">December 2027 Rent</td>
@@ -264,7 +298,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">12</td>
 <td class="px-2 py-1 border-l border-paper-line ">January 28, 2028</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325760</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱238,901.04</td>
 <td class="px-2 py-1 border-l border-paper-line ">January 2028 Rent</td>
@@ -278,7 +314,7 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 </section>
 <section class="mt-4">
 <h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Notes</h2>
-<p class="m-0 mt-1 text-[11px] whitespace-pre-line">Checks are payable to the lessor.</p>
+<p class="m-0 mt-1 text-[11px] whitespace-pre-line font-bold uppercase">Checks are payable to the lessor.</p>
 </section>
 </article>
 </div>
@@ -307,13 +343,13 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Client</dt>
 <dd class="m-0 font-bold uppercase">Northwind Retail Corp.</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Property address</dt>
-<dd class="m-0 font-medium">Unit 5, Ortigas Avenue, Pasig</dd>
+<dd class="m-0 font-bold uppercase">Unit 5, Ortigas Avenue, Pasig</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Lease terms</dt>
-<dd class="m-0 font-medium">2 years, 5% escalation a year from the second year</dd>
+<dd class="m-0 font-bold uppercase">2 years, 5% escalation a year from the second year</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 font-medium">Juan Dela Cruz</dd>
+<dd class="m-0 font-bold uppercase">Juan Dela Cruz</dd>
 <dt class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Contract commencement</dt>
-<dd class="m-0 font-medium tabular-nums">January 1, 2027</dd>
+<dd class="m-0 font-bold uppercase tabular-nums">January 1, 2027</dd>
 </dl>
 <section class="mt-4">
 <h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">1. Breakdown of the monthly rent</h2>
@@ -381,24 +417,36 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
 <td class="px-2 py-1 border-l border-paper-line text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">(₱212,640.00)</td>
-<td class="px-2 py-1 border-l border-paper-line ">1 month deductible to advance rental</td>
-<td class="px-2 py-1 border-l border-paper-line ">CASH DEPOSIT</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">1 month deductible to advance rental</span>
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">CASH DEPOSIT</span>
+</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  ">Security deposit (2 months base rent)</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱212,640.00</td>
 <td class="px-2 py-1 border-l border-paper-line text-center whitespace-nowrap tabular-nums">2</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱425,280.00</td>
-<td class="px-2 py-1 border-l border-paper-line ">Remaining 1 month</td>
-<td class="px-2 py-1 border-l border-paper-line ">—</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">Remaining 1 month</span>
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">—</span>
+</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  ">Advance rental (2 months)</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line text-center whitespace-nowrap tabular-nums">2</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱455,049.60</td>
-<td class="px-2 py-1 border-l border-paper-line ">Jan – Feb 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">—</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">Jan – Feb 2027</span>
+</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">—</span>
+</td>
 </tr>
 </tbody>
 </table>
@@ -460,7 +508,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">1</td>
 <td class="px-2 py-1 border-l border-paper-line ">February 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325749</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">February 2027 Rent</td>
@@ -468,7 +518,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">2</td>
 <td class="px-2 py-1 border-l border-paper-line ">March 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325750</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">March 2027 Rent</td>
@@ -476,7 +528,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">3</td>
 <td class="px-2 py-1 border-l border-paper-line ">April 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325751</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">April 2027 Rent</td>
@@ -484,7 +538,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">4</td>
 <td class="px-2 py-1 border-l border-paper-line ">May 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325752</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">May 2027 Rent</td>
@@ -492,7 +548,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">5</td>
 <td class="px-2 py-1 border-l border-paper-line ">June 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325753</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">June 2027 Rent</td>
@@ -500,7 +558,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">6</td>
 <td class="px-2 py-1 border-l border-paper-line ">July 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325754</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">July 2027 Rent</td>
@@ -508,7 +568,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">7</td>
 <td class="px-2 py-1 border-l border-paper-line ">August 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325755</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">August 2027 Rent</td>
@@ -516,7 +578,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">8</td>
 <td class="px-2 py-1 border-l border-paper-line ">September 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325756</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">September 2027 Rent</td>
@@ -524,7 +588,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">9</td>
 <td class="px-2 py-1 border-l border-paper-line ">October 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325757</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">October 2027 Rent</td>
@@ -532,7 +598,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">10</td>
 <td class="px-2 py-1 border-l border-paper-line ">November 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325758</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">November 2027 Rent</td>
@@ -540,7 +608,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">11</td>
 <td class="px-2 py-1 border-l border-paper-line ">December 28, 2027</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325759</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱227,524.80</td>
 <td class="px-2 py-1 border-l border-paper-line ">December 2027 Rent</td>
@@ -548,7 +618,9 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
 <td class="px-2 py-1  text-right whitespace-nowrap tabular-nums">12</td>
 <td class="px-2 py-1 border-l border-paper-line ">January 28, 2028</td>
-<td class="px-2 py-1 border-l border-paper-line ">BPI</td>
+<td class="px-2 py-1 border-l border-paper-line ">
+<span class="font-bold uppercase">BPI</span>
+</td>
 <td class="px-2 py-1 border-l border-paper-line ">6000325760</td>
 <td class="px-2 py-1 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱238,901.04</td>
 <td class="px-2 py-1 border-l border-paper-line ">January 2028 Rent</td>
@@ -562,7 +634,7 @@ exports[`the statement of account on paper > is laid out, and prints, exactly as
 </section>
 <section class="mt-4">
 <h2 class="m-0 text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">Notes</h2>
-<p class="m-0 mt-1 text-[11px] whitespace-pre-line">Checks are payable to the lessor.</p>
+<p class="m-0 mt-1 text-[11px] whitespace-pre-line font-bold uppercase">Checks are payable to the lessor.</p>
 </section>
 </article>
 </div>

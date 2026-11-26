@@ -2,7 +2,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { DASH, longDate, peso, signatureOf, toCentavos, type Company, type CompanyDetails, type Statement } from '@keystone/core';
 import { ewtRateOf, statementTotals, VAT_RATE } from './rules';
-import { amountColumn, Letterhead, Lines, orDash, paperHeading, paperLabel, Sheet, Signatures, usePaperPart } from '@keystone/kit';
+import { amountColumn, Letterhead, Lines, orDash, paperHeading, paperLabel, paperValue, Sheet, Signatures, usePaperPart } from '@keystone/kit';
 
 // The company's Billing Statement, laid out as its printed form under every paper's letterhead (the title on top, the
 // logo with the address beside it, the number and date): who it is billed to, the invoice box, the charges, then the
@@ -17,7 +17,7 @@ function Note({ title, text, part }: { title: string; text?: string; part: strin
   return (
     <section {...mark(part)} className="mt-4">
       <p className={`m-0 ${paperHeading}`}>{title}</p>
-      <p className="m-0 mt-1 text-[11px] whitespace-pre-line">{text}</p>
+      <p className={`m-0 mt-1 text-[11px] whitespace-pre-line ${paperValue}`}>{text}</p>
     </section>
   );
 }
@@ -26,13 +26,14 @@ function Note({ title, text, part }: { title: string; text?: string; part: strin
  * One row of a ruled box: its label, then its value. `strong` is the row that counts: a band, in bold. `part` is the
  * part of the paper the form's field for it fills.
  */
-function Row({ label, children, strong, first, part }: { label: string; children: ReactNode; strong?: boolean; first?: boolean; part?: string }) {
+function Row({ label, children, strong, first, part, filled }: { label: string; children: ReactNode; strong?: boolean; first?: boolean; part?: string; filled?: boolean }) {
   const mark = usePaperPart();
 
   return (
     <tr {...mark(part)} className={`${first ? '' : 'border-t border-paper-line'} ${strong ? 'bg-paper-tint' : ''}`}>
       <th scope="row" className={`px-2.5 py-1.5 text-left font-semibold ${strong ? paperHeading : paperLabel}`}>{label}</th>
-      <td className={`px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums ${strong ? 'text-sm font-bold' : 'font-semibold'}`}>{children}</td>
+      {/* A value filled in (the invoice box) prints as every paper's answers do; a worked-out total keeps its own weight. */}
+      <td className={`px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums ${strong ? 'text-sm font-bold' : filled ? paperValue : 'font-semibold'}`}>{children}</td>
     </tr>
   );
 }
@@ -47,21 +48,21 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
 
       <dl className="m-0 mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
         <dt className={paperLabel}>Bill to</dt>
-        <dd {...mark('billTo')} className="m-0 font-bold uppercase">{orDash(billTo)}</dd>
+        <dd {...mark('billTo')} className={`m-0 ${paperValue}`}>{orDash(billTo)}</dd>
         <dt className={paperLabel}>Address</dt>
-        <dd {...mark('address')} className="m-0 font-medium">{orDash(b.address)}</dd>
+        <dd {...mark('address')} className={`m-0 ${paperValue}`}>{orDash(b.address)}</dd>
         <dt className={paperLabel}>TIN</dt>
-        <dd {...mark('tin')} className="m-0 font-medium">{orDash(b.tin)}</dd>
+        <dd {...mark('tin')} className={`m-0 ${paperValue}`}>{orDash(b.tin)}</dd>
         <dt className={paperLabel}>Attention</dt>
-        <dd {...mark('attention')} className="m-0 font-medium whitespace-pre-line">{orDash(b.attention)}</dd>
+        <dd {...mark('attention')} className={`m-0 whitespace-pre-line ${paperValue}`}>{orDash(b.attention)}</dd>
       </dl>
 
       <table aria-label="Invoice" className="mb-3 w-full border-collapse border border-paper-ink">
         <tbody>
           <Row label="Invoice No." strong first part="no">{b.no}</Row>
-          <Row label="Invoice date" part="invoiceDate">{longDate(b.invoiceDate ?? b.date)}</Row>
-          <Row label="Due date" part="due">{b.due ? longDate(b.due) : DASH}</Row>
-          <Row label="Mode of payment" part="paymentMode">{orDash(b.paymentMode)}</Row>
+          <Row label="Invoice date" part="invoiceDate" filled>{longDate(b.invoiceDate ?? b.date)}</Row>
+          <Row label="Due date" part="due" filled>{b.due ? longDate(b.due) : DASH}</Row>
+          <Row label="Mode of payment" part="paymentMode" filled>{orDash(b.paymentMode)}</Row>
         </tbody>
       </table>
 

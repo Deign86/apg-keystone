@@ -381,7 +381,7 @@ test('prints the voucher twice on one A4 sheet, ruled into boxes like the cash v
   await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
   await expect(paper.getByText('MARK ANTHONY SANTOS').first()).toBeVisible();
   await expect(paper.getByText('Chief Executive Officer').first()).toBeVisible();
-  await expect(paper).toContainText(/MARK ANTHONY SANTOS\s*Chief Executive Officer/);
+  await expect(paper).toContainText(/MARK ANTHONY SANTOS\s*CHIEF EXECUTIVE OFFICER/);
 
   // Its labels included, nothing on it is smaller than 11px or fainter than 4.5:1.
   expect(await tinyPaperText(browser)).toEqual([]);
@@ -944,15 +944,15 @@ test('marks on both copies where the field being typed in prints, on screen only
   await form.getByRole('textbox', 'Check No.').fill('0004512');
   expect(await markedPaperParts(browser)).toEqual(Array(2).fill('CHECK NO. 0004512 · solid 2px'));
   await form.getByRole('combobox', 'Line 1 description').fill('Office supplies');
-  expect((await markedPaperParts(browser))[0]).toMatch(/^PARTICULARS AMOUNT Office supplies ₱0\.00 TOTAL ₱0\.00 · solid 2px$/);
+  expect((await markedPaperParts(browser))[0]).toMatch(/^PARTICULARS AMOUNT OFFICE SUPPLIES ₱0\.00 TOTAL ₱0\.00 · solid 2px$/);
   await form.getByRole('textbox', "Preparer's position").fill('Accounting Staff');
-  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
+  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO ACCOUNTING STAFF · solid 2px'));
 
   // The ring is drawn on screen only (the mark itself, and its stillness for whoever asks for less motion): it never
   // prints, and Export PDF draws the paper without it.
   expect(await paperMarkMedia(browser)).toEqual(['screen', 'screen and (prefers-reduced-motion: reduce)']);
   expect(await markedPaperPartsDrawn(browser)).toEqual(['none', 'none']);
-  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO Accounting Staff · solid 2px'));
+  expect(await markedPaperParts(browser)).toEqual(Array(2).fill('PREPARED BY D. LAZARO ACCOUNTING STAFF · solid 2px'));
 
   // A field that prints nowhere on the voucher, or leaving the form, clears it.
   await screen.getByRole('heading', { name: 'Check Vouchers', level: 1 }).tap();

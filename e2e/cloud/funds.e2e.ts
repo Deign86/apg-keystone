@@ -94,8 +94,10 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
-  await expect(screen.getByText('2 requests for funds worth ₱50,450.50 wait for your decision, 1 of them ASAP.')).toBeVisible();
   await expect(fundsTile(screen, 2)).toBeVisible();
+  // Overview says what waits (Home shows no finding).
+  await app.open('/#overview');
+  await expect(screen.getByText('2 requests for funds worth ₱50,450.50 wait for your decision, 1 of them ASAP.')).toBeVisible();
 
   await screen.getByRole('button', 'Menu').tap();
   await screen.getByRole('dialog', 'Keystone').getByRole('button', /Requests for Funds$/).tap();
@@ -129,12 +131,14 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
 
   // Each requester sees their own answer the next time Keystone opens, and nothing of theirs still waits.
   await signInElsewhere(app, screen, hr);
-  await expect(screen.getByText('RF-2026-0001 was approved; 888001 is drafted. Upload its receipts once the money is spent.')).toBeVisible();
   await expect(fundsTile(screen, 0)).toBeVisible();
+  await app.open('/#overview');
+  await expect(screen.getByText('RF-2026-0001 was approved; 888001 is drafted. Upload its receipts once the money is spent.')).toBeVisible();
 
   await signInElsewhere(app, screen, it);
-  await expect(screen.getByText('RF-2026-0002 was declined: Use the spare in the IT cabinet.')).toBeVisible();
   await expect(fundsTile(screen, 0)).toBeVisible();
+  await app.open('/#overview');
+  await expect(screen.getByText('RF-2026-0002 was declined: Use the spare in the IT cabinet.')).toBeVisible();
 
   // The CEO deletes the declined request, and it leaves the cloud (docs/adr/0051).
   await browser.setViewport({ width: 1280, height: 800 });
@@ -184,8 +188,9 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   await app.open('/');
   await signIn(screen, owner);
   await expectHome(screen);
-  await expect(screen.getByText('Ana Cruz asks for ₱3,730.75 ASAP; it waits for your decision.')).toBeVisible();
   await expect(fundsTile(screen, 1)).toBeVisible();
+  await app.open('/#overview');
+  await expect(screen.getByText('Ana Cruz asks for ₱3,730.75 ASAP; it waits for your decision.')).toBeVisible();
   await app.open('/#funds');
   const card = screen.getByRole('article', 'RF-2026-0001');
 
@@ -222,7 +227,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // As clean as the paper: each border once, in its colour, no seam, no frame (docs/adr/0048, "Every exported PDF").
   expectCleanPdf(pages, inks);
 
-  expect(read).toContain('Pantry groceries');
+  expect(read).toContain('PANTRY GROCERIES');
   expect(read).toContain('₱3,250.75');
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
   expect(await record('cv', '888001')).toBeNull();
@@ -232,6 +237,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // HR is told, opens it, and can save the same paper.
   await browser.setViewport({ width: 1280, height: 800 });
   await signInElsewhere(app, screen, hr);
+  await app.open('/#overview');
   await expect(screen.getByText('RF-2026-0001 was approved; open it to print or save its fund transfer request, and upload its receipts once the money is spent.')).toBeVisible();
   await app.open('/#funds');
   await screen.getByRole('table', 'Requests for funds').getByRole('cell', 'RF-2026-0001').tap();

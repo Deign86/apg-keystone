@@ -117,7 +117,7 @@ test('saves and prints a billing statement across an A4 page, with its text', as
 
   expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
   expect(squeezed(pages)).toContain('BILLINGSTATEMENT');
-  expect(words(pages)).toContain('Virtual office, November');
+  expect(words(pages)).toContain('VIRTUAL OFFICE, NOVEMBER');
   expect(words(pages)).toContain('₱10,000.00');
   await expectPrintedAlone(browser, 'Billing statement');
 });
@@ -145,7 +145,7 @@ test('saves a signature over its line as a picture, the rest of the statement as
   // The logo and the signature: two pictures, each a small part of the page; the name under the signature is text.
   expectFilled(pages, 'portrait', A4.w - 2 * MARGIN);
   expect(pages[0].images).toHaveLength(2);
-  expect(words(pages)).toContain('D. Lazaro');
+  expect(words(pages)).toContain('D. LAZARO');
 });
 
 test('saves and prints the two-up check voucher across the whole sheet, with its text', async ({ app, screen, browser }) => {
@@ -164,7 +164,7 @@ test('saves and prints the two-up check voucher across the whole sheet, with its
   expect(pages[0].drawn.x1 - pages[0].drawn.x0).toBeGreaterThan(A4.w - 2);
   // Both copies, as text.
   expect(squeezed(pages).split('CHECKVOUCHER')).toHaveLength(3);
-  expect(words(pages).split('Office supplies for November')).toHaveLength(3);
+  expect(words(pages).split('OFFICE SUPPLIES FOR NOVEMBER')).toHaveLength(3);
   expect(words(pages)).toContain('₱1,250.50');
   await expectPrintedAlone(browser, 'Check voucher');
 });
@@ -194,7 +194,7 @@ test('saves and prints the payroll sheet across an A4 page on its side, and a pa
 
   expectFilled(slip, 'portrait', A4.w - 2 * MARGIN);
   expect(squeezed(slip)).toContain('PAYSLIP');
-  expect(words(slip)).toContain('Juan Miguel P. Reyes');
+  expect(words(slip)).toContain('JUAN MIGUEL P. REYES');
   expect(words(slip)).toContain('₱760.00');
   await expectPrintedAlone(browser, 'Payslip');
 });

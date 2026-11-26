@@ -1,14 +1,16 @@
 import { test } from '@e2e-dev/web';
 import { expect } from 'e2e';
 
-// Home (packages/modules/home): the front door, with the date, the greeting, the one finding, a tile per screen that
-// is on Home, and a card per connected system.
+// Home (packages/modules/home): the front door, with the date, the greeting, a tile per screen that is on Home, and a
+// card per connected system. Findings show on Overview and on their own screens, not here.
 
-test('greets with the date, the time of day and the one finding', async ({ app, screen }) => {
+test('greets with the date and the time of day, and no finding under the greeting', async ({ app, screen }) => {
   await app.open('/');
 
   await expect(screen.getByText('Monday, November 2, 2026')).toBeVisible();
   await expect(screen.getByRole('heading', { name: 'Good morning', level: 1 })).toBeVisible();
+  await expect(screen.getByText('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026.')).toBeHidden();
+  await app.open('/#overview');
   await expect(screen.getByText('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026.')).toBeVisible();
 });
 

@@ -25,35 +25,35 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">MANILA ELECTRIC COMPANY (MERALCO)</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">MANILA ELECTRIC COMPANY (MERALCO)</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Ortigas Ave., Pasig City</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">0004509</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 </dl>
 <div class="flex flex-1 flex-col border-t border-paper-ink">
@@ -65,7 +65,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold bg-paper">
+<tr class="align-top font-bold uppercase bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -89,40 +89,40 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 border-t border-paper-line">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">D. LAZARO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">D. LAZARO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">A. BAUTISTA</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">CEO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">CEO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
@@ -146,35 +146,35 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">MANILA ELECTRIC COMPANY (MERALCO)</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">MANILA ELECTRIC COMPANY (MERALCO)</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Ortigas Ave., Pasig City</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">0004509</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 </dl>
 <div class="flex flex-1 flex-col border-t border-paper-ink">
@@ -186,7 +186,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold bg-paper">
+<tr class="align-top font-bold uppercase bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -210,40 +210,40 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 border-t border-paper-line">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">D. LAZARO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">D. LAZARO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">A. BAUTISTA</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">CEO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">CEO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
@@ -277,35 +277,35 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">MANILA ELECTRIC COMPANY (MERALCO)</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">MANILA ELECTRIC COMPANY (MERALCO)</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Ortigas Ave., Pasig City</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">0004509</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 </dl>
 <div class="flex flex-1 flex-col border-t border-paper-ink">
@@ -317,7 +317,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold bg-paper">
+<tr class="align-top font-bold uppercase bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -341,40 +341,40 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 border-t border-paper-line">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">D. LAZARO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">D. LAZARO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">A. BAUTISTA</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">CEO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">CEO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
@@ -398,35 +398,35 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">MANILA ELECTRIC COMPANY (MERALCO)</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">MANILA ELECTRIC COMPANY (MERALCO)</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Ortigas Ave., Pasig City</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Ortigas Ave., Pasig City</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">0004509</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">0004509</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 </dl>
 <div class="flex flex-1 flex-col border-t border-paper-ink">
@@ -438,7 +438,7 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 </tr>
 </thead>
 <tbody>
-<tr class="align-top font-bold bg-paper">
+<tr class="align-top font-bold uppercase bg-paper">
 <td class="border-b border-paper-rule px-2.5 py-1.5">Electricity – Head Office, Sept 2026</td>
 <td class="border-b border-l border-b-paper-rule border-l-paper-line px-2.5 py-1.5 text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
 </tr>
@@ -462,40 +462,40 @@ exports[`the check voucher on paper > is laid out, and prints, exactly as it has
 <dl class="m-0 border-t border-paper-line">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">Forty-Eight Thousand Two Hundred Thirty Pesos and 55/100 Only</dd>
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">D. LAZARO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">D. LAZARO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">A. BAUTISTA</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">A. BAUTISTA</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">CEO</p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">CEO</p>
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
@@ -527,35 +527,35 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 <dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 </dl>
 <div class="flex flex-1 flex-col border-t border-paper-ink">
@@ -587,43 +587,43 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 <dl class="m-0 border-t border-paper-line">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
@@ -646,35 +646,35 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 <dl class="m-0 grid grid-cols-[minmax(0,1fr)_minmax(13.5rem,max-content)_15rem]">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Payee</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem] border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">TIN</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">October 20, 2026</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">October 20, 2026</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 col-span-2 border-b border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Address</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-b border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Check no.</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Issuer</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 max-w-[18rem]">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Bank</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 border-l border-paper-line">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Date of check</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 </dl>
 <div class="flex flex-1 flex-col border-t border-paper-ink">
@@ -706,43 +706,43 @@ exports[`the check voucher on paper > prints a voucher with nothing filled in ye
 <dl class="m-0 border-t border-paper-line">
 <div class="flex min-w-0 items-baseline gap-2.5 px-2.5 py-1.5 ">
 <dt class="shrink-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Pesos</dt>
-<dd class="m-0 min-w-0 font-bold tabular-nums break-words">&nbsp;</dd>
+<dd class="m-0 min-w-0 tabular-nums break-words font-bold uppercase">&nbsp;</dd>
 </div>
 </dl>
 <div class="grid grid-cols-4 border-t border-paper-ink text-[11px]">
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 ">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Audited by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>
 <div class="flex min-h-32 flex-col px-2.5 pt-1.5 pb-1 border-l border-paper-line">
 <p class="m-0 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Received payment by</p>
 <div class="relative mx-1 mt-auto border-t border-paper-ink pt-1 text-center">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
-<p class="m-0 min-h-4 font-semibold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 </div>
 </div>

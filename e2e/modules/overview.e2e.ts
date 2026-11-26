@@ -117,7 +117,6 @@ test('says nothing is waiting once every voucher and statement is dealt with', a
   await expect(screen.getByRole('definition').filter({ hasText: '0 statements open · 0 overdue' })).toBeVisible();
 
   await app.open('/');
-  await expect(screen.getByText('Nothing is waiting on you.')).toBeVisible();
   await expect(screen.getByRole('button', /^Overview /)).toContainText('Waiting on you 0');
 });
 

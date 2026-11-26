@@ -314,7 +314,7 @@ test('prints the mode of payment in the invoice box, and Notes only once somethi
   await expect(paper.getByText('Notes', { exact: true })).toBeHidden();
 
   await form.getByRole('combobox', 'Mode of payment').fill('Bank transfer');
-  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('BANK TRANSFER');
   await form.getByRole('textbox', 'Notes').fill('Thank you.');
   await expect(paper.getByText('Notes', { exact: true })).toBeVisible();
   await form.getByRole('textbox', 'Notes').fill('');
@@ -329,7 +329,7 @@ test('prints the mode of payment in the invoice box, and Notes only once somethi
   await screen.getByRole('tab', /^Statements issued/).tap();
   await screen.getByRole('table', 'Statements issued').getByRole('cell', '888110226').tap();
   await expect(screen.getByRole('form', 'Editing 888110226').getByRole('combobox', 'Mode of payment')).toHaveValue('Bank transfer');
-  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('BANK TRANSFER');
 });
 
 test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
@@ -451,7 +451,7 @@ test('refuses a charge with no quantity, and a due date before the invoice date'
   await expect(screen.getByRole('table', 'Statements issued').getByRole('row', /^888110226 /)).toBeHidden();
 });
 
-test('marks a statement overdue and back to sent from its row menu, and Home follows', async ({ app, screen }) => {
+test('marks a statement overdue and back to sent from its row menu, and Overview follows', async ({ app, screen }) => {
   await app.open('/#billing');
   const row = screen.getByRole('table', 'Statements issued').getByRole('row', /^010099-2026 /);
 
@@ -462,8 +462,8 @@ test('marks a statement overdue and back to sent from its row menu, and Home fol
   await expect(row.getByRole('cell', 'Overdue')).toBeVisible();
   await expect(screen.getByText('₱677,627.50 outstanding on 2 statements, 2 overdue.')).toBeVisible();
 
-  // The larger of the two overdue statements is the one Home names.
-  await app.open('/');
+  // The larger of the two overdue statements is the one Overview names.
+  await app.open('/#overview');
   await expect(screen.getByText('₱586,627.50 from Harbor Point Logistics Corp. has been overdue since Nov 5, 2026. One of 2 overdue statements.')).toBeVisible();
 
   await app.open('/#billing');
@@ -474,7 +474,7 @@ test('marks a statement overdue and back to sent from its row menu, and Home fol
   await expect(row.getByRole('cell', 'Sent')).toBeVisible();
   await expect(screen.getByText('₱677,627.50 outstanding on 2 statements, 1 overdue.')).toBeVisible();
 
-  await app.open('/');
+  await app.open('/#overview');
   await expect(screen.getByText('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026.')).toBeVisible();
 });
 
@@ -529,7 +529,7 @@ test('a statement past its due date turns overdue the next time Keystone opens',
   await expect(row.getByRole('cell', 'Overdue')).toBeVisible();
   await expect(screen.getByText('₱688,627.50 outstanding on 3 statements, 2 overdue.')).toBeVisible();
 
-  await app.open('/');
+  await app.open('/#overview');
   await expect(screen.getByText('₱91,000.00 from Dela Cruz, Maria Teresa has been overdue since Oct 10, 2026. One of 2 overdue statements.')).toBeVisible();
 
   await app.open('/#activity');
@@ -545,8 +545,9 @@ test('paying the overdue statement moves Home and Overview on to the voucher wai
   await expect(screen.getByRole('dialog', '010098-2026 marked paid.')).toBeVisible();
   await expect(row.getByRole('cell', 'Paid')).toBeVisible();
 
-  await app.open('/');
+  await app.open('/#overview');
   await expect(screen.getByText('1 voucher worth ₱35,000.00 waits for approval.')).toBeVisible();
+  await app.open('/');
   await expect(screen.getByRole('button', /^Billing Statements .* Outstanding ₱586,627\.50$/)).toBeVisible();
 
   await app.open('/#overview');
@@ -832,7 +833,7 @@ test('marks on the statement where the field being typed in prints, and brings i
   await form.getByRole('textbox', 'Invoice No.').tap();
   expect(await markedPaperParts(browser)).toEqual(['Invoice No. 888110226 · solid 2px', 'INVOICE NO. 888110226 · solid 2px']);
   await form.getByRole('textbox', 'Due date').fill('2026-12-02');
-  expect(await markedPaperParts(browser)).toEqual(['DUE DATE December 2, 2026 · solid 2px']);
+  expect(await markedPaperParts(browser)).toEqual(['DUE DATE DECEMBER 2, 2026 · solid 2px']);
   const layout = await paperLayoutWithAndWithoutMark(browser);
 
   expect(layout.marked).toEqual(layout.unmarked);
@@ -842,7 +843,7 @@ test('marks on the statement where the field being typed in prints, and brings i
   // its foot, and back up to Bill to at its head.
   await form.getByRole('textbox', 'Notes').fill(Array.from({ length: 24 }, (_, i) => `Note ${i + 1}`).join('\n'));
   await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
-  expect((await markedPaperParts(browser))[0]).toMatch(/Chief Executive Officer APPROVED BY · solid 2px$/);
+  expect((await markedPaperParts(browser))[0]).toMatch(/CHIEF EXECUTIVE OFFICER APPROVED BY · solid 2px$/);
   const foot = await scrolled();
 
   expect(foot).toBeGreaterThan(0);

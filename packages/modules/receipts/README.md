@@ -12,8 +12,8 @@
       check, its number and date;
     - transaction remarks;
     - who received it, their position and the date received.
-  - **E-signature:** a checkbox prints the receiver's saved signature (Company Details); unticked, the line is left blank
-    to sign by hand (`receipts.esign`).
+  - **Signature:** the receiver's line is always left blank, to sign by hand. Whoever takes the payment is typed in,
+    not picked from Company Details, and no signature is kept for them.
 - `src/ReceiptPaper.tsx`: the acknowledgement receipt on one A4 page, from the kit's document blocks:
   - the letterhead;
   - the numbers;
