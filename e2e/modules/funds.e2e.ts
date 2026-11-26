@@ -149,8 +149,8 @@ test('lists the expenses to be paid back by transfer, and previews the fund tran
   const paper = screen.getByRole('article', 'Fund transfer request RF-2026-0001');
 
   await expect(paper).toContainText('ACCOUNT NO. 0012 3456 7890');
-  await expect(paper).toContainText('Pantry groceries ₱3,250.75');
-  await expect(paper).toContainText('Courier for payroll documents ₱480.00');
+  await expect(paper).toContainText('PANTRY GROCERIES ₱3,250.75');
+  await expect(paper).toContainText('COURIER FOR PAYROLL DOCUMENTS ₱480.00');
   await expect(paper).toContainText('Three Thousand Seven Hundred Thirty Pesos and 75/100 Only');
   await expect(paper).toContainText('Not approved yet: this request waits for the CEO\'s decision.');
   // Three sign it: who asked, who checks (Company Details' checker until another is picked), and the CEO.
@@ -329,7 +329,7 @@ test('marks on the fund transfer request where the field being typed in prints, 
   const form = screen.getByRole('form', 'New request');
 
   await form.getByRole('textbox', 'What it is for').fill('Christmas party: venue deposit');
-  expect(await markedPaperParts(browser)).toEqual(['Christmas party: venue deposit · solid 2px']);
+  expect(await markedPaperParts(browser)).toEqual(['CHRISTMAS PARTY: VENUE DEPOSIT · solid 2px']);
   const layout = await paperLayoutWithAndWithoutMark(browser);
 
   expect(layout.marked).toEqual(layout.unmarked);
@@ -339,7 +339,7 @@ test('marks on the fund transfer request where the field being typed in prints, 
   await form.getByRole('textbox', 'Line 1 amount').fill('48000');
   expect(await markedPaperParts(browser)).toEqual([
     'AMOUNT ₱48,000.00 Forty-Eight Thousand Pesos Only · solid 2px',
-    'EXPENSE AMOUNT Venue deposit ₱48,000.00 TOTAL ₱48,000.00 · solid 2px',
+    'EXPENSE AMOUNT VENUE DEPOSIT ₱48,000.00 TOTAL ₱48,000.00 · solid 2px',
   ]);
 
   await form.getByRole('textbox', 'Account number').fill('0012 3456 7890');
@@ -347,7 +347,7 @@ test('marks on the fund transfer request where the field being typed in prints, 
 
   // Who asks prints twice: beside Requested by, and over their line.
   await form.getByRole('textbox', 'Requested by').fill('Ana Cruz');
-  expect(await markedPaperParts(browser)).toEqual(['Ana Cruz · solid 2px', 'Ana Cruz REQUESTED BY · solid 2px']);
+  expect(await markedPaperParts(browser)).toEqual(['ANA CRUZ · solid 2px', 'ANA CRUZ REQUESTED BY · solid 2px']);
 
   await screen.getByRole('heading', { name: 'Requests for Funds', level: 1 }).tap();
   expect(await markedPaperParts(browser)).toEqual([]);

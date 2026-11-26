@@ -3,7 +3,7 @@ import { DASH, longDate, peso, shortDate, sumCentavos, toCentavos, type Company 
 import {
   depositLines, dueOnSigning, EWT_RATE, leaseSchedule, monthlyRent, monthName, pdcSchedule, sqmFigure, topDetails, VAT_RATE, type Soa,
 } from './rules';
-import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet, usePaperPart } from '@keystone/kit';
+import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, paperValue, Sheet, usePaperPart } from '@keystone/kit';
 
 // The company's Statement of Account, on an upright A4 page (the form it follows is drawn on its side). Under the
 // letterhead every paper carries (docs/adr/0038): who and what the lease is for, then four parts, each worked out in
@@ -114,7 +114,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
         {topDetails(a).map((d, i) => (
           <Fragment key={i}>
             <dt className={paperLabel}>{orDash(d.label)}</dt>
-            <dd {...mark(d.part)} className={`m-0 ${i ? 'font-medium' : 'font-bold uppercase'}${d.figure ? ' tabular-nums' : ''}`}>{orDash(d.value)}</dd>
+            <dd {...mark(d.part)} className={`m-0 ${paperValue}${d.figure ? ' tabular-nums' : ''}`}>{orDash(d.value)}</dd>
           </Fragment>
         ))}
       </dl>
@@ -138,7 +138,8 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
           label="Deposit and advance"
           columns={[{ header: 'Description' }, { header: 'Amount', figure: true }, { header: 'Qty', figure: true, centred: true }, { header: 'Total amount', figure: true }, { header: 'Coverage' }, { header: 'Check no.' }]}
           rows={deposit.map((l) => [
-            l.credit ? `Less: ${l.desc}` : l.desc, peso(l.amount), String(l.qty), l.credit ? less(l.total) : peso(l.total), orDash(l.coverage), orDash(l.check),
+            l.credit ? `Less: ${l.desc}` : l.desc, peso(l.amount), String(l.qty), l.credit ? less(l.total) : peso(l.total),
+            <span key="coverage" className={paperValue}>{orDash(l.coverage)}</span>, <span key="check" className={paperValue}>{orDash(l.check)}</span>,
           ])}
           empty="No deposit or advance."
         />
@@ -165,7 +166,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
           label="Postdated checks"
           columns={[{ header: 'No.', figure: true }, { header: 'Check date' }, { header: 'Bank' }, { header: 'Check number' }, { header: 'Amount', figure: true }, { header: 'Payment for' }]}
           rows={checks.map((c) => [
-            String(c.no), longDate(c.date), orDash(c.bank),
+            String(c.no), longDate(c.date), <span key="bank" className={paperValue}>{orDash(c.bank)}</span>,
             onCheckNumber ? <CheckNumber no={c.no} value={c.check} onChange={(check) => onCheckNumber(c.no, check)} /> : orDash(c.check),
             peso(c.amount), `${monthName(c.month)} Rent`,
           ])}
@@ -182,7 +183,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
       {a.notes.trim() && (
         <section {...mark('notes')} className="mt-4">
           <h2 className={`m-0 ${paperHeading}`}>Notes</h2>
-          <p className="m-0 mt-1 text-[11px] whitespace-pre-line">{a.notes}</p>
+          <p className={`m-0 mt-1 text-[11px] whitespace-pre-line ${paperValue}`}>{a.notes}</p>
         </section>
       )}
     </Sheet>

@@ -138,17 +138,17 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 </div>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -293,17 +293,17 @@ exports[`the payroll sheet on paper > is laid out on its side, and prints on one
 </div>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
@@ -343,29 +343,29 @@ exports[`the payslip on paper > is laid out, and prints, exactly as it has > at 
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee ID</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Bank</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Cash</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Cash</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee name</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Angelica S. Bautista</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Angelica S. Bautista</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Account no.</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Designation</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Accounting Supervisor</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Accounting Supervisor</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Standard working days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">11</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">11</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Department</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Finance</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Finance</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Paid days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">10</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">10</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">TIN</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">LWOP days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">1</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">1</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Rate per day</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">₱700.00</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">₱700.00</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Half days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">1</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">1</dd>
 </dl>
 <div class="mt-2 grid grid-cols-2 gap-4">
 <table class="w-full self-start border-collapse border border-paper-ink">
@@ -465,12 +465,12 @@ exports[`the payslip on paper > is laid out, and prints, exactly as it has > at 
 <p class="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Angelica S. Bautista</p>
+<p class="m-0 min-h-4 font-bold uppercase">Angelica S. Bautista</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Employee signature</p>
 </div>
 </div>
@@ -498,29 +498,29 @@ exports[`the payslip on paper > is laid out, and prints, exactly as it has > on 
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee ID</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Bank</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Cash</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Cash</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Employee name</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Angelica S. Bautista</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Angelica S. Bautista</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Account no.</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Designation</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Accounting Supervisor</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Accounting Supervisor</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Standard working days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">11</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">11</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Department</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Finance</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Finance</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Paid days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">10</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">10</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">TIN</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">LWOP days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">1</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">1</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Rate per day</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">₱700.00</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">₱700.00</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Half days</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">1</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">1</dd>
 </dl>
 <div class="mt-2 grid grid-cols-2 gap-4">
 <table class="w-full self-start border-collapse border border-paper-ink">
@@ -620,12 +620,12 @@ exports[`the payslip on paper > is laid out, and prints, exactly as it has > on 
 <p class="m-0 mt-2 text-center text-[11px] tracking-[0.2em] text-paper-muted uppercase">Confidential</p>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(2, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Prepared by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Angelica S. Bautista</p>
+<p class="m-0 min-h-4 font-bold uppercase">Angelica S. Bautista</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Employee signature</p>
 </div>
 </div>

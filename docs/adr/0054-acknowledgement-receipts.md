@@ -26,8 +26,8 @@ Status: Accepted · Date: 2026-11-26
 - **Numbers:** `AR-2026-0001` and on, within the year. A new receipt can be given another number that is not taken.
 - **The paper** follows the template's order and words, built from the kit's letterhead, meta rows, lines and
   signatures. The company's name and address come from core's `COMPANY` (0023).
-- **Signatures:** the receiver signs. Their saved signature prints only when the form's e-signature checkbox is ticked;
-  by default the line is blank, to sign by hand, as on the fund transfer request (0051).
+- **Signatures:** the receiver signs by hand. Received by is whoever takes the payment, typed in, not a signatory
+  picked from Company Details, so no saved signature prints and there is no e-signature option.
 - **Repeated details (0053):**
   - a payor who paid before fills the company, contact and email;
   - the payor, company, bank or channel, receiver, position and remarks offer what was typed before;

@@ -174,13 +174,21 @@ export const paperHeading = 'text-[11px] font-semibold tracking-[0.14em] text-pa
  */
 export const paperStripe = (i: number) => (i % 2 ? 'bg-paper-tint' : 'bg-paper');
 
+/**
+ * What someone filled in, as every paper prints it: in capitals and bold (docs/adr/0055), so an answer stands apart from
+ * its label and from what the paper works out. Every paper's typed or picked values use it, and only those: labels,
+ * headings and computed figures keep their own style. Export PDF draws the capitals too (paper-pdf.ts).
+ */
+export const paperValue = 'font-bold uppercase';
+
 /** The label of a box on a paper: small tracked capitals in the paper's grey. */
 export const paperLabel = 'text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase';
 
 /**
  * A document's facts as one ruled box, two to a row: a firm line around it and light ones between, each column's
- * labels lined up so the values start together. `strong` sets a value in bold; `part` names the value as the part of
- * the paper a field fills (`Fills`).
+ * labels lined up so the values start together. Every value is what someone filled in, so it prints as `paperValue`;
+ * `strong` is kept for older callers and changes nothing. `part` names the value as the part of the paper a field
+ * fills (`Fills`).
  */
 export function Meta({ rows }: { rows: [label: string, value: ReactNode, strong?: boolean, part?: string][] }) {
   const lastRow = Math.ceil(rows.length / 2) - 1;
@@ -188,13 +196,13 @@ export function Meta({ rows }: { rows: [label: string, value: ReactNode, strong?
 
   return (
     <dl className="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
-      {rows.map(([k, v, strong, part], i) => {
+      {rows.map(([k, v, , part], i) => {
         const under = Math.floor(i / 2) < lastRow ? 'border-b border-paper-line' : '';
 
         return (
           <Fragment key={k}>
             <dt className={`flex items-center py-1.5 pr-3 pl-2.5 ${paperLabel} ${under} ${i % 2 ? 'border-l border-paper-line' : ''}`}>{k}</dt>
-            <dd {...mark(part)} className={`m-0 flex items-center py-1.5 pr-2.5 tabular-nums ${strong ? 'font-bold' : 'font-medium'} ${under}`}>{v}</dd>
+            <dd {...mark(part)} className={`m-0 flex items-center py-1.5 pr-2.5 tabular-nums ${paperValue} ${under}`}>{v}</dd>
           </Fragment>
         );
       })}
@@ -235,7 +243,8 @@ export function Lines({ columns, lines, empty, footer, part }: { columns: LineCo
         )}
         {lines.map((l, i) => (
           <tr key={i} className={`border-b border-paper-rule align-top ${paperStripe(i)}`}>
-            {columns.map((c, j) => <td key={c.header} className={cell(j, c)}>{c.cell(l)}</td>)}
+            {/* Each line is what someone filled in. */}
+            {columns.map((c, j) => <td key={c.header} className={`${cell(j, c)} ${paperValue}`}>{c.cell(l)}</td>)}
           </tr>
         ))}
       </tbody>
@@ -271,9 +280,9 @@ export function Signatures({ names, signed }: {
         return (
           <div key={role} {...mark(part)} className="relative border-t border-paper-ink pt-1 text-[11px]">
             {signature && <SignatureImage src={signature} who={who} />}
-            <p className="m-0 min-h-4 font-bold">{who}</p>
+            <p className={`m-0 min-h-4 ${paperValue}`}>{who}</p>
             {/* Under the name, the signatory's position, when the document keeps one. */}
-            {position && <p className="m-0 font-semibold">{position}</p>}
+            {position && <p className={`m-0 ${paperValue}`}>{position}</p>}
             <p className={`m-0 mt-0.5 ${paperLabel}`}>{role}</p>
           </div>
         );

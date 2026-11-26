@@ -21,24 +21,24 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Requested by</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Ana Cruz</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Ana Cruz</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Date filed</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">November 2, 2026</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Christmas party venue and catering</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Deadline</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Nov 15, 2026</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Nov 15, 2026</dd>
 </dl>
 <p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bank</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">BDO</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">BDO</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Branch</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Ortigas</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Ortigas</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Account name</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Casa Milagros Events Inc.</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Casa Milagros Events Inc.</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Account no.</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">0012 3456 7890</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">0012 3456 7890</dd>
 </dl>
 <div class="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
 <span class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Amount</span>
@@ -56,12 +56,12 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  ">Venue deposit</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱30,000.00</td>
+<td class="px-2.5 py-1.5   font-bold uppercase">Venue deposit</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱30,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  ">Catering, 60 persons</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱18,230.55</td>
+<td class="px-2.5 py-1.5   font-bold uppercase">Catering, 60 persons</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱18,230.55</td>
 </tr>
 </tbody>
 <tfoot>
@@ -73,16 +73,16 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </table>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Ana Cruz</p>
+<p class="m-0 min-h-4 font-bold uppercase">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Mark Reyes</p>
+<p class="m-0 min-h-4 font-bold uppercase">Mark Reyes</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
 </div>
@@ -112,24 +112,24 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Requested by</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Ana Cruz</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Ana Cruz</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Date filed</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">November 2, 2026</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Christmas party venue and catering</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Deadline</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Nov 15, 2026</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Nov 15, 2026</dd>
 </dl>
 <p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bank</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">BDO</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">BDO</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Branch</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">Ortigas</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Ortigas</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Account name</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Casa Milagros Events Inc.</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Casa Milagros Events Inc.</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Account no.</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">0012 3456 7890</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">0012 3456 7890</dd>
 </dl>
 <div class="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
 <span class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Amount</span>
@@ -147,12 +147,12 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  ">Venue deposit</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱30,000.00</td>
+<td class="px-2.5 py-1.5   font-bold uppercase">Venue deposit</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱30,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  ">Catering, 60 persons</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱18,230.55</td>
+<td class="px-2.5 py-1.5   font-bold uppercase">Catering, 60 persons</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱18,230.55</td>
 </tr>
 </tbody>
 <tfoot>
@@ -164,16 +164,16 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 </table>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Ana Cruz</p>
+<p class="m-0 min-h-4 font-bold uppercase">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Mark Reyes</p>
+<p class="m-0 min-h-4 font-bold uppercase">Mark Reyes</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>
 </div>
@@ -202,24 +202,24 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 </header>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Requested by</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">Ana Cruz</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">Ana Cruz</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Date filed</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">November 2, 2026</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">Christmas party venue and catering</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Deadline</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">ASAP</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">ASAP</dd>
 </dl>
 <p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
 <dl class="m-0 mb-3 grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)] border border-paper-ink">
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line ">Bank</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase border-b border-paper-line border-l border-paper-line">Branch</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase border-b border-paper-line">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">Account name</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">—</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Account no.</dt>
-<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">—</dd>
+<dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold uppercase ">—</dd>
 </dl>
 <div class="mb-3 flex items-baseline justify-between gap-4 border border-paper-ink px-2.5 py-1.5">
 <span class="text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Amount</span>
@@ -237,8 +237,8 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  ">Christmas party venue and catering</td>
-<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱48,230.55</td>
+<td class="px-2.5 py-1.5   font-bold uppercase">Christmas party venue and catering</td>
+<td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-bold uppercase">₱48,230.55</td>
 </tr>
 </tbody>
 <tfoot>
@@ -250,16 +250,16 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 </table>
 <div class="mt-20 grid break-inside-avoid gap-8" style="grid-template-columns: repeat(3, minmax(0,1fr));">
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">Ana Cruz</p>
+<p class="m-0 min-h-4 font-bold uppercase">Ana Cruz</p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Requested by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Checked by</p>
 </div>
 <div class="relative border-t border-paper-ink pt-1 text-[11px]">
-<p class="m-0 min-h-4 font-bold">
+<p class="m-0 min-h-4 font-bold uppercase">
 </p>
 <p class="m-0 mt-0.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Approved by</p>
 </div>

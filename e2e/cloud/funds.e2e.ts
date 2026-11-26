@@ -227,7 +227,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   // As clean as the paper: each border once, in its colour, no seam, no frame (docs/adr/0048, "Every exported PDF").
   expectCleanPdf(pages, inks);
 
-  expect(read).toContain('Pantry groceries');
+  expect(read).toContain('PANTRY GROCERIES');
   expect(read).toContain('₱3,250.75');
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('Approved');
   expect(await record('cv', '888001')).toBeNull();

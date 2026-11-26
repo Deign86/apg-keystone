@@ -83,15 +83,20 @@ function useEdited() {
  * A labelled field. `name` is how a refusal names it (KeystoneError's fields): inside FieldMarks, a refusal that names
  * it marks it until it is edited. `error` marks it from the screen itself.
  */
+/** Whether a field is in a FieldRow, which lines up the labels and boxes of the fields beside each other. */
+const InRow = createContext(false);
+
 export function Field({ label, hint, error, name, children, className }: { label: string; hint?: string; error?: string; name?: string; children: ReactNode; className?: string }) {
   const mark = useMark(name);
   const said = error ?? mark.error;
+  const inRow = useContext(InRow);
 
   return (
     <NameContext.Provider value={name}>
-      <BaseField.Root ref={mark.place} invalid={!!said} className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+      {/* In a FieldRow: three rows of the row's grid, label, box and hint, shared with the fields beside it. */}
+      <BaseField.Root ref={mark.place} invalid={!!said} className={cn(inRow ? 'row-span-3 grid min-w-0 grid-rows-subgrid gap-1.5' : 'flex min-w-0 flex-col gap-1.5', className)}>
         <BaseField.Label className="text-[13px] font-medium text-ink">{label}</BaseField.Label>
-        {children}
+        {inRow ? <div className="flex min-w-0 flex-col gap-1.5">{children}</div> : children}
         {hint && !said && <BaseField.Description className="m-0 text-[13px] text-ink-2">{hint}</BaseField.Description>}
         {said && <BaseField.Error match className="m-0 text-[13px] text-pretty text-bad">{said}</BaseField.Error>}
       </BaseField.Root>
@@ -307,7 +312,15 @@ export function Checkbox({ checked, onChange, children }: { checked: boolean; on
   );
 }
 
-/** Fields that share a row equally, wrapping on narrow windows. */
+/**
+ * Fields that share a row equally, wrapping on narrow windows. A field in a row lays its label, box and hint on the
+ * row's own grid (a subgrid), so a label that runs to two lines moves its neighbours' boxes down with it, and the boxes
+ * of a row always line up.
+ */
 export function FieldRow({ children, min = 150 }: { children: ReactNode; min?: number }) {
-  return <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}>{children}</div>;
+  return (
+    <InRow.Provider value>
+      <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}>{children}</div>
+    </InRow.Provider>
+  );
 }

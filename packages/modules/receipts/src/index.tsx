@@ -1,4 +1,4 @@
-import { Button, Checkbox, EarlierPicks, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, TextArea, TextInput, useConfirm, type Column, type Refusal } from '@keystone/ui';
+import { Button, EarlierPicks, EmptyState, Field, FieldRow, Panel, Register, ScreenHeader, SectionLabel, SelectInput, TextArea, TextInput, useConfirm, type Column, type Refusal } from '@keystone/ui';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { companyOf, count, peso, shortDate } from '@keystone/core';
 import { Fills, FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
@@ -10,16 +10,12 @@ import { ReceiptPaper } from './ReceiptPaper';
 
 const DRAFT = `${ID}.draft`;
 
-/** Whether the receiver's e-signature prints: kept with the drafts; money is signed for by hand unless it is ticked. */
-const ESIGN = `${ID}.esign`;
-
 const MODES = PAY_MODES.map((m) => ({ value: m, label: m }));
 
 function Receipts() {
   const { state, ctx, run, files, notify } = useKeystone();
   const confirm = useConfirm();
   const [draft, setDraft] = useDraft<ReceiptDraft>(DRAFT, () => newReceipt(state, ctx));
-  const [eSigned, setESigned] = useDraft(ESIGN, () => false);
   const drafts = useSavedDrafts(draft, setDraft, { module: ID, title: receiptDraftTitle, blank: receiptDraftBlank, restore: (d) => receiptDraftFrom(state, ctx, d) });
   const [error, setError] = useState<Refusal | null>(null);
   const paper = useRef<HTMLElement>(null);
@@ -161,10 +157,9 @@ function Receipts() {
               <Fills part="receivedBy"><Field label="Position"><TextInput suggestions={offered.positions} value={draft.position} onChange={(position) => set({ position })} /></Field></Fills>
             </FieldRow>
             <Fills part="receivedOn"><Field label="Date received"><TextInput type="date" value={draft.receivedOn} onChange={(receivedOn) => set({ receivedOn })} /></Field></Fills>
-            <Checkbox checked={eSigned} onChange={setESigned}>Show the e-signature on the receipt (leave unticked to sign by hand)</Checkbox>
           </FormCard>
         }
-        preview={<ReceiptPaper ref={paper} receipt={{ ...live, no: draft.editing ?? live.no }} company={companyOf(state)} eSigned={eSigned} />}
+        preview={<ReceiptPaper ref={paper} receipt={{ ...live, no: draft.editing ?? live.no }} company={companyOf(state)} />}
       />
     </>
   );

@@ -37,14 +37,15 @@ test('issues a receipt for a payment by check, and prints it as the company form
 
   await expect(paper).toContainText(/Acknowledgement Receipt/i);
   await expect(paper).toContainText(/Client \/ Payor name\s*Juan Dela Cruz/i);
-  await expect(paper).toContainText('Virtual office, December 2026 ₱2,299.00');
+  await expect(paper).toContainText('VIRTUAL OFFICE, DECEMBER 2026 ₱2,299.00');
   await expect(paper).toContainText(/Total amount received ₱2,799\.00/i);
   await expect(paper).toContainText('Two Thousand Seven Hundred Ninety-Nine Pesos Only');
-  await expect(paper.getByRole('list', 'Mode of payment')).toContainText(/□ Cash\s*□ Bank transfer\s*■ Check/);
+  await expect(paper.getByRole('list', 'Mode of payment')).toContainText(/□ Cash\s*□ Bank transfer\s*■ CHECK/);
   await expect(paper).toContainText(/Check No\.\s*0004512/i);
   await expect(paper).toContainText(/Rosa Lim\s*Cashier\s*Received by/i);
   await expect(paper).toContainText('is not, by itself, an Official Receipt or Invoice for tax purposes.');
-  await expect(form.getByRole('checkbox', 'Show the e-signature on the receipt (leave unticked to sign by hand)')).not.toBeChecked();
+  // The receiver signs by hand: there is no e-signature to print.
+  await expect(form.getByRole('checkbox', /e-signature/)).toBeHidden();
 
   await form.getByRole('button', 'Save receipt').tap();
   await expect(screen.getByRole('dialog', 'AR-2026-0001 saved.')).toBeVisible();

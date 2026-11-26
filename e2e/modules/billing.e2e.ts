@@ -314,7 +314,7 @@ test('prints the mode of payment in the invoice box, and Notes only once somethi
   await expect(paper.getByText('Notes', { exact: true })).toBeHidden();
 
   await form.getByRole('combobox', 'Mode of payment').fill('Bank transfer');
-  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('BANK TRANSFER');
   await form.getByRole('textbox', 'Notes').fill('Thank you.');
   await expect(paper.getByText('Notes', { exact: true })).toBeVisible();
   await form.getByRole('textbox', 'Notes').fill('');
@@ -329,7 +329,7 @@ test('prints the mode of payment in the invoice box, and Notes only once somethi
   await screen.getByRole('tab', /^Statements issued/).tap();
   await screen.getByRole('table', 'Statements issued').getByRole('cell', '888110226').tap();
   await expect(screen.getByRole('form', 'Editing 888110226').getByRole('combobox', 'Mode of payment')).toHaveValue('Bank transfer');
-  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('Bank transfer');
+  await expect(invoice.getByRole('row', /^Mode of payment/)).toContainText('BANK TRANSFER');
 });
 
 test('Pay into follows payment instructions typed by hand, and picking an account adds its lines', async ({ app, screen }) => {
@@ -833,7 +833,7 @@ test('marks on the statement where the field being typed in prints, and brings i
   await form.getByRole('textbox', 'Invoice No.').tap();
   expect(await markedPaperParts(browser)).toEqual(['Invoice No. 888110226 · solid 2px', 'INVOICE NO. 888110226 · solid 2px']);
   await form.getByRole('textbox', 'Due date').fill('2026-12-02');
-  expect(await markedPaperParts(browser)).toEqual(['DUE DATE December 2, 2026 · solid 2px']);
+  expect(await markedPaperParts(browser)).toEqual(['DUE DATE DECEMBER 2, 2026 · solid 2px']);
   const layout = await paperLayoutWithAndWithoutMark(browser);
 
   expect(layout.marked).toEqual(layout.unmarked);
@@ -843,7 +843,7 @@ test('marks on the statement where the field being typed in prints, and brings i
   // its foot, and back up to Bill to at its head.
   await form.getByRole('textbox', 'Notes').fill(Array.from({ length: 24 }, (_, i) => `Note ${i + 1}`).join('\n'));
   await form.getByRole('textbox', "Approver's position").fill('Chief Executive Officer');
-  expect((await markedPaperParts(browser))[0]).toMatch(/Chief Executive Officer APPROVED BY · solid 2px$/);
+  expect((await markedPaperParts(browser))[0]).toMatch(/CHIEF EXECUTIVE OFFICER APPROVED BY · solid 2px$/);
   const foot = await scrolled();
 
   expect(foot).toBeGreaterThan(0);
