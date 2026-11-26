@@ -52,7 +52,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <table class="my-2 w-full border-collapse border border-paper-ink">
 <thead>
 <tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
-<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-semibold">Qty</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
@@ -60,7 +60,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Monthly rent – 18/F, 420 sqm (October 2026)</span>
 </td>
@@ -68,7 +68,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Association dues (October 2026)</span>
 </td>
@@ -176,7 +176,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <table class="my-2 w-full border-collapse border border-paper-ink">
 <thead>
 <tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
-<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-semibold">Qty</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
@@ -184,7 +184,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Monthly rent – 18/F, 420 sqm (October 2026)</span>
 </td>
@@ -192,7 +192,7 @@ exports[`the billing statement on paper > is laid out, and prints, exactly as it
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱357,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Association dues (October 2026)</span>
 </td>
@@ -299,7 +299,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <table class="my-2 w-full border-collapse border border-paper-ink">
 <thead>
 <tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
-<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-semibold">Qty</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
@@ -307,7 +307,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Monthly rent – Unit 12B (October 2026)</span>
 </td>
@@ -315,7 +315,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱85,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Parking slot P-214 (October 2026)</span>
 </td>
@@ -414,7 +414,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <table class="my-2 w-full border-collapse border border-paper-ink">
 <thead>
 <tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
-<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-semibold">Qty</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>
@@ -422,7 +422,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 </thead>
 <tbody>
 <tr class="border-b border-paper-rule align-top bg-paper">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">Warehouse lease – Bldg 4 (November 2026)</span>
 </td>
@@ -430,7 +430,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <td class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums">₱510,000.00</td>
 </tr>
 <tr class="border-b border-paper-rule align-top bg-paper-tint">
-<td class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums">1</td>
+<td class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums">1</td>
 <td class="px-2.5 py-1.5 border-l border-paper-line ">
 <span class="whitespace-pre-line">CUSA charges (November 2026)</span>
 </td>
@@ -533,7 +533,7 @@ exports[`the billing statement on paper > lays out every statement in the sample
 <table class="my-2 w-full border-collapse border border-paper-ink">
 <thead>
 <tr class="border-b border-paper-line bg-paper-tint text-left text-[11px] font-semibold tracking-[0.14em] text-paper-gold uppercase">
-<th class="px-2.5 py-1.5  text-right whitespace-nowrap tabular-nums font-semibold">Qty</th>
+<th class="px-2.5 py-1.5  text-center whitespace-nowrap tabular-nums font-semibold">Qty</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line  font-semibold">Description</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Unit price</th>
 <th class="px-2.5 py-1.5 border-l border-paper-line text-right whitespace-nowrap tabular-nums font-semibold">Amount</th>

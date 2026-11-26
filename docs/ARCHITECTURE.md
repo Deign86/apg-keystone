@@ -105,8 +105,8 @@ Keystone reads nothing from these systems and keeps no password for any of them.
 - **Passwords (docs/adr/0016):** anyone signed in changes theirs on User Accounts (the `accounts` service's `changePassword`,
   which signs in again with the current one first). The sign-in screen's Forgot password? has Firebase email a link to
   choose a new one (`CloudSession.sendPasswordReset`), answering the same whether or not the email has an account.
-- **On a phone:** the same web build, hosted on Firebase Hosting (`firebase.json › hosting`, `npm run build:web`),
-  with a top bar and a menu instead of the rail below 768px.
+- **On a phone:** the same web build, served from Vercel only, deployed by itself on every merge to `main`
+  (`vercel.json`, `npm run build:web`, docs/WEB.md), with a top bar and a menu instead of the rail below 768px.
 - **Photos:** in `photos/`.
 - **Folder:**
   - macOS: `~/Library/Application Support/com.alphapremier.keystone/`

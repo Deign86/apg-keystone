@@ -202,11 +202,12 @@ export function Meta({ rows }: { rows: [label: string, value: ReactNode, strong?
   );
 }
 
-/** One column of a document's line table. Figures align right. */
+/** One column of a document's line table. Figures align right, or in the middle when `centred` (a quantity). */
 export interface LineColumn {
   header: string;
   cell: (l: LineItem) => ReactNode;
   figure?: boolean;
+  centred?: boolean;
 }
 
 /** The line's amount before tax, as a column. */
@@ -219,13 +220,13 @@ export const amountColumn = (): LineColumn => ({ header: 'Amount', figure: true,
  */
 export function Lines({ columns, lines, empty, footer, part }: { columns: LineColumn[]; lines: LineItem[]; empty: string; footer: [string, string, boolean?][]; part?: string }) {
   const mark = usePaperPart();
-  const cell = (i: number, figure?: boolean) => `px-2.5 py-1.5 ${i ? 'border-l border-paper-line' : ''} ${figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`;
+  const cell = (i: number, c: LineColumn) => `px-2.5 py-1.5 ${i ? 'border-l border-paper-line' : ''} ${c.figure ? `${c.centred ? 'text-center' : 'text-right'} whitespace-nowrap tabular-nums` : ''}`;
 
   return (
     <table {...mark(part)} className="my-2 w-full border-collapse border border-paper-ink">
       <thead>
         <tr className={`border-b border-paper-line bg-paper-tint text-left ${paperHeading}`}>
-          {columns.map((c, i) => <th key={c.header} className={`${cell(i, c.figure)} font-semibold`}>{c.header}</th>)}
+          {columns.map((c, i) => <th key={c.header} className={`${cell(i, c)} font-semibold`}>{c.header}</th>)}
         </tr>
       </thead>
       <tbody>
@@ -234,7 +235,7 @@ export function Lines({ columns, lines, empty, footer, part }: { columns: LineCo
         )}
         {lines.map((l, i) => (
           <tr key={i} className={`border-b border-paper-rule align-top ${paperStripe(i)}`}>
-            {columns.map((c, j) => <td key={c.header} className={cell(j, c.figure)}>{c.cell(l)}</td>)}
+            {columns.map((c, j) => <td key={c.header} className={cell(j, c)}>{c.cell(l)}</td>)}
           </tr>
         ))}
       </tbody>

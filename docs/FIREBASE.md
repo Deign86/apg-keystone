@@ -59,16 +59,9 @@ up Auth and Firestore, and deploy `firestore.rules`.
    `VITE_FIREBASE_AUTH_DOMAIN`. The next release then ships with the cloud records. Set them as **Variables**, not
    Secrets: the workflow refuses to make a release without the first three (docs/adr/0017), since such a copy would
    open on "Administrator access" with no sign-in.
-9. **On a phone (Firebase Hosting):** Sir Mark decides requests for funds from his phone's browser too. With the four
-   values in `apps/keystone/.env.local`, build the web app and deploy it from the repository root:
-
-   ```bash
-   npm run build:web
-   npx -y firebase-tools@latest deploy --only hosting --project <project id>
-   ```
-
-   It is served at `https://<project id>.web.app`, behind the same sign-in. Never deploy a build without the
-   variables: it would keep its records in each visitor's browser. CI does not deploy it.
+9. **On a phone or in a browser:** the web app is served from Vercel only, and Vercel deploys it by itself on every
+   merge to `main` (docs/WEB.md, docs/adr/0047). Keystone is not deployed to Firebase Hosting: `firebase.json` has no
+   `hosting`, so `firebase deploy` sends only the rules and the sign-in settings.
 
 ## Good to know
 
@@ -86,7 +79,7 @@ up Auth and Firestore, and deploy `firestore.rules`.
 - **Signing out:** "Sign out" is in the rail. Keystone also signs out by itself after 10 minutes unused, with a
   minute's warning, and asks for the account again when it is opened after sitting unused that long (docs/adr/0012).
 - **API key restrictions:** if you restrict the key to websites, allow `tauri://localhost`, `http://tauri.localhost`,
-  `http://127.0.0.1:5174` (development) and `https://<project id>.web.app` (the phone), or leave it unrestricted and
+  `http://127.0.0.1:5174` (development) and the Vercel address (docs/WEB.md), or leave it unrestricted and
   rely on the rules.
 - **Turning it off:** build without the variables, by hand (`npm run build`); a release cannot be made without
   them. Each computer then opens the copy its last save left in `state.json`.

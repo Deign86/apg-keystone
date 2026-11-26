@@ -151,7 +151,8 @@ export const statementDraftTitle = (d: StatementDraft) => `${d.client.trim() || 
 export function statementDraftFrom(s: TerminalState, ctx: Ctx, accounts: BankAccount[], saved: Partial<StatementDraft>): StatementDraft {
   const fresh = newStatement(s, ctx, accounts);
 
-  return { ...fresh, ...saved, lines: linesFromDraft(saved.lines), no: saved.editing ?? fresh.no };
+  // A new statement takes the next number; one editing a saved statement keeps the number typed on it.
+  return { ...fresh, ...saved, lines: linesFromDraft(saved.lines), no: saved.editing ? saved.no || saved.editing : fresh.no };
 }
 
 export const statementDraftOf = (b: Statement, s: TerminalState): StatementDraft => ({
@@ -278,12 +279,17 @@ export function saveStatement(s: TerminalState, d: StatementDraft, ctx: Ctx, asN
       throw new KeystoneError(`${original.no} is ${original.status.toLowerCase()} and can no longer be changed. Save it as a new statement instead.`);
     }
 
-    const updated = { ...b, no: original.no, status: original.status };
+    // Its Invoice No. can be changed too, to one no other statement has; left blank, it keeps its own.
+    const no = b.no || original.no;
+
+    if (no !== original.no && s.bs.some((x) => x.no === no)) throw new KeystoneError(`Invoice No. ${no} is already used by another statement.`, 'no');
+    const updated = { ...b, no, status: original.status };
+    const renumbered = no === original.no ? '' : `, now ${no}`;
 
     return {
       state: logged({ ...s, bs: s.bs.map((x) => (x.no === original.no ? updated : x)) }, TAG,
-        `${updated.no} for ${nameOf(s, b.client)} edited (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
-      record: updated, message: `${updated.no} updated.`,
+        `${original.no} for ${nameOf(s, b.client)} edited${renumbered} (${peso(t.due)} due ${shortDate(b.due)}).`, ctx),
+      record: updated, message: renumbered ? `${original.no} is now ${no}.` : `${no} updated.`,
     };
   }
 

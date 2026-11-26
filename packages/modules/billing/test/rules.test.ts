@@ -50,6 +50,20 @@ describe('billing statements', () => {
     expect(saveStatement(s, statementDraftOf(s.bs[2], s), ctx, true).record.no).toBe('888102526'); // a copy takes the next number for its date
   });
 
+  it('renumbers a saved statement while it can still be changed, to a number no other statement has', () => {
+    const s = state();
+    const sent = s.bs.find((b) => b.status === 'Sent')!;
+    const other = s.bs.find((b) => b.no !== sent.no)!;
+    const r = saveStatement(s, { ...statementDraftOf(sent, s), no: ' 888110226 ' }, ctx);
+    expect(r.record.no).toBe('888110226');
+    expect(r.message).toBe(`${sent.no} is now 888110226.`);
+    expect(r.state.bs.map((b) => b.no)).toEqual(s.bs.map((b) => (b.no === sent.no ? '888110226' : b.no)));
+    expect(r.state.log[0].text).toMatch(new RegExp(`^${sent.no} for .* edited, now 888110226 \\(`));
+    // Blank keeps its own number; another statement's is refused, naming the field.
+    expect(saveStatement(s, { ...statementDraftOf(sent, s), no: '' }, ctx).record.no).toBe(sent.no);
+    expect(refusalOf(() => saveStatement(s, { ...statementDraftOf(sent, s), no: other.no }, ctx))).toEqual({ error: `Invoice No. ${other.no} is already used by another statement.`, fields: ['no'] });
+  });
+
   it('prices each charge by quantity, and adds VAT on the subtotal', () => {
     const s = state();
     const d = { ...billed(s), ewt: false, lines: [lineDraft({ desc: 'Virtual Office Service (October 2026)', qty: '1', amount: '2,299' })] };

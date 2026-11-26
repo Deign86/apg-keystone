@@ -67,7 +67,7 @@ export const StatementPaper = forwardRef<HTMLDivElement, { statement: Statement;
 
       <Lines
         columns={[
-          { header: 'Qty', figure: true, cell: (l) => String(l.qty ?? 1) },
+          { header: 'Qty', figure: true, centred: true, cell: (l) => String(l.qty ?? 1) },
           { header: 'Description', cell: (l) => <span className="whitespace-pre-line">{l.desc}</span> },
           { header: 'Unit price', figure: true, cell: (l) => peso(toCentavos(l.price ?? l.amt)) },
           amountColumn(),
