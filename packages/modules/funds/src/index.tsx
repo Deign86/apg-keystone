@@ -72,7 +72,7 @@ function Waiting({ request: r, onApproved }: { request: FundsRequest; onApproved
           {r.pay === 'transfer'
             ? <><dt className="text-ink-2">Transfer to</dt><dd className="m-0 break-words">{to}</dd></>
             : <><dt className="text-ink-2">Payee</dt><dd className="m-0 truncate">{payee} (by check)</dd></>}
-          <dt className="text-ink-2">Asked by</dt>
+          <dt className="text-ink-2">Requested by</dt>
           <dd className="m-0 truncate">{r.requester} on {shortDate(r.date)}</dd>
         </dl>
         <Field label="Note to the requester" hint="Optional. They see it with your answer.">
@@ -156,7 +156,7 @@ function Funds() {
     { key: 'no', header: 'RF No.', width: 120, cell: (r) => <span className="font-semibold text-gold-bright tabular-nums">{r.no}</span> },
     { key: 'date', header: 'Filed', width: 104, cell: (r) => <span className="text-ink-2 tabular-nums">{shortDate(r.date)}</span> },
     { key: 'purpose', header: 'For', cell: (r) => <>{r.purpose} <span className="block text-xs text-ink-2">{r.pay === 'transfer' ? 'Bank transfer' : 'Check'}</span></> },
-    { key: 'by', header: 'Asked by', width: 140, cell: (r) => r.requester },
+    { key: 'by', header: 'Requested by', width: 140, cell: (r) => r.requester },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (r) => <span className="font-semibold">{peso(requestTotal(r))}</span> },
     { key: 'settle', header: 'Settle', width: 104, cell: (r) => <span className="tabular-nums">{settleText(r)}</span> },
     { key: 'status', header: 'Status', width: 140, align: 'right', cell: (r) => <StatusPill status={r.status} tone={requestTone(r.status)} /> },
