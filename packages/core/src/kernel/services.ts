@@ -2,7 +2,7 @@ import type { MemberAccount, NewAccount } from './accounts';
 import type { ISODate } from './dates';
 import type { Centavos } from './money';
 import type { BankAccount, CompanyDetails, SignatureOffset, Statement, TerminalState, Voucher } from './schema';
-import type { Change, Ctx } from './state';
+import type { Change, Ctx, PayoutAccount } from './state';
 
 // Published service contracts. When one part needs something another part does, the
 // provider offers it under a name (ModuleDef.provides) and the consumer asks for it by
@@ -172,6 +172,11 @@ export interface Accounts {
    * stay. The rail and the rules see the new name from the next change on, so log one after.
    */
   rename(name: string): Promise<void>;
+  /**
+   * Keeps the bank account of the member signed in, or with null forgets it (docs/adr/0052). Only they, or an owner,
+   * change it; their requests for funds by transfer start with it. Absent where it cannot be kept.
+   */
+  setBank?(bank: PayoutAccount | null): Promise<void>;
   /**
    * Gives a staff member something a connected system lets the CEO give (`MemberGrant.field`), or takes it back
    * (docs/adr/0030). Only an owner may, and only a field a connector contributed. Absent where it cannot be kept.

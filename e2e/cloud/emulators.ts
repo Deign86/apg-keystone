@@ -181,6 +181,24 @@ export async function setMemberFieldAs(token: string, uid: string, name: string,
   return res.status;
 }
 
+/**
+ * What firestore.rules answer a member who sets the bank account on a member document, as Profile keeps one
+ * (docs/adr/0052), or with null removes it, signed in with `token` (200 allowed, 403 refused). `also` writes other string
+ * fields in the same change.
+ */
+export async function setMemberBankAs(token: string, uid: string, bank: Record<string, string> | null, also: Record<string, string> = {}): Promise<number> {
+  const paths = ['bank', ...Object.keys(also)].map((f) => `updateMask.fieldPaths=${f}`).join('&');
+  const strings = (o: Record<string, string>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { stringValue: v }]));
+
+  const res = await fetch(`${DATABASE}/documents/keystone/apg/members/${uid}?${paths}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: { ...(bank && { bank: { mapValue: { fields: strings(bank) } } }), ...strings(also) } }),
+  });
+
+  return res.status;
+}
+
 /** What firestore.rules answer a member who deletes a document under keystone/apg, signed in with `token` (200 allowed, 403 refused). */
 export async function deleteAsMember(token: string, path: string): Promise<number> {
   const res = await fetch(`${DATABASE}/documents/keystone/apg${path}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });

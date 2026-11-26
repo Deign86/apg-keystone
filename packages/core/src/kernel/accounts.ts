@@ -1,4 +1,5 @@
-import type { Member } from './state';
+import type { JsonValue } from './schema';
+import { isJsonObject, jsonText, type Member, type PayoutAccount } from './state';
 
 // Who may open the company's records in the cloud, as every part sees them (docs/adr/0014, 0033): a member with their
 // email, what the CEO asks for a new one, what a connected system lets the CEO give a member, the one test of "is this
@@ -47,10 +48,21 @@ export interface MemberGrant {
 }
 
 /** What a member document already holds; a grant is never kept under one of these. */
-export const MEMBER_FIELDS = ['role', 'name', 'email'] as const;
+export const MEMBER_FIELDS = ['role', 'name', 'email', 'bank'] as const;
 
 /** The same names to write by, so the platform spells none of them: `MEMBER_FIELD.role`. */
-export const MEMBER_FIELD = { role: MEMBER_FIELDS[0], name: MEMBER_FIELDS[1], email: MEMBER_FIELDS[2] } as const;
+export const MEMBER_FIELD = { role: MEMBER_FIELDS[0], name: MEMBER_FIELDS[1], email: MEMBER_FIELDS[2], bank: MEMBER_FIELDS[3] } as const;
+
+/**
+ * A member's bank account as their member document holds it (docs/adr/0052), read leniently: absent unless it names at
+ * least a bank and an account number.
+ */
+export function payoutAccountOf(v: JsonValue | undefined): PayoutAccount | undefined {
+  if (!isJsonObject(v)) return undefined;
+  const a = { bank: jsonText(v.bank), branch: jsonText(v.branch), name: jsonText(v.name), number: jsonText(v.number) };
+
+  return a.bank && a.number ? a : undefined;
+}
 
 /** Why a grant cannot be contributed, or null when it can. */
 export function grantProblem(g: MemberGrant): string | null {

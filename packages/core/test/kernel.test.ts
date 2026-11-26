@@ -3,7 +3,7 @@ import {
   addDays, addYears, amountInWords, changeEach, COMPANY, companyOf, datesBetween, emptyState, halfMonthOf, halfMonthsTo, isWeekday, lineDraft, lineDraftOf,
   isJsonObject, jsonNumber, jsonObjects, jsonText, lineItemsOf, longDate, mondayOf, moduleData, periodLabel, withModuleData,
   newDirectoryDraft, nextCode, nextNumber, parseAmount, parseBackup, parseQuantity, parseState, payees, peso, percent, removeDirectoryRecord, saveDirectoryRecord, signatoryNames, signedNames, shortDate,
-  fieldsOf, KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge,
+  fieldsOf, KeystoneError, laterVersion, openDesktopApp, sentenceOf, toCentavos, topFinding, usedBy, validateConnector, type Ctx, type InstalledApp, type PlatformName, type Reference, type SystemBridge, grantProblem, payoutAccountOf,
 } from '../src';
 import { sampleState } from '../sample';
 
@@ -391,5 +391,18 @@ describe('one rule over several records', () => {
     // One refused: nothing changes, and the sentence is the rule's.
     expect(() => changeEach(s, ['V-002', 'X-999'], one, () => '')).toThrow(KeystoneError);
     expect(s.dir.map((d) => d.code)).toContain('V-002');
+  });
+});
+
+describe('a member\'s own bank account (docs/adr/0052)', () => {
+  it('reads as kept on the member document, or not at all without a bank and a number', () => {
+    expect(payoutAccountOf({ bank: 'BDO', name: 'Ana Cruz', number: '0012 3456 7890' })).toEqual({ bank: 'BDO', branch: '', name: 'Ana Cruz', number: '0012 3456 7890' });
+    expect(payoutAccountOf({ bank: 'BDO', name: 'Ana Cruz' })).toBeUndefined();
+    expect(payoutAccountOf('BDO 0012')).toBeUndefined();
+    expect(payoutAccountOf(undefined)).toBeUndefined();
+  });
+
+  it('is the member\'s own field, which no connected system may give', () => {
+    expect(grantProblem({ field: 'bank', label: 'Bank', as: 'a bank', opens: 'nothing', asks: { give: () => '', take: () => '' } })).toBe('the field "bank" is the member\'s own');
   });
 });

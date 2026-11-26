@@ -1,5 +1,5 @@
 import {
-  COLLECTIONS, isOwner, jsonText, LIVE_REREAD_MS, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, MEMBER_FIELD, ONLY_OWNER_REMOVES, onlyOwnerGrants, sentenceOf,
+  COLLECTIONS, isOwner, jsonText, LIVE_REREAD_MS, NOT_YOUR_OWN_ACCOUNT, ONLY_OWNER_MAKES, MEMBER_FIELD, ONLY_OWNER_REMOVES, onlyOwnerGrants, payoutAccountOf, sentenceOf,
   type Accounts, type DocumentChanges, type DocumentLayout, type JsonObject, type JsonValue, type Member, type MemberAccount, type MemberGrant,
   type StateDocument,
 } from '@keystone/core';
@@ -10,7 +10,7 @@ import {
   updatePassword, type Auth,
 } from 'firebase/auth';
 import {
-  collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, initializeFirestore, onSnapshot, persistentLocalCache, persistentMultipleTabManager,
+  collection, connectFirestoreEmulator, deleteDoc, deleteField, doc, getDoc, getDocs, initializeFirestore, onSnapshot, persistentLocalCache, persistentMultipleTabManager,
   query, serverTimestamp, setDoc, updateDoc, where, writeBatch, type WriteBatch,
 } from 'firebase/firestore';
 import type { RemoteDocs } from './cloud';
@@ -21,7 +21,7 @@ import { grantsHeld, grantToWrite } from './grants';
 // has a Firebase project (VITE_FIREBASE_*), so the SDK never reaches a build without one.
 //
 //   keystone/apg                  { status: 'ready', by, at }: the records have been started, by an owner (docs/adr/0018)
-//   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name, email, …a yes-or-no field per grant }: who may open
+//   keystone/apg/members/{uid}    { role: 'owner' | 'staff', name, email, bank?, …a yes-or-no field per grant }: who may open
 //                                 them (firestore.rules), and what a connected system lets the CEO give them (docs/adr/0030)
 //   keystone/apg/{dir|cv|bs|ids|log|ext}/{id}   { pos, body }: one record each (StateDocument)
 //   keystone/apg/company/details  { pos, body }: the company's details, which only an owner writes (docs/adr/0018)
@@ -374,6 +374,20 @@ export function openFirebase(
       }
     },
 
+    // firestore.rules let a member keep their own bank account on their member document, and nobody else's but an
+    // owner (docs/adr/0052). Null forgets it.
+    async setBank(bank) {
+      const uid = me();
+
+      if (!uid) throw new Error('Sign out and in again, then save your bank account.');
+
+      try {
+        await updateDoc(doc(members, uid), { [MEMBER_FIELD.bank]: bank ? { ...bank } : deleteField() });
+      } catch (e) {
+        throw new Error(explainCloudError(e));
+      }
+    },
+
     // firestore.rules hold the same line: only an owner writes another member's document, and a member changes only
     // their own name, so nobody gives themselves this. Only a field a connector contributed is ever written: never
     // `role`, and nothing a part made up.
@@ -422,6 +436,9 @@ export function openFirebase(
 
       if (!uid || !found?.exists()) throw new Error(NOT_A_MEMBER);
       const who: Member = { uid, name: jsonText(found.get(MEMBER_FIELD.name)) || auth.currentUser?.email || 'A member', role: found.get(MEMBER_FIELD.role) === 'owner' ? 'owner' : 'staff' };
+      const bank = payoutAccountOf(found.get(MEMBER_FIELD.bank));
+
+      if (bank) who.bank = bank;
 
       owner = isOwner(who);
 

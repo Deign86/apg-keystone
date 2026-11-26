@@ -3,7 +3,7 @@ rules_version = '2';
 // Who may read and change Keystone's records in Firestore (docs/adr/0009). Deploy with `firebase deploy --only firestore:rules`.
 //
 //   keystone/{company}                   the records have been started: { status: 'ready', by, at } (docs/adr/0018)
-//   keystone/{company}/members/{uid}     who may open the records: { role: 'owner' | 'staff', name, email }
+//   keystone/{company}/members/{uid}     who may open the records: { role: 'owner' | 'staff', name, email, bank? }
 //   keystone/{company}/{list}/{id}       one record each: { pos, body } (list is dir, cv, bs, ids, log or ext)
 //   keystone/{company}/company/details   the company's details: { pos, body } (docs/adr/0018)
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
@@ -20,7 +20,7 @@ rules_version = '2';
 // Only members can read or write anything. Only an owner adds, changes or removes members: Keystone's User Accounts
 // screen makes and removes staff members (docs/adr/0014, 0015), and the first owner is added by hand in the Firebase
 // console (docs/FIREBASE.md). A sign-in nobody made a member, or whose member was removed, opens nothing. A member
-// changes only their own name (Profile, docs/adr/0020), never their role.
+// changes only their own name (Profile, docs/adr/0020) and their own bank account (docs/adr/0052), never their role.
 //
 // The register of issued employee IDs is written by the Alpha Premier ID Maker (Deign86/apg-id-creator), not by
 // Keystone. A member reads it and adds to it, as themselves; nobody changes or removes an issued ID from an app, so a
@@ -99,6 +99,16 @@ service cloud.firestore {
         && d.body is string && d.body.size() < 900000 && d.uid is string;
     }
 
+    // A member's own bank account, as Profile keeps it (docs/adr/0052): a bank, an account name and a number, and an
+    // optional branch, each short text.
+    function payoutAccount(b) {
+      return b is map && b.keys().hasOnly(['bank', 'branch', 'name', 'number']) && b.keys().hasAll(['bank', 'name', 'number'])
+        && b.bank is string && b.bank.size() > 0 && b.bank.size() <= 100
+        && b.name is string && b.name.size() > 0 && b.name.size() <= 100
+        && b.number is string && b.number.size() > 0 && b.number.size() <= 40
+        && (!('branch' in b) || (b.branch is string && b.branch.size() <= 100));
+    }
+
     // A request a member files, edits or withdraws: their own, waiting or withdrawn, and with no decision.
     function ownUndecided(d) {
       return d.uid == request.auth.uid && d.status in ['For Approval', 'Withdrawn'] && !('decision' in d);
@@ -123,6 +133,10 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80;
+        // Anyone signed in keeps their own bank account on Profile, or forgets it, and nobody else's (docs/adr/0052).
+        allow update: if member(company) && uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bank'])
+          && (!('bank' in request.resource.data) || payoutAccount(request.resource.data.bank));
       }
 
       // A kiosk's account (docs/adr/0026). Only an owner lists, renames or removes one; a device sees only its own.

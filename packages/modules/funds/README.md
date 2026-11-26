@@ -28,7 +28,8 @@
   - filing, editing and withdrawing, by the requester only, while the request waits: the expenses (blank lines
     dropped, a half-filled line refused, naming it), and the account for a transfer or the payee for a check;
   - a blank request, paid as the person's last one was (a transfer when they have filed none), and a transfer starting
-    with the account their last transfer went to;
+    with the bank account they keep on Profile (`ctx.who.bank`, docs/adr/0052), or else the account their last
+    transfer went to;
   - deciding, by the CEO signed in to the cloud only (`ctx.who.role === 'owner'`); a decision is final. Approving a
     transfer makes its fund transfer request; approving a check drafts its voucher;
   - paying, by the requester only, once it is approved: at least one receipt, each a photo or a PDF, up to

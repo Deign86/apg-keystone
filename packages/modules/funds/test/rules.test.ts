@@ -152,6 +152,15 @@ describe('a request paid by transfer', () => {
     expect(newRequest(thenCheck, at(hr))).toMatchObject({ pay: 'check', payee: 'V-002', account: fund });
   });
 
+  it('starts a transfer with the bank account the person keeps on Profile, before any request of theirs (docs/adr/0052)', () => {
+    const own = { bank: 'BPI', branch: '', name: 'Paolo Santos', number: '4011 0258 68' };
+    const s = fileRequest(state(), topUp(), at(hr)).state;
+    expect(newRequest(s, at({ ...it2, bank: own }))).toMatchObject({ pay: 'transfer', account: own });
+    // Their saved account wins over the one their last transfer went to.
+    expect(newRequest(s, at({ ...hr, bank: own })).account).toEqual(own);
+    expect(newRequest(s, at({ ...hr, bank: own })).account).not.toBe(own);
+  });
+
   it('keeps no account once switched to a check, and no payee once switched to a transfer', () => {
     const r = fileRequest(state(), topUp(), at(hr));
     const check = fileRequest(r.state, { ...requestDraftOf(r.record), pay: 'check', payee: 'V-002' }, at(hr)).record;

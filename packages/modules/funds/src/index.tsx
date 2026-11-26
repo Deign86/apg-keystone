@@ -236,6 +236,13 @@ function Funds() {
               <Fills part="accountName"><Field name="account.name" label="Account name" hint="As the bank holds it."><TextInput capitalize value={shown.account.name} onChange={(name) => setAccount({ name })} /></Field></Fills>
               <Fills part="accountNo"><Field name="account.number" label="Account number"><TextInput figures placeholder="0012 3456 7890" value={shown.account.number} onChange={(number) => setAccount({ number })} /></Field></Fills>
             </FieldRow>
+            {/* Where a new request's account comes from: the requester's own, kept on Profile (docs/adr/0052). */}
+            {ctx.who && !editing && (
+              <p className="m-0 flex flex-wrap items-center gap-2 text-xs text-pretty text-ink-2">
+                {ctx.who.bank ? 'Filled in from your bank account on Profile.' : 'Save your bank account on Profile and new requests start with it.'}
+                {app.has('profile') && <Button size="sm" kind="quiet" onClick={() => app.go('profile')}>Open Profile</Button>}
+              </p>
+            )}
           </>
           : <Field name="payee" label="Payee">
             <SelectInput value={shown.payee} onChange={(payee) => setDraft({ ...draft, payee })} options={payees(state).map((d) => ({ value: d.code, label: `${d.name} (${d.code})` }))} />
