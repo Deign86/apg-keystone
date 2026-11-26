@@ -33,7 +33,7 @@ export const TransferPaper = forwardRef<HTMLElement, Props>(function TransferPap
     <Sheet ref={ref} label={`Fund transfer request ${r.no}`}>
       <Letterhead company={company} title="Fund Transfer Request" no={r.no} date={longDate(r.decision?.at.slice(0, 10) || r.date)} />
 
-      <Meta rows={[['Requested by', orDash(r.requester), true, 'requester'], ['Date filed', longDate(r.date)], ['For', orDash(r.purpose), true, 'purpose'], ['Settle by', settleText(r), false, 'settle']]} />
+      <Meta rows={[['Requested by', orDash(r.requester), true, 'requester'], ['Date filed', longDate(r.date)], ['For', orDash(r.purpose), true, 'purpose'], ['Deadline', settleText(r), false, 'settle']]} />
 
       <p {...mark('pay')} className={`m-0 mb-1 ${paperLabel}`}>Transfer to</p>
       <Meta rows={[['Bank', orDash(a?.bank), true, 'bank'], ['Branch', orDash(a?.branch), false, 'branch'], ['Account name', orDash(a?.name), true, 'accountName'], ['Account no.', orDash(a?.number), true, 'accountNo']]} />

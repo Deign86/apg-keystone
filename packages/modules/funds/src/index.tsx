@@ -3,9 +3,9 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { changeEach, companyOf, count, nameOf, payees, peso, SERVICES, shortDate, toCentavos, type TerminalState } from '@keystone/core';
 import { Fills, FormCard, LineEditor, printElement, SaveDraftButton, SavedDrafts, savePdf, useDraft, useKeystone, useModuleApp, useSavedDrafts, Workspace, type ModuleDef } from '@keystone/kit';
 import {
-  accountLabel, ASAP, decideRefusal, decideRequest, decides, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
+  accountLabel, ASAP, decideRefusal, decideRequest, decides, deleteRefusal, deleteRequest, deleteRequests, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding,
   fundsLine, fundsWaiting, newRequest, requestDocuments, requestDraftBlank, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestOf, requestPreview, requestsNewestFirst,
-  requestTone, requestTotal, settleText, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
+  requestTone, requestTotal, paymentStatus, settleText, transactionState, transferReady, waitingRequests, withdrawRequest, type FundsRequest, type TransferAccount,
   type Verdict, ID, TAG, refersTo,
 } from './rules';
 import { Receipts } from './Receipts';
@@ -120,7 +120,6 @@ function Funds() {
   const ready = editing && transferReady(editing) ? editing : undefined;
   const waiting = decides(ctx) ? waitingRequests(state) : [];
   const refusal = decideRefusal(ctx);
-  const staff = !!ctx.who && !decides(ctx);
   const setAccount = (patch: Partial<TransferAccount>) => setDraft({ ...draft, account: { ...draft.account, ...patch } });
 
   /** Opens a request in the form, as the state after its approval holds it, on the form's tab. */
@@ -152,14 +151,36 @@ function Funds() {
     },
   });
 
+  // The CEO deletes requests, whatever their status; where nobody signs in, whoever is there (docs/adr/0051).
+  const canDelete = !deleteRefusal(ctx);
+
+  const remove = (rs: FundsRequest[], clear?: () => void) => confirm({
+    title: rs.length === 1 ? `Delete ${rs[0].no}?` : `Delete ${count(rs.length, 'request')}?`,
+    body: `${rs.map((r) => r.no).join(', ')} ${rs.length === 1 ? 'is' : 'are'} removed from the register for everyone, with any receipts. Their numbers are not given out again; a voucher an approval drafted stays in Check Vouchers.`,
+    confirm: 'Delete', danger: true,
+    onConfirm: () => {
+      const out = rs.length === 1 ? run((s, c) => deleteRequest(s, rs[0].no, c)) : run((s, c) => deleteRequests(s, rs.map((r) => r.no), c));
+
+      if (!out.ok) return;
+      clear?.();
+
+      if (rs.some((r) => r.no === draft.editing)) setDraft(newRequest(out.state, ctx));
+    },
+  });
+
   const columns: Column<FundsRequest>[] = [
     { key: 'no', header: 'RF No.', width: 120, cell: (r) => <span className="font-semibold text-gold-bright tabular-nums">{r.no}</span> },
     { key: 'date', header: 'Filed', width: 104, cell: (r) => <span className="text-ink-2 tabular-nums">{shortDate(r.date)}</span> },
     { key: 'purpose', header: 'For', cell: (r) => <>{r.purpose} <span className="block text-xs text-ink-2">{r.pay === 'transfer' ? 'Bank transfer' : 'Check'}</span></> },
     { key: 'by', header: 'Requested by', width: 140, cell: (r) => r.requester },
     { key: 'amount', header: 'Amount', width: 128, align: 'right', cell: (r) => <span className="font-semibold">{peso(requestTotal(r))}</span> },
-    { key: 'settle', header: 'Settle', width: 104, cell: (r) => <span className="tabular-nums">{settleText(r)}</span> },
-    { key: 'status', header: 'Status', width: 140, align: 'right', cell: (r) => <StatusPill status={r.status} tone={requestTone(r.status)} /> },
+    { key: 'settle', header: 'Deadline', width: 104, cell: (r) => <span className="tabular-nums">{settleText(r)}</span> },
+    { key: 'status', header: 'Transaction state', width: 140, align: 'right', cell: (r) => <StatusPill status={transactionState(r.status)} tone={requestTone(r.status)} /> },
+    { key: 'paid', header: 'Payment status', width: 128, align: 'right', cell: (r) => {
+      const p = paymentStatus(r.status);
+
+      return p ? <StatusPill status={p.label} tone={p.tone} /> : <span className="text-ink-2">—</span>;
+    } },
   ];
 
   const form = (
@@ -219,8 +240,8 @@ function Funds() {
           </Field>}
         <FieldRow>
           <Fills part="settle">
-            <Field label="Settle"><SelectInput value={shown.when} onChange={(when) => setDraft({ ...draft, when: when === 'date' ? 'date' : ASAP })} options={WHEN} /></Field>
-            {shown.when === 'date' && <Field name="by" label="Settle by"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
+            <Field label="Deadline"><SelectInput value={shown.when} onChange={(when) => setDraft({ ...draft, when: when === 'date' ? 'date' : ASAP })} options={WHEN} /></Field>
+            {shown.when === 'date' && <Field name="by" label="Deadline date"><TextInput type="date" value={shown.by} onChange={(by) => setDraft({ ...draft, by })} /></Field>}
           </Fills>
         </FieldRow>
         <Fills part="requester">
@@ -268,7 +289,7 @@ function Funds() {
         tabs={[
           {
             value: 'register',
-            label: staff ? 'Your requests' : 'Requests',
+            label: 'Requests',
             note: requestsNewestFirst(state).length,
             panel: (
               <>
@@ -283,11 +304,14 @@ function Funds() {
                   actions={(r) => [
                     { label: 'Edit', disabled: !!requestLock(r, ctx), onSelect: () => { setDraft(requestDraftOf(r)); setError(null); setView('entry'); } },
                     { label: 'Withdraw…', danger: true, disabled: !!requestLock(r, ctx), onSelect: () => withdraw(r) },
+                    ...(canDelete ? [{ label: 'Delete…', danger: true, onSelect: () => remove([r]) }] : []),
                   ]}
                   bulk={(picked, clear): RowAction[] => {
                     const open = picked.filter((r) => !requestLock(r, ctx));
 
-                    return [{
+                    const deleting: RowAction[] = canDelete ? [{ label: `Delete (${picked.length})…`, danger: true, disabled: !picked.length, onSelect: () => remove(picked, clear) }] : [];
+
+                    return [...deleting, {
                       label: `Withdraw (${open.length})…`, danger: true, disabled: !open.length,
                       onSelect: () => confirm({
                         title: `Withdraw ${count(open.length, 'request')}?`, body: `${open.map((r) => r.no).join(', ')}. They stay on record as withdrawn; to ask again, file a new request.`, confirm: 'Withdraw', danger: true,

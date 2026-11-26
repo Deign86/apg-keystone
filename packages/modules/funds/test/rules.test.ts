@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { refusalOf } from '@keystone/kit/testing';
 import { CLOUD_LAYOUT, lineDraft, logged, withModuleData, type Ctx, type Member, type TerminalState, type Voucher, type VoucherDrafts } from '@keystone/core';
 import {
-  dataOf, decideRefusal, decideRequest, decisionLine, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
-  nextRequestNo, paidLine, payRequest, RECEIPTS_MOST, receiptsLock, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
+  dataOf, decideRefusal, decideRequest, decisionLine, deleteRefusal, deleteRequest, deleteRequests, expensesOf, fileRequest, fundsFigure, fundsFinding, fundsLine, fundsWaiting, newRequest,
+  nextRequestNo, paidLine, paymentStatus, payRequest, RECEIPTS_MOST, receiptsLock, REQUEST_STATUSES, requestDocuments, requestDraftFrom, requestDraftOf, requestDraftTitle, requestLock, requestPreview, transactionState, transferReady, waitingRequests, withdrawRequest, type RequestDraft,
 } from '../src/rules';
 import { sampleState } from '@keystone/core/sample';
 
@@ -97,7 +97,7 @@ describe('filing a request', () => {
     expect(refusalOf(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '0']) }), local))).toEqual({ error: 'Enter the amount for line 1, Venue deposit.', fields: ['lines.0.amount'] });
     expect(refusalOf(() => fileRequest(s, ask({ lines: lines(['Venue deposit', '48000'], ['', '500']) }), local))).toEqual({ error: 'Say what line 2 is for.', fields: ['lines.1.desc'] });
     expect(refusalOf(() => fileRequest(s, ask({ payee: 'V-999' }), local))).toEqual({ error: 'Choose a payee from the directory.', fields: ['payee'] });
-    expect(refusalOf(() => fileRequest(s, ask({ when: 'date', by: '' }), local))).toEqual({ error: 'Choose the date it must be settled by, or ASAP.', fields: ['by'] });
+    expect(refusalOf(() => fileRequest(s, ask({ when: 'date', by: '' }), local))).toEqual({ error: 'Choose the deadline date, or ASAP.', fields: ['by'] });
     expect(refusalOf(() => fileRequest(s, ask({ when: 'date', by: '2026-11-01' }), local))).toEqual({ error: 'Nov 1, 2026 has passed. Choose a later date, or ASAP.', fields: ['by'] });
     expect(refusalOf(() => fileRequest(s, ask({ requester: ' ' }), local))).toEqual({ error: 'Enter your name, so the CEO knows who is asking.', fields: ['requester'] });
   });
@@ -267,6 +267,42 @@ describe('marking a request paid (docs/adr/0050)', () => {
   });
 });
 
+describe('the transaction state and the payment status', () => {
+  it('shows the decision as the transaction state, and whether the receipts are in as the payment status', () => {
+    expect(REQUEST_STATUSES).toEqual(['For Approval', 'Approved', 'Paid', 'Declined', 'Withdrawn']);
+    expect(REQUEST_STATUSES.map(transactionState)).toEqual(['Pending', 'Processing', 'Processing', 'Declined', 'Withdrawn']);
+    expect(REQUEST_STATUSES.map((s) => paymentStatus(s)?.label ?? null)).toEqual(['Pending', 'Pending', 'Paid', null, null]);
+  });
+});
+
+describe('deleting a request (docs/adr/0051)', () => {
+  it('is the CEO\'s, or anyone\'s where nobody signs in, whatever its status, and never frees its number', () => {
+    const s = decideRequest(filed(), 'RF-2026-0002', 'Declined', '', at(owner)).state;
+    expect(deleteRefusal(at(owner))).toBeNull();
+    expect(deleteRefusal(local)).toBeNull();
+    expect(() => deleteRequest(s, 'RF-2026-0001', at(hr))).toThrow('Only the CEO deletes requests for funds.');
+
+    const r = deleteRequest(s, 'RF-2026-0002', at(owner));
+    expect(r.message).toBe('RF-2026-0002 deleted.');
+    expect(r.state.log[0].text).toBe('RF-2026-0002 deleted by Mark Reyes.');
+    expect(dataOf(r.state).requests.map((x) => x.no)).toEqual(['RF-2026-0001']);
+    expect(nextRequestNo(r.state, at(hr))).toBe('RF-2026-0003');
+    expect(() => deleteRequest(r.state, 'RF-2026-0002', at(owner))).toThrow('RF-2026-0002 is not among the requests.');
+
+    // Every one, or none: a request that cannot be deleted stops them all.
+    const both = deleteRequests(s, ['RF-2026-0001', 'RF-2026-0002'], local);
+    expect(dataOf(both.state).requests).toEqual([]);
+    expect(both.message).toBe('2 requests deleted.');
+    expect(nextRequestNo(both.state, local)).toBe('RF-2026-0003');
+    expect(() => deleteRequests(s, ['RF-2026-0001', 'RF-2026-0009'], at(owner))).toThrow('RF-2026-0009 is not among the requests.');
+  });
+
+  it('keeps the voucher an approval drafted', () => {
+    const s = decideRequest(filed(), 'RF-2026-0001', 'Approved', '', at(owner), vouchers).state;
+    expect(deleteRequest(s, 'RF-2026-0001', at(owner)).state.cv).toEqual(s.cv);
+  });
+});
+
 describe('what it tells Home and Overview', () => {
   it('shows the CEO what waits for a decision, ASAP first', () => {
     const s = filed();
@@ -274,8 +310,8 @@ describe('what it tells Home and Overview', () => {
     expect(fundsFinding(s, at(owner))).toEqual({ priority: 35, text: '2 requests for funds worth ₱50,450.50 wait for your decision, 1 of them ASAP.' });
     expect(fundsFigure(s)).toMatchObject({ value: '2', caption: '₱50,450.50 waiting for a decision' });
     expect(fundsWaiting(s)).toEqual([
-      { no: 'RF-2026-0001', who: 'Ana Cruz · ASAP', amount: 4800000, status: 'For Approval', tone: 'warn', rank: -1 },
-      { no: 'RF-2026-0002', who: 'Paolo Santos · by Nov 20, 2026', amount: 245050, status: 'For Approval', tone: 'warn', rank: 5 },
+      { no: 'RF-2026-0001', who: 'Ana Cruz · ASAP', amount: 4800000, status: 'Pending', tone: 'warn', rank: -1 },
+      { no: 'RF-2026-0002', who: 'Paolo Santos · by Nov 20, 2026', amount: 245050, status: 'Pending', tone: 'warn', rank: 5 },
     ]);
 
     const one = withdrawRequest(s, 'RF-2026-0001', at(hr)).state;

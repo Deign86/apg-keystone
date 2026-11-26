@@ -96,7 +96,8 @@ Keystone reads nothing from these systems and keeps no password for any of them.
 - **Who is signed in (docs/adr/0011):** the member's document (`role` owner or staff, and `name`) is read before the
   records and reaches the rules as `ctx.who`. A module may keep one list as cloud documents of its own
   (`ModuleDef.documents`): Requests for Funds keeps each request in `keystone/apg/rf/{no}`, where `firestore.rules`
-  lets only the owner decide and lets staff read only their own. Without a sign-in there is no `ctx.who`.
+  lets every member read every request, only the owner decide or delete one, and only its requester change it
+  (docs/adr/0051). Without a sign-in there is no `ctx.who`.
 - **Accounts (docs/adr/0014, 0015, 0033):** the owner makes and removes staff accounts on the User Accounts screen, through
   the `accounts` service the cloud platform provides (`Platform.provides`). `platform/firestore.ts` makes the sign-in in a second Firebase app kept in memory, so the owner
   stays signed in, then writes the member document; removing deletes that document and leaves the sign-in, which then

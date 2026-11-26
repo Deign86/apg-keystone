@@ -1,5 +1,5 @@
 import {
-  addDays, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesBlank, linesFromDraft, logged,
+  addDays, changeEach, count, isISODate, isJsonObject, isOwner, jsonNumber, jsonObjects, jsonText, KeystoneError, lineDraft, lineDraftOf, linesBlank, linesFromDraft, logged,
   moduleData, nameOf, newestFirst, nextNumber, parseAmount, payees, peso, recordOf, shortDate, stamp, sumCentavos, thisYear,
   toCentavos, toPesos, today, withModuleData, type Centavos, type Change, type Ctx, type Editing, type Figure, type Finding,
   type ISODate, type JsonObject, type JsonValue, type LineDraft, type RecordDocuments, type Reference, type TerminalState, type Tone,
@@ -9,7 +9,7 @@ import {
 // Requests for funds (docs/adr/0011, 0021): staff list the expenses they need money for, the CEO approves or
 // declines, and an approval either makes the fund transfer request, for a transfer to the account the request names,
 // or drafts the check voucher through Check Vouchers' service. Only the CEO, signed in to the records in the cloud,
-// decides; firestore.rules holds the same line, and lets staff read only their own requests. Once approved, the
+// decides; firestore.rules holds the same line. Every member reads every request (0051). Once approved, the
 // requester uploads the receipts or other proof of what the money paid for, and that marks the request paid (0050).
 
 /** This module's id, written once: its route, its ModuleDef.id, its key under state.ext and its draft key. */
@@ -24,7 +24,25 @@ const TONES: Record<RequestStatus, Tone> = { 'For Approval': 'warn', Approved: '
 
 export const requestTone = (s: RequestStatus): Tone => TONES[s];
 
-/** Settle by: as soon as possible, or a date. */
+/**
+ * A request's transaction state, as the register shows it: the CEO's decision. Pending until the CEO decides, then
+ * Processing once approved, paid or not; a declined or withdrawn request says so. The saved status is unchanged.
+ */
+const STATES: Record<RequestStatus, string> = { 'For Approval': 'Pending', Approved: 'Processing', Paid: 'Processing', Declined: 'Declined', Withdrawn: 'Withdrawn' };
+
+export const transactionState = (s: RequestStatus): string => STATES[s];
+
+/**
+ * Whether the money is accounted for: Paid once its requester uploads the receipts (docs/adr/0050), Pending until then,
+ * and null for a request that will never be paid, declined or withdrawn.
+ */
+export function paymentStatus(s: RequestStatus): { label: 'Paid' | 'Pending'; tone: Tone } | null {
+  if (s === 'Paid') return { label: 'Paid', tone: 'good' };
+
+  return s === 'For Approval' || s === 'Approved' ? { label: 'Pending', tone: 'warn' } : null;
+}
+
+/** The deadline: as soon as possible, or a date. */
 export const ASAP = 'ASAP';
 
 /** The CEO's answer. */
@@ -84,7 +102,7 @@ export type FundsRequest = {
   account?: TransferAccount;
   /** Checks: directory code of the payee. */
   payee: string;
-  /** ASAP, or the date it must be settled by. */
+  /** The deadline: ASAP, or the date it must be paid by. */
   settle: string;
   /** Who asked, by name. */
   requester: string;
@@ -103,17 +121,18 @@ export type FundsRequest = {
 export type FundsData = {
   requests: FundsRequest[];
   /**
-   * The last number given out. Staff read only their own requests in the cloud, so the numbers in their list cannot
-   * say which is next; this is kept in the module's shared document, which every member reads.
+   * The last number given out, kept in the module's shared document, so a number is never given twice even after a
+   * request is removed. Before 0051 staff read only their own requests, and their lists could not say which was next.
    */
   last: string;
 }
 
 /**
- * In the cloud each request is its own document (keystone/apg/rf/{no}), with the fields the rules check beside it, and
- * read only by its requester and the CEO. Locally nothing changes.
+ * In the cloud each request is its own document (keystone/apg/rf/{no}), with the fields the rules check beside it. Every
+ * member reads every request (docs/adr/0051); only its requester changes it, and only the CEO decides it. Locally
+ * nothing changes.
  */
-export const requestDocuments: RecordDocuments = { collection: 'rf', list: 'requests', key: 'no', fields: ['status', 'uid', 'decision'], readBy: 'uid' };
+export const requestDocuments: RecordDocuments = { collection: 'rf', list: 'requests', key: 'no', fields: ['status', 'uid', 'decision'] };
 
 const statusOf = (v: JsonValue | undefined): RequestStatus => REQUEST_STATUSES.find((s) => s === v) ?? 'For Approval';
 
@@ -179,10 +198,7 @@ const saved = (s: TerminalState, data: FundsData) => withModuleData(s, ID, {
 export const requestsNewestFirst = (s: TerminalState) => newestFirst(dataOf(s).requests);
 export const requestOf = (s: TerminalState, no: string) => dataOf(s).requests.find((r) => r.no === no);
 
-/**
- * A request paid by check names its payee by directory code; that record is kept. In the cloud a staff member reads
- * only their own requests, so only the CEO's Keystone knows every request that names a record.
- */
+/** A request paid by check names its payee by directory code; that record is kept. Every member reads every request. */
 export const refersTo: Reference = { tag: TAG, codes: (s) => dataOf(s).requests.map((r) => r.payee) };
 export const requestTotal = (r: Pick<FundsRequest, 'amount'>): Centavos => toCentavos(r.amount);
 
@@ -369,7 +385,7 @@ export function fileRequest(s: TerminalState, d: RequestDraft, ctx: Ctx): Change
 
   if (d.pay === 'check' && !recordOf(s, d.payee)) throw new KeystoneError('Choose a payee from the directory.', 'payee');
 
-  if (d.when === 'date' && !isISODate(d.by)) throw new KeystoneError('Choose the date it must be settled by, or ASAP.', 'by');
+  if (d.when === 'date' && !isISODate(d.by)) throw new KeystoneError('Choose the deadline date, or ASAP.', 'by');
 
   if (d.when === 'date' && d.by < today(ctx)) throw new KeystoneError(`${shortDate(d.by)} has passed. Choose a later date, or ASAP.`, 'by');
 
@@ -421,6 +437,39 @@ export function withdrawRequest(s: TerminalState, no: string, ctx: Ctx): Change<
     record: updated, message: `${no} withdrawn.`,
   };
 }
+
+// ---------- deleting ----------
+
+/** A request number's serial, as numbering counts it: 7 for RF-2026-0007. */
+const serial = (no: string) => Number(/(\d+)$/.exec(no)?.[1] ?? 0);
+
+/** Why this person cannot delete requests, or null when they can: the CEO signed in, or anyone where nobody signs in. */
+export const deleteRefusal = (ctx: Ctx): string | null => (!ctx.who || decides(ctx) ? null : 'Only the CEO deletes requests for funds.');
+
+/**
+ * Deletes a request from the register, whatever its status. Its number is never given out again (`last`), and a
+ * voucher its approval drafted stays in Check Vouchers. The log names the request and who deleted it.
+ */
+export function deleteRequest(s: TerminalState, no: string, ctx: Ctx): Change<FundsRequest> {
+  const refusal = deleteRefusal(ctx);
+
+  if (refusal) throw new KeystoneError(refusal);
+  const data = dataOf(s);
+  const r = data.requests.find((x) => x.no === no);
+
+  if (!r) throw new KeystoneError(`${no} is not among the requests.`);
+  // The highest number given out stays the last, so the next request never takes a deleted one's number.
+  const last = [data.last, ...data.requests.map((x) => x.no)].reduce((a, b) => (serial(b) > serial(a) ? b : a), '');
+
+  return {
+    state: logged(saved(s, { requests: data.requests.filter((x) => x.no !== no), last }), TAG, `${no} deleted by ${ctx.who?.name ?? 'someone on this computer'}.`, ctx),
+    record: r, message: `${no} deleted.`,
+  };
+}
+
+/** Deletes several requests at once: every one, or none if any cannot be. */
+export const deleteRequests = (s: TerminalState, nos: readonly string[], ctx: Ctx): Change<FundsRequest[]> =>
+  changeEach(s, nos, (st, no) => deleteRequest(st, no, ctx), (rs) => `${count(rs.length, 'request')} deleted.`);
 
 // ---------- deciding ----------
 
@@ -615,6 +664,6 @@ export function fundsFigure(s: TerminalState): Figure {
 export function fundsWaiting(s: TerminalState): WaitingItem[] {
   return waitingRequests(s).map((r) => ({
     no: r.no, who: `${r.requester || nameOf(s, r.payee)} · ${r.settle === ASAP ? 'ASAP' : `by ${shortDate(r.settle)}`}`, amount: requestTotal(r),
-    status: 'For Approval', tone: requestTone('For Approval'), rank: r.settle === ASAP ? -1 : 5,
+    status: transactionState('For Approval'), tone: requestTone('For Approval'), rank: r.settle === ASAP ? -1 : 5,
   }));
 }

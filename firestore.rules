@@ -33,9 +33,9 @@ rules_version = '2';
 // rebuild itself on a new computer; besides it only an owner reads those. These documents are the attendance records
 // (docs/adr/0028); the kiosk is their only writer, so Keystone never writes them.
 //
-// Only an owner reads every request for funds and decides them; any other member reads, files, edits and withdraws
-// only their own, and only while it waits. Once it is approved, its requester marks it paid with its receipts, and
-// changes nothing else. Keystone reads a request's status, requester and decision from the fields
+// Every member reads every request for funds (docs/adr/0051). Only an owner decides them; any other member files,
+// edits and withdraws only their own, and only while it waits. Once it is approved, its requester marks it paid with
+// its receipts, and changes nothing else. Keystone reads a request's status, requester and decision from the fields
 // beside its body, so a body edited past these rules changes none.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -154,7 +154,7 @@ service cloud.firestore {
       // An owner may write any request (deciding it, moving the records in, restoring a backup). Anyone else files one as
       // themselves, waiting for a decision, and changes it only while it still waits.
       match /rf/{no} {
-        allow read: if owner(company) || (member(company) && resource.data.uid == request.auth.uid);
+        allow read: if member(company);
         allow create: if fundsRequest() && (owner(company)
           || (member(company) && request.resource.data.status == 'For Approval' && ownUndecided(request.resource.data)));
         allow update: if fundsRequest() && (owner(company)

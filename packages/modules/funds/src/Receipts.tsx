@@ -9,8 +9,8 @@ const isPdf = (r: Receipt) => r.data.startsWith('data:application/pdf');
 
 /**
  * An approved request's receipts (docs/adr/0050). Its requester adds the receipts or other proof of what the money paid
- * for, a photo or a PDF each, and sending them marks the request paid. A paid request shows them, to save, to its
- * requester and the CEO. Nothing shows before it is approved.
+ * for, a photo or a PDF each, and sending them marks the request paid. A paid request shows them, to save, to every
+ * member (docs/adr/0051). Nothing shows before it is approved.
  */
 export function Receipts({ request: r }: { request: FundsRequest }) {
   const { ctx, run, files, notify } = useKeystone();
@@ -38,7 +38,7 @@ export function Receipts({ request: r }: { request: FundsRequest }) {
 
   const send = () => confirm({
     title: `Mark ${r.no} paid?`,
-    body: `${count(picked.length, 'receipt')} ${picked.length === 1 ? 'is' : 'are'} kept with it, for the CEO to see. A paid request cannot be changed.`,
+    body: `${count(picked.length, 'receipt')} ${picked.length === 1 ? 'is' : 'are'} kept with it, for everyone to see. A paid request cannot be changed.`,
     confirm: 'Mark paid',
     onConfirm: () => {
       const out = run((s, c) => payRequest(s, r.no, picked, c));

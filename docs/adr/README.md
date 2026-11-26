@@ -61,6 +61,7 @@ Consequences**.
 | [0048](0048-every-pdf-is-drawn-as-text.md) | Every PDF is text, on every platform: Keystone draws the paper as text, shapes and its real pictures | Accepted |
 | [0049](0049-live-updates-that-recover-and-say-what-arrived.md) | Live updates recover by themselves, and say what arrived and who saved it | Accepted |
 | [0050](0050-an-approved-request-is-paid-with-its-receipts.md) | An approved request is paid once its requester uploads the receipts | Accepted |
+| [0051](0051-every-member-sees-every-request-for-funds.md) | Every member sees every request for funds, and the CEO can delete one | Accepted |
 
 Template:
 

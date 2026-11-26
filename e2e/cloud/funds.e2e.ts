@@ -1,14 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { asMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
+import { asMember, deleteAsMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
 import { expectCleanPdf, PDF_MOST_BYTES_A_PAGE, paperInks, readPdf } from '../support/paper';
 
-// Requests for funds in the cloud (docs/adr/0011, 0021): staff ask, each on their own computer and seeing only their
-// own requests; the CEO decides them from a phone. Approving a check drafts the check voucher through Check Vouchers;
-// approving a transfer makes the fund transfer request, which the CEO and the requester print or save as a PDF.
-// Then firestore.rules on their own, for a member who goes past Keystone: only the CEO decides, and staff read only
-// theirs. app.clearState() is another computer, signed out and empty.
+// Requests for funds in the cloud (docs/adr/0011, 0021, 0051): staff ask, each on their own computer, and every member
+// sees every request; the CEO decides them from a phone. Approving a check drafts the check voucher through Check
+// Vouchers; approving a transfer makes the fund transfer request, which the CEO and the requester print or save as a
+// PDF. Then firestore.rules on their own, for a member who goes past Keystone: every member reads every request, only
+// the CEO decides or deletes one, and only its requester changes it. app.clearState() is another computer, signed out
+// and empty.
 
 test.beforeEach(async () => {
   await emptyCloud();
@@ -58,12 +59,17 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await expect.poll(() => field('rf', 'RF-2026-0001', 'status'), { timeout: 10_000 }).toBe('For Approval');
   expect(await field('rf', 'RF-2026-0001', 'uid')).toBe(hr.uid);
 
-  // IT sees none of HR's requests, and its own still takes the next number.
+  // IT sees HR's request, and opens it to read but not to change. Its own takes the next number.
   await signInElsewhere(app, screen, it);
   await app.open('/#funds');
-  await expect(screen.getByRole('tab', /^Your requests/)).toBeVisible();
-  await expect(screen.getByText('No requests yet.')).toBeVisible();
-  await screen.getByRole('tab', /^Request entry/).tap();
+  await screen.getByRole('tab', /^Requests/).tap();
+  await screen.getByRole('table', 'Requests for funds').getByRole('cell', 'RF-2026-0001').tap();
+  const others = screen.getByRole('form', 'Viewing RF-2026-0001');
+
+  await expect(others).toContainText('Only Ana Cruz can change RF-2026-0001.');
+  await expect(others.getByRole('textbox', 'Line 1 amount')).toHaveValue('48000');
+  await expect(others.getByRole('button', 'Withdraw…')).toBeHidden();
+  await others.getByRole('button', 'New request').tap();
   const mine = screen.getByRole('form', 'New request');
 
   await mine.getByRole('textbox', 'What it is for').fill('Replacement laptop charger');
@@ -71,16 +77,16 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await mine.getByRole('textbox', 'Line 1 amount').fill('2450.50');
   await mine.getByRole('combobox', 'Paid by').tap();
   await screen.getByRole('option', 'Check').tap();
-  await mine.getByRole('combobox', 'Settle').tap();
+  await mine.getByRole('combobox', 'Deadline').tap();
   await screen.getByRole('option', 'By a date').tap();
-  await mine.getByRole('textbox', 'Settle by').fill('2026-11-20');
+  await mine.getByRole('textbox', 'Deadline date').fill('2026-11-20');
   await mine.getByRole('button', 'Send for approval').tap();
   await expect(screen.getByRole('dialog', 'RF-2026-0002 sent to the CEO for approval.')).toBeVisible();
   await expect.poll(() => field('rf', 'RF-2026-0002', 'uid'), { timeout: 10_000 }).toBe(it.uid);
 
-  // IT's Home counts only its own request, not HR's.
+  // IT's Home counts both requests waiting, HR's too.
   await app.open('/');
-  await expect(fundsTile(screen, 1)).toBeVisible();
+  await expect(fundsTile(screen, 2)).toBeVisible();
 
   // The CEO, on a phone, is told what waits, opens the screen from the menu, approves one and declines the other.
   await app.clearState();
@@ -129,6 +135,19 @@ test('staff ask for funds, the CEO decides from a phone, and the approved one be
   await signInElsewhere(app, screen, it);
   await expect(screen.getByText('RF-2026-0002 was declined: Use the spare in the IT cabinet.')).toBeVisible();
   await expect(fundsTile(screen, 0)).toBeVisible();
+
+  // The CEO deletes the declined request, and it leaves the cloud (docs/adr/0051).
+  await browser.setViewport({ width: 1280, height: 800 });
+  await signInElsewhere(app, screen, owner);
+  await app.open('/#funds');
+  await screen.getByRole('tab', /^Requests/).tap();
+  await screen.getByRole('table', 'Requests for funds').getByRole('button', 'Actions for RF-2026-0002').tap();
+  await screen.getByRole('menuitem', 'Delete…').tap();
+  await screen.getByRole('alertdialog', 'Delete RF-2026-0002?').getByRole('checkbox', 'I understand this can’t be undone').tap();
+  await screen.getByRole('alertdialog', 'Delete RF-2026-0002?').getByRole('button', 'Delete').tap();
+  await expect(screen.getByRole('dialog', 'RF-2026-0002 deleted.')).toBeVisible();
+  await expect.poll(() => field('rf', 'RF-2026-0002', 'status'), { timeout: 10_000 }).toBeNull();
+  expect(await field('rf', 'RF-2026-0001', 'status')).toBe('Approved');
 });
 
 test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone, and both save its fund transfer request', async ({ app, screen, browser }) => {
@@ -235,8 +254,8 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   await expect.poll(async () => (await record('rf', 'RF-2026-0001'))?.receipts, { timeout: 10_000 }).toEqual([{ name: 'logo.jpg', data: expect.stringMatching(/^data:image\/jpeg;base64,/) }]);
   // The paper still carries the approval, and says when it was paid.
   await expect(screen.getByRole('article', 'Fund transfer request RF-2026-0001')).toContainText('Approved in Keystone by Mark Reyes on November 2, 2026 at 10:00. Paid on November 2, 2026 at 10:00.');
-  await screen.getByRole('tab', /^Your requests/).tap();
-  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Paid/)).toBeVisible();
+  await screen.getByRole('tab', /^Requests/).tap();
+  await expect(screen.getByRole('table', 'Requests for funds').getByRole('row', /^RF-2026-0001 .* Processing Paid/)).toBeVisible();
 
   // The CEO sees it paid, and saves the receipt.
   await signInElsewhere(app, screen, owner);
@@ -254,7 +273,7 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
   expect((await readFile(saved.absolutePath)).subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
 });
 
-test('firestore.rules let only the CEO decide a request, and staff read only their own', async () => {
+test('firestore.rules let every member read a request, only the CEO decide or delete it, and only its requester change it', async () => {
   const owner = await makeAccount('owner', 'Mark Reyes');
   const hr = await makeAccount('staff', 'Ana Cruz');
   const it = await makeAccount('staff', 'Paolo Santos');
@@ -267,8 +286,8 @@ test('firestore.rules let only the CEO decide a request, and staff read only the
   expect(await asMember(hrToken, path, request('For Approval', it.uid))).toBe(403);
   expect(await asMember(hrToken, path, request('For Approval', hr.uid))).toBe(200);
 
-  // Only HR and the CEO read it.
-  expect(await asMember(itToken, path)).toBe(403);
+  // Every member reads it, IT too (docs/adr/0051).
+  expect(await asMember(itToken, path)).toBe(200);
   expect(await asMember(hrToken, path)).toBe(200);
   expect(await asMember(ownerToken, path)).toBe(200);
 
@@ -297,4 +316,10 @@ test('firestore.rules let only the CEO decide a request, and staff read only the
   // Paid, it stays paid for HR.
   expect(await asMember(hrToken, path, request('Approved', hr.uid), decided)).toBe(403);
   expect(await asMember(hrToken, path, request('For Approval', hr.uid))).toBe(403);
+
+  // Only the CEO deletes it: not its requester, not anyone else.
+  expect(await deleteAsMember(hrToken, path)).toBe(403);
+  expect(await deleteAsMember(itToken, path)).toBe(403);
+  expect(await deleteAsMember(ownerToken, path)).toBe(200);
+  expect(await field('rf', 'RF-2026-0001', 'status')).toBeNull();
 });

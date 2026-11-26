@@ -26,7 +26,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
-<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Settle by</dt>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Deadline</dt>
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Nov 15, 2026</dd>
 </dl>
 <p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
@@ -112,7 +112,7 @@ exports[`the fund transfer request on paper > is laid out, and prints, exactly a
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
-<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Settle by</dt>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Deadline</dt>
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">Nov 15, 2026</dd>
 </dl>
 <p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>
@@ -197,7 +197,7 @@ exports[`the fund transfer request on paper > lays out one still waiting, with n
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium border-b border-paper-line">November 2, 2026</dd>
 <dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  ">For</dt>
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-bold ">Christmas party venue and catering</dd>
-<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Settle by</dt>
+<dt class="flex items-center py-1.5 pr-3 pl-2.5 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase  border-l border-paper-line">Deadline</dt>
 <dd class="m-0 flex items-center py-1.5 pr-2.5 tabular-nums font-medium ">ASAP</dd>
 </dl>
 <p class="m-0 mb-1 text-[11px] font-semibold tracking-[0.08em] text-paper-muted uppercase">Transfer to</p>

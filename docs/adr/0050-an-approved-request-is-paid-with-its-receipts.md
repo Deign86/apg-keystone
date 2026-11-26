@@ -21,7 +21,7 @@ Status: Accepted · Date: 2026-11-26
   were uploaded (`paid`). A photo is drawn again as a JPEG at most 1,600 px on its long side, smaller until it is
   about 190 KB, which is still readable. A PDF is kept as it is. The rule refuses any other kind of file, and receipts
   that come to more than `RECEIPTS_MOST` (700,000 characters, about 510 KB), so that a request stays under the body limit.
-- **Who sees them:** the requester and the CEO, who are the only ones who read the request (0011). A paid request shows
+- **Who sees them:** whoever reads the request: the requester and the CEO under 0011, and every member since 0051. A paid request shows
   each receipt with **Save…**. The fund transfer request keeps the approval and also says when it was paid.
 - **What Home tells the requester:** the approval says to upload the receipts once the money is spent. After the
   week of news, an approved request that still has no receipts says so (priority 20) until it is paid.
@@ -35,7 +35,8 @@ Status: Accepted · Date: 2026-11-26
 - **Good:** every approved request is closed with its proof, which the CEO can look at, and nobody has to chase paper
   receipts.
 - **Cost and limits:**
-  - Receipts sit in the request's document, so the CEO's Keystone, which reads every request, downloads them too.
+  - Receipts sit in the request's document, so the CEO's Keystone, which reads every request, downloads them too (since
+    0051, every member's).
     One request holds at most about 510 KB of receipts. Many paid requests make that download larger. If it becomes
     slow, receipts can move to a file store (Firebase Storage), and the request would keep only their names.
   - When the requester marks a request paid, they write its body once more. That write is how the receipts get in. A

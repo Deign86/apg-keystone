@@ -46,8 +46,8 @@ up Auth and Firestore, and deploy `firestore.rules`.
    (docs/adr/0020). After that, the CEO makes each staff member's account in Keystone:
    **Settings › User Accounts › Make account**, with their name, email and the password they first sign in with,
    which the CEO hands over (docs/adr/0014). It makes the sign-in and the member document together. A second CEO,
-   or a change of role, is still made here in the console. Only a CEO approves or declines requests for funds and
-   reads everyone's; staff read only their own (docs/adr/0011).
+   or a change of role, is still made here in the console. Every member reads every request for funds
+   (docs/adr/0051); only a CEO approves, declines or deletes one (docs/adr/0011).
 7. **Start the records:** sign in to a build with the variables set as a CEO. Keystone starts APG's records in
    the cloud, empty: the cloud is their only source, and nothing a computer holds is ever copied in (docs/adr/0018).
    Staff who sign in before then are told the CEO signs in first. Then fill in **Settings › Company Details** (the
