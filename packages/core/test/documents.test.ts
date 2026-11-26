@@ -146,3 +146,18 @@ describe('a module\'s own records', () => {
     expect(fromDocuments(toDocuments(s, layout), layout)).toEqual(s);
   });
 });
+
+describe('a record read back in another order', () => {
+  it('is not written again, so a save never rewrites a record it did not change (docs/adr/0051)', () => {
+    const doc = { collection: 'rf', id: 'RF-2026-0001', pos: 0, body: JSON.stringify({ no: 'RF-2026-0001', status: 'For Approval', uid: 'hr-1', lines: [{ desc: 'Venue', amt: 1 }] }) };
+    const reordered = { ...doc, body: JSON.stringify({ lines: [{ amt: 1, desc: 'Venue' }], uid: 'hr-1', status: 'For Approval', no: 'RF-2026-0001' }) };
+    expect(diffDocuments([doc], [reordered])).toEqual({ set: [], remove: [] });
+    // A real change is still written, and so is a move.
+    const changed = { ...doc, body: JSON.stringify({ no: 'RF-2026-0001', status: 'Withdrawn', uid: 'hr-1', lines: [{ desc: 'Venue', amt: 1 }] }) };
+    expect(diffDocuments([doc], [changed]).set).toEqual([changed]);
+    expect(diffDocuments([doc], [{ ...reordered, pos: 1 }]).set).toHaveLength(1);
+    // The order of a list's items is a change.
+    const twoLines = (a: string, b: string) => ({ ...doc, body: JSON.stringify({ lines: [{ desc: a }, { desc: b }] }) });
+    expect(diffDocuments([twoLines('a', 'b')], [twoLines('b', 'a')]).set).toHaveLength(1);
+  });
+});
