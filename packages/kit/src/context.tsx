@@ -61,8 +61,8 @@ function capabilitiesOf(store: KeystoneStore): Capabilities {
 
 /**
  * What the platform offers, as a part is handed it. The accounts service is the platform's own, with one thing added:
- * when the member signed in changes their name, the rules' context follows, so the rail and the caller's log line
- * (docs/adr/0020) carry the new one.
+ * when the member signed in changes their name or their bank account, the rules' context follows, so the rail and the
+ * caller's log line (docs/adr/0020) carry the new name, and their next request for funds the account (docs/adr/0052).
  */
 function offeredBy(store: KeystoneStore): ServiceProviders {
   const offered = store.platform.provides ?? {};
@@ -79,6 +79,17 @@ function offeredBy(store: KeystoneStore): ServiceProviders {
 
         if (store.ctx.who) store.ctx = { ...store.ctx, who: { ...store.ctx.who, name } };
       },
+      // The rules' context follows a member's own bank account too, so their next request for funds starts with it.
+      ...(accounts.setBank && {
+        setBank: async (bank) => {
+          await accounts.setBank?.(bank);
+
+          if (!store.ctx.who) return;
+          const { bank: _old, ...who } = store.ctx.who;
+
+          store.ctx = { ...store.ctx, who: bank ? { ...who, bank: { ...bank } } : who };
+        },
+      }),
     },
   };
 }

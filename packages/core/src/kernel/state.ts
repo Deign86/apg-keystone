@@ -30,12 +30,28 @@ export const sentenceOf = (cause: unknown): string => (cause instanceof Error ? 
 /** The fields a refusal is about: a KeystoneError's, and none for anything else. */
 export const fieldsOf = (cause: unknown): readonly string[] => (cause instanceof KeystoneError ? cause.fields : []);
 
+/** A bank account money is sent to, as its holder typed it: the bank, an optional branch, the account name and number. */
+export interface PayoutAccount {
+  bank: string;
+  /** Optional: '' when not given. */
+  branch: string;
+  /** The account name, as the bank holds it. */
+  name: string;
+  /** As printed: "0012 3456 7890". */
+  number: string;
+}
+
 /** Who is signed in to the company's records in the cloud: their member document (docs/adr/0009, 0010). */
 export interface Member {
   uid: string;
   name: string;
   /** An owner, shown as the CEO, adds members and decides requests for funds; staff do neither. */
   role: 'owner' | 'staff';
+  /**
+   * The member's own bank account, kept on their member document, which only they and an owner change (docs/adr/0052).
+   * Their requests for funds by transfer start with it. Absent until they save one on Profile.
+   */
+  bank?: PayoutAccount;
 }
 
 /**

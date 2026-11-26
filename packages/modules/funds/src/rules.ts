@@ -272,13 +272,14 @@ export interface RequestDraft extends Editing {
 const NO_ACCOUNT: TransferAccount = { bank: '', branch: '', name: '', number: '' };
 
 /**
- * A blank request. It is paid as this person's last request was, by a transfer when they have filed none, and a
- * transfer starts with the account their last transfer went to: the fund they keep is topped up into the same account
- * each time, and nothing about it is built in (docs/adr/0018).
+ * A blank request. It is paid as this person's last request was, by a transfer when they have filed none. A transfer
+ * starts with the bank account they keep on Profile (docs/adr/0052), or, without one, the account their last transfer
+ * went to: the fund they keep is topped up into the same account each time, and nothing about it is built in
+ * (docs/adr/0018).
  */
 export function newRequest(s: TerminalState, ctx: Ctx): RequestDraft {
   const mine = newestFirst(dataOf(s).requests).filter((r) => filedBy(r, ctx));
-  const account = mine.find((r) => r.account)?.account;
+  const account = ctx.who?.bank ?? mine.find((r) => r.account)?.account;
 
   return {
     purpose: '', lines: [lineDraft()], pay: mine[0]?.pay ?? 'transfer',

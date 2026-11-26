@@ -14,6 +14,7 @@ const { platform: base } = memoryPlatform();
 
 const signIn = (): Accounts => ({
   list: vi.fn(async () => []), create: vi.fn(), remove: vi.fn(async () => {}), changePassword: vi.fn(async () => {}), rename: vi.fn(async () => {}),
+  setBank: vi.fn(async () => {}),
 });
 
 async function open(who?: Member, accounts?: Accounts) {
@@ -82,6 +83,32 @@ describe('the Profile screen', () => {
     expect(name).toHaveFocus();
     fireEvent.change(name, { target: { value: 'Mark' } });
     expect(name).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('saves the bank account of whoever is signed in, which their next request for funds starts with', async () => {
+    const accounts = signIn();
+    const store = await open(owner, accounts);
+    const form = screen.getByRole('form', { name: 'Your bank account' });
+    const type = (label: string, value: string) => fireEvent.change(within(form).getByRole('textbox', { name: label }), { target: { value } });
+
+    // Refused before asking the sign-in, with the field marked.
+    type('Bank', 'BDO');
+    fireEvent.click(within(form).getByRole('button', { name: 'Save bank account' }));
+    await act(async () => {});
+    expect(within(form).getByRole('alert')).toHaveTextContent('Enter the account name, as the bank holds it.');
+    expect(within(form).getByRole('textbox', { name: 'Account name' })).toHaveAttribute('aria-invalid', 'true');
+    expect(accounts.setBank).not.toHaveBeenCalled();
+
+    type('Account name', 'Deign Lazaro');
+    type('Account number', '0012 3456 7890');
+    fireEvent.click(within(form).getByRole('button', { name: 'Save bank account' }));
+    await act(async () => {});
+    const bank = { bank: 'BDO', branch: '', name: 'Deign Lazaro', number: '0012 3456 7890' };
+
+    expect(accounts.setBank).toHaveBeenCalledWith(bank);
+    expect(store.ctx.who?.bank).toEqual(bank);
+    expect(store.state.log[0].text).toBe('Deign Lazaro saved their bank account.');
+    expect(within(form).getByText('Saved with your sign-in.')).toBeInTheDocument();
   });
 
   it('with nobody signed in, says there is no profile', async () => {

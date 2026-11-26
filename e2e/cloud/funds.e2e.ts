@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test } from '@e2e-dev/web';
 import { expect, type Screen } from 'e2e';
-import { asMember, deleteAsMember, emptyCloud, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
+import { asMember, deleteAsMember, documentIds, emptyCloud, setMemberBankAs, expectHome, field, idToken, makeAccount, record, recordsInCloud, signIn } from './emulators';
 import { expectCleanPdf, PDF_MOST_BYTES_A_PAGE, paperInks, readPdf } from '../support/paper';
 
 // Requests for funds in the cloud (docs/adr/0011, 0021, 0051): staff ask, each on their own computer, and every member
@@ -271,6 +271,77 @@ test('HR lists the fund\'s expenses, the CEO approves the transfer from a phone,
 
   expect(saved.suggestedFilename).toBe('logo.jpg');
   expect((await readFile(saved.absolutePath)).subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
+});
+
+test('a staff member keeps their bank account on Profile, and their next request by transfer starts with it', async ({ app, screen }) => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+
+  await recordsInCloud();
+  await app.open('/');
+  await signIn(screen, owner);
+  await expectHome(screen);
+
+  // HR saves the account its fund is kept in, once, on Profile (docs/adr/0052).
+  await signInElsewhere(app, screen, hr);
+  await app.open('/#profile');
+  const bank = screen.getByRole('form', 'Your bank account');
+
+  await expect(bank).toContainText('None saved yet.');
+  const logged = (await documentIds('log')).length;
+
+  await bank.getByRole('textbox', 'Bank').fill('BDO');
+  await bank.getByRole('textbox', 'Account name').fill('Liza Ramos');
+  await bank.getByRole('textbox', 'Account number').fill('0012 3456 7890');
+  await bank.getByRole('button', 'Save bank account').tap();
+  await expect(screen.getByRole('dialog', 'Your requests for funds by transfer start with this account from now on.')).toBeVisible();
+  await expect(bank).toContainText('Saved with your sign-in.');
+  // Its log line reaches the cloud before she moves on.
+  await expect.poll(async () => (await documentIds('log')).length, { timeout: 10_000 }).toBe(logged + 1);
+
+  // A new request starts with it, saying where it came from.
+  await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
+  const form = screen.getByRole('form', 'New request');
+
+  await expect(form.getByRole('textbox', 'Bank')).toHaveValue('BDO');
+  await expect(form.getByRole('textbox', 'Account name')).toHaveValue('Liza Ramos');
+  await expect(form.getByRole('textbox', 'Account number')).toHaveValue('0012 3456 7890');
+  await expect(form).toContainText('Filled in from your bank account on Profile.');
+
+  // On another computer, it is still hers: it is kept with her sign-in, not on this computer.
+  await signInElsewhere(app, screen, hr);
+  await app.open('/#funds');
+  await screen.getByRole('tab', /^Request entry/).tap();
+  await expect(screen.getByRole('form', 'New request').getByRole('textbox', 'Account number')).toHaveValue('0012 3456 7890');
+
+  // The log says she saved it, never the account.
+  await app.open('/#activity');
+  const entries = screen.getByRole('region', 'Entries');
+
+  await expect(entries.getByRole('listitem').first()).toContainText('Ana Cruz saved their bank account.');
+  await expect(entries).not.toContainText('0012 3456 7890');
+});
+
+test('firestore.rules let a member keep only their own bank account, and only a proper one', async () => {
+  const owner = await makeAccount('owner', 'Mark Reyes');
+  const hr = await makeAccount('staff', 'Ana Cruz');
+  const it = await makeAccount('staff', 'Paolo Santos');
+  const [ownerToken, hrToken, itToken] = await Promise.all([owner, hr, it].map(idToken));
+  const own = { bank: 'BDO', branch: 'Ortigas', name: 'Ana Cruz', number: '0012 3456 7890' };
+
+  // HR keeps its own, and removes it; IT may not touch HR's, so nobody else can send HR's money elsewhere.
+  expect(await setMemberBankAs(hrToken, hr.uid, own)).toBe(200);
+  expect(await setMemberBankAs(itToken, hr.uid, { ...own, name: 'Paolo Santos' })).toBe(403);
+  expect(await setMemberBankAs(hrToken, hr.uid, null)).toBe(200);
+
+  // Only a proper account, and never with a role or anything else.
+  expect(await setMemberBankAs(hrToken, hr.uid, { bank: 'BDO', name: 'Ana Cruz' })).toBe(403);
+  expect(await setMemberBankAs(hrToken, hr.uid, { ...own, note: 'x' })).toBe(403);
+  expect(await setMemberBankAs(hrToken, hr.uid, own, { role: 'owner' })).toBe(403);
+
+  // The CEO may change anyone's.
+  expect(await setMemberBankAs(ownerToken, hr.uid, own)).toBe(200);
 });
 
 test('firestore.rules let every member read a request, only the CEO decide or delete it, and only its requester change it', async () => {
