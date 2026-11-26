@@ -12,8 +12,8 @@ import { Letterhead, orDash, paperHeading, paperLabel, paperStripe, Sheet, usePa
 
 const figure = sqmFigure;
 
-/** A column of a part's table: its heading, and whether it holds figures (right-aligned, in tabular digits). */
-interface Column { header: string; figure?: boolean }
+/** A column of a part's table: its heading, and whether it holds figures (right-aligned, or centred for a quantity, in tabular digits). */
+interface Column { header: string; figure?: boolean; centred?: boolean }
 
 /**
  * A part's table, ruled as the statement's lines are: a firm line around it, light ones between columns and rows, the
@@ -21,7 +21,7 @@ interface Column { header: string; figure?: boolean }
  * band.
  */
 function Table({ label, columns, rows, total, empty }: { label: string; columns: Column[]; rows: ReactNode[][]; total?: [string, ReactNode]; empty: string }) {
-  const cell = (i: number) => `px-2 py-1 ${i ? 'border-l border-paper-line' : ''} ${columns[i].figure ? 'text-right whitespace-nowrap tabular-nums' : ''}`;
+  const cell = (i: number) => `px-2 py-1 ${i ? 'border-l border-paper-line' : ''} ${columns[i].figure ? `${columns[i].centred ? 'text-center' : 'text-right'} whitespace-nowrap tabular-nums` : ''}`;
 
   return (
     <table aria-label={label} className="mt-1.5 w-full border-collapse border border-paper-ink text-[11.5px]">
@@ -136,7 +136,7 @@ export const SoaPaper = forwardRef<HTMLElement, { soa: Soa; company: Company; on
       <Part n={2} title="Deposit and advance" part="deposit">
         <Table
           label="Deposit and advance"
-          columns={[{ header: 'Description' }, { header: 'Amount', figure: true }, { header: 'Qty', figure: true }, { header: 'Total amount', figure: true }, { header: 'Coverage' }, { header: 'Check no.' }]}
+          columns={[{ header: 'Description' }, { header: 'Amount', figure: true }, { header: 'Qty', figure: true, centred: true }, { header: 'Total amount', figure: true }, { header: 'Coverage' }, { header: 'Check no.' }]}
           rows={deposit.map((l) => [
             l.credit ? `Less: ${l.desc}` : l.desc, peso(l.amount), String(l.qty), l.credit ? less(l.total) : peso(l.total), orDash(l.coverage), orDash(l.check),
           ])}
