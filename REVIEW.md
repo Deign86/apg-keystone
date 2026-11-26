@@ -37,6 +37,7 @@ against this change).
 | `members`, roles, sign-in, User Accounts | Only an owner adds, changes or removes a member; a member changes only their own name; nobody raises their own role | docs/adr/0014, 0015, 0020 |
 | `firebase/*` or `@tauri-apps/*` imports | They are only under `apps/keystone/src/platform/` | AGENTS.md rules 8 and 9 |
 | An `onSnapshot`, or what the store does with what arrives | An error ends a Firestore listener for good: its callback listens again or falls back to reading, and the person is told (never only a console line). One collection failing never holds up the others. What arrives is never saved back | Live updates stopped until a restart, from v0.31 to docs/adr/0049 |
+| Who reads a module's records, or how a part rebuilds a record it read (`readBy`, a `dataOf`) | A staff member's save after reading records someone else wrote is tested in `e2e/cloud/`: it writes only what changed, never another person's record rebuilt in another key order (`diffDocuments` compares content) | Every staff save refused in v0.54–0.55, once staff read every request (docs/adr/0051) |
 | `.env*`, workflows, scripts, documents | No password, token, service-account file or key is written in | AGENTS.md |
 
 ## The code

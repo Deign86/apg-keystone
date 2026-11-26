@@ -221,6 +221,28 @@ export function fromDocuments(docs: StateDocument[], layout: DocumentLayout = {}
 
 const refKey = (d: DocumentRef) => `${d.collection}/${d.id}`;
 
+/** A JSON value with every object's keys in one order, so two writings of the same record compare equal. */
+function canonical(v: JsonValue): JsonValue {
+  if (Array.isArray(v)) return v.map(canonical);
+
+  if (!isJsonObject(v)) return v;
+
+  return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical(v[k])]));
+}
+
+/**
+ * Whether two bodies hold the same record. The same fields in another order are the same record: a part reading a
+ * record back may build it in its own order (funds' `dataOf`), and rewriting someone else's record only for that is
+ * refused by firestore.rules (a staff member's save, docs/adr/0051), so the whole save would be.
+ */
+function sameBody(a: string, b: string): boolean {
+  if (a === b) return true;
+  const x = parseBody(a);
+  const y = parseBody(b);
+
+  return !!x && !!y && JSON.stringify(canonical(x)) === JSON.stringify(canonical(y));
+}
+
 /** What to write to go from one set of documents to the next: new or changed documents, and those to delete. */
 export function diffDocuments(prev: StateDocument[], next: StateDocument[]): DocumentChanges {
   const before = new Map(prev.map((d) => [refKey(d), d]));
@@ -230,7 +252,7 @@ export function diffDocuments(prev: StateDocument[], next: StateDocument[]): Doc
     set: next.filter((d) => {
       const old = before.get(refKey(d));
 
-      return !old || old.pos !== d.pos || old.body !== d.body;
+      return !old || old.pos !== d.pos || !sameBody(old.body, d.body);
     }),
     remove: prev.flatMap(({ collection, id }) => (after.has(refKey({ collection, id })) ? [] : [{ collection, id }])),
   };
