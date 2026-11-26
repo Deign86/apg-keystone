@@ -64,6 +64,7 @@ Consequences**.
 | [0051](0051-every-member-sees-every-request-for-funds.md) | Every member sees every request for funds, and the CEO can delete one | Accepted |
 | [0052](0052-a-member-keeps-their-own-bank-account.md) | A member keeps their own bank account, and their requests for funds start with it | Accepted |
 | [0053](0053-repeated-details-fill-themselves.md) | Repeated details fill themselves, and fields offer what was typed before | Accepted |
+| [0054](0054-acknowledgement-receipts.md) | Acknowledgement Receipts, on the company's form | Accepted |
 
 Template:
 

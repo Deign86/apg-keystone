@@ -16,9 +16,10 @@ test('has a tile for each screen, with its figure, that opens it', async ({ app,
   await app.open('/');
   const tiles = screen.getByRole('main').getByRole('list').first();
 
-  // One per screen on Home: 10 less the ID Maker's, which is no longer installed (docs/adr/0046). Its desktop app
-  // stays among the connected systems.
-  await expect(tiles.getByRole('listitem')).toHaveCount(9);
+  // One per screen on Home, Acknowledgement Receipts' among them (docs/adr/0054); the ID Maker's is no longer
+  // installed (docs/adr/0046), and its desktop app stays among the connected systems.
+  await expect(tiles.getByRole('listitem')).toHaveCount(10);
+  await expect(tiles.getByRole('button', /^Acknowledgement Receipts .* Issued 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding ₱677,627\.50$/)).toBeVisible();

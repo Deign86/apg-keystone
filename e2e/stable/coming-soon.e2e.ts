@@ -12,7 +12,8 @@ test('opens Home with every tile, those coming soon marked, and the connected sy
   const tiles = screen.getByRole('main').getByRole('list').first();
 
   // One per screen on Home: 10 less the ID Maker's, which is no longer installed (docs/adr/0046).
-  await expect(tiles.getByRole('listitem')).toHaveCount(9);
+  await expect(tiles.getByRole('listitem')).toHaveCount(10);
+  await expect(tiles.getByRole('button', /^Acknowledgement Receipts .* Issued 0$/)).not.toContainText('Coming soon');
   await expect(tiles.getByRole('button', /^Check Vouchers .* Awaiting approval 1$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Requests for Funds .* Waiting for a decision 0$/)).toBeVisible();
   await expect(tiles.getByRole('button', /^Billing Statements .* Outstanding/)).not.toContainText('Coming soon');
@@ -37,11 +38,11 @@ test('marks every other screen in the rail and opens it on "Coming soon"', async
   await expect(screen.getByRole('heading', { name: 'Coming soon', level: 2 })).toBeVisible();
 });
 
-test('opens Requests for Funds, Billing Statements, Statements of Account, the Directory, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
+test('opens Requests for Funds, Billing Statements, Statements of Account, Acknowledgement Receipts, the Directory, Profile, User Accounts, Bank Accounts and Company Details, unmarked', async ({ app, screen }) => {
   await app.open('/');
   const rail = screen.getByRole('navigation', 'Keystone');
 
-  for (const title of ['Requests for Funds', 'Billing Statements', 'Statements of Account', 'Directory', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
+  for (const title of ['Requests for Funds', 'Billing Statements', 'Statements of Account', 'Acknowledgement Receipts', 'Directory', 'Profile', 'User Accounts', 'Bank Accounts', 'Company Details']) {
     await rail.getByRole('button', new RegExp(`${title}$`)).tap();
 
     await expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
