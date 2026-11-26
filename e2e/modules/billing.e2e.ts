@@ -340,11 +340,30 @@ test('opens a sent statement from the register and saves changes to it', async (
   await screen.getByRole('tab', /^Statement entry/).tap();
   await expect(screen.getByRole('form', 'New statement').getByRole('textbox', 'Invoice No.')).toHaveValue('888110226');
 
+  // A saved statement's Invoice No. can be changed too, but not to another statement's.
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await register.getByRole('cell', '010099-2026').tap();
+  const renumber = screen.getByRole('form', 'Editing 010099-2026');
+
+  await renumber.getByRole('textbox', 'Invoice No.').fill('010098-2026');
+  await renumber.getByRole('button', 'Save changes').tap();
+  await expect(renumber.getByRole('alert')).toHaveText('Invoice No. 010098-2026 is already used by another statement.');
+  await expect(renumber.getByRole('textbox', 'Invoice No.')).toHaveAttribute('aria-invalid', 'true');
+  await renumber.getByRole('textbox', 'Invoice No.').fill('010199-2026');
+  await expect(screen.getByRole('article', /^Billing statement /)).toContainText('010199-2026');
+  await renumber.getByRole('button', 'Save changes').tap();
+  await expect(screen.getByRole('dialog', '010099-2026 is now 010199-2026.')).toBeVisible();
+  await screen.getByRole('tab', /^Statements issued/).tap();
+  await expect(register.getByRole('row', /^010199-2026 Harbor Point Logistics Corp\. /)).toBeVisible();
+  await expect(register.getByRole('cell', '010099-2026')).toHaveCount(0);
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  await expect(screen.getByRole('form', 'New statement')).toBeVisible();
+
   await app.open('/#overview');
-  await expect(screen.getByRole('region', 'Waiting on you').getByRole('button', '010099-2026 Harbor Point Logistics Corp. · due Nov 10, 2026 ₱586,627.50 Sent')).toBeVisible();
+  await expect(screen.getByRole('region', 'Waiting on you').getByRole('button', '010199-2026 Harbor Point Logistics Corp. · due Nov 10, 2026 ₱586,627.50 Sent')).toBeVisible();
 
   await app.open('/#activity');
-  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('010099-2026 for Harbor Point Logistics Corp. edited (₱586,627.50 due Nov 10, 2026).');
+  await expect(screen.getByRole('region', 'Entries').getByRole('listitem').first()).toContainText('010099-2026 for Harbor Point Logistics Corp. edited, now 010199-2026 (₱586,627.50 due Nov 10, 2026).');
 });
 
 test('will not change an overdue statement, and saves the edit as a new statement instead', async ({ app, screen }) => {

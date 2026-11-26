@@ -141,7 +141,7 @@ function Billing() {
                     error={error}
                     actions={<>
                       <Button onClick={() => paper.current && printElement(paper.current)}>Print</Button>
-                      <Button onClick={() => paper.current && savePdf(paper.current, `${draft.editing ?? draft.no}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
+                      <Button onClick={() => paper.current && savePdf(paper.current, `${draft.no.trim() || draft.editing}.pdf`, files).then((n) => n && notify(`Saved ${n}.`), (e) => notify(String(e), 'error'))}>Export PDF</Button>
                       {editing && <Button onClick={() => save(true)}>Save as new</Button>}
                       <SaveDraftButton drafts={drafts} />
                       <Button kind="primary" type="submit">{editing ? 'Save changes' : 'Save and mark as sent'}</Button>
@@ -149,8 +149,8 @@ function Billing() {
                   >
                     <FieldRow>
                       <Fills part="no">
-                        <Field label="Invoice No." hint={editing ? undefined : 'The next number; change it if you need to.'}>
-                          <TextInput figures readOnly={!!editing} value={draft.editing ?? draft.no} onChange={(no) => setDraft({ ...draft, no })} />
+                        <Field name="no" label="Invoice No." hint={editing ? 'Change it to renumber this statement.' : 'The next number; change it if you need to.'}>
+                          <TextInput figures value={draft.no} onChange={(no) => setDraft({ ...draft, no })} />
                         </Field>
                       </Fills>
                       <Fills part="date"><Field label="Date"><TextInput type="date" value={draft.date} onChange={(date) => setDraft(withStatementDate(state, draft, date))} /></Field></Fills>
@@ -219,7 +219,7 @@ function Billing() {
                     </FieldRow>
                   </FormCard>
                 }
-                preview={<StatementPaper ref={paper} statement={{ ...live, no: draft.editing ?? draft.no }} billTo={draft.client} company={companyOf(state)} terms={companyOf(state).billingTerms} />}
+                preview={<StatementPaper ref={paper} statement={{ ...live, no: draft.no.trim() || draft.editing || '' }} billTo={draft.client} company={companyOf(state)} terms={companyOf(state).billingTerms} />}
               />
             ),
           },

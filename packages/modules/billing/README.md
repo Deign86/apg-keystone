@@ -39,7 +39,8 @@
 
 **Invoice numbers** are 888 and the statement's date as month, day and year, with no dash: `888112426`. A second
 statement that day is `8881124262`, then `8881124263` (`nextStatementNo`), with no dash either. A new statement's number follows its date as the date changes
-(`withStatementDate`); one typed over it is kept unless it is taken. Older `010100-2026` and `BS-2026-0087` numbers
+(`withStatementDate`); one typed over it is kept unless it is taken. A saved statement can be renumbered while it can
+still be changed (Sent), to a number no other statement has; the log says what it was and what it is now. Older `010100-2026` and `BS-2026-0087` numbers
 stay as they are, as do numbers saved with a dash after 888 (`888-112426`) (docs/adr/0038). Older statements keep their billing period and reference;
 neither is entered or printed any more.
 
