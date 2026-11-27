@@ -36,7 +36,10 @@ expectAll('The longest body', all(/\bbody\.size\(\) < (\d+)/g), String(layout.ma
 // The company's details.
 const company = new RegExp(`match /${layout.company.collection}/\\{id\\} \\{([\\s\\S]*?)\\n {6}\\}`).exec(rules)?.[1] ?? '';
 
-expectAll('The document of the company’s details', [...company.matchAll(/\bid == '([^']*)'/g)].map((m) => m[1]), layout.company.id);
+expectAll('The document of the company’s details', [...company.matchAll(/\bowner\(company\) && id == '([^']*)'/g)].map((m) => m[1]), layout.company.id);
+
+// The sizes and places of its signatures, which any member writes.
+expectAll('The document of the signatures’ sizes and places', [...company.matchAll(/\bmember\(company\) && id == '([^']*)'/g)].map((m) => m[1]), layout.company.layout);
 
 // A module's own collection: the fields beside its body, and its statuses.
 const functions = [...rules.matchAll(/function \w+\([^)]*\) \{([\s\S]*?)\n {4}\}/g)].map((m) => m[1]);

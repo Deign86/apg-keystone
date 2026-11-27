@@ -53,7 +53,8 @@ export function saveCompany(s: TerminalState, d: CompanyDraft, ctx: Ctx): Change
     billingTerms: line(d.billingTerms), dueInDays: whole(d.dueInDays, 365, 'the days to pay', 'dueInDays'), idValidYears: whole(d.idValidYears, 10, 'the years an ID is valid', 'idValidYears'),
   };
 
-  // The signatures and their sizes are saved one at a time (setSignature, resizeSignature); saving the form keeps them.
+  // The signatures, their sizes and places are saved one at a time (setSignature, resizeSignature, moveSignature);
+  // saving the form keeps them.
   if (s.company?.signatures) details.signatures = s.company.signatures;
 
   if (s.company?.signatureSizes) details.signatureSizes = s.company.signatureSizes;
@@ -113,11 +114,10 @@ export function setSignature(s: TerminalState, name: string, image: string | nul
 
 /**
  * Draws whoever is named's signature at `size` of the standard height on every paper (from half to twice it, to the
- * nearest hundredth). The standard size keeps nothing. Signed in, only an owner resizes, as only an owner changes
- * signatures.
+ * nearest hundredth). The standard size keeps nothing. Any member resizes one, staff too: sizes are kept apart from
+ * the details only an owner changes (docs/adr/0045).
  */
 export function resizeSignature(s: TerminalState, name: string, size: number, ctx: Ctx): Change<CompanyDetails> {
-  if (!canChange(ctx)) throw new KeystoneError('Only the CEO resizes signatures.');
   const who = line(name);
   const current = companyOf(s);
   const key = signatureKey(who);
@@ -143,11 +143,10 @@ export function resizeSignature(s: TerminalState, name: string, size: number, ct
 
 /**
  * Moves whoever is named's signature from its place on its line, on every paper: a manual correction where trimming
- * left it off. Kept within the signatory's area (`SIGNATURE_OFFSET`); no offset keeps nothing. Signed in, only an owner
- * moves one, as only an owner changes signatures.
+ * left it off. Kept within the signatory's area (`SIGNATURE_OFFSET`); no offset keeps nothing. Any member moves one,
+ * staff too, as any member resizes one.
  */
 export function moveSignature(s: TerminalState, name: string, offset: SignatureOffset, ctx: Ctx): Change<CompanyDetails> {
-  if (!canChange(ctx)) throw new KeystoneError('Only the CEO moves signatures.');
   const who = line(name);
   const current = companyOf(s);
   const key = signatureKey(who);
@@ -172,8 +171,8 @@ export function moveSignature(s: TerminalState, name: string, offset: SignatureO
   return { state: logged({ ...s, company: details }, TAG, message, ctx), record: details, message };
 }
 
-/** Published as SERVICES.signatureSizes, for a paper that lets the CEO resize and move a signature where it shows it. */
-export const signatureSizes: SignatureSizes = { canResize: canChange, resize: resizeSignature, move: moveSignature };
+/** Published as SERVICES.signatureSizes, for a paper that lets whoever uses Keystone resize and move a signature where it shows it. */
+export const signatureSizes: SignatureSizes = { canResize: () => true, resize: resizeSignature, move: moveSignature };
 
 /** The line under the title. */
 export const COMPANY_LINE = 'What each new voucher, statement and ID starts from. The company\'s name, address and contacts are built in.';

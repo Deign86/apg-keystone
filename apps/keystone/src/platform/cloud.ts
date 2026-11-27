@@ -1,5 +1,5 @@
 import {
-  diffDocuments, emptyState, fromDocuments, isOwner, LIVE_REREAD_MS, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
+  asWritten, diffDocuments, emptyState, fromDocuments, isOwner, LIVE_REREAD_MS, parseState, toDocuments, type DocumentChanges, type DocumentLayout, type Member,
   type StateDocument, type TerminalState,
 } from '@keystone/core';
 import type { Platform } from '@keystone/kit';
@@ -161,7 +161,9 @@ export function cloudPlatform(
 
         // A save made meanwhile is not in what was read; the next read, or the listeners, bring both.
         if (stopped || !docs || !synced || saves !== before) return;
-        synced = docs;
+        // As Keystone would write them, so company details from before signature sizes had a document of their own
+        // are not rewritten by the next save, which only an owner may (docs/adr/0045).
+        synced = asWritten(docs);
         hand(docs);
       } catch (cause) {
         console.warn('Keystone could not read the records again; it tries again shortly.', cause);
@@ -171,7 +173,7 @@ export function cloudPlatform(
     const watching = remote.watch!({
       change: (lists) => {
         if (!synced) return;
-        synced = [...synced.filter((d) => !lists.has(d.collection)), ...[...lists.values()].flat()];
+        synced = asWritten([...synced.filter((d) => !lists.has(d.collection)), ...[...lists.values()].flat()]);
         hand(synced);
       },
       live: (on) => {

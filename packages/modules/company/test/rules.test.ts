@@ -149,17 +149,21 @@ describe('company details', () => {
     expect(companyOf(setSignature(saved, 'Mark Anthony Santos', null, at(owner)).state).signatureOffsets).toBeUndefined();
   });
 
-  it('let only the CEO resize, and only a signature that is kept, through the service papers use', () => {
+  it('let staff resize and move a signature that is kept, as the CEO does, through the service papers use', () => {
     const png = 'data:image/png;base64,iVBORw0KGgo=';
     const signed = setSignature(sampleState(), 'Mark Anthony Santos', png, at(owner)).state;
 
     expect(companyModule.provides?.[SERVICES.signatureSizes]).toBe(signatureSizes);
-    expect([signatureSizes.canResize(at(owner)), signatureSizes.canResize(at(staff)), signatureSizes.canResize(at())]).toEqual([true, false, true]);
-    expect(() => resizeSignature(signed, 'Mark Anthony Santos', 1.2, at(staff))).toThrow('Only the CEO resizes signatures.');
+    expect([signatureSizes.canResize(at(owner)), signatureSizes.canResize(at(staff)), signatureSizes.canResize(at())]).toEqual([true, true, true]);
+    const resized = resizeSignature(signed, 'Mark Anthony Santos', 1.2, at(staff));
+    expect(companyOf(resized.state).signatureSizes).toEqual({ 'MARK ANTHONY SANTOS': 1.2 });
+    expect(resized.state.log[0].text).toBe('Signature for Mark Anthony Santos drawn at 120%.');
+    expect(companyOf(moveSignature(signed, 'Mark Anthony Santos', { x: 1, y: 0 }, at(staff)).state).signatureOffsets).toEqual({ 'MARK ANTHONY SANTOS': { x: 1, y: 0 } });
+    // Staff still neither change a signature nor the details.
+    expect(() => setSignature(signed, 'Mark Anthony Santos', null, at(staff))).toThrow('Only the CEO changes signatures.');
     expect(() => resizeSignature(signed, 'Brian Sy', 1.2, at(owner))).toThrow('No signature is kept for Brian Sy.');
     expect(() => resizeSignature(signed, 'Mark Anthony Santos', Number.NaN, at(owner))).toThrow('That is not a size.');
     expect(signatureSizes.move).toBe(moveSignature);
-    expect(() => moveSignature(signed, 'Mark Anthony Santos', { x: 1, y: 0 }, at(staff))).toThrow('Only the CEO moves signatures.');
     expect(() => moveSignature(signed, 'Brian Sy', { x: 1, y: 0 }, at(owner))).toThrow('No signature is kept for Brian Sy.');
     expect(() => moveSignature(signed, 'Mark Anthony Santos', { x: Number.NaN, y: 0 }, at(owner))).toThrow('That is not a place.');
   });
