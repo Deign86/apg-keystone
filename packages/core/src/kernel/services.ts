@@ -105,7 +105,7 @@ export interface EmployeeAttendance {
 
 /** Resizing a signature from a paper, by the rules Company Details keeps signatures by. */
 export interface SignatureSizes {
-  /** Whether whoever is signed in may resize signatures: the CEO, or anyone on a computer nobody signs in on. */
+  /** Whether whoever is signed in may resize and move signatures: any member, staff too (docs/adr/0045). */
   canResize(ctx: Ctx): boolean;
   /** Draws whoever is named's signature at `size` of the standard height, on every paper; 1 is the standard. */
   resize(state: TerminalState, name: string, size: number, ctx: Ctx): Change<CompanyDetails>;

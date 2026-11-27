@@ -46,3 +46,17 @@ Status: Accepted · Date: 2026-11-24
 - Saved signatures need not be uploaded again; they are trimmed where they are shown.
 - A statement saved before prints without the EWT line when it withheld none; its amounts do not change.
 - Company Details (one owner-only record in the cloud) gains an optional field; `firestore.rules` is unchanged.
+
+## Changed 2026-11-27: staff resize and move signatures too
+
+- **Staff could not fix a signature that printed too small or off its line** on the papers they prepare; only the CEO
+  could. Any member now resizes and moves one where a paper shows it. Adding, replacing and removing a signature, and
+  the rest of Company Details, stay the CEO's.
+- **The sizes and places have a document of their own in the cloud,** `company/layout` (`CLOUD_LAYOUT.company.layout`),
+  beside `company/details`. `firestore.rules` let any member write it, and still let only an owner write the details,
+  which hold the payment instructions, so staff still cannot change where money goes. Keystone reads back only sizes
+  and places in range, whatever the document holds. With no details, it is left out, and any member may delete it.
+- **Details saved before keep their sizes and places inside them** until the layout document is written; reading,
+  that document wins once it is there. A member's save is measured from the documents as Keystone would write them
+  (core's `asWritten`), so it never rewrites the details, which the rules would refuse.
+- `SignatureSizes.canResize` stays in the contract; the company module answers yes for everyone.

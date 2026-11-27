@@ -6,6 +6,7 @@ rules_version = '2';
 //   keystone/{company}/members/{uid}     who may open the records: { role: 'owner' | 'staff', name, email, bank? }
 //   keystone/{company}/{list}/{id}       one record each: { pos, body } (list is dir, cv, bs, ids, log or ext)
 //   keystone/{company}/company/details   the company's details: { pos, body } (docs/adr/0018)
+//   keystone/{company}/company/layout    the sizes and places of its signatures: { pos, body } (docs/adr/0045)
 //   keystone/{company}/rf/{no}           a request for funds: { pos, body, status, uid, decision } (docs/adr/0011)
 //   keystone/{company}/idreg/{no}        an issued employee ID, named by its number: { id, year, seq, name, …, kind, by } (docs/adr/0025)
 //   keystone/{company}/idreg/{no}/replacements/{at}   a replacement card for that number (docs/adr/0025)
@@ -15,7 +16,8 @@ rules_version = '2';
 //
 // The records are only ever what members save here: an owner starts them empty, and Keystone copies nothing in from a
 // computer. Only an owner starts them and changes the company's details, which every document prints (payment
-// instructions name the account clients pay into), so no other member can change where money goes.
+// instructions name the account clients pay into), so no other member can change where money goes. Any member sizes
+// and places the signatures, which are kept apart from the details for that (docs/adr/0045).
 //
 // Only members can read or write anything. Only an owner adds, changes or removes members: Keystone's User Accounts
 // screen makes and removes staff members (docs/adr/0014, 0015), and the first owner is added by hand in the Firebase
@@ -161,8 +163,11 @@ service cloud.firestore {
       match /company/{id} {
         allow read: if member(company);
         allow create, update: if owner(company) && id == 'details' && record();
-        // An owner restoring a backup made before there were company details.
-        allow delete: if owner(company);
+        // The sizes and places of the signatures, which any member changes where a paper shows them (docs/adr/0045).
+        // Keystone reads back only sizes and places in range, whatever else this holds.
+        allow create, update: if member(company) && id == 'layout' && record();
+        // An owner restoring a backup made before there were company details; any member, sizes left with no details.
+        allow delete: if owner(company) || (member(company) && id == 'layout');
       }
 
       // An owner may write any request (deciding it, moving the records in, restoring a backup). Anyone else files one as

@@ -2,7 +2,7 @@
   "recordFields": ["pos", "body"],
   "maxBody": 900000,
   "lists": ["dir", "cv", "bs", "ids", "log", "ext"],
-  "company": { "collection": "company", "id": "details" },
+  "company": { "collection": "company", "id": "details", "layout": "layout" },
   "own": {
     "rf": { "fields": ["status", "uid", "decision"], "statuses": ["For Approval", "Approved", "Paid", "Declined", "Withdrawn"] },
     "drafts": { "fields": [] },

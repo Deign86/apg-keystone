@@ -1,17 +1,65 @@
 import { CLOUD_LAYOUT } from './cloud-layout';
-import type { JsonValue, LogEntry, TerminalState } from './schema';
+import type { CompanyDetails, JsonValue, LogEntry, TerminalState } from './schema';
 import { isJsonObject, jsonObjects, jsonText, parseState, type JsonObject } from './state';
 
 // The saved state as one document per record, for a database that keeps documents (Firestore, docs/adr/0009).
 // Each directory entry, voucher, statement and ID is its own document, keyed by its code or number. Each log entry
 // and each module's data under `ext` is one too, and so is each record of a list a module keeps as documents of its
-// own (docs/adr/0011). The company's details are one document of their own, which only an owner writes (docs/adr/0018).
-// After a change, only the documents it touched are written.
+// own (docs/adr/0011). The company's details are one document of their own, which only an owner writes (docs/adr/0018);
+// the sizes and places of its signatures are another, which any member writes from a paper (docs/adr/0045). After a
+// change, only the documents it touched are written.
 
 /** Keystone's own collections, as firestore.rules names them (CLOUD_LAYOUT). */
 export const COLLECTIONS: readonly string[] = [...CLOUD_LAYOUT.lists, CLOUD_LAYOUT.company.collection];
 
+const COMPANY_DOCS = CLOUD_LAYOUT.company.collection;
 const DETAILS = CLOUD_LAYOUT.company.id;
+const LAYOUT = CLOUD_LAYOUT.company.layout;
+
+/** The company's details as their two documents: what only an owner writes, and the signatures' sizes and places. */
+function companyDocuments(company: CompanyDetails): StateDocument[] {
+  const { signatureSizes, signatureOffsets, ...details } = company;
+
+  return [
+    { collection: COMPANY_DOCS, id: DETAILS, pos: 0, body: JSON.stringify(details) },
+    { collection: COMPANY_DOCS, id: LAYOUT, pos: 1, body: JSON.stringify({ signatureSizes, signatureOffsets }) },
+  ];
+}
+
+/** The fields of the company's details that the signatures' own document keeps. */
+const LAID_OUT = ['signatureSizes', 'signatureOffsets'] as const;
+
+/** Company details without the signatures' sizes and places. */
+function withoutLayout(body: JsonObject): JsonObject {
+  const rest = { ...body };
+
+  for (const f of LAID_OUT) delete rest[f];
+
+  return rest;
+}
+
+/** Only the signatures' sizes and places. */
+function onlyLayout(body: JsonObject): JsonObject {
+  return Object.fromEntries(LAID_OUT.flatMap((f) => (body[f] === undefined ? [] : [[f, body[f]]])));
+}
+
+/**
+ * The documents as Keystone would write what they hold. Company details saved before the signatures' sizes and places
+ * had a document of their own (docs/adr/0045) still hold them; here they move to that document, as on reading, so a
+ * member's next save is measured from it and never rewrites the details, which only an owner may.
+ */
+export function asWritten(docs: StateDocument[]): StateDocument[] {
+  const details = docs.find((d) => d.collection === COMPANY_DOCS && d.id === DETAILS);
+  const body = details && parseBody(details.body);
+
+  if (!details || !body || !LAID_OUT.some((f) => body[f] !== undefined)) return docs;
+  const hasLayout = docs.some((d) => d.collection === COMPANY_DOCS && d.id === LAYOUT);
+
+  return [
+    ...docs.map((d) => (d === details ? { ...d, body: JSON.stringify(withoutLayout(body)) } : d)),
+    ...(hasLayout ? [] : [{ collection: COMPANY_DOCS, id: LAYOUT, pos: 1, body: JSON.stringify(onlyLayout(body)) }]),
+  ];
+}
 
 /**
  * One list in a module's data kept as a document per record, in a collection of its own, instead of inside the
@@ -157,7 +205,7 @@ export function toDocuments(s: TerminalState, layout: DocumentLayout = {}): Stat
     ...listDocuments('ids', s.ids, (r) => r.no),
     ...log,
     ...ext,
-    ...(s.company ? [{ collection: CLOUD_LAYOUT.company.collection, id: DETAILS, pos: 0, body: JSON.stringify(s.company) }] : []),
+    ...(s.company ? companyDocuments(s.company) : []),
   ];
 }
 
@@ -211,9 +259,18 @@ export function fromDocuments(docs: StateDocument[], layout: DocumentLayout = {}
 
   if (Object.keys(ext).length) state.ext = ext;
 
-  const [company] = records(CLOUD_LAYOUT.company.collection);
+  // The details, and the signatures' sizes and places beside them. Details saved before those had a document of their
+  // own keep theirs until it is written. Sizes with no details have no signatures to size, and are left out.
+  const companyDoc = (id: string) => {
+    const d = sorted(COMPANY_DOCS).find((c) => c.id === id);
 
-  if (company) state.company = company;
+    return d ? parseBody(d.body) : null;
+  };
+
+  const details = companyDoc(DETAILS);
+  const laidOut = companyDoc(LAYOUT);
+
+  if (details) state.company = laidOut ? { ...withoutLayout(details), ...onlyLayout(laidOut) } : details;
 
   // Read back through parseState, the same check a backup or state.json gets.
   return parseState(JSON.stringify(state));

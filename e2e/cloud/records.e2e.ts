@@ -138,6 +138,54 @@ test('firestore.rules let only the CEO change the company\'s details, and every 
   expect(await record('company', 'details')).toMatchObject({ name: 'Somebody Else' });
 });
 
+test('firestore.rules let any member size and place the signatures, beside the details, and no one else (docs/adr/0045)', async () => {
+  await recordsInCloud();
+  const staff = await idToken(await makeAccount('staff'));
+  const outsider = await idToken(await makeAccount());
+  const body = JSON.stringify({ signatureSizes: { 'D. LAZARO': 1.5 } });
+
+  expect(await asMember(staff, '/company/layout', { body })).toBe(200);
+  expect(await record('company', 'layout')).toEqual({ signatureSizes: { 'D. LAZARO': 1.5 } });
+  expect(await asMember(outsider, '/company/layout', { body: '{}' })).toBe(403);
+  expect(await asMember(staff, '/company/anything', { body })).toBe(403);
+  expect(await record('company', 'layout')).toEqual({ signatureSizes: { 'D. LAZARO': 1.5 } });
+});
+
+test('staff resize and move a signature on a paper, kept in the cloud for every paper, the CEO\'s details untouched (docs/adr/0045)', async ({ app, screen }) => {
+  const staff = await makeAccount('staff', 'Ana Cruz');
+  // A line of ink, 60 × 20, Ana's signature, which the CEO added, with a size kept inside the details as before.
+  const ink = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAUCAYAAADRA14pAAAAJ0lEQVR42u3PAQ0AAAjDsPs3DTIg0CYTsAQA2KaOZNiw4SfDADCgATri+QcOHQSPAAAAAElFTkSuQmCC';
+
+  await recordsInCloud();
+  const details = await record('company', 'details');
+
+  // As the cloud holds them from before the sizes had a document of their own: inside the details, and no layout.
+  await saveElsewhere('company', 'details', { ...details, signatures: { 'ANA CRUZ': ink }, signatureSizes: { 'ANA CRUZ': 1.5 } });
+  await saveElsewhere('company', 'layout', null);
+  await app.open('/');
+  await signIn(screen, staff);
+  await expectHome(screen);
+
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  const handle = screen.getByRole('article', /^Billing statement /).getByRole('slider', 'Size of Ana Cruz\'s signature');
+
+  await expect(handle).toHaveAttribute('aria-valuenow', '150');
+  await handle.press('ArrowUp');
+  await expect(handle).toHaveAttribute('aria-valuenow', '160');
+  await handle.press('Shift+ArrowRight');
+  await expect.poll(() => record('company', 'layout'), { timeout: 10_000 })
+    .toEqual({ signatureSizes: { 'ANA CRUZ': 1.6 }, signatureOffsets: { 'ANA CRUZ': { x: 0.25, y: 0 } } });
+  // The details only the CEO writes were never written: they still hold what they held.
+  expect(await record('company', 'details')).toMatchObject({ signatureSizes: { 'ANA CRUZ': 1.5 }, signatures: { 'ANA CRUZ': ink } });
+
+  // Reopened, the paper draws it as resized. A statement is prepared by whoever is signed in, so Ana signs it.
+  await app.restart();
+  await app.open('/#billing');
+  await screen.getByRole('tab', /^Statement entry/).tap();
+  await expect(screen.getByRole('article', /^Billing statement /).getByRole('slider', 'Size of Ana Cruz\'s signature')).toHaveAttribute('aria-valuenow', '160');
+});
+
 test('a change made just before a reload reaches the cloud, and is there when Keystone reopens', async ({ app, screen, browser }) => {
   const owner = await makeAccount('owner');
 

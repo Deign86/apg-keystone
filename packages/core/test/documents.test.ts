@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diffDocuments, documentId, fromDocuments, toDocuments, type DocumentLayout, type JsonObject, type TerminalState } from '../src';
+import { asWritten, diffDocuments, documentId, fromDocuments, toDocuments, type DocumentLayout, type JsonObject, type TerminalState } from '../src';
 import { sampleState } from '../sample';
 
 // The saved state as one document per record (docs/adr/0009): it must read back exactly as it was saved, and a change
@@ -8,19 +8,62 @@ import { sampleState } from '../sample';
 const state = (): TerminalState => sampleState();
 const withEntry = (s: TerminalState, text: string): TerminalState => ({ ...s, log: [{ when: '2026-11-11 09:30', mod: 'CV', text }, ...s.log] });
 
+/** The state with a signature for D. Lazaro and these sizes and places for it. */
+const withLayout = (s: TerminalState, sizes?: Record<string, number>, offsets?: Record<string, { x: number; y: number }>): TerminalState => {
+  const company = { ...s.company!, signatures: { 'D. LAZARO': 'data:image/png;base64,iVBORw0KGgo=' } };
+
+  return { ...s, company: { ...company, ...(sizes && { signatureSizes: sizes }), ...(offsets && { signatureOffsets: offsets }) } };
+};
+
 describe('documents', () => {
   it('reads the sample data back exactly as it was saved', () => {
     const s = state();
     expect(fromDocuments(toDocuments(s))).toEqual(s);
   });
 
-  it('keeps the company\'s details as one document of their own, and none until there are any (docs/adr/0018)', () => {
+  it('keeps the company\'s details as one document of their own, their signatures\' sizes and places as another, and none until there are any (docs/adr/0018, 0045)', () => {
     const s = state();
-    const details = toDocuments(s).filter((d) => d.collection === 'company');
+    const docs = toDocuments(s).filter((d) => d.collection === 'company');
 
-    expect(details).toEqual([{ collection: 'company', id: 'details', pos: 0, body: JSON.stringify(s.company) }]);
+    expect(docs).toEqual([
+      { collection: 'company', id: 'details', pos: 0, body: JSON.stringify(s.company) },
+      { collection: 'company', id: 'layout', pos: 1, body: '{}' },
+    ]);
     expect(toDocuments({ ...s, company: undefined }).filter((d) => d.collection === 'company')).toEqual([]);
     expect(fromDocuments(toDocuments({ ...s, company: undefined }))).not.toHaveProperty('company');
+  });
+
+  it('writes only the sizes and places when a signature is resized or moved, never the details only an owner writes (docs/adr/0045)', () => {
+    const before = withLayout(state(), { 'D. LAZARO': 1.5 });
+    const after = withLayout(state(), { 'D. LAZARO': 2 }, { 'D. LAZARO': { x: 1, y: 0 } });
+    const change = diffDocuments(toDocuments(before), toDocuments(after));
+
+    expect(change.set.map((d) => `${d.collection}/${d.id}`)).toEqual(['company/layout']);
+    expect(JSON.parse(toDocuments(after).find((d) => d.id === 'details')!.body)).not.toHaveProperty('signatureSizes');
+    expect(fromDocuments(toDocuments(after))).toEqual(after);
+    // Back to the standard size and place: the document stays, holding none, so details from before it never win.
+    expect(diffDocuments(toDocuments(after), toDocuments(withLayout(state()))).set.map((d) => d.body)).toEqual(['{}']);
+  });
+
+  it('reads details saved before the sizes and places had a document of their own, and measures the next save from them as if they had', () => {
+    const sized = withLayout(state(), { 'D. LAZARO': 1.5 }, { 'D. LAZARO': { x: 1, y: 0 } });
+    const legacy = toDocuments(sized).filter((d) => d.id !== 'layout').map((d) => (d.id === 'details' ? { ...d, body: JSON.stringify(sized.company) } : d));
+
+    expect(fromDocuments(legacy)).toEqual(sized);
+    // A save that changes nothing, or only a size, never rewrites the details.
+    expect(diffDocuments(asWritten(legacy), toDocuments(sized))).toEqual({ set: [], remove: [] });
+    expect(diffDocuments(asWritten(legacy), toDocuments(withLayout(state(), { 'D. LAZARO': 2 }))).set.map((d) => `${d.collection}/${d.id}`)).toEqual(['company/layout']);
+    // Once the sizes have their document, it wins over what the details still hold.
+    const written = [...legacy, { collection: 'company', id: 'layout', pos: 1, body: '{}' }];
+    expect(fromDocuments(written)).toEqual(withLayout(state()));
+    expect(asWritten(written).find((d) => d.id === 'layout')!.body).toBe('{}');
+    expect(asWritten(toDocuments(sized))).toEqual(toDocuments(sized));
+  });
+
+  it('leaves out sizes and places with no details: there are no signatures for them', () => {
+    const docs = toDocuments(withLayout(state(), { 'D. LAZARO': 1.5 })).filter((d) => d.id !== 'details');
+
+    expect(fromDocuments(docs)).not.toHaveProperty('company');
   });
 
   it('keeps each list in its order, whatever order the documents come back in', () => {

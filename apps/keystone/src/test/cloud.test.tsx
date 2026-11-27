@@ -497,6 +497,33 @@ describe('live updates (docs/adr/0049)', () => {
     expect(cloud.cloud.writes).toEqual([]);
   });
 
+  it('lets staff resize a signature whose size the CEO kept inside the details, writing only the sizes, after a live update and a re-read (docs/adr/0045)', async () => {
+    vi.useFakeTimers();
+    const s = sample();
+    const sized: TerminalState = { ...s, company: { ...s.company!, signatures: { 'D. LAZARO': 'data:image/png;base64,iVBORw0KGgo=' }, signatureSizes: { 'D. LAZARO': 1.5 } } };
+    // As the cloud holds them from before the sizes had a document of their own: inside the details, and no layout.
+    const legacy = toDocuments(sized).filter((d) => d.id !== 'layout').map((d) => (d.id === 'details' ? { ...d, body: JSON.stringify(sized.company) } : d));
+    const cloud = watched(legacy);
+    const store = await KeystoneStore.open(cloudPlatform(localPlatform(null).platform, cloud.remote, {}, staff, memoryText(), cloud.wake));
+    const written = () => cloud.cloud.writes.flatMap((w) => w.set.map((d) => `${d.collection}/${d.id}`)).filter((k) => k.startsWith('company/'));
+    const resize = (size: number) => store.commit({ ...store.state, company: { ...store.state.company!, signatureSizes: { 'D. LAZARO': size } } });
+
+    expect(store.state.company?.signatureSizes).toEqual({ 'D. LAZARO': 1.5 });
+    // The company's documents arrive as the cloud holds them, then are read again.
+    cloud.send({ company: legacy.filter((d) => d.collection === 'company') });
+    resize(2);
+    await store.flush();
+    cloud.live(false);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(store.state.company?.signatureSizes).toEqual({ 'D. LAZARO': 2 });
+    resize(1.25);
+    await store.flush();
+
+    expect(written()).toEqual(['company/layout', 'company/layout']);
+    expect(recordIn(cloud.docs, 'company', 'layout')).toEqual({ signatureSizes: { 'D. LAZARO': 1.25 } });
+    expect(fromDocuments([...cloud.docs.values()]).company?.signatureSizes).toEqual({ 'D. LAZARO': 1.25 });
+  });
+
   it('does not take a re-read a save here overtook, so the save never disappears from the screen', async () => {
     vi.useFakeTimers();
     const cloud = watched(toDocuments(sample()));

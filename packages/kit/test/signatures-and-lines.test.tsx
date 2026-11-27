@@ -80,7 +80,7 @@ describe('Enter in a line of particulars', () => {
 const png = 'data:image/png;base64,iVBORw0KGgo=';
 const signed: TerminalState = { ...emptyState(), company: { ...companyOf(emptyState()), signatures: { 'D. LAZARO': png } } };
 
-/** A stand-in for the company module's service: the CEO (or a computer nobody signs in on) resizes and moves. */
+/** A stand-in for the company module's service, one that lets staff neither resize nor move, so the paper is seen to ask it. */
 const resize = vi.fn((s: TerminalState, name: string, size: number) => ({
   state: { ...s, company: { ...companyOf(s), signatureSizes: { [name.toUpperCase()]: size } } }, record: companyOf(s), message: 'resized',
 }));
@@ -171,7 +171,7 @@ describe('a signature on a paper', () => {
     expect(move).toHaveBeenLastCalledWith(expect.anything(), 'D. Lazaro', { x: 0, y: 0 }, expect.anything());
   });
 
-  it('cannot be resized by staff, or where no part offers resizing', async () => {
+  it('cannot be resized where the service says no, or where no part offers resizing', async () => {
     await paper([company], { uid: 'hr-1', name: 'Ana Cruz', role: 'staff' });
     expect(screen.queryByRole('slider')).toBeNull();
     cleanup();
